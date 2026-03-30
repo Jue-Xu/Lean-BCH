@@ -14,3 +14,4 @@ Truncated BCH expansion with explicit error bounds for complete normed algebras.
 -/
 
 import BCH.Basic
+import BCH.LogSeries
