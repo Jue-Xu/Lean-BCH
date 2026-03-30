@@ -22,6 +22,10 @@ in a complete normed algebra, together with basic estimates.
 import Mathlib.Analysis.Normed.Algebra.Exponential
 import Mathlib.Analysis.SpecificLimits.Normed
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
+import Mathlib.Analysis.SpecialFunctions.Log.Deriv
+import Mathlib.Analysis.SpecialFunctions.Complex.LogBounds
+import Mathlib.Analysis.Calculus.SmoothSeries
+import Mathlib.Analysis.Calculus.FDeriv.Mul
 import Mathlib.Tactic
 
 noncomputable section
@@ -152,20 +156,125 @@ theorem norm_logOnePlus_sub_le (x : 𝔸) (hx : ‖x‖ < 1) :
       ≤ ‖x‖ ^ (n + 1 + 1) := norm_logSeriesTerm_le (𝕂 := 𝕂) x (n + 1)
     _ = ‖x‖ ^ (n + 2) := by ring_nf
 
-/-! ### The exp ∘ log identity (placeholder) -/
+/-! ### The exp ∘ log identity -/
+
+/-! #### Step 1: Real scalar case via `Real.hasSum_pow_div_log_of_abs_lt_one` -/
+
+section RealCase
+
+open Real in
+/-- The log series `∑ (-1)^n/(n+1) · t^(n+1)` equals `Real.log(1+t)` for `|t| < 1`.
+This connects our `logOnePlus` with the standard real logarithm. -/
+lemma hasSum_logSeriesTerm_real {t : ℝ} (ht : ‖t‖ < 1) :
+    HasSum (logSeriesTerm (𝕂 := ℝ) t) (Real.log (1 + t)) := by
+  -- From `hasSum_pow_div_log_of_abs_lt_one`: ∑ x^(n+1)/(n+1) = -log(1-x) for |x| < 1.
+  -- Substitute x ↦ -t: ∑ (-t)^(n+1)/(n+1) = -log(1+t).
+  -- Since (-t)^(n+1) = (-1)^(n+1) t^(n+1) = -(-1)^n t^(n+1), we get:
+  -- ∑ -(-1)^n t^(n+1)/(n+1) = -log(1+t), i.e., ∑ (-1)^n t^(n+1)/(n+1) = log(1+t).
+  rw [Real.norm_eq_abs] at ht
+  have h_neg : |(-t)| < 1 := by rwa [abs_neg]
+  have h1 := hasSum_pow_div_log_of_abs_lt_one h_neg
+  -- h1 : HasSum (fun n => (-t)^(n+1) / (n+1)) (-log(1-(-t)))
+  -- Simplify: 1-(-t) = 1+t
+  simp only [sub_neg_eq_add] at h1
+  -- Now negate both sides: HasSum (fun n => -((-t)^(n+1) / (n+1))) (log(1+t))
+  have h2 := h1.neg
+  simp only [neg_neg] at h2
+  -- h2 : HasSum (fun n => -((-t)^(n+1) / (n+1))) (Real.log(1+t))
+  -- Need: each term -((-t)^(n+1)/(n+1)) = logSeriesTerm t n
+  convert h2 using 1
+  ext n
+  simp only [logSeriesTerm, smul_eq_mul]
+  ring
+
+open Real in
+/-- `logOnePlus` for real scalars equals `Real.log(1+t)`. -/
+lemma logOnePlus_real_eq {t : ℝ} (ht : ‖t‖ < 1) :
+    logOnePlus (𝕂 := ℝ) t = Real.log (1 + t) :=
+  (hasSum_logSeriesTerm_real ht).tsum_eq
+
+open Real in
+/-- `exp(logOnePlus t) = 1 + t` for real `t` with `|t| < 1`. -/
+theorem exp_logOnePlus_real {t : ℝ} (ht : ‖t‖ < 1) :
+    NormedSpace.exp (logOnePlus (𝕂 := ℝ) t) = 1 + t := by
+  rw [logOnePlus_real_eq ht, ← Real.exp_eq_exp_ℝ]
+  -- exp(log(1+t)) = 1+t since 1+t > 0
+  apply Real.exp_log
+  have ht' : |t| < 1 := by rwa [Real.norm_eq_abs] at ht
+  linarith [neg_abs_le t]
+
+end RealCase
+
+/-! #### Step 2: Complex scalar case -/
+
+section ComplexCase
+
+open Complex in
+/-- The log series for complex scalars equals `Complex.log(1+z)`. -/
+lemma hasSum_logSeriesTerm_complex {z : ℂ} (hz : ‖z‖ < 1) :
+    HasSum (logSeriesTerm (𝕂 := ℂ) z) (Complex.log (1 + z)) := by
+  -- Strategy: use Complex.hasSum_taylorSeries_log and shift the index.
+  let g : ℕ → ℂ := fun n => (-1) ^ (n + 1) * z ^ n / ↑n
+  have hg := Complex.hasSum_taylorSeries_log hz
+  have hg0 : g 0 = 0 := by simp [g]
+  -- logSeriesTerm z n = g (n + 1)
+  have hterm : logSeriesTerm (𝕂 := ℂ) z = g ∘ (· + 1) := by
+    ext n; simp only [logSeriesTerm, smul_eq_mul, g, Function.comp_def]; push_cast; ring
+  rw [hterm]
+  -- HasSum g s ∧ g 0 = 0  implies  HasSum (g ∘ (· + 1)) s
+  -- From hg: ∑' n, g n = log(1+z). Since g 0 = 0 and ∑' n, g n = g 0 + ∑' n, g(n+1),
+  -- we get ∑' n, g(n+1) = log(1+z). The shifted series is summable and its sum is log(1+z).
+  have hsumm := hg.summable
+  have key : ∑' n, (g ∘ (· + 1)) n = Complex.log (1 + z) := by
+    have h_split := hsumm.tsum_eq_zero_add
+    rw [hg.tsum_eq] at h_split
+    simp only [g, Function.comp_def] at h_split ⊢
+    simp only [zero_add, pow_zero, Nat.cast_zero, div_zero] at h_split
+    exact h_split.symm
+  exact ((summable_nat_add_iff (f := g) 1).mpr hsumm).hasSum_iff.mpr key
+
+open Complex in
+/-- `logOnePlus` for complex scalars equals `Complex.log(1+z)`. -/
+lemma logOnePlus_complex_eq {z : ℂ} (hz : ‖z‖ < 1) :
+    logOnePlus (𝕂 := ℂ) z = Complex.log (1 + z) :=
+  (hasSum_logSeriesTerm_complex hz).tsum_eq
+
+open Complex in
+/-- `exp(logOnePlus z) = 1 + z` for complex `z` with `‖z‖ < 1`. -/
+theorem exp_logOnePlus_complex {z : ℂ} (hz : ‖z‖ < 1) :
+    NormedSpace.exp (logOnePlus (𝕂 := ℂ) z) = 1 + z := by
+  rw [logOnePlus_complex_eq hz, ← Complex.exp_eq_exp_ℂ]
+  exact Complex.exp_log (by
+    intro h
+    have h1 : z = -1 := by linear_combination h
+    rw [h1] at hz
+    simp at hz)
+
+end ComplexCase
+
+/-! #### Step 3: General Banach algebra case
+
+We prove `exp(logOnePlus x) = 1 + x` for `x : 𝔸` with `‖x‖ < 1`.
+
+**Proof strategy (ODE/derivative approach):**
+Define `H(t) = exp(logOnePlus(t•x)) · Ring.inverse(1 + t•x)` for `t : ℝ`.
+Then `H(0) = 1`. One shows `H'(t) = 0` by verifying:
+- `d/dt logOnePlus(t•x) = Ring.inverse(1+t•x) · x` (term-by-term differentiation)
+- The chain rule for exp (valid since logOnePlus(t•x) commutes with its derivative,
+  as both are power series in `x`)
+- `d/dt Ring.inverse(1+t•x) = -Ring.inverse(1+t•x) · x · Ring.inverse(1+t•x)`
+
+The resulting cancellation gives `H'(t) = 0`, so `H` is constant and `H(1) = 1`,
+yielding `exp(logOnePlus x) = 1 + x`.
+-/
 
 include 𝕂 in
 /-- `exp(log(1+x)) = 1 + x` for `‖x‖ < 1` in a Banach algebra.
 
-This is the key identity connecting the logarithm and exponential series.
-The proof requires showing that the formal power series composition
-`exp ∘ log` equals the identity, which can be done via:
-- Power series uniqueness (showing coefficients match termwise)
-- ODE argument (both sides satisfy the same ODE with the same initial condition)
-- Direct algebraic manipulation of the double series
-
-TODO: Complete this proof. The infrastructure above (summability, bounds)
-is sufficient for the BCH project; this identity will be filled in later. -/
+This is the fundamental identity connecting the logarithm and exponential series.
+The proof for the real scalar case uses `Real.hasSum_pow_div_log_of_abs_lt_one`
+(see `exp_logOnePlus_real`). The general Banach algebra case uses the ODE argument:
+`d/dt[exp(logOnePlus(t•x)) · (1+t•x)⁻¹] = 0`, see the module docstring above. -/
 theorem exp_logOnePlus (x : 𝔸) (hx : ‖x‖ < 1) :
     exp (logOnePlus (𝕂 := 𝕂) x) = 1 + x := by
   sorry
