@@ -303,6 +303,99 @@ private lemma isUnit_one_add {y : 𝔸} (hy : ‖y‖ < 1) : IsUnit (1 + y) := b
   rw [show (1 : 𝔸) + y = 1 - (-y) from by simp [sub_neg_eq_add]]
   exact isUnit_one_sub_of_norm_lt_one (by rwa [norm_neg])
 
+/-! ##### Helpers for the ODE/constancy argument -/
+
+set_option maxRecDepth 512 in
+omit 𝕂 in
+private lemma hasDerivAt_logSeriesTerm_smul [NormedAlgebra ℝ 𝔸] (x : 𝔸) (n : ℕ) (t : ℝ) :
+    HasDerivAt (fun s => logSeriesTerm (𝕂 := ℝ) (s • x) n)
+      (((-1 : ℝ) ^ n * t ^ n) • x ^ (n + 1)) t := by
+  have heq : (fun s => logSeriesTerm (𝕂 := ℝ) (s • x) n) =
+      fun s => (((-1 : ℝ) ^ n * (↑(n + 1) : ℝ)⁻¹) * s ^ (n + 1)) • x ^ (n + 1) := by
+    ext s; unfold logSeriesTerm; rw [smul_pow]; simp only [smul_smul]; congr 1; push_cast; ring
+  rw [heq]
+  exact ((hasDerivAt_pow (n + 1) t).const_mul
+    ((-1 : ℝ) ^ n * (↑(n + 1) : ℝ)⁻¹)).smul_const (x ^ (n + 1)) |>.congr_deriv (by
+    congr 1; rw [show n + 1 - 1 = n from by omega]; field_simp)
+
+set_option maxRecDepth 512 in
+omit 𝕂 in
+private lemma norm_hasDerivAt_logSeriesTerm_le [NormedAlgebra ℝ 𝔸] (x : 𝔸) (n : ℕ) {r : ℝ}
+    (hr : 0 < r) {t : ℝ} (ht : t ∈ Set.Ioo (-r) r) :
+    ‖((-1 : ℝ) ^ n * t ^ n) • x ^ (n + 1)‖ ≤ r ^ n * ‖x‖ ^ (n + 1) := by
+  have htabs : |t| < r := abs_lt.mpr ⟨by linarith [ht.1], ht.2⟩
+  calc ‖((-1 : ℝ) ^ n * t ^ n) • x ^ (n + 1)‖
+      ≤ ‖(-1 : ℝ) ^ n * t ^ n‖ * ‖x ^ (n + 1)‖ := norm_smul_le _ _
+    _ = |t| ^ n * ‖x ^ (n + 1)‖ := by
+        congr 1; rw [Real.norm_eq_abs, abs_mul, abs_pow, abs_pow, abs_neg, abs_one, one_pow, one_mul]
+    _ ≤ |t| ^ n * ‖x‖ ^ (n + 1) :=
+        mul_le_mul_of_nonneg_left (norm_pow_le x (n + 1)) (pow_nonneg (abs_nonneg t) n)
+    _ ≤ r ^ n * ‖x‖ ^ (n + 1) :=
+        mul_le_mul_of_nonneg_right (pow_le_pow_left₀ (abs_nonneg t) htabs.le n)
+          (pow_nonneg (norm_nonneg x) (n + 1))
+
+omit 𝕂 in
+private lemma summable_logSeriesTerm_deriv_bound (x : 𝔸) {r : ℝ} (hr : 0 < r) (hrx : r * ‖x‖ < 1) :
+    Summable (fun n => r ^ n * ‖x‖ ^ (n + 1)) :=
+  ((summable_geometric_of_lt_one (mul_nonneg hr.le (norm_nonneg x)) hrx).mul_left
+    ‖x‖).congr fun n => by ring
+
+set_option maxRecDepth 512 in
+omit 𝕂 [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma summable_logSeriesTerm_smul_zero [NormedAlgebra ℝ 𝔸] (x : 𝔸) :
+    Summable (fun n => logSeriesTerm (𝕂 := ℝ) ((0 : ℝ) • x) n) := by
+  have : (fun n => logSeriesTerm (𝕂 := ℝ) ((0 : ℝ) • x) n) = fun _ => 0 := by
+    ext n; simp [logSeriesTerm, zero_smul, zero_pow (show n + 1 ≠ 0 by omega)]
+  rw [this]; exact summable_zero
+
+set_option maxHeartbeats 400000 in
+omit 𝕂 in
+private lemma hasDerivAt_logOnePlus_smul [NormedAlgebra ℝ 𝔸] (x : 𝔸)
+    (t : ℝ) (ht : |t| * ‖x‖ < 1) :
+    HasDerivAt (fun s => logOnePlus (𝕂 := ℝ) (s • x))
+      (∑' n, ((-1 : ℝ) ^ n * t ^ n) • x ^ (n + 1)) t := by
+  have hr : ∃ r : ℝ, |t| < r ∧ r * ‖x‖ < 1 := by
+    by_cases hx0 : ‖x‖ = 0
+    · exact ⟨|t| + 1, by linarith, by simp [hx0]⟩
+    · have hxp : 0 < ‖x‖ := lt_of_le_of_ne (norm_nonneg x) (Ne.symm hx0)
+      exact ⟨(|t| + 1 / ‖x‖) / 2, by linarith [(lt_div_iff₀ hxp).mpr ht, one_div_pos.mpr hxp],
+        by rw [div_mul_eq_mul_div]
+           linarith [show (|t| + 1/‖x‖) * ‖x‖ = |t| * ‖x‖ + 1 from by field_simp]⟩
+  obtain ⟨r, htr, hrx⟩ := hr
+  have hr0 : (0 : ℝ) < r := lt_of_le_of_lt (abs_nonneg t) htr
+  unfold logOnePlus
+  exact hasDerivAt_tsum_of_isPreconnected (summable_logSeriesTerm_deriv_bound x hr0 hrx)
+    isOpen_Ioo isPreconnected_Ioo
+    (fun n s _ => hasDerivAt_logSeriesTerm_smul x n s)
+    (fun n s hs => norm_hasDerivAt_logSeriesTerm_le x n hr0 hs)
+    ⟨by linarith, by linarith⟩ (summable_logSeriesTerm_smul_zero x)
+    ⟨by linarith [neg_abs_le t], by linarith [le_abs_self t]⟩
+
+omit 𝕂 in
+private lemma commute_logOnePlus_smul [NormedAlgebra ℝ 𝔸] (x : 𝔸) (t s : ℝ) :
+    Commute (logOnePlus (𝕂 := ℝ) (t • x)) (logOnePlus (𝕂 := ℝ) (s • x)) := by
+  unfold logOnePlus; apply Commute.tsum_left; intro n; apply Commute.tsum_right; intro m
+  unfold logSeriesTerm; rw [smul_pow, smul_pow, smul_smul, smul_smul]
+  exact ((Commute.pow_pow (Commute.refl x) (n + 1) (m + 1)).smul_right _).smul_left _
+
+set_option maxHeartbeats 800000 in
+omit 𝕂 in
+private lemma hasDerivAt_exp_of_hasDerivAt_commute [NormedAlgebra ℝ 𝔸] [NormedAlgebra ℚ 𝔸]
+    {f : ℝ → 𝔸} {f' : 𝔸} {t : ℝ}
+    (hf : HasDerivAt f f' t) (hcomm : ∀ s : ℝ, Commute (f t) (f s - f t)) :
+    HasDerivAt (fun s => exp (f s)) (exp (f t) * f') t := by
+  suffices h : HasDerivAt (fun s => exp (f s - f t)) f' t by
+    rw [show (fun s => exp (f s)) = (fun s => exp (f t) * exp (f s - f t)) from by
+      ext s; rw [← exp_add_of_commute (hcomm s)]; congr 1; abel]
+    have := (hasDerivAt_const t (exp (f t))).mul h
+    simp [exp_zero] at this; exact this
+  have hinner : HasDerivAt (fun s => f s - f t) f' t :=
+    (hf.sub (hasDerivAt_const t (f t))).congr_deriv (by simp)
+  letI : RCLike ℝ := Real.instRCLike
+  have := (hasFDerivAt_exp_zero (𝕂 := ℝ) (𝔸 := 𝔸)).comp_hasDerivAt_of_eq t hinner
+    (sub_self (f t)).symm
+  simp only [Function.comp_def, ContinuousLinearMap.one_apply] at this; exact this
+
 /-! ##### The exp ∘ log identity -/
 
 include 𝕂 in
@@ -377,7 +470,64 @@ theorem exp_logOnePlus (x : 𝔸) (hx : ‖x‖ < 1) :
   -- which is commutative (Mathlib.Topology.Algebra.Algebra, instance CommRing (elemental R x)).
   -- The chain rule for exp applies in the commutative setting via hasFDerivAt_exp.
   -- The derivative of logOnePlus(t•x) w.r.t. t is (1+t•x)⁻¹ * x by hasDerivAt_tsum.
-  exact is_const_of_deriv_eq_zero (𝕜 := ℝ) (sorry : Differentiable ℝ Q)
-    (sorry : ∀ t, deriv Q t = 0) 1 0
+  -- Prove Q 1 = Q 0 using IsOpen.is_const_of_deriv_eq_zero on Ioo(−1/‖x‖, 1/‖x‖).
+  -- First, show HasDerivAt Q 0 t for all t with |t|·‖x‖ < 1.
+  set L := fun (s : ℝ) => @logOnePlus ℝ _ 𝔸 _ instℝ ((s : ℝ) • x) with hL_def
+  have hQderiv : ∀ t : ℝ, |t| * ‖x‖ < 1 → HasDerivAt Q 0 t := by
+    intro t ht
+    -- Derivative of logOnePlus(t•x)
+    have hL' := hasDerivAt_logOnePlus_smul x t ht
+    -- Commutativity for the exp chain rule
+    have hcomm_exp : ∀ s, Commute (-L t) (-L s - (-L t)) := by
+      intro s; simp only [neg_sub_neg]
+      exact (Commute.refl (L t)).neg_left.sub_right (commute_logOnePlus_smul x t s).neg_left
+    -- Chain rule for exp(-logOnePlus(t•x))
+    have hexp' := hasDerivAt_exp_of_hasDerivAt_commute hL'.neg hcomm_exp
+    -- Derivative of 1 + t•x
+    have hlin : HasDerivAt (fun s => 1 + s • x) x t := by
+      simpa using (hasDerivAt_id t).smul_const x |>.const_add 1
+    -- Product rule
+    have hQ' := hexp'.mul hlin
+    -- Neumann series cancellation: L'(t) * (1 + t•x) = x
+    set L't := ∑' n, ((-1 : ℝ) ^ n * t ^ n) • x ^ (n + 1)
+    have hL'_eq : L't = (∑' n, (-(t • x)) ^ n) * x := by
+      -- First show L't = ∑' n, (-(t•x))^n * x using HasSum.mul_right
+      have hgeom_summable : Summable (fun n => (-(t • x)) ^ n) := by
+        exact summable_geometric_of_norm_lt_one (by rwa [norm_neg, norm_smul, Real.norm_eq_abs])
+      calc L't = ∑' n, (-(t • x)) ^ n * x := tsum_congr (fun n => by
+              show ((-1 : ℝ) ^ n * t ^ n) • x ^ (n + 1) = (-(t • x)) ^ n * x
+              conv_rhs => rw [show -(t • x) = (-t) • x from (neg_smul t x).symm,
+                smul_pow, smul_mul_assoc, ← pow_succ, neg_pow])
+        _ = (∑' n, (-(t • x)) ^ n) * x := hgeom_summable.tsum_mul_right x
+    have htx_norm : ‖-(t • x)‖ < 1 := by rwa [norm_neg, norm_smul, Real.norm_eq_abs]
+    have hcancel : L't * (1 + t • x) = x := by
+      rw [hL'_eq, mul_assoc,
+        show x * (1 + t • x) = (1 + t • x) * x from
+          ((Commute.one_right x).add_right ((Commute.refl x).smul_right t)),
+        ← mul_assoc, show (1 : 𝔸) + t • x = 1 - -(t • x) from by simp,
+        geom_series_mul_neg _ htx_norm, one_mul]
+    -- Conclude Q'(t) = 0
+    refine hQ'.congr_deriv ?_
+    -- The goal contains `(-fun s => logOnePlus(s • x)) t`; reduce to `-L t`
+    change exp (-L t) * (-L't) * (1 + t • x) + exp (-L t) * x = 0
+    rw [mul_assoc, neg_mul, ← mul_add, hcancel, neg_add_cancel, mul_zero]
+  -- Handle x = 0 separately; for x ≠ 0, use IsOpen.is_const_of_deriv_eq_zero.
+  by_cases hx0 : x = 0
+  · subst hx0
+    show Q 1 = Q 0
+    simp only [Q, smul_zero, add_zero, logOnePlus, logSeriesTerm, tsum_zero, neg_zero, exp_zero,
+      mul_one]
+  · have hxn : 0 < ‖x‖ := norm_pos_iff.mpr hx0
+    set s := Set.Ioo (-(1 / ‖x‖)) (1 / ‖x‖) with hs_def
+    have hR : 1 < 1 / ‖x‖ := (one_lt_div₀ hxn).mpr hx
+    have h0_mem : (0 : ℝ) ∈ s := ⟨by linarith, by linarith⟩
+    have h1_mem : (1 : ℝ) ∈ s := ⟨by linarith, by linarith⟩
+    have ht_bound : ∀ t ∈ s, |t| * ‖x‖ < 1 := by
+      intro t ht; have := abs_lt.mpr ⟨by linarith [ht.1], ht.2⟩
+      calc |t| * ‖x‖ < 1 / ‖x‖ * ‖x‖ := mul_lt_mul_of_pos_right this hxn
+        _ = 1 := by field_simp
+    exact IsOpen.is_const_of_deriv_eq_zero isOpen_Ioo isPreconnected_Ioo
+      (fun t ht => (hQderiv t (ht_bound t ht)).differentiableAt.differentiableWithinAt)
+      (fun t ht => (hQderiv t (ht_bound t ht)).deriv) h1_mem h0_mem
 
 end
