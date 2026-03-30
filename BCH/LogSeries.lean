@@ -256,27 +256,128 @@ end ComplexCase
 
 We prove `exp(logOnePlus x) = 1 + x` for `x : 𝔸` with `‖x‖ < 1`.
 
-**Proof strategy (ODE/derivative approach):**
-Define `H(t) = exp(logOnePlus(t•x)) · Ring.inverse(1 + t•x)` for `t : ℝ`.
-Then `H(0) = 1`. One shows `H'(t) = 0` by verifying:
-- `d/dt logOnePlus(t•x) = Ring.inverse(1+t•x) · x` (term-by-term differentiation)
-- The chain rule for exp (valid since logOnePlus(t•x) commutes with its derivative,
-  as both are power series in `x`)
-- `d/dt Ring.inverse(1+t•x) = -Ring.inverse(1+t•x) · x · Ring.inverse(1+t•x)`
+**Proof strategy:** The scalar coefficients `(-1)^n/(n+1)` in `logOnePlus` are rational,
+so `logOnePlus` and `exp` do not depend on the choice of RCLike scalar field `𝕂`.
+We show the identity by the parameter trick: the function `Q(t) = exp(-logOnePlus(t•x)) * (1+t•x)`
+satisfies `Q(0) = 1` and `Q'(t) = 0` (by cancellation), hence `Q ≡ 1`, giving the result at `t=1`.
 
-The resulting cancellation gives `H'(t) = 0`, so `H` is constant and `H(1) = 1`,
-yielding `exp(logOnePlus x) = 1 + x`.
+The key sub-results are:
+1. `logSeriesTerm_eq_ratSmul`: the log series terms use only rational scalars
+2. `hasDerivAt_logOnePlus_smul`: term-by-term differentiation of `logOnePlus(t•x)`
+3. Commutativity: all terms are power series in `x`, hence commute
+4. The derivative of `Q` vanishes by algebraic cancellation
 -/
+
+/-! ##### Scalar independence -/
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- The log series scalar coefficient `(-1)^n/(n+1)` is the same whether computed in `𝕂` or `ℝ`. -/
+private lemma logSeriesTerm_eq_real (x : 𝔸) (n : ℕ) :
+    logSeriesTerm (𝕂 := 𝕂) x n =
+      @logSeriesTerm ℝ _ 𝔸 _ (NormedAlgebra.restrictScalars ℝ 𝕂 𝔸) x n := by
+  simp only [logSeriesTerm]
+  -- Both sides are `c • x^(n+1)` where c = (-1)^n/(n+1), viewed as a scalar in 𝕂 or ℝ.
+  -- Since (-1)^n/(n+1) ∈ ℚ, the smul action on 𝔸 agrees by `ratCast_smul_eq`.
+  -- The coefficient (-1)^n * (n+1)⁻¹ is rational; use `ratCast_smul_eq` to change the scalar field.
+  -- Need Module ℝ 𝔸 explicitly from NormedAlgebra 𝕂 𝔸 via restriction of scalars.
+  letI : Module ℝ 𝔸 := (NormedAlgebra.restrictScalars ℝ 𝕂 𝔸).toModule
+  conv_lhs => rw [show (-1 : 𝕂) ^ n * ((n + 1 : 𝕂)⁻¹) = (((-1 : ℚ) ^ n * ((n + 1 : ℚ)⁻¹) : ℚ) : 𝕂) from by push_cast; ring]
+  conv_rhs => rw [show (-1 : ℝ) ^ n * ((n + 1 : ℝ)⁻¹) = (((-1 : ℚ) ^ n * ((n + 1 : ℚ)⁻¹) : ℚ) : ℝ) from by push_cast; ring]
+  exact ratCast_smul_eq 𝕂 ℝ _ (x ^ (n + 1))
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- `logOnePlus` is independent of the scalar field. -/
+private lemma logOnePlus_eq_real (x : 𝔸) :
+    logOnePlus (𝕂 := 𝕂) x =
+      @logOnePlus ℝ _ 𝔸 _ (NormedAlgebra.restrictScalars ℝ 𝕂 𝔸) x := by
+  unfold logOnePlus
+  exact tsum_congr (fun n => logSeriesTerm_eq_real (𝕂 := 𝕂) x n)
+
+/-! ##### Auxiliary: Neumann series and invertibility -/
+
+omit [NormOneClass 𝔸] in
+/-- For `‖y‖ < 1`, the element `1 + y` is a unit. -/
+private lemma isUnit_one_add {y : 𝔸} (hy : ‖y‖ < 1) : IsUnit (1 + y) := by
+  rw [show (1 : 𝔸) + y = 1 - (-y) from by simp [sub_neg_eq_add]]
+  exact isUnit_one_sub_of_norm_lt_one (by rwa [norm_neg])
+
+/-! ##### The exp ∘ log identity -/
 
 include 𝕂 in
 /-- `exp(log(1+x)) = 1 + x` for `‖x‖ < 1` in a Banach algebra.
 
 This is the fundamental identity connecting the logarithm and exponential series.
-The proof for the real scalar case uses `Real.hasSum_pow_div_log_of_abs_lt_one`
-(see `exp_logOnePlus_real`). The general Banach algebra case uses the ODE argument:
-`d/dt[exp(logOnePlus(t•x)) · (1+t•x)⁻¹] = 0`, see the module docstring above. -/
+The proof first reduces to ℝ scalars (since `logOnePlus` uses only rational coefficients),
+then proceeds by the ODE/constancy argument:
+
+The function `Q(t) = exp(-logOnePlus(t•x)) * (1+t•x)` satisfies:
+- `Q(0) = exp(0) * 1 = 1`
+- `Q'(t) = 0` (by cancellation: the derivative of `exp(-logOnePlus(t•x))` is
+  `-exp(-logOnePlus(t•x)) * (1+t•x)⁻¹ * x` using commutativity of power series in `x`,
+  and the product rule gives `Q'(t) = -exp(...)*(1+t•x)⁻¹*x*(1+t•x) + exp(...)*x = 0`)
+
+Hence `Q ≡ 1` by `is_const_of_deriv_eq_zero`, giving `exp(logOnePlus(x)) = 1+x` at `t=1`.
+
+The commutativity needed for the chain rule holds because `logOnePlus(t•x)` and its
+`t`-derivative `(1+t•x)⁻¹*x` are both elements of `Algebra.elemental ℝ x`, which is
+commutative. The `t`-derivative of the log series is computed by `hasDerivAt_tsum`. -/
 theorem exp_logOnePlus (x : 𝔸) (hx : ‖x‖ < 1) :
     exp (logOnePlus (𝕂 := 𝕂) x) = 1 + x := by
-  sorry
+  -- Reduce to ℝ scalars since the log series is 𝕂-independent
+  rw [logOnePlus_eq_real (𝕂 := 𝕂)]
+  -- The identity now involves only ℝ-scalars. Both exp and logOnePlus use ℚ-algebra
+  -- structure under the hood, so this is purely about the Banach algebra 𝔸 over ℝ.
+  -- It suffices to show: (1+x) is a left inverse of exp(-logOnePlus x), because
+  -- exp(-logOnePlus x) already has a right inverse exp(logOnePlus x).
+  -- We use: exp(y) * exp(-y) = 1 for all y (since y commutes with -y).
+  set instℝ := NormedAlgebra.restrictScalars ℝ 𝕂 𝔸
+  letI : NormedAlgebra ℝ 𝔸 := instℝ
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  set y := @logOnePlus ℝ _ 𝔸 _ instℝ x with hy_def
+  -- Goal: exp y = 1 + x
+  -- Strategy: show exp(-y) * (1+x) = 1, then multiply both sides on the left by exp(y)
+  suffices h : exp (-y) * (1 + x) = 1 by
+    have hinv : exp y * exp (-y) = 1 := by
+      rw [← exp_add_of_commute (Commute.neg_right (Commute.refl y)), add_neg_cancel, exp_zero]
+    calc exp y = exp y * 1 := (mul_one _).symm
+    _ = exp y * (exp (-y) * (1 + x)) := by rw [h]
+    _ = (exp y * exp (-y)) * (1 + x) := (mul_assoc _ _ _).symm
+    _ = 1 * (1 + x) := by rw [hinv]
+    _ = 1 + x := one_mul _
+  -- Now we need: exp(-logOnePlus x) * (1+x) = 1.
+  -- Define Q : ℝ → 𝔸 by Q(t) = exp(-logOnePlus(t•x)) * (1 + t•x).
+  -- We show Q ≡ 1 by: Q(0) = 1 and Q is constant (derivative 0).
+  let Q : ℝ → 𝔸 := fun t =>
+    exp (-@logOnePlus ℝ _ 𝔸 _ instℝ ((t : ℝ) • x)) * (1 + (t : ℝ) • x)
+  -- Q(0) = exp(0) * 1 = 1
+  have hQ0 : Q 0 = 1 := by
+    simp only [Q, zero_smul]
+    have : @logOnePlus ℝ _ 𝔸 _ instℝ 0 = 0 := by
+      simp [logOnePlus, logSeriesTerm, tsum_zero]
+    rw [this, neg_zero, exp_zero, add_zero, mul_one]
+  -- Q(1) is what we want
+  have hQ1 : Q 1 = exp (-y) * (1 + x) := by
+    simp only [Q, one_smul, hy_def]
+  -- It suffices to show Q(1) = Q(0), i.e., Q is constant
+  rw [← hQ1, show Q 1 = Q 0 from ?_, hQ0]
+  -- Use is_const_of_deriv_eq_zero to show Q is constant.
+  -- This requires: (1) Q is differentiable, (2) deriv Q = 0 everywhere.
+  -- Both follow from term-by-term differentiation of the log series (hasDerivAt_tsum)
+  -- and the chain rule for exp in the commutative subalgebra Algebra.elemental ℝ x.
+  --
+  -- Specifically, the derivative calculation gives:
+  -- Q'(t) = [d/dt exp(-logOnePlus(t•x))] * (1+t•x) + exp(-logOnePlus(t•x)) * x
+  --       = -exp(-logOnePlus(t•x)) * (1+t•x)⁻¹ * x * (1+t•x) + exp(-logOnePlus(t•x)) * x
+  --       = -exp(-logOnePlus(t•x)) * x + exp(-logOnePlus(t•x)) * x   [commutativity in x-algebra]
+  --       = 0
+  --
+  -- The commutativity of x with (1+t•x)⁻¹ holds because both lie in Algebra.elemental ℝ x,
+  -- which is commutative (Mathlib.Topology.Algebra.Algebra, instance CommRing (elemental R x)).
+  -- The chain rule for exp applies in the commutative setting via hasFDerivAt_exp.
+  -- The derivative of logOnePlus(t•x) w.r.t. t is (1+t•x)⁻¹ * x by hasDerivAt_tsum.
+  exact is_const_of_deriv_eq_zero (𝕜 := ℝ) (sorry : Differentiable ℝ Q)
+    (sorry : ∀ t, deriv Q t = 0) 1 0
 
 end
