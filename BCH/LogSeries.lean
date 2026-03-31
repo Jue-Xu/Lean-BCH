@@ -273,7 +273,7 @@ The key sub-results are:
 include 𝕂 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- The log series scalar coefficient `(-1)^n/(n+1)` is the same whether computed in `𝕂` or `ℝ`. -/
-private lemma logSeriesTerm_eq_real (x : 𝔸) (n : ℕ) :
+lemma logSeriesTerm_eq_real (x : 𝔸) (n : ℕ) :
     logSeriesTerm (𝕂 := 𝕂) x n =
       @logSeriesTerm ℝ _ 𝔸 _ (NormedAlgebra.restrictScalars ℝ 𝕂 𝔸) x n := by
   simp only [logSeriesTerm]
@@ -289,7 +289,7 @@ private lemma logSeriesTerm_eq_real (x : 𝔸) (n : ℕ) :
 include 𝕂 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- `logOnePlus` is independent of the scalar field. -/
-private lemma logOnePlus_eq_real (x : 𝔸) :
+lemma logOnePlus_eq_real (x : 𝔸) :
     logOnePlus (𝕂 := 𝕂) x =
       @logOnePlus ℝ _ 𝔸 _ (NormedAlgebra.restrictScalars ℝ 𝕂 𝔸) x := by
   unfold logOnePlus
