@@ -4,6 +4,25 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-04-02: H2 complete — Symmetric BCH (Strang splitting), 0 sorry's
+
+**What:** Proved `norm_symmetric_bch_sub_add_le`: the cubic remainder bound
+`‖bch(bch(a/2,b),a/2) - (a+b)‖ ≤ 300·s³` for `s = ‖a‖+‖b‖ < 1/4`.
+
+This shows the Strang splitting `exp(a/2)·exp(b)·exp(a/2) = exp(a+b+O(s³))` — the
+commutator `[a/2,b]` from the two BCH applications cancels, leaving only cubic error.
+
+**Proof strategy:**
+1. Apply H1 twice: `z = bch(a/2,b) = a/2+b+½[a/2,b]+R₃'` and `bch(z,a/2) = z+a/2+½[z,a/2]+R₃''`
+2. Ring identity: `[z,a'] + [a',b] = [z-a'-b, a']` (commutator cancellation)
+3. Since `‖z-a'-b‖ = O(s²)`, the bracket `[z-a'-b, a']` is `O(s³)`
+4. Remaining terms `R₃'`, `R₃''` are cubic by H1
+
+**Key challenge:** Verifying `‖z‖+‖a/2‖ < ln 2` for the second BCH application,
+using `‖bch(a',b)-(a'+b)‖ ≤ 3s₁²/(2-exp s₁)` and `s < 1/4`.
+
+---
+
 ## 2026-04-02: H1 complete — Commutator extraction, 0 sorry's
 
 **What:** Proved `norm_bch_sub_add_sub_bracket_le`: the cubic remainder bound

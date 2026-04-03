@@ -1055,4 +1055,298 @@ theorem norm_bch_sub_add_sub_bracket_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 
         -- Total: 13/2·s³ + s³ + s³ + s³ + s³/2 = 10s³
         nlinarith [pow_nonneg hs_nn 3, hRB6, hRB7, hE13_bound, h_sum1, h_sum2]
 
+/-! ### Symmetric BCH: cubic remainder for Strang splitting -/
+
+set_option maxHeartbeats 6400000 in
+include 𝕂 in
+/-- **Symmetric BCH (Strang splitting)**: The symmetric product `exp(a/2)·exp(b)·exp(a/2)`
+equals `exp(a + b + R)` where `‖R‖ = O(s³)`. Equivalently,
+`bch(bch(a/2, b), a/2) = a + b + O(s³)`.
+
+The second-order commutator `[a/2, b]` from the two BCH applications cancels,
+leaving only a cubic remainder. This is the key property making the Strang splitting
+a second-order integrator.
+
+The proof uses the ring identity `[z, a'] + [a', b] = [z - a' - b, a']` to show
+the cancellation, where `z = bch(a', b)` and the RHS is cubic since
+`z - a' - b = bch(a',b) - (a'+b) = O(s²)`. -/
+theorem norm_symmetric_bch_sub_add_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) - (a + b)‖ ≤
+      300 * (‖a‖ + ‖b‖) ^ 3 := by
+  set a' := (2 : 𝕂)⁻¹ • a with ha'_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  -- ‖a'‖ ≤ ‖a‖/2
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ ‖a‖ / 2 := by
+    calc ‖a'‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  have ha'_le_a : ‖a'‖ ≤ ‖a‖ := by linarith [norm_nonneg a]
+  have hs_nn : 0 ≤ s := by positivity
+  have hs14 : s < 1 / 4 := hab
+  have hs1 : s < 1 := by linarith
+  -- s₁ = ‖a'‖ + ‖b‖ ≤ s
+  set s₁ := ‖a'‖ + ‖b‖ with hs₁_def
+  have hs₁_le : s₁ ≤ s := by show ‖a'‖ + ‖b‖ ≤ ‖a‖ + ‖b‖; linarith [ha'_le_a]
+  have hs₁_nn : 0 ≤ s₁ := by positivity
+  have ha_le_s : ‖a‖ ≤ s := le_add_of_nonneg_right (norm_nonneg b)
+  have hb_le_s : ‖b‖ ≤ s := le_add_of_nonneg_left (norm_nonneg a)
+  -- s₁ < ln 2 (for first BCH)
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    have h14 := real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
+      (by norm_num : (1:ℝ)/4 < 5/6)
+    linarith
+  have hs₁_ln2 : s₁ < Real.log 2 := by linarith
+  -- First BCH application: z = bch(a', b)
+  set z := bch (𝕂 := 𝕂) a' b with hz_def
+  -- ‖z - (a' + b)‖ ≤ 3s₁²/(2-exp(s₁))  [quadratic bound]
+  have hexp_s₁_lt : Real.exp s₁ < 2 := by
+    calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs₁_ln2
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom₁ : 0 < 2 - Real.exp s₁ := by linarith
+  have hδ_le : ‖z - (a' + b)‖ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) :=
+    norm_bch_sub_add_le (𝕂 := 𝕂) a' b hs₁_ln2
+  -- Tighter bound on ‖z-(a'+b)‖ using cubic remainder + commutator bound
+  have hR₃'_early := norm_bch_sub_add_sub_bracket_le (𝕂 := 𝕂) a' b hs₁_ln2
+  -- ‖z-(a'+b)‖ ≤ ‖½[a',b]‖ + ‖z-(a'+b)-½[a',b]‖ ≤ ‖a'‖·‖b‖ + 10s₁³/(2-exp s₁)
+  -- ‖½(a'b-ba')‖ ≤ ‖a'‖·‖b‖
+  have hbracket_le : ‖(2 : 𝕂)⁻¹ • (a' * b - b * a')‖ ≤ ‖a'‖ * ‖b‖ := by
+    calc ‖(2 : 𝕂)⁻¹ • (a' * b - b * a')‖
+        ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a' * b - b * a'‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * (‖a' * b‖ + ‖b * a'‖) := by
+          rw [h_half_norm]; gcongr
+          calc ‖a' * b - b * a'‖ ≤ ‖a' * b‖ + ‖-(b * a')‖ := by
+                rw [show a' * b - b * a' = a' * b + -(b * a') from sub_eq_add_neg _ _]
+                exact norm_add_le _ _
+            _ = ‖a' * b‖ + ‖b * a'‖ := by rw [norm_neg]
+      _ ≤ (2 : ℝ)⁻¹ * (‖a'‖ * ‖b‖ + ‖b‖ * ‖a'‖) := by
+          gcongr <;> exact norm_mul_le _ _
+      _ = ‖a'‖ * ‖b‖ := by ring
+  have hδ_tight : ‖z - (a' + b)‖ ≤ ‖a'‖ * ‖b‖ + 10 * s₁ ^ 3 / (2 - Real.exp s₁) := by
+    set w := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    calc ‖z - (a' + b)‖
+        = ‖(z - (a' + b) - w) + w‖ := by abel_nf
+      _ ≤ ‖z - (a' + b) - w‖ + ‖w‖ := norm_add_le _ _
+      _ ≤ 10 * s₁ ^ 3 / (2 - Real.exp s₁) + ‖a'‖ * ‖b‖ :=
+          add_le_add hR₃'_early hbracket_le
+      _ = ‖a'‖ * ‖b‖ + 10 * s₁ ^ 3 / (2 - Real.exp s₁) := by ring
+  -- ‖z‖ bound: ‖z‖ ≤ ‖z - (a'+b)‖ + ‖a'+b‖
+  have hz_le : ‖z‖ ≤ s₁ + ‖a'‖ * ‖b‖ + 10 * s₁ ^ 3 / (2 - Real.exp s₁) := by
+    have hab_le : ‖a' + b‖ ≤ s₁ := norm_add_le a' b
+    calc ‖z‖ = ‖(z - (a' + b)) + (a' + b)‖ := by congr 1; abel
+      _ ≤ ‖z - (a' + b)‖ + ‖a' + b‖ := norm_add_le _ _
+      _ ≤ (‖a'‖ * ‖b‖ + 10 * s₁ ^ 3 / (2 - Real.exp s₁)) + s₁ := by linarith
+      _ = s₁ + ‖a'‖ * ‖b‖ + 10 * s₁ ^ 3 / (2 - Real.exp s₁) := by ring
+  -- Denominator lower bounds
+  have hexp_cubic := real_exp_third_order_le_cube hs_nn (by linarith : s < 5/6)
+  have hexp_le : Real.exp s ≤ 1 + s + s ^ 2 := by nlinarith [sq_nonneg s]
+  have hdenom_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp s := by nlinarith
+  have hdenom₁_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp s₁ := by
+    linarith [Real.exp_le_exp_of_le hs₁_le]
+  -- ‖a'‖·‖b‖ ≤ s²/8 (AM-GM type bound)
+  have hab_prod : ‖a'‖ * ‖b‖ ≤ s ^ 2 / 8 := by
+    have h1 : ‖a'‖ ≤ s / 2 := by linarith [ha_le_s]
+    have h2 : ‖b‖ ≤ s := hb_le_s
+    -- ‖a'‖·‖b‖ ≤ (s/2)·s/4? No. Better: ‖a'‖ ≤ ‖a‖/2 and ‖b‖ = s-‖a‖
+    -- (x/2)(s-x) ≤ s²/8 by AM-GM: max at x=s/2 giving (s/4)(s/2)=s²/8
+    nlinarith [sq_nonneg (2 * ‖a'‖ - ‖b‖), norm_nonneg a', norm_nonneg b]
+  -- s₂ ≤ s + ‖a'‖·‖b‖ + 10s₁³/(2-exp s₁) < 2s
+  -- Key: s₂ = ‖z‖ + ‖a'‖ ≤ (s₁ + ‖a'‖) + ‖a'‖·‖b‖ + 10s₁³/(2-exp s₁)
+  --       = s + ‖a'‖·‖b‖ + 10s₁³/(2-exp s₁)  [since 2‖a'‖+‖b‖ ≤ ‖a‖+‖b‖ = s]
+  have hs1a'_le : s₁ + ‖a'‖ ≤ s := by
+    show ‖a'‖ + ‖b‖ + ‖a'‖ ≤ ‖a‖ + ‖b‖; linarith [ha'_le]
+  -- 10s₁³/(2-exp s₁) ≤ 160/11·s³
+  have hcubic_div_bound : 10 * s₁ ^ 3 / (2 - Real.exp s₁) ≤ 160 / 11 * s ^ 3 := by
+    rw [div_le_iff₀ hdenom₁]
+    have hs₁3 : s₁ ^ 3 ≤ s ^ 3 := pow_le_pow_left₀ hs₁_nn hs₁_le 3
+    -- Need: 10*s₁³ ≤ 160/11*s³*(2-exp s₁)
+    -- Since 160/11*(11/16) = 10 and 2-exp s₁ ≥ 11/16:
+    -- 160/11*s³*(2-exp s₁) ≥ 160/11*s³*(11/16) = 10*s³ ≥ 10*s₁³
+    have h1 : 160 / 11 * s ^ 3 * (2 - Real.exp s₁) ≥ 160 / 11 * s ^ 3 * (11 / 16) := by
+      nlinarith [pow_nonneg hs_nn 3, hdenom₁_lb]
+    have h2 : 160 / 11 * s ^ 3 * (11 / 16) = 10 * s ^ 3 := by ring
+    linarith
+  have hs₂_le_2s : ‖z‖ + ‖a'‖ ≤ 2 * s := by
+    -- ‖z‖ + ‖a'‖ ≤ (s₁ + ‖a'‖) + ‖a'‖·‖b‖ + 10s₁³/(2-exp s₁)
+    --            ≤ s + s²/8 + 160/11·s³
+    -- s²/8 + 160/11·s³ ≤ s  (for s < 1/4)
+    have h1 : ‖z‖ + ‖a'‖ ≤ s + ‖a'‖ * ‖b‖ + 10 * s₁ ^ 3 / (2 - Real.exp s₁) := by
+      have := hz_le
+      have := hs1a'_le
+      linarith
+    -- ‖a'‖·‖b‖ + 10s₁³/(2-exp s₁) ≤ s²/8 + 160/11·s³ ≤ s
+    have h2 : ‖a'‖ * ‖b‖ + 10 * s₁ ^ 3 / (2 - Real.exp s₁) ≤ s := by
+      calc ‖a'‖ * ‖b‖ + 10 * s₁ ^ 3 / (2 - Real.exp s₁)
+          ≤ s ^ 2 / 8 + 160 / 11 * s ^ 3 := by linarith [hab_prod, hcubic_div_bound]
+        _ ≤ s := by nlinarith [sq_nonneg s, pow_nonneg hs_nn 3,
+                     sq_nonneg (1 / 4 - s)]
+    linarith
+  -- ‖z‖ + ‖a'‖ < ln 2  (for second BCH)
+  have hz_a'_ln2 : ‖z‖ + ‖a'‖ < Real.log 2 := by
+    have hln2_half : (1 : ℝ) / 2 < Real.log 2 := by
+      rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+      have := real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/2)
+        (by norm_num : (1:ℝ)/2 < 5/6)
+      linarith
+    linarith
+  -- Second BCH application norms
+  set s₂ := ‖z‖ + ‖a'‖ with hs₂_def
+  have hs₂_le_2s' : s₂ ≤ 2 * s := hs₂_le_2s
+  have hs₂_nn : 0 ≤ s₂ := by positivity
+  have hs₂_lt_half : s₂ < 1 / 2 := by linarith
+  have hexp_s₂_lt : Real.exp s₂ < 2 := by
+    calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hz_a'_ln2
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom₂ : 0 < 2 - Real.exp s₂ := by linarith
+  -- Denominator lower bound for s₂: exp(s₂) ≤ 1+s₂+s₂²/2+s₂³/(6(1-s₂))
+  -- For s₂ < 1/2: 6(1-s₂) > 3, so s₂³/(6(1-s₂)) < s₂³/3
+  -- Then 2-exp(s₂) ≥ 1-s₂-s₂²/2-s₂³/3 ≥ 1-2s-(2s)²/2-(2s)³/3 = 1-2s-2s²-8s³/3
+  -- For s < 1/4: 1-2s-2s²-8s³/3 > 1/3
+  have hdenom₂_lb : (1 : ℝ) / 3 ≤ 2 - Real.exp s₂ := by
+    have hexp_div := real_exp_third_order_le_div hs₂_nn (by linarith : s₂ < 1)
+    -- exp(s₂) ≤ 1 + s₂ + s₂²/2 + s₂³/(6(1-s₂))
+    have h1ms₂ : (0 : ℝ) < 1 - s₂ := by linarith
+    have h6_1ms₂ : (0 : ℝ) < 6 * (1 - s₂) := by linarith
+    -- s₂³/(6(1-s₂)) ≤ s₂³/3 since 6(1-s₂) ≥ 3 (because s₂ < 1/2)
+    have hcubic_div : s₂ ^ 3 / (6 * (1 - s₂)) ≤ s₂ ^ 3 / 3 :=
+      div_le_div_of_nonneg_left (pow_nonneg hs₂_nn 3) (by norm_num : (0:ℝ) < 3) (by linarith)
+    -- 2-exp(s₂) ≥ 1-s₂-s₂²/2-s₂³/3
+    have hexp_ub : Real.exp s₂ ≤ 1 + s₂ + s₂ ^ 2 / 2 + s₂ ^ 3 / 3 := by linarith
+    -- Now bound 1-s₂-s₂²/2-s₂³/3 ≥ 1/3 using s₂ < 2s < 1/2, s < 1/4
+    -- i.e., 2/3 ≥ s₂ + s₂²/2 + s₂³/3 given s₂ < 1/2
+    -- Since s₂ < 2s and s < 1/4:
+    -- s₂ + s₂²/2 + s₂³/3 < 2s + (2s)²/2 + (2s)³/3 = 2s + 2s² + 8s³/3
+    -- Need: 2s + 2s² + 8s³/3 ≤ 2/3, i.e., 6s + 6s² + 8s³ ≤ 2
+    -- At s = 1/4: 3/2 + 3/8 + 1/8 = 2. So for s < 1/4 (strict): 6s+6s²+8s³ < 2.
+    -- s₂ ≤ 2s, s₂² ≤ 4s², s₂³ ≤ 8s³
+    have hs₂_le : s₂ ≤ 2 * s := hs₂_le_2s'
+    -- s₂+s₂²/2+s₂³/3 ≤ 2s+2s²+8s³/3 ≤ 2/3
+    -- 1 - s₂ - s₂²/2 - s₂³/3 ≥ 1 - 2s - 2s² - 8s³/3 ≥ 1/3
+    -- Equivalently: 6s + 6s² + 8s³ ≤ 2
+    -- Use s₂ ≤ 2s to bound: s₂ + s₂²/2 + s₂³/3 ≤ 2s + 2s² + 8s³/3 ≤ 2/3
+    -- Then 1-s₂-s₂²/2-s₂³/3 ≥ 1-2/3 = 1/3
+    -- First: 6s+6s²+8s³ ≤ 2. Write as (1-4s)(2+2s+8s²) ≥ 0... no.
+    -- 2-6s-6s²-8s³ ≥ 0: Subst s = 1/4-t with t > 0:
+    --   2-6(1/4-t)-6(1/4-t)²-8(1/4-t)³ = ... = 6t²(something) ≥ 0
+    -- Simpler: provide the factored form directly
+    -- 2-6s-6s²-8s³ = (1-4s)(2+2s+8s²)/4... let me compute:
+    -- (1-4s)(2+2s) = 2+2s-8s-8s² = 2-6s-8s². Not quite.
+    -- Try: 2-6s-6s²-8s³ = 2(1-4s)+2s-6s²-8s³ = 2(1-4s)+2s(1-3s-4s²)
+    -- For s < 1/4: 1-3s-4s² > 1-3/4-1/4 = 0. And s ≥ 0, so 2s(1-3s-4s²) ≥ 0.
+    suffices h : s₂ + s₂ ^ 2 / 2 + s₂ ^ 3 / 3 ≤ 2 / 3 by linarith
+    have h_s₂_sq : s₂ ^ 2 ≤ 4 * s ^ 2 :=
+      -- s₂² = s₂·s₂ ≤ (2s)·(2s) = 4s²
+      calc s₂ ^ 2 = s₂ * s₂ := by ring
+        _ ≤ (2 * s) * (2 * s) := mul_le_mul hs₂_le hs₂_le hs₂_nn (by linarith)
+        _ = 4 * s ^ 2 := by ring
+    have h_s₂_cu : s₂ ^ 3 ≤ 8 * s ^ 3 :=
+      -- s₂³ = s₂·s₂² ≤ 2s·4s² = 8s³
+      calc s₂ ^ 3 = s₂ * s₂ ^ 2 := by ring
+        _ ≤ (2 * s) * (4 * s ^ 2) := mul_le_mul hs₂_le h_s₂_sq (sq_nonneg _) (by linarith)
+        _ = 8 * s ^ 3 := by ring
+    -- s₂ + s₂²/2 + s₂³/3 ≤ 2s + 2s² + 8s³/3
+    have h_sum : s₂ + s₂ ^ 2 / 2 + s₂ ^ 3 / 3 ≤ 2 * s + 2 * s ^ 2 + 8 / 3 * s ^ 3 := by
+      linarith
+    -- 2s + 2s² + 8s³/3 ≤ 2/3 ⟺ 6s + 6s² + 8s³ ≤ 2
+    -- 2(1-4s) + 2s(1-3s-4s²) ≥ 0
+    have h14 : 0 ≤ 1 - 4 * s := by linarith
+    -- 1-3s-4s² ≥ 0 for s < 1/4: 1-3/4-4/16 = 1-3/4-1/4 = 0
+    have h_inner : 0 ≤ 1 - 3 * s - 4 * s ^ 2 := by
+      -- (1-4s)(1+s) = 1+s-4s-4s² = 1-3s-4s² ≥ 0 since both factors nonneg
+      have : 1 - 3 * s - 4 * s ^ 2 = (1 - 4 * s) * (1 + s) := by ring
+      rw [this]; exact mul_nonneg h14 (by linarith)
+    linarith [mul_nonneg hs_nn h_inner, pow_nonneg hs_nn 3]
+  -- Decomposition using H1:
+  set δ := z - (a' + b) with hδ_def
+  -- The ring identity for commutator cancellation
+  have hcomm_cancel : (z * a' - a' * z) + (a' * b - b * a') = δ * a' - a' * δ := by
+    rw [hδ_def]; noncomm_ring
+  -- From H1 on bch(a', b):
+  have hR₃' := norm_bch_sub_add_sub_bracket_le (𝕂 := 𝕂) a' b hs₁_ln2
+  -- From H1 on bch(z, a'):
+  have hR₃'' := norm_bch_sub_add_sub_bracket_le (𝕂 := 𝕂) z a' hz_a'_ln2
+  -- a'+a' = a
+  have ha'_add : a' + a' = a := by
+    rw [ha'_def, ← add_smul, show (2 : 𝕂)⁻¹ + (2 : 𝕂)⁻¹ = 1 from by
+      rw [← two_mul, mul_inv_cancel₀ (two_ne_zero : (2 : 𝕂) ≠ 0)]]; exact one_smul _ _
+  -- Full algebraic decomposition:
+  -- bch(z, a') - (a+b) = R₃'' + ½(δa'-a'δ) + R₃'
+  have hfull_decomp : bch (𝕂 := 𝕂) z a' - (a + b) =
+      (bch (𝕂 := 𝕂) z a' - (z + a') - (2 : 𝕂)⁻¹ • (z * a' - a' * z)) +
+      ((2 : 𝕂)⁻¹ • (δ * a' - a' * δ)) +
+      (z - (a' + b) - (2 : 𝕂)⁻¹ • (a' * b - b * a')) := by
+    have hsmul_expand : (2 : 𝕂)⁻¹ • (δ * a' - a' * δ) =
+        (2 : 𝕂)⁻¹ • (z * a' - a' * z) + (2 : 𝕂)⁻¹ • (a' * b - b * a') := by
+      rw [← smul_add, ← hcomm_cancel]
+    rw [hsmul_expand, ← ha'_add]
+    abel
+  -- Bound each piece
+  rw [hfull_decomp]
+  -- Bound ‖½(δa' - a'δ)‖ ≤ ‖δ‖ · ‖a'‖
+  have hcomm_bound : ‖(2 : 𝕂)⁻¹ • (δ * a' - a' * δ)‖ ≤ ‖δ‖ * ‖a'‖ := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖δ * a' - a' * δ‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * (‖δ * a'‖ + ‖a' * δ‖) := by
+          rw [h_half_norm]; gcongr
+          calc _ ≤ ‖δ * a'‖ + ‖-(a' * δ)‖ := by
+                rw [show δ * a' - a' * δ = δ * a' + -(a' * δ) from sub_eq_add_neg _ _]
+                exact norm_add_le _ _
+            _ = _ := by rw [norm_neg]
+      _ ≤ (2 : ℝ)⁻¹ * (‖δ‖ * ‖a'‖ + ‖a'‖ * ‖δ‖) := by
+          gcongr <;> exact norm_mul_le _ _
+      _ = ‖δ‖ * ‖a'‖ := by ring
+  -- ‖δ‖ ≤ 3s₁²/(2-exp s₁) ≤ 3s²/(11/16), and ‖a'‖ ≤ s/2
+  have ha'_le_s2 : ‖a'‖ ≤ s / 2 := by linarith [ha_le_s]
+  have hδ_cubic : ‖δ‖ * ‖a'‖ ≤ 3 * s ^ 2 / (2 - Real.exp s₁) * (s / 2) := by
+    calc ‖δ‖ * ‖a'‖
+        ≤ (3 * s₁ ^ 2 / (2 - Real.exp s₁)) * (s / 2) := by
+          apply mul_le_mul hδ_le ha'_le_s2 (norm_nonneg _)
+          exact div_nonneg (by positivity) (le_of_lt hdenom₁)
+      _ ≤ (3 * s ^ 2 / (2 - Real.exp s₁)) * (s / 2) := by
+          apply mul_le_mul_of_nonneg_right _ (by linarith)
+          apply div_le_div_of_nonneg_right _ (le_of_lt hdenom₁)
+          nlinarith
+  -- Final bound: ‖piece1‖ + ‖piece2‖ + ‖piece3‖
+  calc _ ≤ ‖bch (𝕂 := 𝕂) z a' - (z + a') - (2 : 𝕂)⁻¹ • (z * a' - a' * z)‖ +
+          ‖(2 : 𝕂)⁻¹ • (δ * a' - a' * δ)‖ +
+          ‖z - (a' + b) - (2 : 𝕂)⁻¹ • (a' * b - b * a')‖ := by
+        calc _ ≤ ‖(bch (𝕂 := 𝕂) z a' - (z + a') - (2 : 𝕂)⁻¹ • (z * a' - a' * z)) +
+                  ((2 : 𝕂)⁻¹ • (δ * a' - a' * δ))‖ +
+                ‖z - (a' + b) - (2 : 𝕂)⁻¹ • (a' * b - b * a')‖ := norm_add_le _ _
+          _ ≤ _ := by gcongr; exact norm_add_le _ _
+    _ ≤ 10 * s₂ ^ 3 / (2 - Real.exp s₂) +
+        (3 * s ^ 2 / (2 - Real.exp s₁) * (s / 2)) +
+        10 * s₁ ^ 3 / (2 - Real.exp s₁) := by
+        have h1 := hR₃''
+        have h2 : ‖(2 : 𝕂)⁻¹ • (δ * a' - a' * δ)‖ ≤
+            3 * s ^ 2 / (2 - Real.exp s₁) * (s / 2) :=
+          le_trans hcomm_bound hδ_cubic
+        have h3 := hR₃'
+        linarith
+    _ ≤ 300 * s ^ 3 := by
+        -- s₂ < 2s, denom₂ ≥ 1/3, denom₁ ≥ 11/16
+        -- Term 1: 10s₂³/(2-exp s₂) ≤ 10·8s³/(1/3) = 240s³
+        have hs₂3 : s₂ ^ 3 ≤ 8 * s ^ 3 := by
+          have : s₂ ≤ 2 * s := hs₂_le_2s'
+          nlinarith [pow_le_pow_left₀ hs₂_nn this 3]
+        have hterm1 : 10 * s₂ ^ 3 / (2 - Real.exp s₂) ≤ 240 * s ^ 3 := by
+          rw [div_le_iff₀ hdenom₂]
+          nlinarith [hdenom₂_lb, pow_nonneg hs_nn 3]
+        -- Term 2: 3s²/(2-exp s₁)·(s/2) ≤ 3·(16/11)·s²·(s/2) = 24/11·s³
+        have hterm2 : 3 * s ^ 2 / (2 - Real.exp s₁) * (s / 2) ≤ 24 / 11 * s ^ 3 := by
+          have h_div : 3 * s ^ 2 / (2 - Real.exp s₁) ≤ 3 * s ^ 2 / (11 / 16) :=
+            div_le_div_of_nonneg_left (by positivity) (by norm_num) hdenom₁_lb
+          have hs_half : 0 ≤ s / 2 := by linarith
+          calc 3 * s ^ 2 / (2 - Real.exp s₁) * (s / 2)
+              ≤ 3 * s ^ 2 / (11 / 16) * (s / 2) := by nlinarith
+            _ = 24 / 11 * s ^ 3 := by ring
+        -- Term 3: 10s₁³/(2-exp s₁) ≤ 160/11·s³
+        have hterm3 : 10 * s₁ ^ 3 / (2 - Real.exp s₁) ≤ 160 / 11 * s ^ 3 := by
+          have hs₁3 : s₁ ^ 3 ≤ s ^ 3 := pow_le_pow_left₀ hs₁_nn hs₁_le 3
+          calc 10 * s₁ ^ 3 / (2 - Real.exp s₁)
+              ≤ 10 * s ^ 3 / (11 / 16) := by
+                apply div_le_div₀ (by positivity) (by linarith) (by positivity) hdenom₁_lb
+            _ = 160 / 11 * s ^ 3 := by ring
+        -- Total: 240 + 24/11 + 160/11 = 240 + 184/11 ≈ 256.7 ≤ 300
+        linarith [pow_nonneg hs_nn 3]
+
 end
