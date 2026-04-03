@@ -108,6 +108,14 @@ omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 lemma logSeriesTerm_zero (x : 𝔸) : logSeriesTerm (𝕂 := 𝕂) x 0 = x := by
   simp [logSeriesTerm]
 
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+@[simp]
+lemma logSeriesTerm_one (x : 𝔸) :
+    logSeriesTerm (𝕂 := 𝕂) x 1 = -((2 : 𝕂)⁻¹ • x ^ 2) := by
+  simp [logSeriesTerm, pow_succ]
+  ring
+
 /-! ### Norm bound for the full series -/
 
 include 𝕂 in
@@ -155,6 +163,40 @@ theorem norm_logOnePlus_sub_le (x : 𝔸) (hx : ‖x‖ < 1) :
   calc ‖logSeriesTerm (𝕂 := 𝕂) x (n + 1)‖
       ≤ ‖x‖ ^ (n + 1 + 1) := norm_logSeriesTerm_le (𝕂 := 𝕂) x (n + 1)
     _ = ‖x‖ ^ (n + 2) := by ring_nf
+
+/-! ### Remainder bound (log minus linear and quadratic terms) -/
+
+include 𝕂 in
+/-- The double-shifted series `∑'_{n≥2} logSeriesTerm x n` is summable when `‖x‖ < 1`. -/
+lemma summable_logSeriesTerm_shift2 (x : 𝔸) (hx : ‖x‖ < 1) :
+    Summable (fun n => logSeriesTerm (𝕂 := 𝕂) x (n + 2)) :=
+  (summable_nat_add_iff (f := logSeriesTerm (𝕂 := 𝕂) x) 2).mpr
+    (summable_logSeriesTerm (𝕂 := 𝕂) x hx)
+
+include 𝕂 in
+/-- `log(1+x) - x + x²/2 = ∑' n, logSeriesTerm x (n+2)`. -/
+lemma logOnePlus_sub_sub_eq_tsum (x : 𝔸) (hx : ‖x‖ < 1) :
+    logOnePlus (𝕂 := 𝕂) x - x + (2 : 𝕂)⁻¹ • x ^ 2 =
+      ∑' n, logSeriesTerm (𝕂 := 𝕂) x (n + 2) := by
+  have hsumm := summable_logSeriesTerm_shift (𝕂 := 𝕂) x hx
+  rw [logOnePlus_sub_eq_tsum (𝕂 := 𝕂) x hx, hsumm.tsum_eq_zero_add,
+      logSeriesTerm_one (𝕂 := 𝕂)]
+  abel
+
+include 𝕂 in
+/-- `‖log(1+x) - x + x²/2‖ ≤ ‖x‖³/(1-‖x‖)` when `‖x‖ < 1`. -/
+theorem norm_logOnePlus_sub_sub_le (x : 𝔸) (hx : ‖x‖ < 1) :
+    ‖logOnePlus (𝕂 := 𝕂) x - x + (2 : 𝕂)⁻¹ • x ^ 2‖ ≤ ‖x‖ ^ 3 / (1 - ‖x‖) := by
+  rw [logOnePlus_sub_sub_eq_tsum (𝕂 := 𝕂) x hx, div_eq_mul_inv]
+  have h_geom := (hasSum_geometric_of_lt_one (norm_nonneg x) hx).mul_left (‖x‖ ^ 3)
+  have h_eq : (fun i => ‖x‖ ^ 3 * ‖x‖ ^ i) = (fun i => ‖x‖ ^ (i + 3)) := by
+    ext n; ring
+  rw [h_eq] at h_geom
+  apply tsum_of_norm_bounded h_geom
+  intro n
+  calc ‖logSeriesTerm (𝕂 := 𝕂) x (n + 2)‖
+      ≤ ‖x‖ ^ (n + 2 + 1) := norm_logSeriesTerm_le (𝕂 := 𝕂) x (n + 2)
+    _ = ‖x‖ ^ (n + 3) := by ring_nf
 
 /-! ### The exp ∘ log identity -/
 
