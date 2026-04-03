@@ -25,6 +25,7 @@ satisfying `exp(Z) = exp(a) · exp(b)`, defined for ‖a‖ + ‖b‖ < ln 2.
 -/
 
 import BCH.LogSeries
+import Mathlib.Algebra.Lie.OfAssociative
 
 noncomputable section
 
@@ -1348,5 +1349,37 @@ theorem norm_symmetric_bch_sub_add_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 
             _ = 160 / 11 * s ^ 3 := by ring
         -- Total: 240 + 24/11 + 160/11 = 240 + 184/11 ≈ 256.7 ≤ 300
         linarith [pow_nonneg hs_nn 3]
+
+/-! ### Lie bracket formulation of BCH results -/
+
+/-- The Lie bracket `⁅a, b⁆` in an associative ring equals the ring commutator `a*b - b*a`.
+This is `LieRing.of_associative_ring_bracket` from Mathlib, restated here for convenience. -/
+theorem lie_eq_commutator (a b : 𝔸) : ⁅a, b⁆ = a * b - b * a :=
+  LieRing.of_associative_ring_bracket a b
+
+include 𝕂 in
+/-- **BCH commutator extraction (Lie bracket form)**:
+`bch(a,b) = a + b + ½⁅a,b⁆ + O(s³)`. -/
+theorem norm_bch_sub_add_sub_lie_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Real.log 2) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • ⁅a, b⁆‖ ≤
+      10 * (‖a‖ + ‖b‖) ^ 3 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  rw [lie_eq_commutator]
+  exact norm_bch_sub_add_sub_bracket_le (𝕂 := 𝕂) a b hab
+
+include 𝕂 in
+/-- **Symmetric BCH (Lie bracket form)**: The Strang splitting has cubic error,
+with the `⁅a/2, b⁆` term cancelling. -/
+theorem norm_symmetric_bch_sub_add_lie_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) - (a + b)‖ ≤
+      300 * (‖a‖ + ‖b‖) ^ 3 :=
+  norm_symmetric_bch_sub_add_le (𝕂 := 𝕂) a b hab
+
+include 𝕂 in
+/-- The BCH quadratic bound in Lie bracket notation:
+`‖bch(a,b) - (a+b)‖ ≤ 3s²/(2-eˢ)`, i.e., the leading error is `½⁅a,b⁆`. -/
+theorem norm_bch_sub_add_le' (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Real.log 2) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b)‖ ≤
+      3 * (‖a‖ + ‖b‖) ^ 2 / (2 - Real.exp (‖a‖ + ‖b‖)) :=
+  norm_bch_sub_add_le (𝕂 := 𝕂) a b hab
 
 end

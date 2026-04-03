@@ -9,6 +9,7 @@
 - [x] **Phase 2: Quadratic BCH bound** — `‖bch(a,b) - (a+b)‖ ≤ 3s²/(2 - eˢ)` where `s = ‖a‖ + ‖b‖`
 - [x] **H1: Commutator extraction** — `‖bch(a,b) - (a+b) - [a,b]/2‖ ≤ 10s³/(2 - eˢ)` (cubic remainder bound)
 - [x] **H2: Symmetric BCH** — `‖bch(bch(a/2,b),a/2) - (a+b)‖ ≤ 300s³` for `s < 1/4` (Strang splitting)
+- [x] **M1: Lie bracket bridge** — `⁅a,b⁆ = a*b - b*a` via Mathlib's `LieRing.ofAssociativeRing`; BCH results restated with `⁅·,·⁆`
 
 ## High priority
 
