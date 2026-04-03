@@ -4,6 +4,20 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-04-02: M1 + documentation — Lie bracket bridge, README, CLAUDE.md
+
+**What:** Added Lie bracket notation wrappers (`norm_bch_sub_add_sub_lie_le`, etc.)
+via `import Mathlib.Algebra.Lie.OfAssociative`. Updated README with full results table,
+relation to [Lean-Trotter](https://github.com/Jue-Xu/Lean-Trotter) project, and file structure.
+Created CLAUDE.md with project constraints and key techniques.
+
+**Lean-Trotter connection:**
+- Lean-Trotter proves first-order Lie–Trotter and second-order Strang via direct exp bounds
+- Lean-BCH H2 gives an alternative BCH-based proof that Strang is second-order
+- Lean-BCH H1 provides the commutator extraction needed for fourth-order Suzuki S₄ (future)
+
+---
+
 ## 2026-04-02: H2 complete — Symmetric BCH (Strang splitting), 0 sorry's
 
 **What:** Proved `norm_symmetric_bch_sub_add_le`: the cubic remainder bound

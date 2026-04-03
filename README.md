@@ -2,34 +2,56 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-lightblue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A Lean 4 formalization of the **Baker-Campbell-Hausdorff (BCH) formula** for complete normed algebras.
+A Lean 4 formalization of the **Baker-Campbell-Hausdorff (BCH) formula** for complete normed algebras, with applications to product formula error analysis.
 
-**Truncated BCH to order 3:**
+## Main Results
 
-$$e^A \cdot e^B = e^{A + B + \frac{[A,B]}{2} + R_3}, \qquad \|R_3\| \le C(\|A\|^2\|B\| + \|A\|\|B\|^2)\, e^{\|A\|+\|B\|}$$
+All theorems are proved for a general complete normed algebra `𝔸` over `ℝ` or `ℂ`, with **0 sorry's**.
 
-where $[A,B] = AB - BA$ is the ring commutator.
+### Structural BCH theorem
+$$e^{\mathrm{bch}(A,B)} = e^A \cdot e^B \qquad \text{for } \|A\|+\|B\| < \ln 2$$
 
-## Status
+### Commutator extraction (H1)
+$$\left\| \mathrm{bch}(A,B) - (A+B) - \tfrac{1}{2}[A,B] \right\| \le \frac{10\, s^3}{2 - e^s}, \qquad s = \|A\|+\|B\|$$
 
-**Work in progress.**
+where $[A,B] = AB - BA$ is the Lie bracket. This shows the leading non-commutative correction is $\frac{1}{2}[A,B]$, with a cubic remainder.
 
-## Goals
+### Symmetric BCH / Strang splitting (H2)
+$$\left\| \mathrm{bch}\bigl(\mathrm{bch}(\tfrac{A}{2}, B),\, \tfrac{A}{2}\bigr) - (A+B) \right\| \le 300\, s^3, \qquad s = \|A\|+\|B\| < \tfrac{1}{4}$$
 
-1. **Truncated BCH bounds** — Prove the first few terms of the BCH expansion with explicit error bounds in a general Banach algebra setting. Not the full infinite series (which involves Bernoulli numbers and iterated commutators), but enough for applications.
+The commutator $[A/2, B]$ from the two BCH applications **cancels**, leaving only a cubic remainder. This is the key property making the Strang splitting a second-order integrator.
 
-2. **Symmetric BCH** — Prove $e^{A/2} e^B e^{A/2} = e^{A+B+c_3[A,[A,B]]+O(\|A\|^3\|B\|)}$ with explicit $c_3$.
+### Supporting results
+- `exp_logOnePlus`: $\exp(\log(1+x)) = 1+x$ for $\|x\| < 1$ (ODE/constancy argument)
+- `logOnePlus_exp_sub_one`: $\log(1+\exp(a)-1) = a$ for $\|a\| < \ln 2$ (chain-of-neighborhoods)
+- `norm_bch_sub_add_le`: $\|\mathrm{bch}(A,B) - (A+B)\| \le 3s^2/(2-e^s)$ (quadratic bound)
+- Lie bracket bridge: all results restated with Mathlib's `⁅·,·⁆` notation
 
-3. **Bridge Lie algebra ↔ exp** — Connect Mathlib's algebraic Lie bracket `⁅·,·⁆` (`Mathlib.Algebra.Lie`) to the analytic exponential (`Mathlib.Analysis.Normed.Algebra.Exponential`).
+## Relation to Lean-Trotter
 
-## Applications
+This project provides the **BCH infrastructure** for the [Lean-Trotter](https://github.com/Jue-Xu/Lean-Trotter) formalization of the Lie–Trotter product formula.
 
-- [Lean-Trotter](https://github.com/Jue-Xu/Lean-Trotter): Fourth-order Suzuki formula (requires the symmetric BCH to show third-order error cancellation)
-- Lie group integrators, Magnus expansion, Zassenhaus formula
+| Formula | Order | BCH result used | Project |
+|---------|-------|-----------------|---------|
+| Lie–Trotter: $(e^{A/n} e^{B/n})^n \to e^{A+B}$ | 1st | Direct exp bounds | [Lean-Trotter](https://github.com/Jue-Xu/Lean-Trotter) |
+| Strang: $(e^{A/2n} e^{B/n} e^{A/2n})^n \to e^{A+B}$ | 2nd | **H2** (symmetric BCH, cubic error) | Lean-BCH |
+| Suzuki S₄ | 4th | **H1** (commutator extraction) + higher-order BCH | Future work |
+
+The Lean-Trotter project currently proves the first-order Lie–Trotter formula and second-order Strang splitting using direct exp bounds. The BCH approach here gives a cleaner route to higher-order splittings: the commutator extraction (H1) identifies the $[A,B]/2$ correction, and the symmetric BCH (H2) shows its cancellation in the Strang splitting. The fourth-order Suzuki integrator S₄ would require knowing the exact third-order BCH coefficient to verify the error cancellation in the S₄ composition.
+
+## File Structure
+
+```
+BCH/
+├── LogSeries.lean    ← log(1+x) series, summability, exp∘log identity (575 lines)
+└── Basic.lean        ← BCH definition, all bounds, H1, H2, Lie bridge (1385 lines)
+```
+
+Total: ~1960 lines, 0 sorry's.
 
 ## Building
 
-Requires [Lean 4](https://leanprover.github.io/) (v4.29.0-rc8) and [Mathlib](https://github.com/leanprover-community/mathlib4).
+Requires [Lean 4](https://leanprover.github.io/) and [Mathlib](https://github.com/leanprover-community/mathlib4).
 
 ```bash
 lake update
