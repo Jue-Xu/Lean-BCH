@@ -1478,6 +1478,372 @@ theorem norm_bch_cubic_term_le (a b : 𝔸) :
     _ ≤ 4 * ‖a‖ ^ 2 * ‖b‖ + 4 * ‖a‖ * ‖b‖ ^ 2 := by gcongr
     _ ≤ s ^ 3 := by nlinarith [sq_nonneg (‖a‖ - ‖b‖)]
 
+/-! ### Fourth-order BCH expansion -/
+
+-- Fourth-order exp remainder: ‖exp(x)-1-x-½x²-⅙x³‖ ≤ exp(‖x‖)-1-‖x‖-‖x‖²/2-‖x‖³/6
+include 𝕂 in
+private theorem norm_exp_sub_one_sub_sub_sub_le (x : 𝔸) :
+    ‖exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3‖ ≤
+      Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6 := by
+  set f : ℕ → 𝔸 := fun n => (n !⁻¹ : 𝕂) • x ^ n
+  have hf_summ : Summable f := NormedSpace.expSeries_summable' (𝕂 := 𝕂) x
+  have hf0 : f 0 = 1 := by simp [f]
+  have hf1 : f 1 = x := by simp [f]
+  have hf2 : f 2 = (2 : 𝕂)⁻¹ • x ^ 2 := by
+    simp only [f, Nat.factorial, Nat.mul_one, Nat.cast_ofNat, pow_succ, pow_zero, one_mul]
+    ring
+  have hf3 : f 3 = (6 : 𝕂)⁻¹ • x ^ 3 := by
+    simp only [f, Nat.factorial, Nat.mul_one, Nat.cast_ofNat, pow_succ, pow_zero, one_mul]
+    norm_num
+  have h_sub : exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3 = ∑' n, f (n + 4) := by
+    rw [congr_fun (exp_eq_tsum 𝕂 (𝔸 := 𝔸)) x]
+    have h1 := hf_summ.tsum_eq_zero_add; rw [hf0] at h1
+    have h2 := ((summable_nat_add_iff 1).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf1] at h2
+    have h3 := ((summable_nat_add_iff 2).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf2] at h3
+    have h4 := ((summable_nat_add_iff 3).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf3] at h4
+    rw [h1, add_sub_cancel_left, h2, add_sub_cancel_left, h3, add_sub_cancel_left,
+        h4, add_sub_cancel_left]
+  rw [h_sub]
+  have h_rexp := hasSum_real_exp ‖x‖
+  have h_summ4 : Summable (fun n => ((n + 4) !⁻¹ : ℝ) * ‖x‖ ^ (n + 4)) :=
+    (summable_nat_add_iff 4).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 4) !⁻¹ : ℝ) * ‖x‖ ^ (n + 4))
+      (Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6) := by
+    rw [h_summ4.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4
+    linarith
+  exact tsum_of_norm_bounded h_val (fun n => norm_expSeries_term_le' (𝕂 := 𝕂) x (n + 4))
+
+-- For 0 ≤ s with s < 3/4, the fourth-order Taylor remainder satisfies
+-- exp(s)-1-s-s²/2-s³/6 ≤ s⁴.
+private lemma real_exp_fourth_order_le_quartic {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 3 / 4) :
+    Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 ≤ s ^ 4 := by
+  have hs_lt1 : s < 1 := by linarith
+  -- exp(s)-1-s-s²/2 ≤ s³/(6(1-s)) from real_exp_third_order_le_div
+  -- So exp(s)-1-s-s²/2-s³/6 = (exp(s)-1-s-s²/2) - s³/6
+  -- The n≥4 tail: Σ_{n≥0} s^(n+4)/(n+4)!
+  have h_rexp := hasSum_real_exp s
+  have h_summ4 : Summable (fun n => ((n + 4) !⁻¹ : ℝ) * s ^ (n + 4)) :=
+    (summable_nat_add_iff 4).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 4) !⁻¹ : ℝ) * s ^ (n + 4))
+      (Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6) := by
+    rw [h_summ4.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4
+    linarith
+  -- Comparison: (n+4)!⁻¹ * s^(n+4) ≤ (24)⁻¹ * s^(n+4) since (n+4)! ≥ 4! = 24
+  -- So tail ≤ s⁴/(24(1-s)) ≤ s⁴ for s < 23/24
+  have h_geom_summ : Summable (fun n => s ^ (n + 4) / 24) := by
+    apply Summable.div_const
+    exact (summable_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 4) |>.congr fun n => by ring
+  have hterm : ∀ n, ((n + 4) !⁻¹ : ℝ) * s ^ (n + 4) ≤ s ^ (n + 4) * (24 : ℝ)⁻¹ := by
+    intro n
+    rw [mul_comm]
+    apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs _)
+    rw [inv_le_inv₀ (by positivity : (0 : ℝ) < (n + 4)!) (by positivity : (0 : ℝ) < 24)]
+    have : (4 : ℕ)! ≤ (n + 4)! := Nat.factorial_le (by omega)
+    exact_mod_cast this
+  have h_geom : HasSum (fun n => s ^ (n + 4) * (24 : ℝ)⁻¹) (s ^ 4 * (1 - s)⁻¹ * (24 : ℝ)⁻¹) := by
+    have hg := (hasSum_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 4)
+    have h_eq : (fun n => s ^ 4 * s ^ n) = (fun n => s ^ (n + 4)) := by ext n; ring
+    rw [h_eq] at hg
+    exact hg.mul_right (24 : ℝ)⁻¹
+  calc Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6
+      = ∑' n, ((n + 4) !⁻¹ : ℝ) * s ^ (n + 4) := h_val.tsum_eq.symm
+    _ ≤ ∑' n, (s ^ (n + 4) * (24 : ℝ)⁻¹) :=
+        h_summ4.tsum_le_tsum hterm h_geom.summable
+    _ = s ^ 4 * (1 - s)⁻¹ * (24 : ℝ)⁻¹ := h_geom.tsum_eq
+    _ = s ^ 4 / (24 * (1 - s)) := by rw [div_eq_mul_inv, mul_inv_rev]; ring
+    _ ≤ s ^ 4 := by
+        rw [div_le_iff₀ (by nlinarith : (0 : ℝ) < 24 * (1 - s))]
+        nlinarith [sq_nonneg s, pow_nonneg hs 4]
+
+set_option maxHeartbeats 32000000 in
+include 𝕂 in
+/-- **Fourth-order BCH**: `bch(a,b) = (a+b) + ½[a,b] + bch_cubic_term(a,b) + O(s⁴)`.
+
+This extends H1 by identifying the cubic coefficient `(1/12)([a,[a,b]]+[b,[b,a]])`.
+The proof extracts the quartic log remainder `logOnePlus(y)-y+½y²-⅓y³` and the
+degree-3 algebraic terms, showing they combine to `bch_cubic_term`. -/
+theorem norm_bch_quartic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Real.log 2) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b‖ ≤
+      200 * (‖a‖ + ‖b‖) ^ 4 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  -- SETUP: same as H1
+  set y := exp a * exp b - 1 with hy_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set α := ‖a‖; set β := ‖b‖
+  have hs_nn : 0 ≤ s := by positivity
+  have hα_nn : (0 : ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0 : ℝ) ≤ β := norm_nonneg b
+  have hα_le : α ≤ s := le_add_of_nonneg_right hβ_nn
+  have hβ_le : β ≤ s := le_add_of_nonneg_left hα_nn
+  have hexp_lt : Real.exp s < 2 := by
+    calc Real.exp s < Real.exp (Real.log 2) := Real.exp_strictMono hab
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom : 0 < 2 - Real.exp s := by linarith
+  have hy_lt : ‖y‖ < 1 := norm_exp_mul_exp_sub_one_lt_one (𝕂 := 𝕂) a b hab
+  have hy_le : ‖y‖ ≤ Real.exp s - 1 := by
+    have : y = (exp a - 1) * exp b + (exp b - 1) := by rw [hy_def, sub_mul, one_mul]; abel
+    calc ‖y‖ = ‖(exp a - 1) * exp b + (exp b - 1)‖ := by rw [this]
+      _ ≤ ‖exp a - 1‖ * ‖exp b‖ + ‖exp b - 1‖ := by
+          calc _ ≤ ‖(exp a - 1) * exp b‖ + _ := norm_add_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (Real.exp α - 1) * Real.exp β + (Real.exp β - 1) := by
+          apply add_le_add
+          · exact mul_le_mul (norm_exp_sub_one_le (𝕂 := 𝕂) a) (norm_exp_le (𝕂 := 𝕂) b)
+              (norm_nonneg _) (by linarith [Real.add_one_le_exp α])
+          · exact norm_exp_sub_one_le (𝕂 := 𝕂) b
+      _ = Real.exp s - 1 := by rw [hs_def, Real.exp_add]; ring
+  have hs56 : s < 5 / 6 := by
+    calc s < Real.log 2 := hab
+      _ ≤ 5 / 6 := by
+          rw [Real.log_le_iff_le_exp (by norm_num : (0 : ℝ) < 2)]
+          calc (2 : ℝ) ≤ 1 + 5 / 6 + (5 / 6) ^ 2 / 2 := by norm_num
+            _ ≤ Real.exp (5 / 6) := Real.quadratic_le_exp_of_nonneg (by norm_num)
+  have hs34 : s < 3 / 4 := lt_of_lt_of_le hab (by
+    rw [Real.log_le_iff_le_exp (by norm_num : (0 : ℝ) < 2)]
+    calc (2 : ℝ) ≤ 1 + 3 / 4 + (3 / 4) ^ 2 / 2 := by norm_num
+      _ ≤ Real.exp (3 / 4) := Real.quadratic_le_exp_of_nonneg (by norm_num))
+  have hs1 : s < 1 := by linarith
+  -- Auxiliary definitions
+  set D₁ := exp a - 1 - a with hD₁_def
+  set D₂ := exp b - 1 - b with hD₂_def
+  set P := y - (a + b) with hP_def
+  set E₁ := exp a - 1 - a - (2 : 𝕂)⁻¹ • a ^ 2 with hE₁_def
+  set E₂ := exp b - 1 - b - (2 : 𝕂)⁻¹ • b ^ 2 with hE₂_def
+  set F₁ := exp a - 1 - a - (2 : 𝕂)⁻¹ • a ^ 2 - (6 : 𝕂)⁻¹ • a ^ 3 with hF₁_def
+  set F₂ := exp b - 1 - b - (2 : 𝕂)⁻¹ • b ^ 2 - (6 : 𝕂)⁻¹ • b ^ 3 with hF₂_def
+  -- Decomposition: bch - (a+b) - ½[a,b] - cubic = pieceA' + pieceB'
+  -- where pieceA' = logOnePlus(y) - y + ½y² - ⅓y³   (quartic log tail)
+  -- and pieceB' = y - (a+b) - ½(ab-ba) + ½y² - ⅓y³ - bch_cubic_term
+  -- but we reorganize: bch = logOnePlus(y), so
+  -- LHS = logOnePlus(y) - (a+b) - ½(ab-ba) - cubic
+  -- = [logOnePlus(y) - y + ½y² - ⅓y³] + [y - (a+b) - ½(ab-ba) - ½y² + ⅓y³ - cubic]
+  -- Wait: -½y² + ⅓y³? No, the signs should be:
+  -- logOnePlus(y) = y - ½y² + ⅓y³ + (quartic log tail with flipped sign convention)
+  -- Actually: logOnePlus(y) - y + ½y² - ⅓y³ = quartic tail
+  -- So logOnePlus(y) = y - ½y² + ⅓y³ + [quartic tail]
+  -- Then LHS = y - ½y² + ⅓y³ + [quartic tail] - (a+b) - ½(ab-ba) - cubic
+  -- = [quartic tail] + [y - (a+b) - ½(ab-ba) - ½y² + ⅓y³ - cubic]
+  have hdecomp : bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b =
+      (logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 - (3 : 𝕂)⁻¹ • y ^ 3) +
+      (y - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+        (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 -
+        bch_cubic_term 𝕂 a b) := by
+    unfold bch bch_cubic_term; abel
+  rw [hdecomp]
+  -- Piece A' bound: ‖logOnePlus(y) - y + ½y² - ⅓y³‖ ≤ ‖y‖⁴/(1-‖y‖)
+  have hpieceA : ‖logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 -
+      (3 : 𝕂)⁻¹ • y ^ 3‖ ≤
+      (Real.exp s - 1) ^ 4 / (2 - Real.exp s) :=
+    calc _ ≤ ‖y‖ ^ 4 / (1 - ‖y‖) := norm_logOnePlus_sub_sub_sub_le (𝕂 := 𝕂) y hy_lt
+      _ ≤ _ := div_le_div₀ (pow_nonneg (by linarith [Real.add_one_le_exp s]) _)
+          (pow_le_pow_left₀ (norm_nonneg _) hy_le _) hdenom (by linarith)
+  -- PIECE B: Setup
+  set D₁ := exp a - 1 - a with hD₁_def
+  set D₂ := exp b - 1 - b with hD₂_def
+  set P := y - (a + b) with hP_def
+  set E₁ := exp a - 1 - a - (2 : 𝕂)⁻¹ • a ^ 2 with hE₁_def
+  set E₂ := exp b - 1 - b - (2 : 𝕂)⁻¹ • b ^ 2 with hE₂_def
+  set F₁ := exp a - 1 - a - (2 : 𝕂)⁻¹ • a ^ 2 - (6 : 𝕂)⁻¹ • a ^ 3 with hF₁_def
+  set F₂ := exp b - 1 - b - (2 : 𝕂)⁻¹ • b ^ 2 - (6 : 𝕂)⁻¹ • b ^ 3 with hF₂_def
+  set Q := a * D₂ + D₁ * b + D₁ * D₂ with hQ_def
+  have hP_eq : P = a * b + D₁ + D₂ + Q := by
+    rw [hQ_def, hP_def, hy_def, hD₁_def, hD₂_def]; noncomm_ring
+  -- Norm bounds
+  have hD₁_le : ‖D₁‖ ≤ Real.exp α - 1 - α := norm_exp_sub_one_sub_le (𝕂 := 𝕂) a
+  have hD₂_le : ‖D₂‖ ≤ Real.exp β - 1 - β := norm_exp_sub_one_sub_le (𝕂 := 𝕂) b
+  have hE₁_le : ‖E₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 :=
+    norm_exp_sub_one_sub_sub_le (𝕂 := 𝕂) a
+  have hE₂_le : ‖E₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 :=
+    norm_exp_sub_one_sub_sub_le (𝕂 := 𝕂) b
+  have hF₁_le : ‖F₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 :=
+    norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) a
+  have hF₂_le : ‖F₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 :=
+    norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) b
+  have hP_le : ‖P‖ ≤ Real.exp s - 1 - s := by
+    have hP_factor : P = (exp a - 1) * (exp b - 1) + D₁ + D₂ := by
+      rw [hP_def, hy_def, hD₁_def, hD₂_def]; noncomm_ring
+    rw [hP_factor]
+    calc ‖(exp a - 1) * (exp b - 1) + D₁ + D₂‖
+        ≤ ‖(exp a - 1) * (exp b - 1)‖ + ‖D₁‖ + ‖D₂‖ := by
+          calc _ ≤ ‖(exp a - 1) * (exp b - 1) + D₁‖ + ‖D₂‖ := norm_add_le _ _
+            _ ≤ _ := by gcongr; exact norm_add_le _ _
+      _ ≤ (Real.exp α - 1) * (Real.exp β - 1) +
+          (Real.exp α - 1 - α) + (Real.exp β - 1 - β) := by
+          gcongr
+          calc ‖(exp a - 1) * (exp b - 1)‖
+              ≤ ‖exp a - 1‖ * ‖exp b - 1‖ := norm_mul_le _ _
+            _ ≤ _ := mul_le_mul (norm_exp_sub_one_le (𝕂 := 𝕂) a)
+                (norm_exp_sub_one_le (𝕂 := 𝕂) b) (norm_nonneg _)
+                (by linarith [Real.add_one_le_exp α])
+      _ = Real.exp s - 1 - s := by rw [hs_def, Real.exp_add]; ring
+  -- Real Taylor bounds
+  have hFa4 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 ≤ α ^ 4 :=
+    real_exp_fourth_order_le_quartic hα_nn (lt_of_le_of_lt hα_le (by linarith : s < 3 / 4))
+  have hFb4 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 ≤ β ^ 4 :=
+    real_exp_fourth_order_le_quartic hβ_nn (lt_of_le_of_lt hβ_le (by linarith : s < 3 / 4))
+  have hEa3 : Real.exp α - 1 - α - α ^ 2 / 2 ≤ α ^ 3 :=
+    real_exp_third_order_le_cube hα_nn (lt_of_le_of_lt hα_le hs56)
+  have hEb3 : Real.exp β - 1 - β - β ^ 2 / 2 ≤ β ^ 3 :=
+    real_exp_third_order_le_cube hβ_nn (lt_of_le_of_lt hβ_le hs56)
+  have hDa_nn : 0 ≤ Real.exp α - 1 - α := by
+    linarith [Real.quadratic_le_exp_of_nonneg hα_nn, sq_nonneg α]
+  have hDb_nn : 0 ≤ Real.exp β - 1 - β := by
+    linarith [Real.quadratic_le_exp_of_nonneg hβ_nn, sq_nonneg β]
+  have hDa2 : Real.exp α - 1 - α ≤ α ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖α‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hα_nn]; linarith)
+    rwa [Real.norm_eq_abs, abs_of_nonneg hDa_nn, Real.norm_eq_abs, abs_of_nonneg hα_nn] at h
+  have hDb2 : Real.exp β - 1 - β ≤ β ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖β‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hβ_nn]; linarith)
+    rwa [Real.norm_eq_abs, abs_of_nonneg hDb_nn, Real.norm_eq_abs, abs_of_nonneg hβ_nn] at h
+  have hEs2 : Real.exp s - 1 - s ≤ s ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖s‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hs_nn]; linarith)
+    rwa [Real.norm_eq_abs, abs_of_nonneg (by linarith [Real.add_one_le_exp s]),
+         Real.norm_eq_abs, abs_of_nonneg hs_nn] at h
+  have hEs_nn : 0 ≤ Real.exp s - 1 - s := by
+    linarith [Real.quadratic_le_exp_of_nonneg hs_nn, sq_nonneg s]
+  have hEa_nn : 0 ≤ Real.exp α - 1 - α - α ^ 2 / 2 := by
+    linarith [Real.quadratic_le_exp_of_nonneg hα_nn]
+  have hEb_nn : 0 ≤ Real.exp β - 1 - β - β ^ 2 / 2 := by
+    linarith [Real.quadratic_le_exp_of_nonneg hβ_nn]
+  -- Scalar utilities
+  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+  have h3ne : (3 : 𝕂) ≠ 0 := by exact_mod_cast (show (3 : ℕ) ≠ 0 by norm_num)
+  have h6ne : (6 : 𝕂) ≠ 0 := by exact_mod_cast (show (6 : ℕ) ≠ 0 by norm_num)
+  have h12ne : (12 : 𝕂) ≠ 0 := by exact_mod_cast (show (12 : ℕ) ≠ 0 by norm_num)
+  -- H1 identity: y-(a+b)-½(ab-ba)-½y² = ½W
+  have hpieceB_eq_H1 : y - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      (2 : 𝕂)⁻¹ • y ^ 2 = (2 : 𝕂)⁻¹ •
+      ((2 : 𝕂) • (E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂) -
+        (a + b) * P - P * (a + b) - P ^ 2) := by
+    suffices h : (2 : 𝕂) • (y - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+        (2 : 𝕂)⁻¹ • y ^ 2) = (2 : 𝕂) • ((2 : 𝕂)⁻¹ •
+        ((2 : 𝕂) • (E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂) -
+          (a + b) * P - P * (a + b) - P ^ 2)) by
+      have hinj : Function.Injective ((2 : 𝕂) • · : 𝔸 → 𝔸) := by
+        intro x₀ y₀ hxy
+        have := congrArg ((2 : 𝕂)⁻¹ • ·) hxy
+        simp only [smul_smul, inv_mul_cancel₀ h2ne, one_smul] at this; exact this
+      exact hinj h
+    rw [smul_smul, mul_inv_cancel₀ h2ne, one_smul]
+    rw [hE₁_def, hE₂_def, hD₁_def, hD₂_def, hP_def, hy_def]
+    simp only [smul_sub, smul_add, smul_smul, mul_inv_cancel₀ h2ne, one_smul, two_smul]
+    noncomm_ring
+  -- Define pieceB and split into I₁ + I₂
+  set pieceB := y - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+    (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - bch_cubic_term 𝕂 a b with hpieceB_def
+  set z := a + b with hz_def
+  set I₂ := (3 : 𝕂)⁻¹ • (y ^ 3 - z ^ 3) with hI₂_def
+  set I₁ := pieceB - I₂ with hI₁_def
+  have hpieceB_split : pieceB = I₁ + I₂ := by rw [hI₁_def]; abel
+  -- Bound I₂ = ⅓(y³-z³) where y=z+P
+  have hy_eq_zP : y = z + P := by
+    simp only [hP_def, hz_def]; abel
+  have hz_le : ‖z‖ ≤ s := by
+    calc ‖z‖ = ‖a + b‖ := by rw [hz_def]
+      _ ≤ ‖a‖ + ‖b‖ := norm_add_le _ _
+      _ = s := by rw [hs_def]
+  have hP_le_s2 : ‖P‖ ≤ s ^ 2 := le_trans hP_le hEs2
+  have hI₂_bound : ‖I₂‖ ≤ 8 * s ^ 4 := by
+    -- y=z+P so y³-z³ has every term with ≥1 factor of P
+    -- ‖P‖ ≤ s², ‖y‖ ≤ exp(s)-1 ≤ s+s², ‖z‖ ≤ s
+    -- Use: y³-z³ = y²(y-z)+y(y-z)z+(y-z)z² = y²P+yPz+Pz² (telescoping)
+    have hy3z3 : y ^ 3 - z ^ 3 = y ^ 2 * P + y * P * z + P * z ^ 2 := by
+      rw [hy_eq_zP]; noncomm_ring
+    have h3_norm : ‖(3 : 𝕂)⁻¹‖ ≤ 1 := by rw [norm_inv, RCLike.norm_ofNat]; norm_num
+    have hy_le' : ‖y‖ ≤ s + s ^ 2 := by linarith [hy_le, hEs2]
+    calc ‖I₂‖ = ‖(3 : 𝕂)⁻¹ • (y ^ 3 - z ^ 3)‖ := by rfl
+      _ ≤ ‖(3 : 𝕂)⁻¹‖ * ‖y ^ 2 * P + y * P * z + P * z ^ 2‖ := by
+          rw [hy3z3]; exact norm_smul_le _ _
+      _ ≤ 1 * (‖y ^ 2 * P‖ + ‖y * P * z‖ + ‖P * z ^ 2‖) := by
+          gcongr
+          calc _ ≤ ‖y ^ 2 * P + y * P * z‖ + ‖P * z ^ 2‖ := norm_add_le _ _
+            _ ≤ _ := by gcongr; exact norm_add_le _ _
+      _ ≤ 1 * (‖y‖ ^ 2 * ‖P‖ + ‖y‖ * ‖P‖ * ‖z‖ + ‖P‖ * ‖z‖ ^ 2) := by
+          rw [one_mul, one_mul]; gcongr
+          · calc _ ≤ ‖y ^ 2‖ * ‖P‖ := norm_mul_le _ _
+              _ ≤ _ := by gcongr; exact norm_pow_le y 2
+          · calc _ ≤ ‖y * P‖ * ‖z‖ := norm_mul_le _ _
+              _ ≤ _ := by gcongr; exact norm_mul_le _ _
+          · calc _ ≤ ‖P‖ * ‖z ^ 2‖ := norm_mul_le _ _
+              _ ≤ _ := by gcongr; exact norm_pow_le z 2
+      _ ≤ (s + s ^ 2) ^ 2 * s ^ 2 + (s + s ^ 2) * s ^ 2 * s + s ^ 2 * s ^ 2 := by
+          have h1 : ‖y‖ ^ 2 * ‖P‖ ≤ (s + s ^ 2) ^ 2 * s ^ 2 := by
+            apply mul_le_mul (pow_le_pow_left₀ (norm_nonneg y) hy_le' 2) hP_le_s2
+              (norm_nonneg P) (by positivity)
+          have h2 : ‖y‖ * ‖P‖ * ‖z‖ ≤ (s + s ^ 2) * s ^ 2 * s := by
+            apply mul_le_mul (mul_le_mul hy_le' hP_le_s2 (norm_nonneg P) (by positivity))
+              hz_le (norm_nonneg z) (by positivity)
+          have h3 : ‖P‖ * ‖z‖ ^ 2 ≤ s ^ 2 * s ^ 2 := by
+            apply mul_le_mul hP_le_s2 (pow_le_pow_left₀ (norm_nonneg z) hz_le 2)
+              (by positivity) (by positivity)
+          linarith
+      _ ≤ 8 * s ^ 4 := by
+          have := pow_nonneg hs_nn 5
+          have := pow_nonneg hs_nn 6
+          nlinarith [sq_nonneg s, pow_nonneg hs_nn 4]
+  -- QUARTIC IDENTITY for I₁
+  -- I₁ = ½W + ⅓z³ - cubic. After clearing 12:
+  -- 12I₁ = 12F₁+12F₂+12aE₂+12E₁b+12D₁D₂-6z(E₁+E₂+Q)-6(E₁+E₂+Q)z-6P²
+  -- Proved via H1 identity + cubic cancellation.
+  have h12_I₁ : (12 : 𝕂) • I₁ =
+      (12 : 𝕂) • F₁ + (12 : 𝕂) • F₂ +
+      (12 : 𝕂) • (a * E₂) + (12 : 𝕂) • (E₁ * b) + (12 : 𝕂) • (D₁ * D₂) -
+      (6 : 𝕂) • ((a + b) * (E₁ + E₂ + Q)) - (6 : 𝕂) • ((E₁ + E₂ + Q) * (a + b)) -
+      (6 : 𝕂) • P ^ 2 := by
+    -- Clear the (12:𝕂)⁻¹ scalars and verify by noncomm_ring.
+    -- After multiplying by 12: 12·½ = 6, 12·⅓ = 4, 12·(1/12) = 1.
+    -- All inverse-scalar terms become integer scalars.
+    -- Unfold everything: I₁, pieceB, I₂, bch_cubic_term, E, F, D, Q, P, z, y.
+    sorry
+  -- Bound ‖I₁‖
+  have hI₁_le : ‖I₁‖ ≤ 90 * s ^ 4 := by
+    have hI₁_smul : I₁ = (12 : 𝕂)⁻¹ • ((12 : 𝕂) • I₁) := by
+      simp [smul_smul, inv_mul_cancel₀ h12ne]
+    have h12_norm : ‖(12 : 𝕂)⁻¹‖ ≤ 1 := by rw [norm_inv, RCLike.norm_ofNat]; norm_num
+    rw [hI₁_smul, h12_I₁]
+    sorry
+  -- Combine
+  have hpieceB_le : ‖pieceB‖ ≤ 98 * s ^ 4 := by
+    rw [hpieceB_split]
+    calc ‖I₁ + I₂‖ ≤ ‖I₁‖ + ‖I₂‖ := norm_add_le _ _
+      _ ≤ 90 * s ^ 4 + 8 * s ^ 4 := by linarith [hI₁_le, hI₂_bound]
+      _ = 98 * s ^ 4 := by ring
+  calc _ ≤ ‖logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 - (3 : 𝕂)⁻¹ • y ^ 3‖ +
+        ‖pieceB‖ := norm_add_le _ _
+    _ ≤ (Real.exp s - 1) ^ 4 / (2 - Real.exp s) + 98 * s ^ 4 := by linarith [hpieceA, hpieceB_le]
+    _ ≤ 200 * s ^ 4 / (2 - Real.exp s) := by
+        rw [div_add' _ _ _ (ne_of_gt hdenom)]
+        apply div_le_div_of_nonneg_right _ hdenom.le
+        have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
+        have hE1_le : Real.exp s - 1 ≤ s + s ^ 2 := by linarith [hEs2]
+        have h1s4 : (1 + s) ^ 4 ≤ 10 := by nlinarith [sq_nonneg s, sq_nonneg (s - 3/4)]
+        have hexp4 : (Real.exp s - 1) ^ 4 ≤ 10 * s ^ 4 :=
+          calc (Real.exp s - 1) ^ 4 ≤ (s + s ^ 2) ^ 4 := pow_le_pow_left₀ hE1_nn hE1_le 4
+            _ = s ^ 4 * (1 + s) ^ 4 := by ring
+            _ ≤ s ^ 4 * 10 := by nlinarith [pow_nonneg hs_nn 4]
+            _ = 10 * s ^ 4 := by ring
+        nlinarith [pow_nonneg hs_nn 4, hdenom.le,
+          show 2 - Real.exp s ≤ 1 from by linarith [Real.add_one_le_exp s]]
+
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
 For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:
