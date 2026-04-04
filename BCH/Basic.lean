@@ -1495,20 +1495,23 @@ theorem norm_symmetric_bch_cubic_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 
   norm_symmetric_bch_sub_add_le (𝕂 := 𝕂) a b hab
 
 include 𝕂 in
-/-- **Quintic remainder for symmetric BCH**: E₃(c·a, c·b) = c³·E₃(a,b) + O(c⁵·s⁵).
+/-- **Quintic remainder for symmetric BCH**: `E₃(c·a, c·b) - c³·E₃(a,b)` is `O(|c|³·s⁵)`.
 
-This is the key property for Suzuki's cancellation: when `4p³+(1-4p)³=0`,
-the combination `4·E₃(p·a, p·b) + E₃((1-4p)·a, (1-4p)·b)` vanishes at cubic order,
-leaving only a quintic remainder.
+The `|c|³·s⁵` bound suffices for Suzuki's cancellation: when `Σᵢ cᵢ³ = 0`, the sum
+`Σᵢ E₃(cᵢ·a, cᵢ·b) = Σᵢ (E₃(cᵢ·a,cᵢ·b) - cᵢ³·E₃(a,b))` is `O(s⁵)`.
 
-The proof requires extending the BCH expansion by one order to extract the cubic
-coefficient as an explicit algebra element, then showing it factors as c³ times
-a fixed element. See CLAUDE.md for the proof strategy. -/
+The proof requires establishing that the symmetric BCH is an *odd function* of `(a,b)`:
+`bch(bch(-a/2,-b),-a/2) = -bch(bch(a/2,b),a/2)`. This follows from the triple product
+identity `exp(a/2)exp(b)exp(a/2) · exp(-a/2)exp(-b)exp(-a/2) = 1`, combined with
+commutativity of `logOnePlus(y)` and `logOnePlus((1+y)⁻¹-1)` (both are power series
+in `y`) and a chain-of-neighborhoods argument similar to `logOnePlus_exp_sub_one`.
+The oddness kills all even-degree Taylor coefficients, so extracting the cubic term
+`bch_cubic_term` (degree-3 homogeneous) leaves a quintic+ remainder. -/
 theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
     (hc : |c| ≤ 1) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖symmetric_bch_cubic 𝕂 ((↑c : 𝕂) • a) ((↑c : 𝕂) • b) -
       (↑c : 𝕂) ^ 3 • symmetric_bch_cubic 𝕂 a b‖ ≤
-      sorry := by
+      10000 * |c| ^ 3 * (‖a‖ + ‖b‖) ^ 5 := by
   sorry
 
 end
