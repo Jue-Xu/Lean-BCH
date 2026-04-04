@@ -1382,4 +1382,65 @@ theorem norm_bch_sub_add_le' (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Real.log 2)
       3 * (‖a‖ + ‖b‖) ^ 2 / (2 - Real.exp (‖a‖ + ‖b‖)) :=
   norm_bch_sub_add_le (𝕂 := 𝕂) a b hab
 
+/-! ### Suzuki infrastructure: Cubic coefficient and quintic remainder
+
+For the fourth-order Suzuki formula, we need the cubic coefficient E₃ of the
+symmetric BCH expansion, with the property that E₃(c·a, c·b) = c³·E₃(a,b).
+The Suzuki condition 4p³+(1-4p)³=0 then kills this term. -/
+
+/-- The degree-3 BCH term: `(1/12)([a,[a,b]] + [b,[b,a]])`.
+
+This is the leading cubic correction in the BCH expansion:
+`bch(a,b) = a + b + ½[a,b] + bch_cubic_term a b + O(s⁴)`. -/
+noncomputable def bch_cubic_term (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+  (12 : 𝕂)⁻¹ • (a * (a * b - b * a) - (a * b - b * a) * a) +
+  (12 : 𝕂)⁻¹ • (b * (b * a - a * b) - (b * a - a * b) * b)
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Homogeneity of bch_cubic_term**: E₃(c·a, c·b) = c³·E₃(a,b).
+This is the key property enabling Suzuki's cubic cancellation. -/
+theorem bch_cubic_term_smul (a b : 𝔸) (c : 𝕂) :
+    bch_cubic_term 𝕂 (c • a) (c • b) = c ^ 3 • bch_cubic_term 𝕂 a b := by
+  sorry
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Norm bound for bch_cubic_term. -/
+theorem norm_bch_cubic_term_le (a b : 𝔸) :
+    ‖bch_cubic_term 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 3 := by
+  sorry
+
+/-- The cubic coefficient of the *symmetric* BCH expansion.
+
+For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:
+`Z = (a+b) + symmetric_bch_cubic a b + O(s⁵)`.
+
+The quadratic commutator `[a/2,b]` cancels by symmetry (proved in H2). -/
+noncomputable def symmetric_bch_cubic (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸] (a b : 𝔸) : 𝔸 :=
+  bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) - (a + b)
+
+include 𝕂 in
+/-- The symmetric BCH cubic coefficient satisfies ‖E₃(a,b)‖ ≤ 300·s³. -/
+theorem norm_symmetric_bch_cubic_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖symmetric_bch_cubic 𝕂 a b‖ ≤ 300 * (‖a‖ + ‖b‖) ^ 3 :=
+  norm_symmetric_bch_sub_add_le (𝕂 := 𝕂) a b hab
+
+include 𝕂 in
+/-- **Quintic remainder for symmetric BCH**: E₃(c·a, c·b) = c³·E₃(a,b) + O(c⁵·s⁵).
+
+This is the key property for Suzuki's cancellation: when `4p³+(1-4p)³=0`,
+the combination `4·E₃(p·a, p·b) + E₃((1-4p)·a, (1-4p)·b)` vanishes at cubic order,
+leaving only a quintic remainder.
+
+The proof requires extending the BCH expansion by one order to extract the cubic
+coefficient as an explicit algebra element, then showing it factors as c³ times
+a fixed element. See CLAUDE.md for the proof strategy. -/
+theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
+    (hc : |c| ≤ 1) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖symmetric_bch_cubic 𝕂 ((↑c : 𝕂) • a) ((↑c : 𝕂) • b) -
+      (↑c : 𝕂) ^ 3 • symmetric_bch_cubic 𝕂 a b‖ ≤
+      sorry := by
+  sorry
+
 end
