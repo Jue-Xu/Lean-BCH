@@ -1402,13 +1402,81 @@ omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 This is the key property enabling Suzuki's cubic cancellation. -/
 theorem bch_cubic_term_smul (a b : 𝔸) (c : 𝕂) :
     bch_cubic_term 𝕂 (c • a) (c • b) = c ^ 3 • bch_cubic_term 𝕂 a b := by
-  sorry
+  -- Helper: triple product homogeneity
+  have triple : ∀ x y z : 𝔸,
+      (c • x) * ((c • y) * (c • z)) = c ^ 3 • (x * (y * z)) := by
+    intro x y z
+    simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
+    congr 1; ring
+  have triple' : ∀ x y z : 𝔸,
+      ((c • x) * (c • y)) * (c • z) = c ^ 3 • (x * y * z) := by
+    intro x y z
+    simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
+    congr 1; ring
+  unfold bch_cubic_term
+  simp only [mul_sub, sub_mul, triple, triple', ← smul_sub, smul_comm (c ^ 3) ((12 : 𝕂)⁻¹),
+    ← smul_add]
 
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- Norm bound for bch_cubic_term. -/
 theorem norm_bch_cubic_term_le (a b : 𝔸) :
     ‖bch_cubic_term 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 3 := by
-  sorry
+  unfold bch_cubic_term
+  set s := ‖a‖ + ‖b‖
+  -- Bound ‖(12:𝕂)⁻¹‖ ≤ 1
+  have h12 : ‖(12 : 𝕂)⁻¹‖ ≤ 1 := by
+    rw [norm_inv, RCLike.norm_ofNat]
+    norm_num
+  -- Bound each double commutator
+  have hab_comm : ‖a * b - b * a‖ ≤ 2 * ‖a‖ * ‖b‖ := by
+    calc ‖a * b - b * a‖ ≤ ‖a * b‖ + ‖b * a‖ := norm_sub_le _ _
+      _ ≤ ‖a‖ * ‖b‖ + ‖b‖ * ‖a‖ := by gcongr <;> exact norm_mul_le _ _
+      _ = 2 * ‖a‖ * ‖b‖ := by ring
+  have hba_comm : ‖b * a - a * b‖ ≤ 2 * ‖a‖ * ‖b‖ := by
+    calc ‖b * a - a * b‖ ≤ ‖b * a‖ + ‖a * b‖ := norm_sub_le _ _
+      _ ≤ ‖b‖ * ‖a‖ + ‖a‖ * ‖b‖ := by gcongr <;> exact norm_mul_le _ _
+      _ = 2 * ‖a‖ * ‖b‖ := by ring
+  -- First double commutator: a*[a,b] - [a,b]*a, norm ≤ 4‖a‖²‖b‖
+  have h1 : ‖a * (a * b - b * a) - (a * b - b * a) * a‖ ≤ 4 * ‖a‖ ^ 2 * ‖b‖ := by
+    calc ‖a * (a * b - b * a) - (a * b - b * a) * a‖
+        ≤ ‖a * (a * b - b * a)‖ + ‖(a * b - b * a) * a‖ := norm_sub_le _ _
+      _ ≤ ‖a‖ * ‖a * b - b * a‖ + ‖a * b - b * a‖ * ‖a‖ := by
+          gcongr <;> exact norm_mul_le _ _
+      _ ≤ ‖a‖ * (2 * ‖a‖ * ‖b‖) + (2 * ‖a‖ * ‖b‖) * ‖a‖ := by
+          gcongr
+      _ = 4 * ‖a‖ ^ 2 * ‖b‖ := by ring
+  -- Second double commutator: b*[b,a] - [b,a]*b, norm ≤ 4‖a‖‖b‖²
+  have h2 : ‖b * (b * a - a * b) - (b * a - a * b) * b‖ ≤ 4 * ‖a‖ * ‖b‖ ^ 2 := by
+    calc ‖b * (b * a - a * b) - (b * a - a * b) * b‖
+        ≤ ‖b * (b * a - a * b)‖ + ‖(b * a - a * b) * b‖ := norm_sub_le _ _
+      _ ≤ ‖b‖ * ‖b * a - a * b‖ + ‖b * a - a * b‖ * ‖b‖ := by
+          gcongr <;> exact norm_mul_le _ _
+      _ ≤ ‖b‖ * (2 * ‖a‖ * ‖b‖) + (2 * ‖a‖ * ‖b‖) * ‖b‖ := by
+          gcongr
+      _ = 4 * ‖a‖ * ‖b‖ ^ 2 := by ring
+  -- Bound the smul'd terms
+  have hs1 : ‖(12 : 𝕂)⁻¹ • (a * (a * b - b * a) - (a * b - b * a) * a)‖
+      ≤ 4 * ‖a‖ ^ 2 * ‖b‖ := by
+    calc _ ≤ ‖(12 : 𝕂)⁻¹‖ * ‖a * (a * b - b * a) - (a * b - b * a) * a‖ :=
+            norm_smul_le _ _
+      _ ≤ 1 * (4 * ‖a‖ ^ 2 * ‖b‖) := by gcongr
+      _ = 4 * ‖a‖ ^ 2 * ‖b‖ := by ring
+  have hs2 : ‖(12 : 𝕂)⁻¹ • (b * (b * a - a * b) - (b * a - a * b) * b)‖
+      ≤ 4 * ‖a‖ * ‖b‖ ^ 2 := by
+    calc _ ≤ ‖(12 : 𝕂)⁻¹‖ * ‖b * (b * a - a * b) - (b * a - a * b) * b‖ :=
+            norm_smul_le _ _
+      _ ≤ 1 * (4 * ‖a‖ * ‖b‖ ^ 2) := by gcongr
+      _ = 4 * ‖a‖ * ‖b‖ ^ 2 := by ring
+  -- Combine
+  have ha := norm_nonneg a
+  have hb := norm_nonneg b
+  calc ‖(12 : 𝕂)⁻¹ • (a * (a * b - b * a) - (a * b - b * a) * a) +
+        (12 : 𝕂)⁻¹ • (b * (b * a - a * b) - (b * a - a * b) * b)‖
+      ≤ ‖(12 : 𝕂)⁻¹ • (a * (a * b - b * a) - (a * b - b * a) * a)‖ +
+        ‖(12 : 𝕂)⁻¹ • (b * (b * a - a * b) - (b * a - a * b) * b)‖ :=
+        norm_add_le _ _
+    _ ≤ 4 * ‖a‖ ^ 2 * ‖b‖ + 4 * ‖a‖ * ‖b‖ ^ 2 := by gcongr
+    _ ≤ s ^ 3 := by nlinarith [sq_nonneg (‖a‖ - ‖b‖)]
 
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
