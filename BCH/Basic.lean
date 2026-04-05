@@ -1550,9 +1550,35 @@ private theorem quartic_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
         intro x; rw [show (6:𝕂) = 2+2+2 from by push_cast; norm_num,
           add_smul, add_smul, two_smul]; abel]
     noncomm_ring
-  -- The full identity reduces to hpure (the ea,eb terms cancel algebraically).
-  -- The connection requires distributing smul over products with nested ½ factors,
-  -- which creates non-integer scalars (like 3/2). Multiply by 24 instead of 12.
+  -- Multiply both sides by 24 to clear ALL denominators (½, ⅓, ⅙, 1/12, and ½·½)
+  have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
+  have hinj24 : Function.Injective ((24 : 𝕂) • · : 𝔸 → 𝔸) := by
+    intro x₀ y₀ hxy
+    have := congrArg ((24 : 𝕂)⁻¹ • ·) hxy
+    simp only [smul_smul, inv_mul_cancel₀ h24ne, one_smul] at this; exact this
+  apply hinj24
+  unfold bch_cubic_term
+  simp only [smul_sub, smul_add, smul_smul]
+  -- Clear all scalar products: 24·(2⁻¹)=12, 24·(3⁻¹)=8, 24·(6⁻¹)=4, 24·(12⁻¹)=2,
+  -- 24·(2⁻¹·2⁻¹)=6, etc.
+  simp only [
+    show (24 : 𝕂) * (2 : 𝕂)⁻¹ = 12 from by push_cast; norm_num,
+    show (24 : 𝕂) * (3 : 𝕂)⁻¹ = 8 from by push_cast; norm_num,
+    show (24 : 𝕂) * (6 : 𝕂)⁻¹ = 4 from by push_cast; norm_num,
+    show (24 : 𝕂) * (12 : 𝕂)⁻¹ = 2 from by push_cast; norm_num,
+    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by push_cast; norm_num,
+    show (12 : 𝕂) * (2 : 𝕂)⁻¹ = 6 from by push_cast; norm_num,
+    show (12 : 𝕂) * (6 : 𝕂)⁻¹ = 2 from by push_cast; norm_num,
+    show (12 : 𝕂) * (12 : 𝕂)⁻¹ = 1 from by
+      apply mul_inv_cancel₀; exact_mod_cast (show (12 : ℕ) ≠ 0 by norm_num),
+    show (6 : 𝕂) * (2 : 𝕂)⁻¹ = 3 from by push_cast; norm_num,
+    show (6 : 𝕂) * (6 : 𝕂)⁻¹ = 1 from by
+      apply mul_inv_cancel₀; exact_mod_cast (show (6 : ℕ) ≠ 0 by norm_num),
+    one_smul, mul_one]
+  -- The connection between hpure and the full identity requires distributing smul
+  -- over products and collecting terms. noncomm_ring can't handle the full expression
+  -- (too large or has smul structure it doesn't recognize).
+  -- The hpure lemma above proves the mathematically non-trivial part.
   sorry
 
 /-! ### Fourth-order BCH expansion -/
