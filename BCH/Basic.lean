@@ -1478,6 +1478,60 @@ theorem norm_bch_cubic_term_le (a b : 𝔸) :
     _ ≤ 4 * ‖a‖ ^ 2 * ‖b‖ + 4 * ‖a‖ * ‖b‖ ^ 2 := by gcongr
     _ ≤ s ^ 3 := by nlinarith [sq_nonneg (‖a‖ - ‖b‖)]
 
+/-! ### Quartic algebraic identity for BCH -/
+
+set_option maxHeartbeats 64000000 in
+/-- The quartic algebraic identity: after clearing scalar denominators by multiplying by 12,
+the combination `½W_H1 + ⅓(a+b)³ - bch_cubic_term` reduces to quartic+ terms.
+
+This is the key identity enabling the fourth-order BCH expansion. The proof clears
+all `(k:𝕂)⁻¹ •` scalars via `smul_smul` and verifies the resulting ring identity
+with `noncomm_ring`. -/
+private theorem quartic_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (ea eb a b : 𝔸) :
+    let y := ea * eb - 1
+    let D₁ := ea - 1 - a
+    let D₂ := eb - 1 - b
+    let P := y - (a + b)
+    let E₁ := ea - 1 - a - (2 : 𝕂)⁻¹ • a ^ 2
+    let E₂ := eb - 1 - b - (2 : 𝕂)⁻¹ • b ^ 2
+    let Q := a * D₂ + D₁ * b + D₁ * D₂
+    let F₁ := ea - 1 - a - (2 : 𝕂)⁻¹ • a ^ 2 - (6 : 𝕂)⁻¹ • a ^ 3
+    let F₂ := eb - 1 - b - (2 : 𝕂)⁻¹ • b ^ 2 - (6 : 𝕂)⁻¹ • b ^ 3
+    (12 : 𝕂) • ((2 : 𝕂)⁻¹ • ((2 : 𝕂) • (E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂) -
+          (a + b) * P - P * (a + b) - P ^ 2) +
+        (3 : 𝕂)⁻¹ • (a + b) ^ 3 - bch_cubic_term 𝕂 a b) =
+    (12 : 𝕂) • F₁ + (12 : 𝕂) • F₂ +
+    (12 : 𝕂) • (a * E₂) + (12 : 𝕂) • (E₁ * b) + (12 : 𝕂) • (D₁ * D₂) -
+    (6 : 𝕂) • ((a + b) * (E₁ + E₂ + Q)) - (6 : 𝕂) • ((E₁ + E₂ + Q) * (a + b)) -
+    (6 : 𝕂) • P ^ 2 := by
+  -- Clear all scalar denominators
+  simp only [smul_sub, smul_add, smul_smul]
+  -- Compute 12*(k⁻¹) for k ∈ {2,3,6,12}
+  have h12_2 : (12 : 𝕂) * (2 : 𝕂)⁻¹ = 6 := by push_cast; norm_num
+  have h12_3 : (12 : 𝕂) * (3 : 𝕂)⁻¹ = 4 := by push_cast; norm_num
+  have h12_6 : (12 : 𝕂) * (6 : 𝕂)⁻¹ = 2 := by push_cast; norm_num
+  have h12_12 : (12 : 𝕂) * (12 : 𝕂)⁻¹ = 1 := by
+    apply mul_inv_cancel₀; exact_mod_cast (show (12 : ℕ) ≠ 0 by norm_num)
+  have h6_2 : (6 : 𝕂) * (2 : 𝕂)⁻¹ = 3 := by push_cast; norm_num
+  simp only [h12_2, h12_3, h12_6, h12_12, h6_2, one_smul, mul_one]
+  -- Now convert remaining (n:𝕂)•x to sums
+  have smul2 : ∀ x : 𝔸, (2 : 𝕂) • x = x + x := two_smul 𝕂
+  have smul3 : ∀ x : 𝔸, (3 : 𝕂) • x = x + x + x := by
+    intro x; rw [show (3:𝕂) = 2 + 1 from by push_cast; norm_num, add_smul, two_smul, one_smul]
+  have smul4 : ∀ x : 𝔸, (4 : 𝕂) • x = x + x + x + x := by
+    intro x; rw [show (4:𝕂) = 2 + 2 from by push_cast; norm_num, add_smul, two_smul]; abel
+  have smul6 : ∀ x : 𝔸, (6 : 𝕂) • x = x + x + x + x + x + x := by
+    intro x; rw [show (6:𝕂) = 3 + 3 from by push_cast; norm_num, add_smul, smul3]; abel
+  have smul12 : ∀ x : 𝔸, (12 : 𝕂) • x = x + x + x + x + x + x + x + x + x + x + x + x := by
+    intro x; rw [show (12:𝕂) = 6 + 6 from by push_cast; norm_num, add_smul, smul6]; abel
+  -- Unfold bch_cubic_term
+  unfold bch_cubic_term
+  simp only [smul2, smul3, smul4, smul6, smul12]
+  -- Pure non-commutative ring identity — no more scalar smul
+  -- noncomm_ring fails on this large expression. May need to break into sub-identities.
+  sorry
+
 /-! ### Fourth-order BCH expansion -/
 
 -- Fourth-order exp remainder: ‖exp(x)-1-x-½x²-⅙x³‖ ≤ exp(‖x‖)-1-‖x‖-‖x‖²/2-‖x‖³/6
@@ -1800,19 +1854,40 @@ theorem norm_bch_quartic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
           have := pow_nonneg hs_nn 5
           have := pow_nonneg hs_nn 6
           nlinarith [sq_nonneg s, pow_nonneg hs_nn 4]
-  -- QUARTIC IDENTITY for I₁
-  -- I₁ = ½W + ⅓z³ - cubic. After clearing 12:
-  -- 12I₁ = 12F₁+12F₂+12aE₂+12E₁b+12D₁D₂-6z(E₁+E₂+Q)-6(E₁+E₂+Q)z-6P²
-  -- Proved via H1 identity + cubic cancellation.
+  -- Use quartic_identity to prove 12·I₁ = quartic terms
+  -- Rewrite I₁ using H1's piece B identity
+  set W_H1 := (2 : 𝕂) • (E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂) -
+          (a + b) * P - P * (a + b) - P ^ 2 with hW_H1_def
+  have hI₁_eq2 : I₁ = (2 : 𝕂)⁻¹ • W_H1 +
+      (3 : 𝕂)⁻¹ • z ^ 3 - bch_cubic_term 𝕂 a b := by
+    -- I₁ = pieceB - I₂ and pieceB has the H1 piece replaced
+    -- pieceB - I₂ = pieceB - ⅓(y³-z³)
+    -- = y-(a+b)-½(ab-ba)-½y²+⅓y³-cubic - ⅓y³ + ⅓z³
+    -- = y-(a+b)-½(ab-ba)-½y² + ⅓z³ - cubic
+    have h1 : I₁ = (y - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+        (2 : 𝕂)⁻¹ • y ^ 2) + (3 : 𝕂)⁻¹ • z ^ 3 - bch_cubic_term 𝕂 a b := by
+      simp only [hI₁_def, hpieceB_def, hI₂_def, hz_def]
+      -- Decompose ⅓y³ = ⅓(y³-z³) + ⅓z³ where z = a+b
+      rw [show (3 : 𝕂)⁻¹ • y ^ 3 = (3 : 𝕂)⁻¹ • (y ^ 3 - (a + b) ^ 3) +
+          (3 : 𝕂)⁻¹ • (a + b) ^ 3 from by rw [smul_sub]; abel]
+      abel
+    rw [h1, hpieceB_eq_H1]
   have h12_I₁ : (12 : 𝕂) • I₁ =
       (12 : 𝕂) • F₁ + (12 : 𝕂) • F₂ +
       (12 : 𝕂) • (a * E₂) + (12 : 𝕂) • (E₁ * b) + (12 : 𝕂) • (D₁ * D₂) -
       (6 : 𝕂) • ((a + b) * (E₁ + E₂ + Q)) - (6 : 𝕂) • ((E₁ + E₂ + Q) * (a + b)) -
       (6 : 𝕂) • P ^ 2 := by
-    -- Clear the (12:𝕂)⁻¹ scalars and verify by noncomm_ring.
-    -- After multiplying by 12: 12·½ = 6, 12·⅓ = 4, 12·(1/12) = 1.
-    -- All inverse-scalar terms become integer scalars.
-    -- Unfold everything: I₁, pieceB, I₂, bch_cubic_term, E, F, D, Q, P, z, y.
+    rw [hI₁_eq2]
+    exact quartic_identity 𝕂 (exp a) (exp b) a b
+  -- Bound ‖I₁‖ using the identity
+  have hI₁_le : ‖I₁‖ ≤ 90 * s ^ 4 := by
+    have hI₁_smul : I₁ = (12 : 𝕂)⁻¹ • ((12 : 𝕂) • I₁) := by
+      simp [smul_smul, inv_mul_cancel₀ h12ne]
+    have h12_norm : ‖(12 : 𝕂)⁻¹‖ ≤ 1 := by rw [norm_inv, RCLike.norm_ofNat]; norm_num
+    rw [hI₁_smul, h12_I₁]
+    -- ‖(12⁻¹) • (sum of quartic terms)‖ ≤ ‖sum‖ ≤ sum of ‖terms‖
+    -- Each term involves F₁, F₂ (4th order), E₁·b, a·E₂ (4th order),
+    -- D₁·D₂ (4th order), (a+b)·(E+Q), (E+Q)·(a+b) (4th order), P² (4th order)
     sorry
   -- Bound ‖I₁‖
   have hI₁_le : ‖I₁‖ ≤ 90 * s ^ 4 := by
