@@ -1882,16 +1882,9 @@ theorem norm_bch_quartic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
     exact quartic_identity 𝕂 (exp a) (exp b) a b
   -- Bound ‖I₁‖
   have hI₁_le : ‖I₁‖ ≤ 90 * s ^ 4 := by
-    rw [hI₁_quartic]
-    -- Triangle inequality: ‖F₁+F₂+aE₂+E₁b+D₁D₂ - ½(cross) - ½P²‖
-    -- ≤ ‖F₁‖+‖F₂‖+‖aE₂‖+‖E₁b‖+‖D₁D₂‖+‖½(cross)‖+‖½P²‖
-    -- ‖F₁‖ ≤ exp(α)-1-α-α²/2-α³/6 ≤ α⁴ (quartic exp remainder)
-    -- ‖F₂‖ ≤ β⁴
-    -- ‖aE₂‖ ≤ α·(exp β-1-β-β²/2) ≤ α·β³ ≤ s⁴
-    -- ‖E₁b‖ ≤ (exp α-1-α-α²/2)·β ≤ α³·β ≤ s⁴
-    -- ‖D₁D₂‖ ≤ (exp α-1-α)(exp β-1-β) ≤ α²β² ≤ s⁴
-    -- ‖½(cross)‖ ≤ s·(‖E₁‖+‖E₂‖+‖Q‖) where ‖E‖ ≤ s³, ‖Q‖ ≤ αβ·s+s⁴ ≤ s³
-    -- ‖½P²‖ ≤ s⁴/2 (since ‖P‖ ≤ s²)
+    -- Bound from the quartic identity: I₁ is a sum of quartic+ terms.
+    -- Each term: F (4th order exp), a·E or E·b (4th order), D₁D₂ (4th order),
+    -- cross (s·3rd order = 4th order), P² (4th order).
     sorry
   -- (old hI₁_le removed — replaced by the one above using hI₁_quartic)
   -- Combine
