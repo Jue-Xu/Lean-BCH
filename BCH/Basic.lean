@@ -1504,33 +1504,55 @@ private theorem quartic_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
     F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
     (2 : 𝕂)⁻¹ • ((a + b) * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * (a + b)) -
     (2 : 𝕂)⁻¹ • P ^ 2 := by
-  -- Strategy: unfold everything including bch_cubic_term, distribute all smul,
-  -- use the H1 technique of multiplying by lcm(2,3,6,12)=12 via smul injectivity,
-  -- then noncomm_ring.
-  -- But simp+noncomm_ring on the full expression fails (too large after expanding n•x).
-  -- Instead: reduce to the H1 identity (which is already proved) plus a simpler correction.
+  -- DECOMPOSITION: reduce to a pure identity in (a,b) that noncomm_ring can handle.
   --
-  -- The LHS is: ½W + ⅓z³ - cubic where W is the H1 "piece B" inner expression.
-  -- The RHS is: F₁+F₂+aE₂+E₁b+D₁D₂ - ½((a+b)(E+Q)+(E+Q)(a+b)) - ½P²
+  -- Step 1: ½W = E₁+E₂+aD₂+D₁b+D₁D₂ - ½((a+b)P+P(a+b)+P²)
+  -- Step 2: Substitute E=F+⅙x³, aD₂=aE₂+½ab², D₁b=E₁b+½a²b
+  -- Step 3: Split (a+b)P using P=ab+D₁+D₂+Q and D=E+½x²
+  -- Step 4: After cancellation, a pure identity in a,b remains, provable by noncomm_ring.
   --
-  -- Key observation: W = 2(E₁+E₂+aD₂+D₁b+D₁D₂) - (a+b)P - P(a+b) - P²
-  -- So ½W = E₁+E₂+aD₂+D₁b+D₁D₂ - ½((a+b)P+P(a+b)+P²)
-  --
-  -- And P = ab + D₁ + D₂ + Q (from hP_eq in the main proof), so
-  -- (a+b)P = (a+b)(ab+D₁+D₂+Q) and similarly.
-  --
-  -- ½W + ⅓z³ - cubic
-  -- = [E₁+E₂+aD₂+D₁b+D₁D₂] - ½((a+b)P+P(a+b)+P²) + ⅓(a+b)³ - cubic
-  --
-  -- The cubic cancellation: E₁ = F₁ + ⅙a³, E₂ = F₂ + ⅙b³
-  -- So E₁+E₂ = F₁+F₂ + ⅙a³ + ⅙b³
-  -- And aD₂ = aE₂ + ½a·b², D₁b = E₁b + ½a²·b
-  -- So aD₂ + D₁b = aE₂ + E₁b + ½(ab²+a²b)
-  -- And (a+b)P = (a+b)(ab + ...) where the leading term is (a+b)·(ab) = a²b+ab²+bab+b²a... messy
-  --
-  -- The identity IS correct but too complex for a single noncomm_ring call.
-  -- Accept sorry for now — this is a verified-by-hand algebraic identity
-  -- that can be proved by breaking into smaller verified pieces.
+  -- The pure identity (verified by hand, all 8 noncomm monomials cancel):
+  -- ⅙a³+⅙b³+½ab²+½a²b - ½((a+b)·ab+ab·(a+b))
+  --   - ¼((a+b)(a²+b²)+(a²+b²)(a+b)) + ⅓(a+b)³ - bch_cubic_term = 0
+  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+  -- Sub-identity 1: the pure cubic identity (no ea,eb — just a,b)
+  -- After multiplying by 12 to clear denominators:
+  -- 2a³+2b³+6ab²+6a²b - 6((a+b)ab+ab(a+b)) - 3((a+b)(a²+b²)+(a²+b²)(a+b))
+  --   + 4(a+b)³ - [a,[a,b]] - [b,[b,a]] = 0
+  have hpure : (6 : 𝕂)⁻¹ • a ^ 3 + (6 : 𝕂)⁻¹ • b ^ 3 +
+      (2 : 𝕂)⁻¹ • (a * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * b) -
+      (2 : 𝕂)⁻¹ • ((a + b) * (a * b) + a * b * (a + b)) -
+      (2 : 𝕂)⁻¹ • (2 : 𝕂)⁻¹ • ((a + b) * (a ^ 2 + b ^ 2) + (a ^ 2 + b ^ 2) * (a + b)) +
+      (3 : 𝕂)⁻¹ • (a + b) ^ 3 - bch_cubic_term 𝕂 a b = 0 := by
+    -- Multiply by 12
+    have h12ne : (12 : 𝕂) ≠ 0 := by exact_mod_cast (show (12 : ℕ) ≠ 0 by norm_num)
+    have hinj : Function.Injective ((12 : 𝕂) • · : 𝔸 → 𝔸) := by
+      intro x₀ y₀ hxy
+      have := congrArg ((12 : 𝕂)⁻¹ • ·) hxy
+      simp only [smul_smul, inv_mul_cancel₀ h12ne, one_smul] at this; exact this
+    apply hinj; simp only [smul_zero]
+    unfold bch_cubic_term
+    simp only [smul_sub, smul_add, smul_smul]
+    -- Clear scalar products: 12·(6⁻¹)=2, 12·(2⁻¹)=6, 12·(3⁻¹)=4, 12·(12⁻¹)=1,
+    -- 12·(2⁻¹·2⁻¹)=3
+    have h12_6 : (12 : 𝕂) * (6 : 𝕂)⁻¹ = 2 := by push_cast; norm_num
+    have h12_2 : (12 : 𝕂) * (2 : 𝕂)⁻¹ = 6 := by push_cast; norm_num
+    have h12_3 : (12 : 𝕂) * (3 : 𝕂)⁻¹ = 4 := by push_cast; norm_num
+    have h12_12 : (12 : 𝕂) * (12 : 𝕂)⁻¹ = 1 := mul_inv_cancel₀ h12ne
+    have h12_22 : (12 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 3 := by push_cast; norm_num
+    simp only [h12_6, h12_2, h12_3, h12_12, h12_22, one_smul, mul_one]
+    -- Now expand n•x to sums
+    simp only [two_smul 𝕂, show ∀ x : 𝔸, (3 : 𝕂) • x = x + x + x from by
+        intro x; rw [show (3:𝕂) = 2+1 from by push_cast; norm_num, add_smul, two_smul, one_smul],
+      show ∀ x : 𝔸, (4 : 𝕂) • x = x + x + x + x from by
+        intro x; rw [show (4:𝕂) = 2+2 from by push_cast; norm_num, add_smul, two_smul]; abel,
+      show ∀ x : 𝔸, (6 : 𝕂) • x = x + x + x + x + x + x from by
+        intro x; rw [show (6:𝕂) = 2+2+2 from by push_cast; norm_num,
+          add_smul, add_smul, two_smul]; abel]
+    noncomm_ring
+  -- The full identity reduces to hpure (the ea,eb terms cancel algebraically).
+  -- The connection requires distributing smul over products with nested ½ factors,
+  -- which creates non-integer scalars (like 3/2). Multiply by 24 instead of 12.
   sorry
 
 /-! ### Fourth-order BCH expansion -/
