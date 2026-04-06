@@ -1550,9 +1550,36 @@ private theorem quartic_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
         intro x; rw [show (6:𝕂) = 2+2+2 from by push_cast; norm_num,
           add_smul, add_smul, two_smul]; abel]
     noncomm_ring
-  -- Connection to full identity: sorry (noncomm_ring can't handle 4 generators at degree 4).
-  -- The mathematically non-trivial content is verified by hpure above.
-  sorry
+  -- Connection: multiply by 24, clear scalar denominators, convert to ℕ-smul, noncomm_ring.
+  dsimp only
+  unfold bch_cubic_term
+  rw [← sub_eq_zero]
+  -- Multiply by 24 to clear all denominators (deepest scalar nesting: 2⁻¹·2⁻¹·2⁻¹ = 8⁻¹)
+  have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
+  have hinj : Function.Injective ((24 : 𝕂) • · : 𝔸 → 𝔸) := by
+    intro x₀ y₀ hxy; have := congrArg ((24 : 𝕂)⁻¹ • ·) hxy
+    simp only [smul_smul, inv_mul_cancel₀ h24ne, one_smul] at this; exact this
+  apply hinj; simp only [smul_zero]
+  -- Pull all smul out of products and merge nested smuls
+  simp only [smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul, mul_sub, sub_mul]
+  -- Clear scalar products: use mul_assoc to right-associate, then cancel n*n⁻¹ and n⁻¹*n.
+  -- The h24_* lemmas handle direct products 24*c⁻¹; mul_assoc + cancel handle deeper nesting.
+  simp only [mul_assoc,
+    -- n * n⁻¹ = 1 and n⁻¹ * n = 1
+    mul_inv_cancel₀ h2ne, inv_mul_cancel₀ h2ne,
+    -- 24 * c⁻¹ products (after right-association by mul_assoc)
+    show (24 : 𝕂) * (2 : 𝕂)⁻¹ = 12 from by norm_num,
+    show (24 : 𝕂) * (3 : 𝕂)⁻¹ = 8 from by norm_num,
+    show (24 : 𝕂) * (6 : 𝕂)⁻¹ = 4 from by norm_num,
+    show (24 : 𝕂) * (12 : 𝕂)⁻¹ = 2 from by norm_num,
+    -- 24 * 2⁻¹ * 2⁻¹ (two-level nesting)
+    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by norm_num,
+    -- Cleanup
+    one_smul, mul_one]
+  -- Convert (n : 𝕂) • x to (n : ℕ) • x so noncomm_ring (which uses abel) can close.
+  simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
+  noncomm_ring
 
 /-! ### Fourth-order BCH expansion -/
 
@@ -1903,10 +1930,114 @@ theorem norm_bch_quartic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
     exact quartic_identity 𝕂 (exp a) (exp b) a b
   -- Bound ‖I₁‖
   have hI₁_le : ‖I₁‖ ≤ 90 * s ^ 4 := by
-    -- Bound from the quartic identity: I₁ is a sum of quartic+ terms.
-    -- Each term: F (4th order exp), a·E or E·b (4th order), D₁D₂ (4th order),
-    -- cross (s·3rd order = 4th order), P² (4th order).
-    sorry
+    -- Bound each term in hI₁_quartic using triangle inequality + component bounds.
+    have h2_le : ‖(2 : 𝕂)⁻¹‖ ≤ 1 := by rw [norm_inv, RCLike.norm_ofNat]; norm_num
+    -- Component bounds (all ≤ s⁴)
+    have hF₁_s4 : ‖F₁‖ ≤ s ^ 4 :=
+      le_trans hF₁_le (le_trans hFa4 (pow_le_pow_left₀ hα_nn hα_le 4))
+    have hF₂_s4 : ‖F₂‖ ≤ s ^ 4 :=
+      le_trans hF₂_le (le_trans hFb4 (pow_le_pow_left₀ hβ_nn hβ_le 4))
+    have haE₂ : ‖a * E₂‖ ≤ s ^ 4 :=
+      calc ‖a * E₂‖ ≤ ‖a‖ * ‖E₂‖ := norm_mul_le _ _
+        _ ≤ α * β ^ 3 := mul_le_mul_of_nonneg_left (le_trans hE₂_le hEb3) hα_nn
+        _ ≤ s * s ^ 3 := by nlinarith [pow_le_pow_left₀ hβ_nn hβ_le 3]
+        _ = s ^ 4 := by ring
+    have hE₁b : ‖E₁ * b‖ ≤ s ^ 4 :=
+      calc ‖E₁ * b‖ ≤ ‖E₁‖ * ‖b‖ := norm_mul_le _ _
+        _ ≤ α ^ 3 * β := mul_le_mul (le_trans hE₁_le hEa3) le_rfl hβ_nn (by positivity)
+        _ ≤ s ^ 3 * s := by nlinarith [pow_le_pow_left₀ hα_nn hα_le 3]
+        _ = s ^ 4 := by ring
+    have hDD : ‖D₁ * D₂‖ ≤ s ^ 4 :=
+      calc ‖D₁ * D₂‖ ≤ ‖D₁‖ * ‖D₂‖ := norm_mul_le _ _
+        _ ≤ α ^ 2 * β ^ 2 := mul_le_mul (le_trans hD₁_le hDa2) (le_trans hD₂_le hDb2)
+            (norm_nonneg _) (by positivity)
+        _ ≤ s ^ 2 * s ^ 2 := by
+            apply mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+              (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
+        _ = s ^ 4 := by ring
+    -- Cross term: ‖(a+b)‖ ≤ s, ‖E₁+E₂+Q‖ ≤ 5s³
+    have hQ_le : ‖Q‖ ≤ 3 * s ^ 3 := by
+      calc ‖Q‖ ≤ ‖a * D₂‖ + ‖D₁ * b‖ + ‖D₁ * D₂‖ := by
+            rw [hQ_def]; calc _ ≤ ‖a * D₂ + D₁ * b‖ + _ := norm_add_le _ _
+              _ ≤ _ := by gcongr; exact norm_add_le _ _
+        _ ≤ α * β ^ 2 + α ^ 2 * β + α ^ 2 * β ^ 2 := by
+            gcongr
+            · calc _ ≤ ‖a‖ * ‖D₂‖ := norm_mul_le _ _
+                _ ≤ _ := mul_le_mul_of_nonneg_left (le_trans hD₂_le hDb2) hα_nn
+            · calc _ ≤ ‖D₁‖ * ‖b‖ := norm_mul_le _ _
+                _ ≤ _ := mul_le_mul (le_trans hD₁_le hDa2) le_rfl hβ_nn (by positivity)
+            · calc _ ≤ ‖D₁‖ * ‖D₂‖ := norm_mul_le _ _
+                _ ≤ _ := mul_le_mul (le_trans hD₁_le hDa2) (le_trans hD₂_le hDb2)
+                    (norm_nonneg _) (by positivity)
+        _ ≤ s * s ^ 2 + s ^ 2 * s + s ^ 2 * s ^ 2 := by
+            nlinarith [pow_le_pow_left₀ hα_nn hα_le 2, pow_le_pow_left₀ hβ_nn hβ_le 2]
+        _ ≤ 3 * s ^ 3 := by nlinarith [pow_nonneg hs_nn 4]
+    have hEQ : ‖E₁ + E₂ + Q‖ ≤ 5 * s ^ 3 :=
+      calc ‖E₁ + E₂ + Q‖ ≤ ‖E₁‖ + ‖E₂‖ + ‖Q‖ := by
+            calc _ ≤ ‖E₁ + E₂‖ + ‖Q‖ := norm_add_le _ _
+              _ ≤ _ := by gcongr; exact norm_add_le _ _
+        _ ≤ α ^ 3 + β ^ 3 + 3 * s ^ 3 := by linarith [le_trans hE₁_le hEa3, le_trans hE₂_le hEb3]
+        _ ≤ s ^ 3 + s ^ 3 + 3 * s ^ 3 := by
+            nlinarith [pow_le_pow_left₀ hα_nn hα_le 3, pow_le_pow_left₀ hβ_nn hβ_le 3]
+        _ = 5 * s ^ 3 := by ring
+    -- Cross term bound
+    have hcross_inner : ‖(a + b) * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * (a + b)‖ ≤
+        10 * s ^ 4 := by
+      calc _ ≤ ‖(a + b) * (E₁ + E₂ + Q)‖ + ‖(E₁ + E₂ + Q) * (a + b)‖ := norm_add_le _ _
+        _ ≤ s * (5 * s ^ 3) + 5 * s ^ 3 * s := by
+            gcongr
+            · exact le_trans (norm_mul_le _ _) (mul_le_mul hz_le hEQ (norm_nonneg _) hs_nn)
+            · exact le_trans (norm_mul_le _ _) (mul_le_mul hEQ hz_le (norm_nonneg _)
+                (by positivity))
+        _ = 10 * s ^ 4 := by ring
+    have hcross : ‖(2 : 𝕂)⁻¹ • ((a + b) * (E₁ + E₂ + Q) +
+        (E₁ + E₂ + Q) * (a + b))‖ ≤ 10 * s ^ 4 :=
+      calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖(a + b) * (E₁ + E₂ + Q) +
+            (E₁ + E₂ + Q) * (a + b)‖ := norm_smul_le _ _
+        _ ≤ 1 * (10 * s ^ 4) := by gcongr
+        _ = 10 * s ^ 4 := one_mul _
+    have hP2 : ‖(2 : 𝕂)⁻¹ • P ^ 2‖ ≤ s ^ 4 := by
+      calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖P ^ 2‖ := norm_smul_le _ _
+        _ ≤ 1 * ‖P‖ ^ 2 := by
+            gcongr
+            exact norm_pow_le P 2
+        _ ≤ 1 * (s ^ 2) ^ 2 := by
+            apply mul_le_mul_of_nonneg_left
+            · exact pow_le_pow_left₀ (norm_nonneg P) hP_le_s2 2
+            · norm_num
+        _ = s ^ 4 := by rw [one_mul]; ring
+    -- Triangle inequality + combine all bounds
+    rw [hI₁_quartic]
+    have h1 : ‖F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+        (2 : 𝕂)⁻¹ • ((a + b) * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * (a + b)) -
+        (2 : 𝕂)⁻¹ • P ^ 2‖ ≤
+        ‖F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+        (2 : 𝕂)⁻¹ • ((a + b) * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * (a + b))‖ +
+        ‖(2 : 𝕂)⁻¹ • P ^ 2‖ := by
+      rw [show F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+        (2 : 𝕂)⁻¹ • ((a + b) * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * (a + b)) -
+        (2 : 𝕂)⁻¹ • P ^ 2 = (F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+        (2 : 𝕂)⁻¹ • ((a + b) * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * (a + b))) -
+        (2 : 𝕂)⁻¹ • P ^ 2 from by abel]
+      exact norm_sub_le _ _
+    have h2 : ‖F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+        (2 : 𝕂)⁻¹ • ((a + b) * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * (a + b))‖ ≤
+        ‖F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂‖ +
+        ‖(2 : 𝕂)⁻¹ • ((a + b) * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * (a + b))‖ :=
+      norm_sub_le _ _
+    have h3 : ‖F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂‖ ≤
+        ‖F₁‖ + ‖F₂‖ + ‖a * E₂‖ + ‖E₁ * b‖ + ‖D₁ * D₂‖ := by
+      calc _ ≤ ‖F₁ + F₂ + a * E₂ + E₁ * b‖ + ‖D₁ * D₂‖ := norm_add_le _ _
+        _ ≤ (‖F₁ + F₂ + a * E₂‖ + ‖E₁ * b‖) + ‖D₁ * D₂‖ := by gcongr; exact norm_add_le _ _
+        _ ≤ ((‖F₁ + F₂‖ + ‖a * E₂‖) + ‖E₁ * b‖) + ‖D₁ * D₂‖ := by
+            gcongr; exact norm_add_le _ _
+        _ ≤ (((‖F₁‖ + ‖F₂‖) + ‖a * E₂‖) + ‖E₁ * b‖) + ‖D₁ * D₂‖ := by
+            gcongr; exact norm_add_le _ _
+        _ = ‖F₁‖ + ‖F₂‖ + ‖a * E₂‖ + ‖E₁ * b‖ + ‖D₁ * D₂‖ := by ring
+    -- Chain: goal ≤ (h3 bound + hcross) + hP2 via h1,h2
+    -- = (5*s⁴ + 10*s⁴) + s⁴ = 16*s⁴ ≤ 90*s⁴
+    linarith [h1, h2, h3, hF₁_s4, hF₂_s4, haE₂, hE₁b, hDD, hcross, hP2,
+              pow_nonneg hs_nn 4]
   -- (old hI₁_le removed — replaced by the one above using hI₁_quartic)
   -- Combine
   have hpieceB_le : ‖pieceB‖ ≤ 98 * s ^ 4 := by
