@@ -2078,6 +2078,81 @@ theorem norm_symmetric_bch_cubic_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 
     ‖symmetric_bch_cubic 𝕂 a b‖ ≤ 300 * (‖a‖ + ‖b‖) ^ 3 :=
   norm_symmetric_bch_sub_add_le (𝕂 := 𝕂) a b hab
 
+/-! ### Oddness of symmetric BCH -/
+
+include 𝕂 in
+/-- The triple product `exp(a/2)·exp(b)·exp(a/2)` equals `exp(bch(bch(a/2,b),a/2))`. -/
+theorem exp_symmetric_bch (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    exp (bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a)) =
+    exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) := by
+  set a' := (2 : 𝕂)⁻¹ • a
+  set s := ‖a‖ + ‖b‖
+  -- Norm setup: ‖a'‖ ≤ ‖a‖/2
+  have h_half : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha' : ‖a'‖ ≤ ‖a‖ / 2 := by
+    calc ‖a'‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half]; ring
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4) (by norm_num : (1:ℝ)/4 < 5/6)]
+  -- s₁ = ‖a'‖+‖b‖ < ln 2 for first BCH
+  have hs₁ : ‖a'‖ + ‖b‖ < Real.log 2 := by linarith [norm_nonneg a]
+  -- First BCH: exp(bch(a',b)) = exp(a')*exp(b)
+  have h1 : exp (bch (𝕂 := 𝕂) a' b) = exp a' * exp b := exp_bch (𝕂 := 𝕂) a' b hs₁
+  -- s₂ = ‖bch(a',b)‖+‖a'‖ < ln 2 for second BCH
+  set z := bch (𝕂 := 𝕂) a' b
+  have hδ_le : ‖z - (a' + b)‖ ≤ 3 * (‖a'‖ + ‖b‖) ^ 2 / (2 - Real.exp (‖a'‖ + ‖b‖)) :=
+    norm_bch_sub_add_le (𝕂 := 𝕂) a' b hs₁
+  have hz_le : ‖z‖ ≤ ‖a'‖ + ‖b‖ + 3 * (‖a'‖ + ‖b‖) ^ 2 / (2 - Real.exp (‖a'‖ + ‖b‖)) := by
+    calc ‖z‖ = ‖(z - (a' + b)) + (a' + b)‖ := by congr 1; abel
+      _ ≤ ‖z - (a' + b)‖ + ‖a' + b‖ := norm_add_le _ _
+      _ ≤ 3 * (‖a'‖ + ‖b‖) ^ 2 / (2 - Real.exp (‖a'‖ + ‖b‖)) + (‖a'‖ + ‖b‖) :=
+          add_le_add hδ_le (norm_add_le a' b)
+      _ = _ := by ring
+  have hs₂ : ‖z‖ + ‖a'‖ < Real.log 2 := by
+    have hs₁_nn : 0 ≤ ‖a'‖ + ‖b‖ := by positivity
+    have hs₁_lt : ‖a'‖ + ‖b‖ < 1 / 4 := by linarith [norm_nonneg a]
+    have hexp_le : Real.exp (‖a'‖ + ‖b‖) ≤ 1 + (‖a'‖ + ‖b‖) + (‖a'‖ + ‖b‖) ^ 2 := by
+      nlinarith [real_exp_third_order_le_cube hs₁_nn (by linarith : ‖a'‖ + ‖b‖ < 5/6)]
+    have hdenom : (11 : ℝ) / 16 ≤ 2 - Real.exp (‖a'‖ + ‖b‖) := by nlinarith
+    -- ‖z‖+‖a'‖ ≤ (2‖a'‖+‖b‖) + quad ≤ s + 3/11 < 1/4+3/11 = 23/44 < 6/11 < ln 2
+    have h2a'b_le : 2 * ‖a'‖ + ‖b‖ ≤ s := by linarith
+    have hquad_bound : 3 * (‖a'‖ + ‖b‖) ^ 2 / (2 - Real.exp (‖a'‖ + ‖b‖)) ≤ 3 / 11 := by
+      rw [div_le_div_iff₀ (by linarith : 0 < 2 - Real.exp (‖a'‖ + ‖b‖)) (by norm_num : (0:ℝ) < 11)]
+      nlinarith [sq_nonneg (‖a'‖ + ‖b‖), norm_nonneg a', norm_nonneg b,
+                 sq_nonneg (1/4 - (‖a'‖ + ‖b‖))]
+    have hza : ‖z‖ + ‖a'‖ ≤ s + 3 / 11 := by linarith [hz_le]
+    -- 23/44 < 6/11 < ln 2
+    have hln2_611 : (6 : ℝ) / 11 < Real.log 2 := by
+      rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+      have := real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 6/11)
+        (by norm_num : (6:ℝ)/11 < 5/6)
+      nlinarith
+    linarith
+  -- Second BCH: exp(bch(z,a')) = exp(z)*exp(a')
+  have h2 : exp (bch (𝕂 := 𝕂) z a') = exp z * exp a' := exp_bch (𝕂 := 𝕂) z a' hs₂
+  rw [h2, h1, mul_assoc]
+
+include 𝕂 in
+/-- The symmetric BCH is an odd function: `Z(a,b) + Z(-a,-b) = 0` where
+`Z(a,b) = bch(bch(a/2,b),a/2)`. -/
+theorem symmetric_bch_add_neg (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) +
+    bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • (-a)) (-b)) ((2 : 𝕂)⁻¹ • (-a)) = 0 := by
+  sorry
+
+include 𝕂 in
+/-- The symmetric BCH cubic coefficient is an odd function:
+`E₃(-a,-b) = -E₃(a,b)`. -/
+theorem symmetric_bch_cubic_neg (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    symmetric_bch_cubic 𝕂 (-a) (-b) = -(symmetric_bch_cubic 𝕂 a b) := by
+  unfold symmetric_bch_cubic
+  have h := symmetric_bch_add_neg (𝕂 := 𝕂) a b hab
+  have hZ_neg : bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • (-a)) (-b)) ((2 : 𝕂)⁻¹ • (-a)) =
+      -(bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a)) :=
+    eq_neg_of_add_eq_zero_right h
+  rw [hZ_neg]; abel
+
 include 𝕂 in
 /-- **Quintic remainder for symmetric BCH**: `E₃(c·a, c·b) - c³·E₃(a,b)` is `O(|c|³·s⁵)`.
 
