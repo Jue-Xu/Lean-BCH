@@ -2133,13 +2133,404 @@ theorem exp_symmetric_bch (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
   have h2 : exp (bch (𝕂 := 𝕂) z a') = exp z * exp a' := exp_bch (𝕂 := 𝕂) z a' hs₂
   rw [h2, h1, mul_assoc]
 
+set_option maxHeartbeats 1600000 in
 include 𝕂 in
 /-- The symmetric BCH is an odd function: `Z(a,b) + Z(-a,-b) = 0` where
 `Z(a,b) = bch(bch(a/2,b),a/2)`. -/
 theorem symmetric_bch_add_neg (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) +
     bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • (-a)) (-b)) ((2 : 𝕂)⁻¹ • (-a)) = 0 := by
-  sorry
+  -- Chain-of-neighborhoods argument, following logOnePlus_exp_sub_one.
+  set s := ‖a‖ + ‖b‖
+  have hs_nn : 0 ≤ s := by positivity
+  set instℝ := NormedAlgebra.restrictScalars ℝ 𝕂 𝔸
+  letI : NormedAlgebra ℝ 𝔸 := instℝ
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  -- Define h(t) = Z(ta,tb) + Z(-ta,-tb)
+  -- Use -((2:𝕂)⁻¹ • (t•a)) instead of (2:𝕂)⁻¹ • (-(t•a)) for cleaner unfolding
+  set h : ℝ → 𝔸 := fun t =>
+    bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • (t • a)) (t • b)) ((2 : 𝕂)⁻¹ • (t • a)) +
+    bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) (-((2 : 𝕂)⁻¹ • (t • a))) (-(t • b)))
+      (-((2 : 𝕂)⁻¹ • (t • a)))
+  suffices h1 : h 1 = 0 by
+    -- h 1 has -((2:𝕂)⁻¹ • a) while goal has (2:𝕂)⁻¹ • (-a); convert via smul_neg
+    simp only [smul_neg]
+    simpa [h] using h1
+  -- Auxiliary constants
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
+      (by norm_num : (1:ℝ)/4 < 5/6)]
+  have h_half : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have hnorm_t : ∀ t : ℝ, 0 ≤ t → t ≤ 1 → ‖t • a‖ + ‖t • b‖ ≤ s := by
+    intro t ht0 ht1
+    calc ‖t • a‖ + ‖t • b‖ ≤ |t| * ‖a‖ + |t| * ‖b‖ := by
+          gcongr <;> exact norm_smul_le t _
+      _ = |t| * s := by ring
+      _ ≤ 1 * s := by gcongr; exact abs_le.mpr ⟨by linarith, ht1⟩
+      _ = s := one_mul s
+  -- Step 1: h(0) = 0
+  have h0 : h 0 = 0 := by
+    simp only [h, zero_smul, smul_zero, neg_zero]
+    have : bch (𝕂 := 𝕂) 0 0 = (0 : 𝔸) := by
+      unfold bch; simp [exp_zero, mul_one, logOnePlus, logSeriesTerm, tsum_zero]
+    simp [this]
+  -- Step 2: exp(h(t)) = 1 for t ∈ [0,1]
+  have hexp_ht : ∀ t : ℝ, 0 ≤ t → t ≤ 1 → exp (h t) = 1 := by
+    intro t ht0 ht1
+    set ta := t • a; set tb := t • b
+    have hts : ‖ta‖ + ‖tb‖ < 1 / 4 := lt_of_le_of_lt (hnorm_t t ht0 ht1) hab
+    have hts_neg : ‖-ta‖ + ‖-tb‖ < 1 / 4 := by rwa [norm_neg, norm_neg]
+    set a₂ := (2 : 𝕂)⁻¹ • ta
+    -- exp of symmetric bch
+    have hexpZ := exp_symmetric_bch (𝕂 := 𝕂) ta tb hts
+    have hexpZ_neg := exp_symmetric_bch (𝕂 := 𝕂) (-ta) (-tb) hts_neg
+    rw [smul_neg] at hexpZ_neg
+    set Z := bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) a₂ tb) a₂
+    set Z_neg := bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) (-a₂) (-tb)) (-a₂)
+    -- Triple product: exp(Z)*exp(Z_neg) = 1 and exp(Z_neg)*exp(Z) = 1
+    have haa : exp a₂ * exp (-a₂) = 1 := by
+      rw [← exp_add_of_commute (Commute.neg_right (Commute.refl a₂)), add_neg_cancel, exp_zero]
+    have hbb : exp tb * exp (-tb) = 1 := by
+      rw [← exp_add_of_commute (Commute.neg_right (Commute.refl tb)), add_neg_cancel, exp_zero]
+    have haa' : exp (-a₂) * exp a₂ = 1 := by
+      rw [← exp_add_of_commute (Commute.neg_left (Commute.refl a₂)), neg_add_cancel, exp_zero]
+    have hbb' : exp (-tb) * exp tb = 1 := by
+      rw [← exp_add_of_commute (Commute.neg_left (Commute.refl tb)), neg_add_cancel, exp_zero]
+    have hprod : exp Z * exp Z_neg = 1 := by
+      rw [hexpZ, hexpZ_neg]
+      calc exp a₂ * exp tb * exp a₂ * (exp (-a₂) * exp (-tb) * exp (-a₂))
+          = exp a₂ * exp tb * (exp a₂ * exp (-a₂)) * exp (-tb) * exp (-a₂) := by noncomm_ring
+        _ = exp a₂ * exp tb * 1 * exp (-tb) * exp (-a₂) := by rw [haa]
+        _ = exp a₂ * (exp tb * exp (-tb)) * exp (-a₂) := by noncomm_ring
+        _ = exp a₂ * 1 * exp (-a₂) := by rw [hbb]
+        _ = exp a₂ * exp (-a₂) := by noncomm_ring
+        _ = 1 := haa
+    have hprod' : exp Z_neg * exp Z = 1 := by
+      rw [hexpZ, hexpZ_neg]
+      calc exp (-a₂) * exp (-tb) * exp (-a₂) * (exp a₂ * exp tb * exp a₂)
+          = exp (-a₂) * exp (-tb) * (exp (-a₂) * exp a₂) * exp tb * exp a₂ := by noncomm_ring
+        _ = exp (-a₂) * exp (-tb) * 1 * exp tb * exp a₂ := by rw [haa']
+        _ = exp (-a₂) * (exp (-tb) * exp tb) * exp a₂ := by noncomm_ring
+        _ = exp (-a₂) * 1 * exp a₂ := by rw [hbb']
+        _ = exp (-a₂) * exp a₂ := by noncomm_ring
+        _ = 1 := haa'
+    -- Units structure for commutativity
+    set u : 𝔸ˣ := ⟨exp Z, exp Z_neg, hprod, hprod'⟩
+    -- y = exp Z - 1, y_neg = exp Z_neg - 1
+    -- Commutativity chain: y ↔ y_neg ↔ logOnePlus(y) ↔ logOnePlus(y_neg)
+    have hcomm_y_yneg : Commute (exp Z - 1) (exp Z_neg - 1) :=
+      ((show Commute (exp Z - 1) (↑u) from by
+        show (exp Z - 1) * exp Z = exp Z * (exp Z - 1); noncomm_ring).units_inv_right
+      ).sub_right (Commute.one_right _)
+    -- Z = logOnePlus(y) where y = exp(bch(a₂,tb))*exp(a₂)-1
+    -- By bch definition, Z = logOnePlus(exp(bch(a₂,tb))*exp(a₂)-1)
+    -- And exp(bch(a₂,tb))*exp(a₂)-1 = exp(a₂)*exp(tb)*exp(a₂)-1 = exp Z - 1
+    have ha₂_tb : ‖a₂‖ + ‖tb‖ < Real.log 2 := by
+      have hta_le : ‖ta‖ + ‖tb‖ ≤ s := hnorm_t t ht0 ht1
+      calc ‖a₂‖ + ‖tb‖ ≤ ‖ta‖ / 2 + ‖tb‖ := by
+            gcongr; calc ‖a₂‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖ta‖ := norm_smul_le _ _
+              _ = ‖ta‖ / 2 := by rw [h_half]; ring
+        _ ≤ s := by linarith [norm_nonneg ta]
+        _ < 1 / 4 := hab
+        _ < Real.log 2 := hln2
+    have hexp_inner : exp (bch (𝕂 := 𝕂) a₂ tb) = exp a₂ * exp tb :=
+      exp_bch (𝕂 := 𝕂) a₂ tb ha₂_tb
+    -- Commutativity of Z and Z_neg via logOnePlus structure
+    -- Z = bch(bch(a₂,tb),a₂) = logOnePlus(w) where w = exp(bch(a₂,tb))*exp(a₂)-1
+    -- We show w commutes with w_neg, then use commute_logOnePlus_of_commute
+    -- w = exp(a₂)*exp(tb)*exp(a₂) - 1 = exp Z - 1 (by hexp_inner and hexpZ)
+    -- So Commute w w_neg ↔ Commute (exp Z - 1) (exp Z_neg - 1) = hcomm_y_yneg
+    -- Z = logOnePlus(w): by definition of bch, Z is logOnePlus applied to w
+    -- We use: commute_logOnePlus_of_commute applied to w and w_neg
+    -- Since Z = logOnePlus(w), this gives Commute Z w_neg = Commute Z (exp Z_neg - 1)
+    -- Then similarly for Z_neg = logOnePlus(w_neg)
+    -- Step A: show w = exp Z - 1 (so commute_logOnePlus_of_commute on w gives commute on Z)
+    have hw_eq : exp (bch (𝕂 := 𝕂) a₂ tb) * exp a₂ - 1 = exp Z - 1 := by
+      congr 1; rw [hexp_inner]; exact hexpZ.symm
+    have ha₂_neg_tb : ‖-a₂‖ + ‖-tb‖ < Real.log 2 := by rw [norm_neg, norm_neg]; exact ha₂_tb
+    have hexp_inner_neg : exp (bch (𝕂 := 𝕂) (-a₂) (-tb)) = exp (-a₂) * exp (-tb) :=
+      exp_bch (𝕂 := 𝕂) (-a₂) (-tb) ha₂_neg_tb
+    have hw_neg_eq : exp (bch (𝕂 := 𝕂) (-a₂) (-tb)) * exp (-a₂) - 1 = exp Z_neg - 1 := by
+      congr 1; rw [hexp_inner_neg]; exact hexpZ_neg.symm
+    -- Step B: Z = logOnePlus(w), and Commute w (exp Z_neg - 1)
+    -- w = exp(bch a₂ tb)*exp a₂ - 1 = exp Z - 1 (by hw_eq)
+    -- So Commute w (exp Z_neg - 1) follows from hcomm_y_yneg (after rewriting w)
+    -- Z is definitionally logOnePlus(exp(bch(a₂,tb))*exp(a₂)-1), so
+    -- commute_logOnePlus_of_commute gives Commute Z (exp Z_neg - 1)
+    have hcomm_w_wneg : Commute (exp (bch (𝕂 := 𝕂) a₂ tb) * exp a₂ - 1) (exp Z_neg - 1) := by
+      rw [hw_eq]; exact hcomm_y_yneg
+    have hcomm_Z_yneg : Commute Z (exp Z_neg - 1) :=
+      commute_logOnePlus_of_commute (𝕂 := 𝕂) _ _ hcomm_w_wneg
+    -- Step C: Z_neg = logOnePlus(w_neg), and Commute w_neg Z
+    have hcomm_wneg_Z : Commute (exp (bch (𝕂 := 𝕂) (-a₂) (-tb)) * exp (-a₂) - 1) Z := by
+      rw [hw_neg_eq]; exact hcomm_Z_yneg.symm
+    have hcomm_Z_Zneg : Commute Z Z_neg :=
+      (commute_logOnePlus_of_commute (𝕂 := 𝕂) _ _ hcomm_wneg_Z).symm
+    -- exp(h(t)) = exp(Z + Z_neg) = exp(Z) * exp(Z_neg) = 1
+    have hht_eq : h t = Z + Z_neg := rfl
+    rw [hht_eq, exp_add_of_commute hcomm_Z_Zneg, hprod]
+  -- Step 3: h is continuous on [0, 1]
+  have hcont : ContinuousOn h (Set.Icc 0 1) := by
+    -- h is a sum; show each summand is continuous
+    -- Each bch(x,y) = logOnePlus(exp x * exp y - 1) is logOnePlus of a continuous function
+    set ρ := Real.exp s - 1
+    have hρ_lt : ρ < 1 := by
+      have : Real.exp s < 2 := lt_of_lt_of_eq
+        (Real.exp_strictMono (by linarith : s < Real.log 2)) (Real.exp_log (by norm_num))
+      linarith
+    have hnorm_half_smul : ∀ x : 𝔸, ‖(2 : 𝕂)⁻¹ • x‖ ≤ ‖x‖ / 2 := by
+      intro x; calc ‖(2 : 𝕂)⁻¹ • x‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖x‖ := norm_smul_le _ _
+        _ = ‖x‖ / 2 := by rw [h_half]; ring
+    -- ‖exp f * exp g - 1‖ ≤ exp(‖f‖+‖g‖)-1
+    have hprod_le : ∀ (f g : 𝔸), ‖exp f * exp g - 1‖ ≤ Real.exp (‖f‖ + ‖g‖) - 1 := by
+      intro f g
+      have : exp f * exp g - 1 = (exp f - 1) * exp g + (exp g - 1) := by
+        rw [sub_mul, one_mul]; abel
+      rw [this]
+      calc ‖(exp f - 1) * exp g + (exp g - 1)‖
+          ≤ ‖(exp f - 1) * exp g‖ + ‖exp g - 1‖ := norm_add_le _ _
+        _ ≤ ‖exp f - 1‖ * ‖exp g‖ + ‖exp g - 1‖ := by gcongr; exact norm_mul_le _ _
+        _ ≤ (Real.exp ‖f‖ - 1) * Real.exp ‖g‖ + (Real.exp ‖g‖ - 1) :=
+            add_le_add (mul_le_mul (norm_exp_sub_one_le (𝕂 := 𝕂) f)
+              (norm_exp_le (𝕂 := 𝕂) g) (norm_nonneg _)
+              (sub_nonneg.mpr (Real.one_le_exp (norm_nonneg f))))
+              (norm_exp_sub_one_le (𝕂 := 𝕂) g)
+        _ = _ := by rw [Real.exp_add]; ring
+    -- ‖exp p * exp q * exp p - 1‖ ≤ exp(2‖p‖+‖q‖)-1 ≤ ρ
+    have htriple_le : ∀ (p q : 𝔸), ‖p‖ + ‖q‖ + ‖p‖ ≤ s →
+        ‖exp p * exp q * exp p - 1‖ ≤ ρ := by
+      intro p q hpq
+      have hfact : exp p * exp q * exp p - 1 =
+        exp p * (exp q * exp p - 1) + (exp p - 1) := by noncomm_ring
+      rw [hfact]
+      calc ‖exp p * (exp q * exp p - 1) + (exp p - 1)‖
+          ≤ ‖exp p * (exp q * exp p - 1)‖ + ‖exp p - 1‖ := norm_add_le _ _
+        _ ≤ ‖exp p‖ * ‖exp q * exp p - 1‖ + ‖exp p - 1‖ := by gcongr; exact norm_mul_le _ _
+        _ ≤ Real.exp ‖p‖ * (Real.exp (‖q‖ + ‖p‖) - 1) + (Real.exp ‖p‖ - 1) :=
+            add_le_add (mul_le_mul (norm_exp_le (𝕂 := 𝕂) p)
+              (hprod_le q p) (norm_nonneg _)
+              (Real.exp_pos _).le) (norm_exp_sub_one_le (𝕂 := 𝕂) p)
+        _ = Real.exp (‖p‖ + ‖q‖ + ‖p‖) - 1 := by
+            have : Real.exp (‖p‖ + ‖q‖ + ‖p‖) =
+              Real.exp ‖p‖ * Real.exp (‖q‖ + ‖p‖) := by
+              rw [show ‖p‖ + ‖q‖ + ‖p‖ = ‖p‖ + (‖q‖ + ‖p‖) from by ring, Real.exp_add]
+            rw [this]; ring
+        _ ≤ ρ := sub_le_sub_right (Real.exp_le_exp.mpr hpq) 1
+    have hcf : Continuous (fun t : ℝ => (2 : 𝕂)⁻¹ • (t • a)) :=
+      continuous_const.smul (continuous_id.smul continuous_const)
+    have hcg : Continuous (fun t : ℝ => t • b) := continuous_id.smul continuous_const
+    have hnorm_fg : ∀ t ∈ Set.Icc (0:ℝ) 1, ‖(2 : 𝕂)⁻¹ • (t • a)‖ + ‖t • b‖ ≤ s := by
+      intro t ht; linarith [hnorm_half_smul (t • a), hnorm_t t ht.1 ht.2, norm_nonneg (t • a)]
+    have hnorm_triple : ∀ t ∈ Set.Icc (0:ℝ) 1,
+        ‖(2 : 𝕂)⁻¹ • (t • a)‖ + ‖t • b‖ + ‖(2 : 𝕂)⁻¹ • (t • a)‖ ≤ s := by
+      intro t ht; linarith [hnorm_half_smul (t • a), hnorm_t t ht.1 ht.2]
+    -- Continuity of bch(f(t), g(t)) when ‖f‖+‖g‖ ≤ s on [0,1]
+    have hcont_bch : ∀ (f g : ℝ → 𝔸), Continuous f → Continuous g →
+        (∀ t ∈ Set.Icc 0 1, ‖f t‖ + ‖g t‖ ≤ s) →
+        ContinuousOn (fun t => bch (𝕂 := 𝕂) (f t) (g t)) (Set.Icc 0 1) := by
+      intro f g hf hg hfg
+      show ContinuousOn (fun t => logOnePlus (𝕂 := 𝕂) (exp (f t) * exp (g t) - 1)) _
+      exact (continuousOn_logOnePlus (𝕂 := 𝕂) hρ_lt).comp
+        (((NormedSpace.exp_continuous.comp hf).mul
+          (NormedSpace.exp_continuous.comp hg)).sub continuous_const |>.continuousOn)
+        (fun t ht => by
+          rw [Metric.mem_closedBall, dist_zero_right]
+          exact (hprod_le _ _).trans (sub_le_sub_right (Real.exp_le_exp.mpr (hfg t ht)) 1))
+    have hcont_inner_pos := hcont_bch _ _ hcf hcg hnorm_fg
+    have hcont_inner_neg := hcont_bch _ _ hcf.neg hcg.neg
+      (fun t ht => by rw [norm_neg, norm_neg]; exact hnorm_fg t ht)
+    -- h = outer_bch_pos + outer_bch_neg
+    -- outer_bch(t) = logOnePlus(exp(inner_bch(t))*exp(a₂(t))-1)
+    -- inner map continuous, outer maps into closedBall via triple product bound
+    apply ContinuousOn.add
+    · show ContinuousOn (fun t => logOnePlus (𝕂 := 𝕂)
+        (exp (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • (t • a)) (t • b)) *
+          exp ((2 : 𝕂)⁻¹ • (t • a)) - 1)) (Set.Icc 0 1)
+      exact (continuousOn_logOnePlus (𝕂 := 𝕂) hρ_lt).comp
+        ((NormedSpace.exp_continuous.comp_continuousOn' hcont_inner_pos
+          |>.mul (NormedSpace.exp_continuous.comp hcf).continuousOn).sub continuousOn_const)
+        (fun t ht => by
+          rw [Metric.mem_closedBall, dist_zero_right]
+          have hts' : ‖(2 : 𝕂)⁻¹ • (t • a)‖ + ‖t • b‖ < Real.log 2 := by
+            linarith [hnorm_fg t ht]
+          rw [show exp (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • (t • a)) (t • b)) =
+            exp ((2 : 𝕂)⁻¹ • (t • a)) * exp (t • b) from exp_bch _ _ hts']
+          exact htriple_le _ _ (hnorm_triple t ht))
+    · show ContinuousOn (fun t => logOnePlus (𝕂 := 𝕂)
+        (exp (bch (𝕂 := 𝕂) (-((2 : 𝕂)⁻¹ • (t • a))) (-(t • b))) *
+          exp (-((2 : 𝕂)⁻¹ • (t • a))) - 1)) (Set.Icc 0 1)
+      exact (continuousOn_logOnePlus (𝕂 := 𝕂) hρ_lt).comp
+        ((NormedSpace.exp_continuous.comp_continuousOn' hcont_inner_neg
+          |>.mul (NormedSpace.exp_continuous.comp hcf.neg).continuousOn).sub continuousOn_const)
+        (fun t ht => by
+          rw [Metric.mem_closedBall, dist_zero_right]
+          have hts' : ‖-((2 : 𝕂)⁻¹ • (t • a))‖ + ‖-(t • b)‖ < Real.log 2 := by
+            rw [norm_neg, norm_neg]; linarith [hnorm_fg t ht]
+          rw [show exp (bch (𝕂 := 𝕂) (-((2 : 𝕂)⁻¹ • (t • a))) (-(t • b))) =
+            exp (-((2 : 𝕂)⁻¹ • (t • a))) * exp (-(t • b)) from exp_bch _ _ hts']
+          exact htriple_le _ _ (by simp only [norm_neg]; exact hnorm_triple t ht))
+    /- h(t) = bch(bch(a₂(t),b(t)),a₂(t)) + bch(bch(-a₂(t),-b(t)),-a₂(t))
+    -- bch(x,y) = logOnePlus(exp(x)*exp(y)-1)
+    -- So each bch is logOnePlus composed with a continuous function mapping into the unit ball
+    -- Each summand is bch(bch(f(t),g(t)),f(t)) = logOnePlus(exp(bch(f,g))*exp(f)-1)
+    -- The exp(bch(f,g))*exp(f) = exp(f)*exp(g)*exp(f) by exp_bch, so the argument is
+    -- exp(f)*exp(g)*exp(f)-1 which has norm ≤ exp(2‖f‖+‖g‖)-1 ≤ exp(s)-1 < 1
+    set ρ := Real.exp s - 1
+    have hρ_lt : ρ < 1 := by
+      have : Real.exp s < 2 := lt_of_lt_of_eq
+        (Real.exp_strictMono (by linarith : s < Real.log 2)) (Real.exp_log (by norm_num))
+      linarith
+    -- Helper: norm bound for triple product ‖exp p * exp q * exp p - 1‖ ≤ exp(2‖p‖+‖q‖)-1
+    have htriple_le : ∀ (p q : 𝔸), ‖p‖ + ‖q‖ + ‖p‖ ≤ s →
+        ‖exp p * exp q * exp p - 1‖ ≤ ρ := by
+      intro p q hpq
+      -- Factor and bound using exp estimates
+      have hfact : exp p * exp q * exp p - 1 =
+        exp p * (exp q * exp p - 1) + (exp p - 1) := by noncomm_ring
+      have hfact2 : exp q * exp p - 1 = (exp q - 1) * exp p + (exp p - 1) := by
+        rw [sub_mul, one_mul]; abel
+      rw [hfact]
+      have h1 : ‖exp p * (exp q * exp p - 1) + (exp p - 1)‖ ≤
+          ‖exp p‖ * ‖exp q * exp p - 1‖ + ‖exp p - 1‖ :=
+        (norm_add_le _ _).trans (add_le_add_right (norm_mul_le _ _) _)
+      have h2 : ‖exp q * exp p - 1‖ ≤ Real.exp (‖q‖ + ‖p‖) - 1 := by
+        rw [hfact2]
+        calc ‖(exp q - 1) * exp p + (exp p - 1)‖
+            ≤ ‖exp q - 1‖ * ‖exp p‖ + ‖exp p - 1‖ :=
+              (norm_add_le _ _).trans (add_le_add_right (norm_mul_le _ _) _)
+          _ ≤ (Real.exp ‖q‖ - 1) * Real.exp ‖p‖ + (Real.exp ‖p‖ - 1) := by
+              gcongr
+              · exact norm_exp_sub_one_le (𝕂 := 𝕂) q
+              · exact norm_exp_le (𝕂 := 𝕂) p
+              · exact norm_exp_sub_one_le (𝕂 := 𝕂) p
+          _ = _ := by rw [Real.exp_add]; ring
+      calc ‖exp p * (exp q * exp p - 1) + (exp p - 1)‖
+          ≤ ‖exp p‖ * ‖exp q * exp p - 1‖ + ‖exp p - 1‖ := h1
+        _ ≤ Real.exp ‖p‖ * (Real.exp (‖q‖ + ‖p‖) - 1) + (Real.exp ‖p‖ - 1) := by
+            gcongr
+            · exact norm_exp_le (𝕂 := 𝕂) p
+            · exact norm_exp_sub_one_le (𝕂 := 𝕂) p
+        _ = Real.exp (‖p‖ + ‖q‖ + ‖p‖) - 1 := by rw [Real.exp_add, Real.exp_add]; ring
+        _ ≤ ρ := by gcongr
+    -- Continuity of basic functions
+    have hcf : Continuous (fun t : ℝ => (2 : 𝕂)⁻¹ • (t • a)) :=
+      continuous_const.smul (continuous_id.smul continuous_const)
+    have hcg : Continuous (fun t : ℝ => t • b) := continuous_id.smul continuous_const
+    -- Norm bound: ‖a₂(t)‖ + ‖tb(t)‖ + ‖a₂(t)‖ ≤ s for t ∈ [0,1]
+    have hnorm_half_smul : ∀ x : 𝔸, ‖(2 : 𝕂)⁻¹ • x‖ ≤ ‖x‖ / 2 := by
+      intro x; calc ‖(2 : 𝕂)⁻¹ • x‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖x‖ := norm_smul_le _ _
+        _ = ‖x‖ / 2 := by rw [h_half]; ring
+    have hnorm_triple : ∀ t ∈ Set.Icc (0:ℝ) 1,
+        ‖(2 : 𝕂)⁻¹ • (t • a)‖ + ‖t • b‖ + ‖(2 : 𝕂)⁻¹ • (t • a)‖ ≤ s := by
+      intro t ht
+      have h1 := hnorm_half_smul (t • a)
+      calc ‖(2 : 𝕂)⁻¹ • (t • a)‖ + ‖t • b‖ + ‖(2 : 𝕂)⁻¹ • (t • a)‖
+          ≤ ‖t • a‖ / 2 + ‖t • b‖ + ‖t • a‖ / 2 := by linarith
+        _ = ‖t • a‖ + ‖t • b‖ := by ring
+        _ ≤ s := hnorm_t t ht.1 ht.2
+    -- Inner bch continuity
+    have hnorm_fg : ∀ t ∈ Set.Icc (0:ℝ) 1,
+        ‖(2 : 𝕂)⁻¹ • (t • a)‖ + ‖t • b‖ ≤ s := by
+      intro t ht; linarith [hnorm_triple t ht, norm_nonneg ((2 : 𝕂)⁻¹ • (t • a))]
+    -- Helper: ‖exp f * exp g - 1‖ ≤ exp(‖f‖+‖g‖)-1
+    have hprod_le : ∀ (f g : 𝔸), ‖exp f * exp g - 1‖ ≤ Real.exp (‖f‖ + ‖g‖) - 1 := by
+      intro f g
+      have hfact : exp f * exp g - 1 = (exp f - 1) * exp g + (exp g - 1) := by
+        rw [sub_mul, one_mul]; abel
+      rw [hfact]
+      calc ‖(exp f - 1) * exp g + (exp g - 1)‖
+          ≤ ‖exp f - 1‖ * ‖exp g‖ + ‖exp g - 1‖ :=
+            (norm_add_le _ _).trans (add_le_add_right (norm_mul_le _ _) _)
+        _ ≤ (Real.exp ‖f‖ - 1) * Real.exp ‖g‖ + (Real.exp ‖g‖ - 1) := by
+            gcongr
+            · exact norm_exp_sub_one_le (𝕂 := 𝕂) f
+            · exact norm_exp_le (𝕂 := 𝕂) g
+            · exact norm_exp_sub_one_le (𝕂 := 𝕂) g
+        _ = _ := by rw [Real.exp_add]; ring
+    -- Continuity of bch(f(t), g(t)) when f, g continuous and ‖f‖+‖g‖ ≤ s on [0,1]
+    have hcont_bch : ∀ (f g : ℝ → 𝔸), Continuous f → Continuous g →
+        (∀ t ∈ Set.Icc 0 1, ‖f t‖ + ‖g t‖ ≤ s) →
+        ContinuousOn (fun t => bch (𝕂 := 𝕂) (f t) (g t)) (Set.Icc 0 1) := by
+      intro f g hf hg hfg
+      show ContinuousOn (fun t => logOnePlus (𝕂 := 𝕂) (exp (f t) * exp (g t) - 1)) _
+      apply (continuousOn_logOnePlus (𝕂 := 𝕂) hρ_lt).comp
+      · exact ((NormedSpace.exp_continuous.comp hf).mul
+            (NormedSpace.exp_continuous.comp hg)).sub continuous_const |>.continuousOn
+      · intro t ht; rw [Metric.mem_closedBall, dist_zero_right]
+        calc ‖exp (f t) * exp (g t) - 1‖ ≤ Real.exp (‖f t‖ + ‖g t‖) - 1 := hprod_le _ _
+          _ ≤ ρ := by gcongr; exact hfg t ht
+    have hcont_inner_pos := hcont_bch _ _ hcf hcg hnorm_fg
+    have hcont_inner_neg := hcont_bch _ _ hcf.neg hcg.neg (by
+      intro t ht; rw [norm_neg, norm_neg]; exact hnorm_fg t ht)
+    -- Now prove h = sum of two summands, each continuous
+    apply ContinuousOn.add
+    · -- First summand: logOnePlus(exp(inner_bch)*exp(a₂)-1) where inner_bch = bch(a₂,tb)
+      show ContinuousOn
+        (fun t => logOnePlus (𝕂 := 𝕂) (exp (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • (t • a)) (t • b)) *
+          exp ((2 : 𝕂)⁻¹ • (t • a)) - 1)) (Set.Icc 0 1)
+      apply (continuousOn_logOnePlus (𝕂 := 𝕂) hρ_lt).comp
+      · exact (NormedSpace.exp_continuous.continuousOn.comp hcont_inner_pos Set.Subset.rfl
+          |>.mul (NormedSpace.exp_continuous.comp hcf).continuousOn).sub continuousOn_const
+      · intro t ht; rw [Metric.mem_closedBall, dist_zero_right]
+        have hts' : ‖(2 : 𝕂)⁻¹ • (t • a)‖ + ‖t • b‖ < Real.log 2 := by
+          linarith [hnorm_fg t ht]
+        -- exp(bch(a₂,tb))*exp(a₂) = exp(a₂)*exp(tb)*exp(a₂) by exp_bch
+        have hexpb := exp_bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • (t • a)) (t • b) hts'
+        rw [hexpb]; exact htriple_le _ _ (hnorm_triple t ht)
+    · -- Second summand: same with negated arguments
+      show ContinuousOn
+        (fun t => logOnePlus (𝕂 := 𝕂) (exp (bch (𝕂 := 𝕂) (-((2 : 𝕂)⁻¹ • (t • a))) (-(t • b))) *
+          exp (-((2 : 𝕂)⁻¹ • (t • a))) - 1)) (Set.Icc 0 1)
+      apply (continuousOn_logOnePlus (𝕂 := 𝕂) hρ_lt).comp
+      · exact (NormedSpace.exp_continuous.continuousOn.comp hcont_inner_neg Set.Subset.rfl
+          |>.mul (NormedSpace.exp_continuous.comp hcf.neg).continuousOn).sub continuousOn_const
+      · intro t ht; rw [Metric.mem_closedBall, dist_zero_right]
+        have hts' : ‖-((2 : 𝕂)⁻¹ • (t • a))‖ + ‖-(t • b)‖ < Real.log 2 := by
+          rw [norm_neg, norm_neg]; linarith [hnorm_fg t ht]
+        have hexpb := exp_bch (𝕂 := 𝕂) (-((2 : 𝕂)⁻¹ • (t • a))) (-(t • b)) hts'
+        rw [hexpb]
+        -- ‖exp(-a₂)*exp(-tb)*exp(-a₂)-1‖ ≤ ρ via htriple_le with norms of negations
+        exact htriple_le _ _ (by rw [norm_neg, norm_neg, norm_neg]; exact hnorm_triple t ht) -/
+  -- Step 4-6: Chain of neighborhoods argument (same as logOnePlus_exp_sub_one)
+  have hcompact : IsCompact (Set.Icc (0:ℝ) 1) := isCompact_Icc
+  have huc := hcompact.uniformContinuousOn_of_continuous hcont
+  rw [Metric.uniformContinuousOn_iff] at huc
+  obtain ⟨δ, hδ_pos, hδ⟩ := huc (Real.log 2) (Real.log_pos (by norm_num))
+  obtain ⟨N, hN⟩ := exists_nat_gt (1 / δ)
+  have hN_pos : 0 < N := by
+    rcases N with _ | n
+    · simp at hN; linarith [div_pos one_pos hδ_pos]
+    · exact Nat.succ_pos n
+  suffices hind : ∀ k : ℕ, k ≤ N → h (k / N) = 0 by
+    have := hind N le_rfl
+    rwa [show (N : ℝ) / N = 1 from div_self (Nat.cast_ne_zero.mpr (by omega))] at this
+  intro k hk
+  induction k with
+  | zero => simp [h0]
+  | succ k ih =>
+    have hk_le : k ≤ N := by omega
+    have hprev := ih hk_le
+    have hN_pos_real : (0 : ℝ) < N := Nat.cast_pos.mpr hN_pos
+    have hkN_mem : (k : ℝ) / N ∈ Set.Icc (0:ℝ) 1 :=
+      ⟨div_nonneg (Nat.cast_nonneg k) hN_pos_real.le,
+       div_le_one_of_le₀ (Nat.cast_le.mpr hk_le) hN_pos_real.le⟩
+    have hk1N_mem : ((k+1 : ℕ) : ℝ) / N ∈ Set.Icc (0:ℝ) 1 :=
+      ⟨div_nonneg (Nat.cast_nonneg _) hN_pos_real.le,
+       div_le_one_of_le₀ (Nat.cast_le.mpr hk) hN_pos_real.le⟩
+    have h1N_lt : (1 : ℝ) / N < δ := by
+      rw [one_div]
+      exact (inv_lt_comm₀ hδ_pos hN_pos_real).mp (by rwa [one_div] at hN)
+    have hdist' : dist ((↑(k + 1) : ℝ) / ↑N) (↑k / ↑N) < δ := by
+      rw [dist_comm, Real.dist_eq, show (k : ℝ) / N - ((k + 1 : ℕ) : ℝ) / N = -(1 / N) from by
+        push_cast; field_simp; ring, abs_neg, abs_of_nonneg (by positivity : (0 : ℝ) ≤ 1 / N)]
+      exact h1N_lt
+    have hnorm_small : ‖h ((k+1 : ℕ) / N) - h (k / N)‖ < Real.log 2 := by
+      rw [← dist_eq_norm]; exact hδ _ hk1N_mem _ hkN_mem hdist'
+    rw [hprev, sub_zero] at hnorm_small
+    have hexp1 : exp (h ((k+1 : ℕ) / N)) = 1 :=
+      hexp_ht _ hk1N_mem.1 hk1N_mem.2
+    exact exp_eq_one_of_norm_lt (𝕂 := 𝕂) _ hexp1 hnorm_small
 
 include 𝕂 in
 /-- The symmetric BCH cubic coefficient is an odd function:
