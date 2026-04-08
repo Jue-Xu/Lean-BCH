@@ -1478,6 +1478,131 @@ theorem norm_bch_cubic_term_le (a b : 𝔸) :
     _ ≤ 4 * ‖a‖ ^ 2 * ‖b‖ + 4 * ‖a‖ * ‖b‖ ^ 2 := by gcongr
     _ ≤ s ^ 3 := by nlinarith [sq_nonneg (‖a‖ - ‖b‖)]
 
+/-- The degree-4 BCH term: `-(1/24)([a,[a,[a,b]]] + [b,[b,[b,a]]])`.
+
+This is the quartic correction in the BCH expansion:
+`bch(a,b) = a + b + ½[a,b] + bch_cubic_term a b + bch_quartic_term a b + O(s⁵)`.
+
+Written as triple commutators using the Lie bracket `⁅·,·⁆` of the associative algebra:
+`C₄(a,b) = -(1/24)(⁅a,⁅a,⁅a,b⁆⁆⁆ + ⁅b,⁅b,⁅b,a⁆⁆⁆)`.
+
+In ring notation (expanded):
+`[x,[x,[x,y]]] = x(x(xy-yx)) - (x(xy-yx))x - x((xy-yx)x) + ((xy-yx)x)x`
+
+We use the Lie bracket notation which Lean handles via `⁅·,·⁆ = a*b - b*a`. -/
+noncomputable def bch_quartic_term (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+  -((24 : 𝕂)⁻¹ • (a * (a * (a * b - b * a) - (a * b - b * a) * a) -
+    (a * (a * b - b * a) - (a * b - b * a) * a) * a +
+    b * (b * (b * a - a * b) - (b * a - a * b) * b) -
+    (b * (b * a - a * b) - (b * a - a * b) * b) * b))
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Homogeneity of bch_quartic_term**: C₄(c·a, c·b) = c⁴·C₄(a,b).
+This is the key property for extracting the quartic term from the BCH expansion. -/
+theorem bch_quartic_term_smul (a b : 𝔸) (c : 𝕂) :
+    bch_quartic_term 𝕂 (c • a) (c • b) = c ^ 4 • bch_quartic_term 𝕂 a b := by
+  -- Helper: quadruple product homogeneity (all association patterns)
+  have q1 : ∀ x y z w : 𝔸,
+      (c • x) * ((c • y) * (c • z) - (c • z) * (c • y)) =
+      c ^ 3 • (x * (y * z - z * y)) := by
+    intro x y z w
+    simp only [mul_sub, smul_mul_assoc, mul_smul_comm, smul_smul, ← smul_sub]
+    congr 1; ring
+  have q2 : ∀ x y z w : 𝔸,
+      ((c • y) * (c • z) - (c • z) * (c • y)) * (c • x) =
+      c ^ 3 • ((y * z - z * y) * x) := by
+    intro x y z w
+    simp only [sub_mul, smul_mul_assoc, mul_smul_comm, smul_smul, ← smul_sub]
+    congr 1; ring
+  unfold bch_quartic_term
+  -- Step 1: push c through the first level of products using mul_sub / sub_mul
+  -- After unfolding, the expression is -(24⁻¹ • (big))
+  -- where big = a*DC_a - DC_a*a + b*DC_b - DC_b*b
+  -- and DC_x = x*[x,y] - [x,y]*x
+  -- We need: (c•a)*(...) - (...)(c•a) + (c•b)*(...) - (...)(c•b)
+  -- = c⁴•(a*(...) - (...)*a + b*(...) - (...)*b)
+  -- Approach: use helper lemmas to factor out c from each commutator level.
+  simp only [smul_mul_assoc, mul_smul_comm, smul_sub, mul_sub, sub_mul, smul_smul,
+    smul_add, mul_add, add_mul, smul_neg, neg_inj]
+  congr 1; congr 1
+  -- Goal should now be about matching scalar coefficients × monomial expressions.
+  -- After simp, the scalars are products of c's and (24)⁻¹.
+  -- Try ring on the scalar part (ring works on 𝕂 which is commutative).
+  all_goals (try (congr 1; ring)); try ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Norm bound for bch_quartic_term. -/
+theorem norm_bch_quartic_term_le (a b : 𝔸) :
+    ‖bch_quartic_term 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 4 := by
+  -- bch_quartic_term = -(1/24)•(a•DC_a - DC_a•a + b•DC_b - DC_b•b) where
+  -- DC_a = [a,[a,b]], DC_b = [b,[b,a]] are double commutators with norm ≤ 4α²β, 4αβ²
+  -- Triple commutator norms: ≤ 8α³β, 8αβ³.
+  -- Total: (1/24)•8(α³β+αβ³) ≤ (8/24)s⁴ ≤ s⁴.
+  set s := ‖a‖ + ‖b‖
+  have ha := norm_nonneg a
+  have hb := norm_nonneg b
+  have h24 : ‖(24 : 𝕂)⁻¹‖ ≤ 1 := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  -- Double commutator bounds
+  have hab_comm : ‖a * b - b * a‖ ≤ 2 * ‖a‖ * ‖b‖ := by
+    calc _ ≤ ‖a * b‖ + ‖b * a‖ := norm_sub_le _ _
+      _ ≤ ‖a‖ * ‖b‖ + ‖b‖ * ‖a‖ := by gcongr <;> exact norm_mul_le _ _
+      _ = _ := by ring
+  have hba_comm : ‖b * a - a * b‖ ≤ 2 * ‖a‖ * ‖b‖ := by
+    calc _ ≤ ‖b * a‖ + ‖a * b‖ := norm_sub_le _ _
+      _ ≤ ‖b‖ * ‖a‖ + ‖a‖ * ‖b‖ := by gcongr <;> exact norm_mul_le _ _
+      _ = _ := by ring
+  -- DC_a = a*[a,b]-[a,b]*a, ‖DC_a‖ ≤ 4α²β
+  have hA_dc : ‖a * (a * b - b * a) - (a * b - b * a) * a‖ ≤ 4 * ‖a‖ ^ 2 * ‖b‖ := by
+    calc _ ≤ ‖a * (a * b - b * a)‖ + ‖(a * b - b * a) * a‖ := norm_sub_le _ _
+      _ ≤ ‖a‖ * (2 * ‖a‖ * ‖b‖) + (2 * ‖a‖ * ‖b‖) * ‖a‖ := by
+          gcongr
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_left hab_comm ha)
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right hab_comm ha)
+      _ = _ := by ring
+  -- DC_b = b*[b,a]-[b,a]*b, ‖DC_b‖ ≤ 4αβ²
+  have hB_dc : ‖b * (b * a - a * b) - (b * a - a * b) * b‖ ≤ 4 * ‖a‖ * ‖b‖ ^ 2 := by
+    calc _ ≤ ‖b * (b * a - a * b)‖ + ‖(b * a - a * b) * b‖ := norm_sub_le _ _
+      _ ≤ ‖b‖ * (2 * ‖a‖ * ‖b‖) + (2 * ‖a‖ * ‖b‖) * ‖b‖ := by
+          gcongr
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_left hba_comm hb)
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right hba_comm hb)
+      _ = _ := by ring
+  -- The quartic term is -(24⁻¹)•(TC_a + TC_b) where TC_x = x•DC_x - DC_x•x
+  -- Rewrite as a norm bound on the definition
+  show ‖bch_quartic_term 𝕂 a b‖ ≤ s ^ 4
+  unfold bch_quartic_term
+  set DC_a := a * (a * b - b * a) - (a * b - b * a) * a
+  set DC_b := b * (b * a - a * b) - (b * a - a * b) * b
+  -- Triple commutator bounds
+  have hA_tc : ‖a * DC_a - DC_a * a‖ ≤ 8 * ‖a‖ ^ 3 * ‖b‖ := by
+    calc _ ≤ ‖a * DC_a‖ + ‖DC_a * a‖ := norm_sub_le _ _
+      _ ≤ ‖a‖ * ‖DC_a‖ + ‖DC_a‖ * ‖a‖ := by gcongr <;> exact norm_mul_le _ _
+      _ ≤ ‖a‖ * (4 * ‖a‖ ^ 2 * ‖b‖) + (4 * ‖a‖ ^ 2 * ‖b‖) * ‖a‖ := by gcongr
+      _ = _ := by ring
+  have hB_tc : ‖b * DC_b - DC_b * b‖ ≤ 8 * ‖a‖ * ‖b‖ ^ 3 := by
+    calc _ ≤ ‖b * DC_b‖ + ‖DC_b * b‖ := norm_sub_le _ _
+      _ ≤ ‖b‖ * ‖DC_b‖ + ‖DC_b‖ * ‖b‖ := by gcongr <;> exact norm_mul_le _ _
+      _ ≤ ‖b‖ * (4 * ‖a‖ * ‖b‖ ^ 2) + (4 * ‖a‖ * ‖b‖ ^ 2) * ‖b‖ := by gcongr
+      _ = _ := by ring
+  -- Sum of triple commutators (left-associated: a*DC_a - DC_a*a + b*DC_b - DC_b*b)
+  have hsum : ‖a * DC_a - DC_a * a + b * DC_b - DC_b * b‖ ≤
+      8 * (‖a‖ ^ 3 * ‖b‖ + ‖a‖ * ‖b‖ ^ 3) := by
+    have : a * DC_a - DC_a * a + b * DC_b - DC_b * b =
+        (a * DC_a - DC_a * a) + (b * DC_b - DC_b * b) := by abel
+    rw [this]
+    calc _ ≤ ‖a * DC_a - DC_a * a‖ + ‖b * DC_b - DC_b * b‖ := norm_add_le _ _
+      _ ≤ 8 * ‖a‖ ^ 3 * ‖b‖ + 8 * ‖a‖ * ‖b‖ ^ 3 := by linarith
+      _ = _ := by ring
+  -- Final
+  calc ‖-((24 : 𝕂)⁻¹ • (a * DC_a - DC_a * a + b * DC_b - DC_b * b))‖
+      = ‖(24 : 𝕂)⁻¹ • (a * DC_a - DC_a * a + b * DC_b - DC_b * b)‖ := norm_neg _
+    _ ≤ ‖(24 : 𝕂)⁻¹‖ * ‖a * DC_a - DC_a * a + b * DC_b - DC_b * b‖ := norm_smul_le _ _
+    _ ≤ 1 * (8 * (‖a‖ ^ 3 * ‖b‖ + ‖a‖ * ‖b‖ ^ 3)) := by gcongr
+    _ = 8 * (‖a‖ ^ 3 * ‖b‖ + ‖a‖ * ‖b‖ ^ 3) := one_mul _
+    _ ≤ s ^ 4 := by nlinarith [sq_nonneg (‖a‖ - ‖b‖)]
+
 /-! ### Quartic algebraic identity for BCH -/
 
 set_option maxHeartbeats 64000000 in
@@ -1672,6 +1797,102 @@ private lemma real_exp_fourth_order_le_quartic {s : ℝ} (hs : 0 ≤ s) (hs1 : s
     _ ≤ s ^ 4 := by
         rw [div_le_iff₀ (by nlinarith : (0 : ℝ) < 24 * (1 - s))]
         nlinarith [sq_nonneg s, pow_nonneg hs 4]
+
+/-! ### Fifth-order exp helpers -/
+
+-- Fifth-order exp remainder: ‖exp(x)-1-x-½x²-⅙x³-(1/24)x⁴‖ ≤ exp(‖x‖)-1-‖x‖-‖x‖²/2-‖x‖³/6-‖x‖⁴/24
+include 𝕂 in
+private theorem norm_exp_sub_one_sub_sub_sub_sub_le (x : 𝔸) :
+    ‖exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3 - (24 : 𝕂)⁻¹ • x ^ 4‖ ≤
+      Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6 - ‖x‖ ^ 4 / 24 := by
+  set f : ℕ → 𝔸 := fun n => (n !⁻¹ : 𝕂) • x ^ n
+  have hf_summ : Summable f := NormedSpace.expSeries_summable' (𝕂 := 𝕂) x
+  have hf0 : f 0 = 1 := by simp [f]
+  have hf1 : f 1 = x := by simp [f]
+  have hf2 : f 2 = (2 : 𝕂)⁻¹ • x ^ 2 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    ring
+  have hf3 : f 3 = (6 : 𝕂)⁻¹ • x ^ 3 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf4 : f 4 = (24 : 𝕂)⁻¹ • x ^ 4 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have h_sub : exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3 -
+      (24 : 𝕂)⁻¹ • x ^ 4 = ∑' n, f (n + 5) := by
+    rw [congr_fun (exp_eq_tsum 𝕂 (𝔸 := 𝔸)) x]
+    have h1 := hf_summ.tsum_eq_zero_add; rw [hf0] at h1
+    have h2 := ((summable_nat_add_iff 1).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf1] at h2
+    have h3 := ((summable_nat_add_iff 2).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf2] at h3
+    have h4 := ((summable_nat_add_iff 3).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf3] at h4
+    have h5 := ((summable_nat_add_iff 4).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf4] at h5
+    rw [h1, add_sub_cancel_left, h2, add_sub_cancel_left, h3, add_sub_cancel_left,
+        h4, add_sub_cancel_left, h5, add_sub_cancel_left]
+  rw [h_sub]
+  have h_rexp := hasSum_real_exp ‖x‖
+  have h_summ5 : Summable (fun n => ((n + 5) !⁻¹ : ℝ) * ‖x‖ ^ (n + 5)) :=
+    (summable_nat_add_iff 5).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 5) !⁻¹ : ℝ) * ‖x‖ ^ (n + 5))
+      (Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6 - ‖x‖ ^ 4 / 24) := by
+    rw [h_summ5.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split5 := ((summable_nat_add_iff 4).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4 h_split5
+    linarith
+  exact tsum_of_norm_bounded h_val (fun n => norm_expSeries_term_le' (𝕂 := 𝕂) x (n + 5))
+
+-- For 0 ≤ s with s < 3/4, the fifth-order Taylor remainder satisfies
+-- exp(s)-1-s-s²/2-s³/6-s⁴/24 ≤ s⁵.
+private lemma real_exp_fifth_order_le_quintic {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 3 / 4) :
+    Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 ≤ s ^ 5 := by
+  have hs_lt1 : s < 1 := by linarith
+  have h_rexp := hasSum_real_exp s
+  have h_summ5 : Summable (fun n => ((n + 5) !⁻¹ : ℝ) * s ^ (n + 5)) :=
+    (summable_nat_add_iff 5).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 5) !⁻¹ : ℝ) * s ^ (n + 5))
+      (Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24) := by
+    rw [h_summ5.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split5 := ((summable_nat_add_iff 4).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4 h_split5
+    linarith
+  -- Comparison: (n+5)!⁻¹ * s^(n+5) ≤ (120)⁻¹ * s^(n+5) since (n+5)! ≥ 5! = 120
+  have h_geom_summ : Summable (fun n => s ^ (n + 5) / 120) := by
+    apply Summable.div_const
+    exact (summable_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 5) |>.congr fun n => by ring
+  have hterm : ∀ n, ((n + 5) !⁻¹ : ℝ) * s ^ (n + 5) ≤ s ^ (n + 5) * (120 : ℝ)⁻¹ := by
+    intro n
+    rw [mul_comm]
+    apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs _)
+    rw [inv_le_inv₀ (by positivity : (0 : ℝ) < (n + 5)!) (by positivity : (0 : ℝ) < 120)]
+    have : (5 : ℕ)! ≤ (n + 5)! := Nat.factorial_le (by omega)
+    exact_mod_cast this
+  have h_geom : HasSum (fun n => s ^ (n + 5) * (120 : ℝ)⁻¹) (s ^ 5 * (1 - s)⁻¹ * (120 : ℝ)⁻¹) := by
+    have hg := (hasSum_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 5)
+    have h_eq : (fun n => s ^ 5 * s ^ n) = (fun n => s ^ (n + 5)) := by ext n; ring
+    rw [h_eq] at hg
+    exact hg.mul_right (120 : ℝ)⁻¹
+  calc Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24
+      = ∑' n, ((n + 5) !⁻¹ : ℝ) * s ^ (n + 5) := h_val.tsum_eq.symm
+    _ ≤ ∑' n, (s ^ (n + 5) * (120 : ℝ)⁻¹) :=
+        h_summ5.tsum_le_tsum hterm h_geom.summable
+    _ = s ^ 5 * (1 - s)⁻¹ * (120 : ℝ)⁻¹ := h_geom.tsum_eq
+    _ = s ^ 5 / (120 * (1 - s)) := by rw [div_eq_mul_inv, mul_inv_rev]; ring
+    _ ≤ s ^ 5 := by
+        rw [div_le_iff₀ (by nlinarith : (0 : ℝ) < 120 * (1 - s))]
+        nlinarith [sq_nonneg s, pow_nonneg hs 5]
 
 set_option maxHeartbeats 32000000 in
 include 𝕂 in
@@ -2061,6 +2282,44 @@ theorem norm_bch_quartic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
             _ = 10 * s ^ 4 := by ring
         nlinarith [pow_nonneg hs_nn 4, hdenom.le,
           show 2 - Real.exp s ≤ 1 from by linarith [Real.add_one_le_exp s]]
+
+set_option maxHeartbeats 64000000 in
+include 𝕂 in
+/-- **Fifth-order BCH**: `bch(a,b) = (a+b) + ½[a,b] + bch_cubic_term(a,b) + bch_quartic_term(a,b) + O(s⁵)`.
+
+This extends the fourth-order result `norm_bch_quartic_remainder_le` by identifying the
+quartic coefficient `-(1/24)([a,[a,[a,b]]]+[b,[b,[b,a]]])`. The proof strategy is:
+1. Extract the quintic log remainder `logOnePlus(y)-y+½y²-⅓y³+¼y⁴`
+2. Extract the quartic exp remainder from D, E, F variables
+3. Show the degree-4 algebraic terms combine to `bch_quartic_term` via a quintic identity
+4. Bound all quintic+ remainder terms. -/
+theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Real.log 2) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b‖ ≤
+      3000 * (‖a‖ + ‖b‖) ^ 5 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  -- PROOF STRATEGY (mirrors norm_bch_quartic_remainder_le):
+  -- Decompose: LHS = [quintic log tail] + [quintic algebraic piece]
+  -- where:
+  -- - quintic log tail = logOnePlus(y) - y + ½y² - ⅓y³ + ¼y⁴
+  --   bounded by ‖y‖⁵/(1-‖y‖) via norm_logOnePlus_sub_sub_sub_sub_le
+  -- - quintic algebraic piece combines:
+  --   * quartic identity RHS terms (F₁,F₂,etc.) from norm_bch_quartic_remainder_le
+  --   * the ¼y⁴ term via (y=z+P) expansion
+  --   * the bch_quartic_term C₄ cancellation
+  --   Each piece is O(s⁵) using the G_i = F_i - (24)⁻¹•x⁴ fifth-order exp remainders
+  --   and the quintic algebraic identity (analogous to quartic_identity).
+  -- The quintic algebraic identity itself is proved by multiplying by lcm(24,12,6,4,3,2)
+  -- to clear all scalar denominators, then verifying with noncomm_ring.
+  --
+  -- Available infrastructure:
+  -- - norm_logOnePlus_sub_sub_sub_sub_le (quintic log bound, in LogSeries.lean)
+  -- - norm_exp_sub_one_sub_sub_sub_sub_le (fifth-order exp bound)
+  -- - real_exp_fifth_order_le_quintic (real Taylor bound)
+  -- - quartic_identity (the degree-4 algebraic identity)
+  --
+  -- The full proof requires ~400 lines of norm bounds and a quintic algebraic identity
+  -- verified by noncomm_ring. Deferred to a follow-up.
+  sorry
 
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 

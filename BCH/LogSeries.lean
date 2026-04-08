@@ -241,6 +241,51 @@ theorem norm_logOnePlus_sub_sub_sub_le (x : 𝔸) (hx : ‖x‖ < 1) :
       ≤ ‖x‖ ^ (n + 3 + 1) := norm_logSeriesTerm_le (𝕂 := 𝕂) x (n + 3)
     _ = ‖x‖ ^ (n + 4) := by ring_nf
 
+/-! ### Remainder bound (log minus linear, quadratic, cubic, and quartic terms) -/
+
+include 𝕂 in
+/-- The quad-shifted series `∑'_{n≥4} logSeriesTerm x n` is summable when `‖x‖ < 1`. -/
+lemma summable_logSeriesTerm_shift4 (x : 𝔸) (hx : ‖x‖ < 1) :
+    Summable (fun n => logSeriesTerm (𝕂 := 𝕂) x (n + 4)) :=
+  (summable_nat_add_iff (f := logSeriesTerm (𝕂 := 𝕂) x) 4).mpr
+    (summable_logSeriesTerm (𝕂 := 𝕂) x hx)
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+@[simp]
+lemma logSeriesTerm_three (x : 𝔸) :
+    logSeriesTerm (𝕂 := 𝕂) x 3 = -((4 : 𝕂)⁻¹ • x ^ 4) := by
+  simp [logSeriesTerm, pow_succ]
+  ring
+
+include 𝕂 in
+/-- `log(1+x) - x + x²/2 - x³/3 + x⁴/4 = ∑' n, logSeriesTerm x (n+4)`. -/
+lemma logOnePlus_sub_sub_sub_sub_eq_tsum (x : 𝔸) (hx : ‖x‖ < 1) :
+    logOnePlus (𝕂 := 𝕂) x - x + (2 : 𝕂)⁻¹ • x ^ 2 - (3 : 𝕂)⁻¹ • x ^ 3 +
+      (4 : 𝕂)⁻¹ • x ^ 4 =
+      ∑' n, logSeriesTerm (𝕂 := 𝕂) x (n + 4) := by
+  have hsumm := summable_logSeriesTerm_shift3 (𝕂 := 𝕂) x hx
+  rw [logOnePlus_sub_sub_sub_eq_tsum (𝕂 := 𝕂) x hx, hsumm.tsum_eq_zero_add,
+      logSeriesTerm_three (𝕂 := 𝕂)]
+  abel
+
+include 𝕂 in
+/-- `‖log(1+x) - x + x²/2 - x³/3 + x⁴/4‖ ≤ ‖x‖⁵/(1-‖x‖)` when `‖x‖ < 1`. -/
+theorem norm_logOnePlus_sub_sub_sub_sub_le (x : 𝔸) (hx : ‖x‖ < 1) :
+    ‖logOnePlus (𝕂 := 𝕂) x - x + (2 : 𝕂)⁻¹ • x ^ 2 - (3 : 𝕂)⁻¹ • x ^ 3 +
+      (4 : 𝕂)⁻¹ • x ^ 4‖ ≤
+      ‖x‖ ^ 5 / (1 - ‖x‖) := by
+  rw [logOnePlus_sub_sub_sub_sub_eq_tsum (𝕂 := 𝕂) x hx, div_eq_mul_inv]
+  have h_geom := (hasSum_geometric_of_lt_one (norm_nonneg x) hx).mul_left (‖x‖ ^ 5)
+  have h_eq : (fun i => ‖x‖ ^ 5 * ‖x‖ ^ i) = (fun i => ‖x‖ ^ (i + 5)) := by
+    ext n; ring
+  rw [h_eq] at h_geom
+  apply tsum_of_norm_bounded h_geom
+  intro n
+  calc ‖logSeriesTerm (𝕂 := 𝕂) x (n + 4)‖
+      ≤ ‖x‖ ^ (n + 4 + 1) := norm_logSeriesTerm_le (𝕂 := 𝕂) x (n + 4)
+    _ = ‖x‖ ^ (n + 5) := by ring_nf
+
 /-! ### The exp ∘ log identity -/
 
 /-! #### Step 1: Real scalar case via `Real.hasSum_pow_div_log_of_abs_lt_one` -/
