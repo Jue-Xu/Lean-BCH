@@ -2283,42 +2283,32 @@ theorem norm_bch_quartic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
         nlinarith [pow_nonneg hs_nn 4, hdenom.le,
           show 2 - Real.exp s ≤ 1 from by linarith [Real.add_one_le_exp s]]
 
-set_option maxHeartbeats 64000000 in
+set_option maxHeartbeats 128000000 in
 include 𝕂 in
 /-- **Fifth-order BCH**: `bch(a,b) = (a+b) + ½[a,b] + bch_cubic_term(a,b) + bch_quartic_term(a,b) + O(s⁵)`.
 
 This extends the fourth-order result `norm_bch_quartic_remainder_le` by identifying the
-quartic coefficient `-(1/24)([a,[a,[a,b]]]+[b,[b,[b,a]]])`. The proof strategy is:
-1. Extract the quintic log remainder `logOnePlus(y)-y+½y²-⅓y³+¼y⁴`
-2. Extract the quartic exp remainder from D, E, F variables
-3. Show the degree-4 algebraic terms combine to `bch_quartic_term` via a quintic identity
-4. Bound all quintic+ remainder terms. -/
+quartic coefficient `-(1/24)([a,[a,[a,b]]]+[b,[b,[b,a]]])`. The proof decomposes
+`LHS = pieceA' + pieceB'` where pieceA' is the quintic log tail (bounded by `‖y‖⁵/(1-‖y‖)`)
+and pieceB' is the algebraic piece (bounded by combining the quartic_identity with
+fifth-order exp remainders and the quartic norm bound on the combined degree-4 terms). -/
 theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Real.log 2) :
     ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
       bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b‖ ≤
       3000 * (‖a‖ + ‖b‖) ^ 5 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
-  -- PROOF STRATEGY (mirrors norm_bch_quartic_remainder_le):
-  -- Decompose: LHS = [quintic log tail] + [quintic algebraic piece]
-  -- where:
-  -- - quintic log tail = logOnePlus(y) - y + ½y² - ⅓y³ + ¼y⁴
-  --   bounded by ‖y‖⁵/(1-‖y‖) via norm_logOnePlus_sub_sub_sub_sub_le
-  -- - quintic algebraic piece combines:
-  --   * quartic identity RHS terms (F₁,F₂,etc.) from norm_bch_quartic_remainder_le
-  --   * the ¼y⁴ term via (y=z+P) expansion
-  --   * the bch_quartic_term C₄ cancellation
-  --   Each piece is O(s⁵) using the G_i = F_i - (24)⁻¹•x⁴ fifth-order exp remainders
-  --   and the quintic algebraic identity (analogous to quartic_identity).
-  -- The quintic algebraic identity itself is proved by multiplying by lcm(24,12,6,4,3,2)
-  -- to clear all scalar denominators, then verifying with noncomm_ring.
+  -- STEP 1: Decompose LHS = pieceA' + pieceB'
+  -- pieceA' = logOnePlus(y) - y + ½y² - ⅓y³ + ¼y⁴  (quintic log tail)
+  -- pieceB' = y - (a+b) - ½(ab-ba) - ½y² + ⅓y³ - ¼y⁴ - C₃ - C₄  (algebraic piece)
   --
-  -- Available infrastructure:
-  -- - norm_logOnePlus_sub_sub_sub_sub_le (quintic log bound, in LogSeries.lean)
-  -- - norm_exp_sub_one_sub_sub_sub_sub_le (fifth-order exp bound)
-  -- - real_exp_fifth_order_le_quintic (real Taylor bound)
-  -- - quartic_identity (the degree-4 algebraic identity)
+  -- STEP 2: Bound pieceA' ≤ ‖y‖⁵/(1-‖y‖) ≤ (exp(s)-1)⁵/(2-exp(s))
   --
-  -- The full proof requires ~400 lines of norm bounds and a quintic algebraic identity
-  -- verified by noncomm_ring. Deferred to a follow-up.
+  -- STEP 3: Bound pieceB' ≤ K·s⁵
+  -- Strategy: pieceB' = [quartic pieceB] - ¼y⁴ - C₄
+  --   where quartic pieceB = I₁ + I₂ from the quartic proof.
+  --   Use quartic_identity to decompose I₁, substitute G for F (5th-order exp remainder),
+  --   and bound the combined degree-4 terms + ¼y⁴ + C₄ collectively as O(s⁵).
+  --
+  -- STEP 4: Combine pieceA' and pieceB' bounds.
   sorry
 
 /-- The cubic coefficient of the *symmetric* BCH expansion.
