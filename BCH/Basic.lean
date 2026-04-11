@@ -2380,6 +2380,30 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
         (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 -
         bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b‖ ≤
         2800 * s ^ 5 / (2 - Real.exp s) := by
+      -- pieceB' = quartic_pieceB - ¼y⁴ - C₄
+      -- Use the quartic_identity + G-level refinement + quintic_pure_identity.
+      -- After algebraic decomposition, pieceB' = [quintic terms] (degree-4 = 0).
+      -- Each quintic term ≤ Cs⁵. Total ≤ 50s⁵ ≤ 2800s⁵/(2-exp(s)).
+      --
+      -- Define quintic exp remainders
+      set G₁ := exp a - 1 - a - (2 : 𝕂)⁻¹ • a ^ 2 - (6 : 𝕂)⁻¹ • a ^ 3 -
+          (24 : 𝕂)⁻¹ • a ^ 4
+      set G₂ := exp b - 1 - b - (2 : 𝕂)⁻¹ • b ^ 2 - (6 : 𝕂)⁻¹ • b ^ 3 -
+          (24 : 𝕂)⁻¹ • b ^ 4
+      -- Quintic exp remainder bounds: ‖G₁‖ ≤ α⁵, ‖G₂‖ ≤ β⁵
+      have hG₁_le : ‖G₁‖ ≤ α ^ 5 := by
+        calc ‖G₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 :=
+              norm_exp_sub_one_sub_sub_sub_sub_le (𝕂 := 𝕂) a
+          _ ≤ α ^ 5 := real_exp_fifth_order_le_quintic (norm_nonneg a)
+              (lt_of_le_of_lt hα_le hs34)
+      have hG₂_le : ‖G₂‖ ≤ β ^ 5 := by
+        calc ‖G₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 :=
+              norm_exp_sub_one_sub_sub_sub_sub_le (𝕂 := 𝕂) b
+          _ ≤ β ^ 5 := real_exp_fifth_order_le_quintic (norm_nonneg b)
+              (lt_of_le_of_lt hβ_le hs34)
+      -- TODO: Full algebraic decomposition using quartic_identity + quintic_pure_identity,
+      -- then norm bounds on each quintic term.
+      -- For now, this sorry captures the remaining ~150 lines of the 5th-order analysis.
       sorry
     -- Combine pieceA' + pieceB'
     have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
