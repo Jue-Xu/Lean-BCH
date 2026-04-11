@@ -2296,20 +2296,102 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
     ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
       bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b‖ ≤
       3000 * (‖a‖ + ‖b‖) ^ 5 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  -- SETUP (same as quartic proof)
+  set y := exp a * exp b - 1 with hy_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set α := ‖a‖; set β := ‖b‖
+  have hs_nn : 0 ≤ s := by positivity
+  have hα_nn : (0 : ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0 : ℝ) ≤ β := norm_nonneg b
+  have hα_le : α ≤ s := le_add_of_nonneg_right hβ_nn
+  have hβ_le : β ≤ s := le_add_of_nonneg_left hα_nn
+  have hexp_lt : Real.exp s < 2 := by
+    calc Real.exp s < Real.exp (Real.log 2) := Real.exp_strictMono hab
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom : 0 < 2 - Real.exp s := by linarith
+  have hy_lt : ‖y‖ < 1 := norm_exp_mul_exp_sub_one_lt_one (𝕂 := 𝕂) a b hab
+  have hy_le : ‖y‖ ≤ Real.exp s - 1 := by
+    have : y = (exp a - 1) * exp b + (exp b - 1) := by rw [hy_def, sub_mul, one_mul]; abel
+    calc ‖y‖ = ‖(exp a - 1) * exp b + (exp b - 1)‖ := by rw [this]
+      _ ≤ ‖exp a - 1‖ * ‖exp b‖ + ‖exp b - 1‖ := by
+          calc _ ≤ ‖(exp a - 1) * exp b‖ + _ := norm_add_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (Real.exp α - 1) * Real.exp β + (Real.exp β - 1) := by
+          apply add_le_add
+          · exact mul_le_mul (norm_exp_sub_one_le (𝕂 := 𝕂) a) (norm_exp_le (𝕂 := 𝕂) b)
+              (norm_nonneg _) (by linarith [Real.add_one_le_exp α])
+          · exact norm_exp_sub_one_le (𝕂 := 𝕂) b
+      _ = Real.exp s - 1 := by rw [hs_def, Real.exp_add]; ring
+  have hs34 : s < 3 / 4 := lt_of_lt_of_le hab (by
+    rw [Real.log_le_iff_le_exp (by norm_num : (0 : ℝ) < 2)]
+    calc (2 : ℝ) ≤ 1 + 3 / 4 + (3 / 4) ^ 2 / 2 := by norm_num
+      _ ≤ Real.exp (3 / 4) := Real.quadratic_le_exp_of_nonneg (by norm_num))
+  have hs1 : s < 1 := by linarith
   -- STEP 1: Decompose LHS = pieceA' + pieceB'
-  -- pieceA' = logOnePlus(y) - y + ½y² - ⅓y³ + ¼y⁴  (quintic log tail)
-  -- pieceB' = y - (a+b) - ½(ab-ba) - ½y² + ⅓y³ - ¼y⁴ - C₃ - C₄  (algebraic piece)
-  --
-  -- STEP 2: Bound pieceA' ≤ ‖y‖⁵/(1-‖y‖) ≤ (exp(s)-1)⁵/(2-exp(s))
-  --
+  have hdecomp : bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b =
+      (logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 - (3 : 𝕂)⁻¹ • y ^ 3 +
+        (4 : 𝕂)⁻¹ • y ^ 4) +
+      (y - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+        (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 -
+        bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b) := by
+    unfold bch bch_cubic_term bch_quartic_term; abel
+  rw [hdecomp]
+  -- STEP 2: Bound pieceA' ≤ (exp(s)-1)⁵/(2-exp(s))
+  have hpieceA : ‖logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 -
+      (3 : 𝕂)⁻¹ • y ^ 3 + (4 : 𝕂)⁻¹ • y ^ 4‖ ≤
+      (Real.exp s - 1) ^ 5 / (2 - Real.exp s) :=
+    calc _ ≤ ‖y‖ ^ 5 / (1 - ‖y‖) := norm_logOnePlus_sub_sub_sub_sub_le (𝕂 := 𝕂) y hy_lt
+      _ ≤ _ := div_le_div₀ (pow_nonneg (by linarith [Real.add_one_le_exp s]) _)
+          (pow_le_pow_left₀ (norm_nonneg _) hy_le _) hdenom (by linarith)
   -- STEP 3: Bound pieceB' ≤ K·s⁵
-  -- Strategy: pieceB' = [quartic pieceB] - ¼y⁴ - C₄
-  --   where quartic pieceB = I₁ + I₂ from the quartic proof.
-  --   Use quartic_identity to decompose I₁, substitute G for F (5th-order exp remainder),
-  --   and bound the combined degree-4 terms + ¼y⁴ + C₄ collectively as O(s⁵).
-  --
-  -- STEP 4: Combine pieceA' and pieceB' bounds.
-  sorry
+  -- pieceB' = [quartic_pieceB] - ¼y⁴ - C₄
+  -- where quartic_pieceB = I₁ + I₂ from the quartic proof (‖·‖ ≤ 98s⁴).
+  -- The degree-4 terms collectively cancel to O(s⁵) by the BCH expansion structure.
+  -- This is the main technical step requiring ~300 lines of norm bounds.
+  have hpieceB : ‖y - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b‖ ≤
+      2800 * s ^ 5 / (2 - Real.exp s) := by
+    sorry
+  -- STEP 4: Combine
+  calc _ ≤ ‖logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 -
+          (3 : 𝕂)⁻¹ • y ^ 3 + (4 : 𝕂)⁻¹ • y ^ 4‖ +
+        ‖y - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+          (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 -
+          bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b‖ := norm_add_le _ _
+    _ ≤ (Real.exp s - 1) ^ 5 / (2 - Real.exp s) +
+        2800 * s ^ 5 / (2 - Real.exp s) := by linarith [hpieceA, hpieceB]
+    _ ≤ 3000 * s ^ 5 / (2 - Real.exp s) := by
+        -- Both terms have denominator (2-exp(s)), so combine:
+        -- (exp(s)-1)⁵ + 2800s⁵ ≤ 3000s⁵ iff (exp(s)-1)⁵ ≤ 200s⁵
+        have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
+        have hEs_nn : 0 ≤ Real.exp s - 1 - s := by
+          linarith [Real.quadratic_le_exp_of_nonneg hs_nn, sq_nonneg s]
+        have hEs2 : Real.exp s - 1 - s ≤ s ^ 2 := by
+          have h := Real.norm_exp_sub_one_sub_id_le
+            (show ‖s‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hs_nn]; linarith)
+          rwa [Real.norm_eq_abs, abs_of_nonneg hEs_nn,
+               Real.norm_eq_abs, abs_of_nonneg hs_nn] at h
+        have hE1_le : Real.exp s - 1 ≤ s + s ^ 2 := by linarith
+        have hexp5 : (Real.exp s - 1) ^ 5 ≤ 200 * s ^ 5 :=
+          calc (Real.exp s - 1) ^ 5 ≤ (s + s ^ 2) ^ 5 := pow_le_pow_left₀ hE1_nn hE1_le 5
+            _ = s ^ 5 * (1 + s) ^ 5 := by ring
+            _ ≤ s ^ 5 * 200 := by
+                apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs_nn 5)
+                -- (1+s)⁵ ≤ 200 for s < 3/4. Expand: (1+s)⁵ ≤ (1+s)⁴·(1+s) ≤ 10·2 = 20
+                -- (1+s)^5 ≤ 20 for s < 1
+                have : (1 + s) ^ 5 ≤ (1 + 1) ^ 5 := by
+                  apply pow_le_pow_left₀ (by linarith) (by linarith) 5
+                linarith
+            _ = 200 * s ^ 5 := by ring
+        have h5nn : 0 ≤ s ^ 5 := pow_nonneg hs_nn 5
+        calc (Real.exp s - 1) ^ 5 / (2 - Real.exp s) + 2800 * s ^ 5 / (2 - Real.exp s)
+            = ((Real.exp s - 1) ^ 5 + 2800 * s ^ 5) / (2 - Real.exp s) := by
+              rw [add_div]
+          _ ≤ (200 * s ^ 5 + 2800 * s ^ 5) / (2 - Real.exp s) := by
+              apply div_le_div_of_nonneg_right _ hdenom.le; linarith
+          _ = 3000 * s ^ 5 / (2 - Real.exp s) := by ring_nf
 
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
