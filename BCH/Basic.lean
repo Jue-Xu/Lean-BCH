@@ -1478,82 +1478,48 @@ theorem norm_bch_cubic_term_le (a b : 𝔸) :
     _ ≤ 4 * ‖a‖ ^ 2 * ‖b‖ + 4 * ‖a‖ * ‖b‖ ^ 2 := by gcongr
     _ ≤ s ^ 3 := by nlinarith [sq_nonneg (‖a‖ - ‖b‖)]
 
-/-- The degree-4 BCH term: `-(1/24)([a,[a,[a,b]]] + [b,[b,[b,a]]])`.
+/-- The degree-4 BCH term: `-(1/24)⁅b,⁅a,⁅a,b⁆⁆⁆`.
 
 This is the quartic correction in the BCH expansion:
 `bch(a,b) = a + b + ½[a,b] + bch_cubic_term a b + bch_quartic_term a b + O(s⁵)`.
 
-Written as triple commutators using the Lie bracket `⁅·,·⁆` of the associative algebra:
-`C₄(a,b) = -(1/24)(⁅a,⁅a,⁅a,b⁆⁆⁆ + ⁅b,⁅b,⁅b,a⁆⁆⁆)`.
+The 4th BCH coefficient Z₄ = -(1/24)[b,[a,[a,b]]], verified by direct computation:
+the degree-4 part of y-y²/2+y³/3-y⁴/4 (where y=exp(a)exp(b)-1) equals this expression.
 
-In ring notation (expanded):
-`[x,[x,[x,y]]] = x(x(xy-yx)) - (x(xy-yx))x - x((xy-yx)x) + ((xy-yx)x)x`
-
-We use the Lie bracket notation which Lean handles via `⁅·,·⁆ = a*b - b*a`. -/
+Note: in the free Lie algebra, [b,[a,[a,b]]]+[a,[b,[b,a]]] = 0 (identity in any associative
+algebra), so Z₄ = -(1/24)[b,[a,[a,b]]] = (1/24)[a,[b,[b,a]]]. -/
 noncomputable def bch_quartic_term (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
     [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
-  -((24 : 𝕂)⁻¹ • (a * (a * (a * b - b * a) - (a * b - b * a) * a) -
-    (a * (a * b - b * a) - (a * b - b * a) * a) * a +
-    b * (b * (b * a - a * b) - (b * a - a * b) * b) -
-    (b * (b * a - a * b) - (b * a - a * b) * b) * b))
+  -((24 : 𝕂)⁻¹ • (b * (a * (a * b - b * a) - (a * b - b * a) * a) -
+    (a * (a * b - b * a) - (a * b - b * a) * a) * b))
 
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **Homogeneity of bch_quartic_term**: C₄(c·a, c·b) = c⁴·C₄(a,b).
 This is the key property for extracting the quartic term from the BCH expansion. -/
 theorem bch_quartic_term_smul (a b : 𝔸) (c : 𝕂) :
     bch_quartic_term 𝕂 (c • a) (c • b) = c ^ 4 • bch_quartic_term 𝕂 a b := by
-  -- Helper: quadruple product homogeneity (all association patterns)
-  have q1 : ∀ x y z w : 𝔸,
-      (c • x) * ((c • y) * (c • z) - (c • z) * (c • y)) =
-      c ^ 3 • (x * (y * z - z * y)) := by
-    intro x y z w
-    simp only [mul_sub, smul_mul_assoc, mul_smul_comm, smul_smul, ← smul_sub]
-    congr 1; ring
-  have q2 : ∀ x y z w : 𝔸,
-      ((c • y) * (c • z) - (c • z) * (c • y)) * (c • x) =
-      c ^ 3 • ((y * z - z * y) * x) := by
-    intro x y z w
-    simp only [sub_mul, smul_mul_assoc, mul_smul_comm, smul_smul, ← smul_sub]
-    congr 1; ring
   unfold bch_quartic_term
-  -- Step 1: push c through the first level of products using mul_sub / sub_mul
-  -- After unfolding, the expression is -(24⁻¹ • (big))
-  -- where big = a*DC_a - DC_a*a + b*DC_b - DC_b*b
-  -- and DC_x = x*[x,y] - [x,y]*x
-  -- We need: (c•a)*(...) - (...)(c•a) + (c•b)*(...) - (...)(c•b)
-  -- = c⁴•(a*(...) - (...)*a + b*(...) - (...)*b)
-  -- Approach: use helper lemmas to factor out c from each commutator level.
   simp only [smul_mul_assoc, mul_smul_comm, smul_sub, mul_sub, sub_mul, smul_smul,
-    smul_add, mul_add, add_mul, smul_neg, neg_inj]
+    smul_neg, neg_inj]
   congr 1; congr 1
-  -- Goal should now be about matching scalar coefficients × monomial expressions.
-  -- After simp, the scalars are products of c's and (24)⁻¹.
-  -- Try ring on the scalar part (ring works on 𝕂 which is commutative).
   all_goals (try (congr 1; ring)); try ring
 
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
-/-- Norm bound for bch_quartic_term. -/
+/-- Norm bound for bch_quartic_term: `‖C₄(a,b)‖ ≤ s⁴`.
+The new definition C₄ = -(1/24)[b,[a,[a,b]]] is a single triple commutator,
+so the bound is ‖(1/24)·2β·4α²β‖ = (1/3)α²β² ≤ s⁴. -/
 theorem norm_bch_quartic_term_le (a b : 𝔸) :
     ‖bch_quartic_term 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 4 := by
-  -- bch_quartic_term = -(1/24)•(a•DC_a - DC_a•a + b•DC_b - DC_b•b) where
-  -- DC_a = [a,[a,b]], DC_b = [b,[b,a]] are double commutators with norm ≤ 4α²β, 4αβ²
-  -- Triple commutator norms: ≤ 8α³β, 8αβ³.
-  -- Total: (1/24)•8(α³β+αβ³) ≤ (8/24)s⁴ ≤ s⁴.
   set s := ‖a‖ + ‖b‖
   have ha := norm_nonneg a
   have hb := norm_nonneg b
   have h24 : ‖(24 : 𝕂)⁻¹‖ ≤ 1 := by
     rw [norm_inv, RCLike.norm_ofNat]; norm_num
-  -- Double commutator bounds
+  -- Double commutator bound: ‖[a,[a,b]]‖ ≤ 4α²β
   have hab_comm : ‖a * b - b * a‖ ≤ 2 * ‖a‖ * ‖b‖ := by
     calc _ ≤ ‖a * b‖ + ‖b * a‖ := norm_sub_le _ _
       _ ≤ ‖a‖ * ‖b‖ + ‖b‖ * ‖a‖ := by gcongr <;> exact norm_mul_le _ _
       _ = _ := by ring
-  have hba_comm : ‖b * a - a * b‖ ≤ 2 * ‖a‖ * ‖b‖ := by
-    calc _ ≤ ‖b * a‖ + ‖a * b‖ := norm_sub_le _ _
-      _ ≤ ‖b‖ * ‖a‖ + ‖a‖ * ‖b‖ := by gcongr <;> exact norm_mul_le _ _
-      _ = _ := by ring
-  -- DC_a = a*[a,b]-[a,b]*a, ‖DC_a‖ ≤ 4α²β
   have hA_dc : ‖a * (a * b - b * a) - (a * b - b * a) * a‖ ≤ 4 * ‖a‖ ^ 2 * ‖b‖ := by
     calc _ ≤ ‖a * (a * b - b * a)‖ + ‖(a * b - b * a) * a‖ := norm_sub_le _ _
       _ ≤ ‖a‖ * (2 * ‖a‖ * ‖b‖) + (2 * ‖a‖ * ‖b‖) * ‖a‖ := by
@@ -1561,47 +1527,28 @@ theorem norm_bch_quartic_term_le (a b : 𝔸) :
           · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_left hab_comm ha)
           · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right hab_comm ha)
       _ = _ := by ring
-  -- DC_b = b*[b,a]-[b,a]*b, ‖DC_b‖ ≤ 4αβ²
-  have hB_dc : ‖b * (b * a - a * b) - (b * a - a * b) * b‖ ≤ 4 * ‖a‖ * ‖b‖ ^ 2 := by
-    calc _ ≤ ‖b * (b * a - a * b)‖ + ‖(b * a - a * b) * b‖ := norm_sub_le _ _
-      _ ≤ ‖b‖ * (2 * ‖a‖ * ‖b‖) + (2 * ‖a‖ * ‖b‖) * ‖b‖ := by
-          gcongr
-          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_left hba_comm hb)
-          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right hba_comm hb)
-      _ = _ := by ring
-  -- The quartic term is -(24⁻¹)•(TC_a + TC_b) where TC_x = x•DC_x - DC_x•x
-  -- Rewrite as a norm bound on the definition
+  -- Triple commutator: ‖[b,[a,[a,b]]]‖ = ‖b·DC_a-DC_a·b‖ ≤ 8α²β²
   show ‖bch_quartic_term 𝕂 a b‖ ≤ s ^ 4
   unfold bch_quartic_term
   set DC_a := a * (a * b - b * a) - (a * b - b * a) * a
-  set DC_b := b * (b * a - a * b) - (b * a - a * b) * b
-  -- Triple commutator bounds
-  have hA_tc : ‖a * DC_a - DC_a * a‖ ≤ 8 * ‖a‖ ^ 3 * ‖b‖ := by
-    calc _ ≤ ‖a * DC_a‖ + ‖DC_a * a‖ := norm_sub_le _ _
-      _ ≤ ‖a‖ * ‖DC_a‖ + ‖DC_a‖ * ‖a‖ := by gcongr <;> exact norm_mul_le _ _
-      _ ≤ ‖a‖ * (4 * ‖a‖ ^ 2 * ‖b‖) + (4 * ‖a‖ ^ 2 * ‖b‖) * ‖a‖ := by gcongr
+  have hB_tc : ‖b * DC_a - DC_a * b‖ ≤ 8 * ‖a‖ ^ 2 * ‖b‖ ^ 2 := by
+    calc _ ≤ ‖b * DC_a‖ + ‖DC_a * b‖ := norm_sub_le _ _
+      _ ≤ ‖b‖ * ‖DC_a‖ + ‖DC_a‖ * ‖b‖ := by gcongr <;> exact norm_mul_le _ _
+      _ ≤ ‖b‖ * (4 * ‖a‖ ^ 2 * ‖b‖) + (4 * ‖a‖ ^ 2 * ‖b‖) * ‖b‖ := by gcongr
       _ = _ := by ring
-  have hB_tc : ‖b * DC_b - DC_b * b‖ ≤ 8 * ‖a‖ * ‖b‖ ^ 3 := by
-    calc _ ≤ ‖b * DC_b‖ + ‖DC_b * b‖ := norm_sub_le _ _
-      _ ≤ ‖b‖ * ‖DC_b‖ + ‖DC_b‖ * ‖b‖ := by gcongr <;> exact norm_mul_le _ _
-      _ ≤ ‖b‖ * (4 * ‖a‖ * ‖b‖ ^ 2) + (4 * ‖a‖ * ‖b‖ ^ 2) * ‖b‖ := by gcongr
-      _ = _ := by ring
-  -- Sum of triple commutators (left-associated: a*DC_a - DC_a*a + b*DC_b - DC_b*b)
-  have hsum : ‖a * DC_a - DC_a * a + b * DC_b - DC_b * b‖ ≤
-      8 * (‖a‖ ^ 3 * ‖b‖ + ‖a‖ * ‖b‖ ^ 3) := by
-    have : a * DC_a - DC_a * a + b * DC_b - DC_b * b =
-        (a * DC_a - DC_a * a) + (b * DC_b - DC_b * b) := by abel
-    rw [this]
-    calc _ ≤ ‖a * DC_a - DC_a * a‖ + ‖b * DC_b - DC_b * b‖ := norm_add_le _ _
-      _ ≤ 8 * ‖a‖ ^ 3 * ‖b‖ + 8 * ‖a‖ * ‖b‖ ^ 3 := by linarith
-      _ = _ := by ring
-  -- Final
-  calc ‖-((24 : 𝕂)⁻¹ • (a * DC_a - DC_a * a + b * DC_b - DC_b * b))‖
-      = ‖(24 : 𝕂)⁻¹ • (a * DC_a - DC_a * a + b * DC_b - DC_b * b)‖ := norm_neg _
-    _ ≤ ‖(24 : 𝕂)⁻¹‖ * ‖a * DC_a - DC_a * a + b * DC_b - DC_b * b‖ := norm_smul_le _ _
-    _ ≤ 1 * (8 * (‖a‖ ^ 3 * ‖b‖ + ‖a‖ * ‖b‖ ^ 3)) := by gcongr
-    _ = 8 * (‖a‖ ^ 3 * ‖b‖ + ‖a‖ * ‖b‖ ^ 3) := one_mul _
-    _ ≤ s ^ 4 := by nlinarith [sq_nonneg (‖a‖ - ‖b‖)]
+  calc ‖-((24 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))‖
+      = ‖(24 : 𝕂)⁻¹ • (b * DC_a - DC_a * b)‖ := norm_neg _
+    _ ≤ ‖(24 : 𝕂)⁻¹‖ * ‖b * DC_a - DC_a * b‖ := norm_smul_le _ _
+    _ ≤ 1 * (8 * ‖a‖ ^ 2 * ‖b‖ ^ 2) := by gcongr
+    _ = 8 * ‖a‖ ^ 2 * ‖b‖ ^ 2 := one_mul _
+    _ ≤ s ^ 4 := by
+        -- 8α²β² ≤ (α+β)⁴ since αβ ≤ (α+β)²/4 → α²β² ≤ s⁴/16 → 8α²β² ≤ s⁴/2
+        have hab : ‖a‖ * ‖b‖ ≤ s ^ 2 / 4 := by nlinarith [sq_nonneg (‖a‖ - ‖b‖)]
+        have hab2 : ‖a‖ ^ 2 * ‖b‖ ^ 2 ≤ s ^ 4 / 16 := by
+          have h1 : (‖a‖ * ‖b‖) ^ 2 ≤ (s ^ 2 / 4) ^ 2 :=
+            sq_le_sq' (by nlinarith) hab
+          nlinarith [h1]
+        nlinarith
 
 /-! ### Quartic algebraic identity for BCH -/
 
