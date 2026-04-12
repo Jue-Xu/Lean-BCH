@@ -2236,25 +2236,20 @@ theorem norm_bch_quartic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
 -- After ×24 clearing: the Y₄-½(Y₁Y₃+Y₂²+Y₃Y₁)+⅓(Y₁²Y₂+...)-¼Y₁⁴+C₄ = 0.
 set_option maxHeartbeats 800000000 in
 omit [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸] in
-private theorem quintic_pure_identity_cleared (a b : 𝔸) :
-    let z := a + b
-    let U := 2 • (a * b) + a ^ 2 + b ^ 2  -- 2Y₂ = 2ab+a²+b²
-    -- 24×[Y₄ - ½(Y₁Y₃+Y₂²+Y₃Y₁) + ⅓(Y₁²Y₂+Y₁Y₂Y₁+Y₂Y₁²) - ¼Y₁⁴ + C₄] = 0
-    -- 24Y₄ = a⁴+4a³b+6a²b²+4ab³+b⁴
+theorem quintic_pure_identity_cleared (a b : 𝔸) :
+    -- 24×[Y₄-½(Y₁Y₃+Y₂²+Y₃Y₁)+⅓(Y₁²Y₂+Y₁Y₂Y₁+Y₂Y₁²)-¼Y₁⁴+C₄] = 0
+    -- z := a+b, U := 2ab+a²+b² (= 2Y₂)
     (a ^ 4 + 4 • (a ^ 3 * b) + 6 • (a ^ 2 * b ^ 2) + 4 • (a * b ^ 3) + b ^ 4) -
-    -- 12(Y₁Y₃+Y₃Y₁) where 6Y₃ = a³+3a²b+3ab²+b³
-    2 • (z * (a ^ 3 + 3 • (a ^ 2 * b) + 3 • (a * b ^ 2) + b ^ 3) +
-         (a ^ 3 + 3 • (a ^ 2 * b) + 3 • (a * b ^ 2) + b ^ 3) * z) -
-    -- 12Y₂² = 3U² where U = 2Y₂
-    3 • (U * U) +
-    -- 8(Y₁²Y₂+Y₁Y₂Y₁+Y₂Y₁²) = 4(z²U+zUz+Uz²)
-    4 • (z ^ 2 * U + z * U * z + U * z ^ 2) -
-    -- 6Y₁⁴
-    6 • z ^ 4 +
-    -- 24C₄ = -[b,[a,[a,b]]]
+    2 • ((a + b) * (a ^ 3 + 3 • (a ^ 2 * b) + 3 • (a * b ^ 2) + b ^ 3) +
+         (a ^ 3 + 3 • (a ^ 2 * b) + 3 • (a * b ^ 2) + b ^ 3) * (a + b)) -
+    3 • ((2 • (a * b) + a ^ 2 + b ^ 2) * (2 • (a * b) + a ^ 2 + b ^ 2)) +
+    4 • ((a + b) ^ 2 * (2 • (a * b) + a ^ 2 + b ^ 2) +
+         (a + b) * (2 • (a * b) + a ^ 2 + b ^ 2) * (a + b) +
+         (2 • (a * b) + a ^ 2 + b ^ 2) * (a + b) ^ 2) -
+    6 • (a + b) ^ 4 +
     (b * (a * (a * b - b * a) - (a * b - b * a) * a) -
      (a * (a * b - b * a) - (a * b - b * a) * a) * b) = 0 := by
-  dsimp only; noncomm_ring
+  noncomm_ring
 
 set_option maxHeartbeats 128000000 in
 include 𝕂 in
