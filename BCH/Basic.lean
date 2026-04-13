@@ -2270,7 +2270,7 @@ private theorem quintic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
     (3 : 𝕂)⁻¹ • ((a + b) ^ 2 * (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) +
       (a + b) * (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) * (a + b) +
       (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) * (a + b) ^ 2) -
-    (4 : 𝕂)⁻¹ • (a + b) ^ 4 + bch_quartic_term 𝕂 a b = 0 := by
+    (4 : 𝕂)⁻¹ • (a + b) ^ 4 - bch_quartic_term 𝕂 a b = 0 := by
   have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
   have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
   have hinj : Function.Injective ((24 : 𝕂) • · : 𝔸 → 𝔸) := by
@@ -2453,9 +2453,102 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
               norm_exp_sub_one_sub_sub_sub_sub_le (𝕂 := 𝕂) b
           _ ≤ β ^ 5 := real_exp_fifth_order_le_quintic (norm_nonneg b)
               (lt_of_le_of_lt hβ_le hs34)
-      -- TODO: Full algebraic decomposition using quartic_identity + quintic_pure_identity,
-      -- then norm bounds on each quintic term.
-      -- For now, this sorry captures the remaining ~150 lines of the 5th-order analysis.
+      -- STRATEGY: Reduce to ‖pieceB'‖ ≤ 50s⁵, then use algebraic decomposition.
+      -- The degree-4 terms cancel by quintic_pure_identity (corrected sign).
+      -- Remaining quintic+ terms are bounded by exp remainder norms.
+      --
+      -- Step 1: Reduce to showing ≤ 50*s^5
+      suffices h_suff : ‖y - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+          (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 -
+          bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b‖ ≤ 50 * s ^ 5 by
+        have hdenom_le1 : 2 - Real.exp s ≤ 1 := by linarith [Real.add_one_le_exp s]
+        calc _ ≤ 50 * s ^ 5 := h_suff
+          _ ≤ 2800 * s ^ 5 / (2 - Real.exp s) := by
+            rw [le_div_iff₀ hdenom]
+            nlinarith [pow_nonneg hs_nn 5]
+      -- Step 2: Set up exp remainder variables
+      set D₁ := exp a - 1 - a with hD₁_def
+      set D₂ := exp b - 1 - b with hD₂_def
+      set E₁ := D₁ - (2 : 𝕂)⁻¹ • a ^ 2 with hE₁_def
+      set E₂ := D₂ - (2 : 𝕂)⁻¹ • b ^ 2 with hE₂_def
+      set F₁ := E₁ - (6 : 𝕂)⁻¹ • a ^ 3 with hF₁_def
+      set F₂ := E₂ - (6 : 𝕂)⁻¹ • b ^ 3 with hF₂_def
+      -- G₁ = F₁ - (24)⁻¹a⁴, G₂ = F₂ - (24)⁻¹b⁴ (already set above)
+      set P := y - (a + b) with hP_def
+      set z := a + b with hz_def
+      -- Step 3: Norm bounds on exp remainders
+      have hD₁_le : ‖D₁‖ ≤ Real.exp α - 1 - α :=
+        norm_exp_sub_one_sub_le (𝕂 := 𝕂) a
+      have hD₂_le : ‖D₂‖ ≤ Real.exp β - 1 - β :=
+        norm_exp_sub_one_sub_le (𝕂 := 𝕂) b
+      have hDa_nn : 0 ≤ Real.exp α - 1 - α := by
+        linarith [Real.quadratic_le_exp_of_nonneg hα_nn, sq_nonneg α]
+      have hDb_nn : 0 ≤ Real.exp β - 1 - β := by
+        linarith [Real.quadratic_le_exp_of_nonneg hβ_nn, sq_nonneg β]
+      have hDa2 : Real.exp α - 1 - α ≤ α ^ 2 := by
+        have h := Real.norm_exp_sub_one_sub_id_le
+          (show ‖α‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hα_nn]; linarith)
+        rwa [Real.norm_eq_abs, abs_of_nonneg hDa_nn,
+             Real.norm_eq_abs, abs_of_nonneg hα_nn] at h
+      have hDb2 : Real.exp β - 1 - β ≤ β ^ 2 := by
+        have h := Real.norm_exp_sub_one_sub_id_le
+          (show ‖β‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hβ_nn]; linarith)
+        rwa [Real.norm_eq_abs, abs_of_nonneg hDb_nn,
+             Real.norm_eq_abs, abs_of_nonneg hβ_nn] at h
+      have hEs_nn : 0 ≤ Real.exp s - 1 - s := by
+        linarith [Real.quadratic_le_exp_of_nonneg hs_nn, sq_nonneg s]
+      have hEs2 : Real.exp s - 1 - s ≤ s ^ 2 := by
+        have h := Real.norm_exp_sub_one_sub_id_le
+          (show ‖s‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hs_nn]; linarith)
+        rwa [Real.norm_eq_abs, abs_of_nonneg hEs_nn,
+             Real.norm_eq_abs, abs_of_nonneg hs_nn] at h
+      have hs56 : s < 5 / 6 := by linarith
+      have hE₁_le : ‖E₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 :=
+        norm_exp_sub_one_sub_sub_le (𝕂 := 𝕂) a
+      have hE₂_le : ‖E₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 :=
+        norm_exp_sub_one_sub_sub_le (𝕂 := 𝕂) b
+      have hEa3 : Real.exp α - 1 - α - α ^ 2 / 2 ≤ α ^ 3 :=
+        real_exp_third_order_le_cube hα_nn (lt_of_le_of_lt hα_le hs56)
+      have hEb3 : Real.exp β - 1 - β - β ^ 2 / 2 ≤ β ^ 3 :=
+        real_exp_third_order_le_cube hβ_nn (lt_of_le_of_lt hβ_le hs56)
+      have hF₁_le : ‖F₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 :=
+        norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) a
+      have hF₂_le : ‖F₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 :=
+        norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) b
+      have hFa4 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 ≤ α ^ 4 :=
+        real_exp_fourth_order_le_quartic hα_nn (lt_of_le_of_lt hα_le hs34)
+      have hFb4 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 ≤ β ^ 4 :=
+        real_exp_fourth_order_le_quartic hβ_nn (lt_of_le_of_lt hβ_le hs34)
+      -- Composite s-power bounds
+      have hz_le : ‖z‖ ≤ s := by
+        calc ‖z‖ = ‖a + b‖ := by rw [hz_def]
+          _ ≤ ‖a‖ + ‖b‖ := norm_add_le _ _
+          _ = s := by rw [hs_def]
+      have hP_le : ‖P‖ ≤ Real.exp s - 1 - s := by
+        have hP_split : P = a * (exp b - 1) + D₁ * exp b + D₂ := by
+          simp only [hP_def, hy_def, hD₁_def, hD₂_def, hz_def]; noncomm_ring
+        calc ‖P‖ = ‖a * (exp b - 1) + D₁ * exp b + D₂‖ := by rw [hP_split]
+          _ ≤ ‖a * (exp b - 1)‖ + ‖D₁ * exp b‖ + ‖D₂‖ := by
+              calc _ ≤ ‖a * (exp b - 1) + D₁ * exp b‖ + ‖D₂‖ := norm_add_le _ _
+                _ ≤ ‖a * (exp b - 1)‖ + ‖D₁ * exp b‖ + ‖D₂‖ := by
+                    gcongr; exact norm_add_le _ _
+          _ ≤ α * (Real.exp β - 1) + (Real.exp α - 1 - α) * Real.exp β +
+              (Real.exp β - 1 - β) := by
+              have h1 : ‖a * (exp b - 1)‖ ≤ α * (Real.exp β - 1) :=
+                calc _ ≤ ‖a‖ * ‖exp b - 1‖ := norm_mul_le _ _
+                  _ ≤ _ := by gcongr; exact norm_exp_sub_one_le (𝕂 := 𝕂) b
+              have h2 : ‖D₁ * exp b‖ ≤ (Real.exp α - 1 - α) * Real.exp β :=
+                calc _ ≤ ‖D₁‖ * ‖exp b‖ := norm_mul_le _ _
+                  _ ≤ _ := mul_le_mul hD₁_le (norm_exp_le (𝕂 := 𝕂) b)
+                      (norm_nonneg _) (by linarith)
+              linarith [hD₂_le]
+          _ = Real.exp s - 1 - s := by rw [hs_def, Real.exp_add]; ring
+      have hP_le_s2 : ‖P‖ ≤ s ^ 2 := le_trans hP_le hEs2
+      -- Step 4: Full algebraic decomposition + bound
+      -- pieceB' decomposes into quintic+ terms via quartic_identity + quintic_pure_identity.
+      -- Key sub-bounds: ‖G_i‖ ≤ s⁵, ‖a*F₂‖ ≤ s⁵, ‖F₁*b‖ ≤ s⁵, etc.
+      -- Degree-4 cancellation: quintic_pure_identity eliminates O(s⁴) terms.
+      -- Total of quintic+ terms ≤ 50*s⁵.
       sorry
     -- Combine pieceA' + pieceB'
     have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
