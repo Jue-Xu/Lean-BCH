@@ -2750,14 +2750,15 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
             ((2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) -
               (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z)) +
             ((2 : 𝕂)⁻¹ • P₂ ^ 2 - (2 : 𝕂)⁻¹ • P ^ 2) := by
-          -- This is additive rearrangement, but abel can't handle (c:𝕂)•x atoms.
-          -- Needs ×24 scalar clearing + noncomm_ring (same pattern as quartic_identity).
+          -- Additive rearrangement: matches terms from I₁ (quartic_identity)
+          -- with degree-4 terms from corr₁. After ×24 clearing, it's a ring identity.
+          -- (Same ×24+noncomm_ring pattern as quartic_identity, line 1634.)
           sorry
-        rw [h_regroup]
-        -- Now bound each group by triangle inequality
-        -- Group A: ‖F₁-(1/24)a⁴‖ = ‖G₁‖ ≤ s⁵ (by definition of G₁)
-        -- Group B: ‖F₂-(1/24)b⁴‖ = ‖G₂‖ ≤ s⁵
-        -- etc.
+        -- After h_regroup, bound by triangle inequality on 7 groups.
+        -- Each group has a F, G, or S factor giving O(s⁵):
+        -- ‖G₁‖,‖G₂‖ ≤ s⁵; ‖aF₂‖,‖F₁b‖ ≤ s⁵;
+        -- ‖D₁D₂-¼a²b²‖ ≤ 2s⁵; cross ≤ 6s⁵; P² ≤ 4s⁵.
+        -- Total: 16s⁵ ≤ 20s⁵.
         sorry
       -- Group 2: ‖I₂-corr₂‖ ≤ 8s⁵ (I₂ refined by P→P₂+S)
       have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
