@@ -2593,10 +2593,51 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
                 _ ≤ _ := by linarith [norm_add_le (y ^ 3 * P) (y ^ 2 * P * z)]
           _ ≤ (2*s)^3*s^2 + (2*s)^2*s^2*s + 2*s*s^2*s^2 + s^2*s^3 := by linarith
           _ = 15 * s ^ 5 := by ring
-      -- Step 5: Full algebraic decomposition + degree-4 cancellation + norm bounds
-      -- Uses quartic_identity + quintic_pure_identity to decompose pieceB' into
-      -- quintic+ groups. The y⁴-z⁴ bound (hy4z4) is proved above.
-      -- Remaining: quartic_identity extraction + quintic_pure_identity cancellation.
+      -- Step 5: Additional norm bounds needed for the quintic+ terms
+      have hS_le : ‖P - (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2)‖ ≤
+          5 * s ^ 3 := by
+        -- S = P - P₂ = E₁+E₂+aD₂+D₁b+D₁D₂ (starts at degree 3)
+        have hS_eq : P - (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) =
+            E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂ := by
+          simp only [hP_def, hy_def, hE₁_def, hE₂_def, hD₁_def, hD₂_def, hz_def]
+          noncomm_ring
+        rw [hS_eq]
+        have hE₁_s3 : ‖E₁‖ ≤ α ^ 3 := le_trans hE₁_le hEa3
+        have hE₂_s3 : ‖E₂‖ ≤ β ^ 3 := le_trans hE₂_le hEb3
+        have haD₂ : ‖a * D₂‖ ≤ α * β ^ 2 :=
+          calc _ ≤ ‖a‖ * ‖D₂‖ := norm_mul_le _ _
+            _ ≤ _ := mul_le_mul_of_nonneg_left (le_trans hD₂_le hDb2) hα_nn
+        have hD₁b : ‖D₁ * b‖ ≤ α ^ 2 * β :=
+          calc _ ≤ ‖D₁‖ * ‖b‖ := norm_mul_le _ _
+            _ ≤ _ := mul_le_mul (le_trans hD₁_le hDa2) le_rfl hβ_nn (by positivity)
+        have hDD : ‖D₁ * D₂‖ ≤ α ^ 2 * β ^ 2 :=
+          calc _ ≤ ‖D₁‖ * ‖D₂‖ := norm_mul_le _ _
+            _ ≤ _ := mul_le_mul (le_trans hD₁_le hDa2) (le_trans hD₂_le hDb2)
+                (norm_nonneg _) (by positivity)
+        calc ‖E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂‖
+            ≤ ‖E₁‖ + ‖E₂‖ + ‖a * D₂‖ + ‖D₁ * b‖ + ‖D₁ * D₂‖ := by
+              have := norm_add_le E₁ E₂
+              have := norm_add_le (E₁ + E₂) (a * D₂)
+              have := norm_add_le (E₁ + E₂ + a * D₂) (D₁ * b)
+              have := norm_add_le (E₁ + E₂ + a * D₂ + D₁ * b) (D₁ * D₂)
+              linarith
+          _ ≤ α ^ 3 + β ^ 3 + α * β ^ 2 + α ^ 2 * β + α ^ 2 * β ^ 2 := by
+              linarith [hE₁_s3, hE₂_s3, haD₂, hD₁b, hDD]
+          _ ≤ 5 * s ^ 3 := by nlinarith [pow_le_pow_left₀ hα_nn hα_le 3,
+              pow_le_pow_left₀ hβ_nn hβ_le 3, pow_le_pow_left₀ hα_nn hα_le 2,
+              pow_le_pow_left₀ hβ_nn hβ_le 2, pow_nonneg hs_nn 4]
+      -- Step 6: The full bound
+      -- pieceB' decomposes (via quartic_identity + quintic_pure_identity degree-4 cancellation)
+      -- into quintic+ terms. After triangle inequality, each group is ≤ Cs⁵.
+      -- The algebraic decomposition identity is:
+      --   pieceB' = G₁+G₂+aF₂+F₁b+½(a²E₂+E₁b²)+E₁E₂
+      --            -½(z·S_rest+S_rest·z)-½(P₂S+SP₂+S²)
+      --            +⅓(z²S+zSz+Sz²+zP²+PzP+P²z+P³)
+      --            -¼(y⁴-z⁴)
+      -- where S_rest = F₁+F₂+aE₂+E₁b+D₁D₂, S = P-P₂.
+      -- This follows from quartic_identity + quintic_pure_identity + substitutions.
+      --
+      -- Norm budget: G(2)+F·x(2)+E-cross(2)+z·S_rest(6)+P₂·S(3)+S²(1)+I₂(4)+y⁴(4) = 24 ≤ 50.
       sorry
     -- Combine pieceA' + pieceB'
     have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
