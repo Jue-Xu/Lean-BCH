@@ -2732,13 +2732,100 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
         -- Each term bounded by Cs⁵. Total ≤ 20s⁵.
         -- (Proof: substitute quartic_identity + definitional equalities + triangle inequality)
         sorry
-      -- Group 2: ‖I₂-corr₂‖ (I₂ refined by P→P₂+S)
+      -- Group 2: ‖I₂-corr₂‖ ≤ 8s⁵ (I₂ refined by P→P₂+S)
       have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
-        -- I₂-corr₂ = ⅓(y³-z³-(z²P₂+zP₂z+P₂z²))
-        -- = ⅓(z²S+zSz+Sz²+zP²+PzP+P²z+P³) where S = P-P₂
-        -- Each z²S term: s²·5s³ = 5s⁵; each zP²: s·s⁴; P³ = s⁶.
-        -- Total: ⅓(15s⁵+3s⁵+s⁶) ≤ 7s⁵ ≤ 8s⁵.
-        sorry
+        -- Factor out ⅓: I₂-corr₂ = ⅓•((y³-z³)-(z²P₂+zP₂z+P₂z²))
+        -- Inner ring identity: using y=z+P, the inner expr equals
+        -- z²(P-P₂)+z(P-P₂)z+(P-P₂)z²+zP²+PzP+P²z+P³
+        have hy_zP : y = z + P := by simp only [hP_def, hz_def]; abel
+        have hinner : y ^ 3 - z ^ 3 - (z ^ 2 * P₂ + z * P₂ * z + P₂ * z ^ 2) =
+            z ^ 2 * (P - P₂) + z * (P - P₂) * z + (P - P₂) * z ^ 2 +
+            z * P ^ 2 + P * z * P + P ^ 2 * z + P ^ 3 := by
+          rw [hy_zP]; noncomm_ring
+        have hI₂_alg : I₂ - corr₂ = (3 : 𝕂)⁻¹ •
+            (z ^ 2 * (P - P₂) + z * (P - P₂) * z + (P - P₂) * z ^ 2 +
+             z * P ^ 2 + P * z * P + P ^ 2 * z + P ^ 3) := by
+          -- Factor out ⅓ then use ring identity hinner
+          -- I₂ = ⅓(y³-z³), corr₂ = ⅓(z²P₂+zP₂z+P₂z²) → diff = ⅓(hinner)
+          sorry -- algebraic: simp [hI₂_def] + smul_sub + hinner
+        rw [hI₂_alg]
+        -- Bound each of 7 terms using ‖P-P₂‖ ≤ 5s³, ‖P‖ ≤ s², ‖z‖ ≤ s
+        have hSn : ‖P - P₂‖ ≤ 5 * s ^ 3 := hS_le
+        -- Triangle inequality: ‖⅓•(sum)‖ ≤ ‖⅓‖·(sum of norms) ≤ 1·(sum of norms)
+        have h3le : ‖(3 : 𝕂)⁻¹‖ ≤ 1 := by rw [norm_inv, RCLike.norm_ofNat]; norm_num
+        -- Each term: z²S ≤ s²·5s³ = 5s⁵, zP² ≤ s·s⁴ = s⁵, P³ ≤ s⁶
+        -- 7 terms: 3×5s⁵ + 3×s⁵ + s⁶ = 18s⁵+s⁶ ≤ 19s⁵
+        -- With ‖⅓‖ ≤ 1: total ≤ 19s⁵ ≤ 8s⁵? NO — need tighter.
+        -- Actually ‖⅓‖ = 1/3, so total ≤ ⅓·19s⁵ ≈ 6.3s⁵ ≤ 8s⁵ ✓
+        -- But using ‖⅓‖ ≤ 1 gives 19s⁵ which is > 8s⁵.
+        -- Use exact value: ‖⅓‖ = 1/3.
+        have h3eq : ‖(3 : 𝕂)⁻¹‖ = (3 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+        calc _ ≤ ‖(3 : 𝕂)⁻¹‖ * ‖z ^ 2 * (P - P₂) + z * (P - P₂) * z +
+                (P - P₂) * z ^ 2 + z * P ^ 2 + P * z * P + P ^ 2 * z + P ^ 3‖ :=
+              norm_smul_le _ _
+          _ ≤ (3 : ℝ)⁻¹ * (19 * s ^ 5) := by
+              rw [h3eq]; gcongr
+              -- Bound inner sum by 19s⁵ via triangle inequality
+              have t1 : ‖z ^ 2 * (P - P₂)‖ ≤ 5 * s ^ 5 := by
+                calc _ ≤ ‖z‖^2 * ‖P - P₂‖ := by
+                      calc _ ≤ ‖z ^ 2‖ * _ := norm_mul_le _ _
+                        _ ≤ _ := by gcongr; exact norm_pow_le z 2
+                  _ ≤ s^2 * (5*s^3) := mul_le_mul (pow_le_pow_left₀ (norm_nonneg z) hz_le 2)
+                      hSn (norm_nonneg _) (by positivity)
+                  _ = _ := by ring
+              have t2 : ‖z * (P - P₂) * z‖ ≤ 5 * s ^ 5 := by
+                calc _ ≤ ‖z‖ * ‖P - P₂‖ * ‖z‖ := by
+                      calc _ ≤ ‖z * (P - P₂)‖ * ‖z‖ := norm_mul_le _ _
+                        _ ≤ _ := by gcongr; exact norm_mul_le _ _
+                  _ ≤ s * (5*s^3) * s := mul_le_mul (mul_le_mul hz_le hSn (norm_nonneg _)
+                      (by positivity)) hz_le (norm_nonneg _) (by positivity)
+                  _ = _ := by ring
+              have t3 : ‖(P - P₂) * z ^ 2‖ ≤ 5 * s ^ 5 := by
+                calc _ ≤ ‖P - P₂‖ * ‖z‖^2 := by
+                      calc _ ≤ _ * ‖z ^ 2‖ := norm_mul_le _ _
+                        _ ≤ _ := by gcongr; exact norm_pow_le z 2
+                  _ ≤ (5*s^3) * s^2 := mul_le_mul hSn (pow_le_pow_left₀ (norm_nonneg z)
+                      hz_le 2) (by positivity) (by positivity)
+                  _ = 5 * s ^ 5 := by ring
+              have t4 : ‖z * P ^ 2‖ ≤ s ^ 5 := by
+                calc _ ≤ ‖z‖ * ‖P ^ 2‖ := norm_mul_le _ _
+                  _ ≤ ‖z‖ * ‖P‖ ^ 2 := by gcongr; exact norm_pow_le P 2
+                  _ ≤ s * (s ^ 2) ^ 2 := by
+                      exact mul_le_mul hz_le (pow_le_pow_left₀ (norm_nonneg P) hP_le_s2 2)
+                        (by positivity) hs_nn
+                  _ = s ^ 5 := by ring
+              have t5 : ‖P * z * P‖ ≤ s ^ 5 := by
+                calc _ ≤ ‖P * z‖ * ‖P‖ := norm_mul_le _ _
+                  _ ≤ (‖P‖ * ‖z‖) * ‖P‖ := by gcongr; exact norm_mul_le _ _
+                  _ ≤ (s ^ 2 * s) * s ^ 2 := by
+                      exact mul_le_mul (mul_le_mul hP_le_s2 hz_le (norm_nonneg _)
+                        (by positivity)) hP_le_s2 (norm_nonneg _) (by positivity)
+                  _ = s ^ 5 := by ring
+              have t6 : ‖P ^ 2 * z‖ ≤ s ^ 5 := by
+                calc _ ≤ ‖P ^ 2‖ * ‖z‖ := norm_mul_le _ _
+                  _ ≤ ‖P‖ ^ 2 * ‖z‖ := by gcongr; exact norm_pow_le P 2
+                  _ ≤ (s ^ 2) ^ 2 * s := by
+                      exact mul_le_mul (pow_le_pow_left₀ (norm_nonneg P) hP_le_s2 2)
+                        hz_le (norm_nonneg _) (by positivity)
+                  _ = s ^ 5 := by ring
+              have t7 : ‖P ^ 3‖ ≤ s ^ 5 := by
+                calc _ ≤ ‖P‖^3 := norm_pow_le P 3
+                  _ ≤ (s^2)^3 := pow_le_pow_left₀ (norm_nonneg P) hP_le_s2 3
+                  _ = s ^ 6 := by ring
+                  _ ≤ s ^ 5 := by nlinarith [pow_nonneg hs_nn 5]
+              -- Total via triangle inequality
+              have := norm_add_le (z ^ 2 * (P - P₂) + z * (P - P₂) * z +
+                  (P - P₂) * z ^ 2 + z * P ^ 2 + P * z * P + P ^ 2 * z) (P ^ 3)
+              have := norm_add_le (z ^ 2 * (P - P₂) + z * (P - P₂) * z +
+                  (P - P₂) * z ^ 2 + z * P ^ 2 + P * z * P) (P ^ 2 * z)
+              have := norm_add_le (z ^ 2 * (P - P₂) + z * (P - P₂) * z +
+                  (P - P₂) * z ^ 2 + z * P ^ 2) (P * z * P)
+              have := norm_add_le (z ^ 2 * (P - P₂) + z * (P - P₂) * z +
+                  (P - P₂) * z ^ 2) (z * P ^ 2)
+              have := norm_add_le (z ^ 2 * (P - P₂) + z * (P - P₂) * z) ((P - P₂) * z ^ 2)
+              have := norm_add_le (z ^ 2 * (P - P₂)) (z * (P - P₂) * z)
+              nlinarith
+          _ ≤ 8 * s ^ 5 := by nlinarith [pow_nonneg hs_nn 5]
       -- Group 3: ¼‖y⁴-z⁴‖ ≤ ¼·15s⁵
       have hGroup3 : ‖(4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4)‖ ≤ 4 * s ^ 5 :=
         calc _ ≤ ‖(4 : 𝕂)⁻¹‖ * ‖y ^ 4 - z ^ 4‖ := norm_smul_le _ _
