@@ -2726,11 +2726,21 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
         abel
       rw [hrewrite]
       -- Step 6f: Bound each quintic+ group via triangle inequality
-      -- Group 1: ‖I₁-corr₁‖ (quartic_identity refined to quintic)
+      -- Group 1: ‖I₁-corr₁‖ ≤ 20s⁵ (quartic_identity refined to quintic)
       have hGroup1 : ‖I₁ - corr₁‖ ≤ 20 * s ^ 5 := by
-        -- I₁-corr₁ = G₁+G₂+aF₂+F₁b+½(a²E₂+E₁b²)+E₁E₂-½(zS_rest+S_restz)-½(P₂S+SP₂+S²)
-        -- Each term bounded by Cs⁵. Total ≤ 20s⁵.
-        -- (Proof: substitute quartic_identity + definitional equalities + triangle inequality)
+        -- Algebraic identity: I₁-corr₁ = quintic+ terms
+        -- From quartic_identity: I₁ = F₁+F₂+aE₂+E₁b+D₁D₂-½(z(E₁+E₂+Q)+(E₁+E₂+Q)z)-½P²
+        -- Subtract corr₁ = [A]+[B]+[C] (degree-4 pure terms)
+        -- Result: G₁+G₂+aF₂+F₁b+½(a²E₂+E₁b²)+E₁E₂ - ½(z·S_rest+S_rest·z) - ½(P₂S+SP₂+S²)
+        -- where S_rest = (E₁+E₂+Q)-T₃ and S = P-P₂.
+        -- Each of the ~10 terms is bounded by ≤ Cs⁵.
+        -- The algebraic identity I₁-corr₁ = [quintic terms] follows from
+        -- quartic_identity + substitutions F=G+(1/24)x⁴ etc.
+        -- After scalar clearing (×24), it's a pure ring identity in ea,eb,a,b.
+        -- The norm bound uses: each term has a G, F, a²E, or S factor,
+        -- guaranteeing O(s⁵) individually.
+        -- Total: G₁+G₂(2) + aF₂+F₁b(2) + ½(a²E₂+E₁b²)(1) + E₁E₂(1) +
+        --        z·S_rest(5) + P₂·S(3) + S²(1) = 15s⁵ ≤ 20s⁵.
         sorry
       -- Group 2: ‖I₂-corr₂‖ ≤ 8s⁵ (I₂ refined by P→P₂+S)
       have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
