@@ -2734,13 +2734,30 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
         -- Result: G₁+G₂+aF₂+F₁b+½(a²E₂+E₁b²)+E₁E₂ - ½(z·S_rest+S_rest·z) - ½(P₂S+SP₂+S²)
         -- where S_rest = (E₁+E₂+Q)-T₃ and S = P-P₂.
         -- Each of the ~10 terms is bounded by ≤ Cs⁵.
-        -- The algebraic identity I₁-corr₁ = [quintic terms] follows from
-        -- quartic_identity + substitutions F=G+(1/24)x⁴ etc.
-        -- After scalar clearing (×24), it's a pure ring identity in ea,eb,a,b.
-        -- The norm bound uses: each term has a G, F, a²E, or S factor,
-        -- guaranteeing O(s⁵) individually.
-        -- Total: G₁+G₂(2) + aF₂+F₁b(2) + ½(a²E₂+E₁b²)(1) + E₁E₂(1) +
-        --        z·S_rest(5) + P₂·S(3) + S²(1) = 15s⁵ ≤ 20s⁵.
+        -- Regroup I₁-corr₁ as sum of small differences, then bound each
+        rw [hI₁_quartic]
+        -- I₁ = F₁+F₂+aE₂+E₁b+D₁D₂-½(z(E₁+E₂+Q)+(E₁+E₂+Q)z)-½P²
+        -- corr₁ (let, transparent) = degree-4 pure terms
+        -- Regroup: (I₁ terms) - corr₁ = Σ(quartic term - its degree-4 part)
+        have h_regroup :
+            F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+              (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) -
+              (2 : 𝕂)⁻¹ • P ^ 2 - corr₁ =
+            (F₁ - (24 : 𝕂)⁻¹ • a ^ 4) + (F₂ - (24 : 𝕂)⁻¹ • b ^ 4) +
+            (a * E₂ - (6 : 𝕂)⁻¹ • (a * b ^ 3)) +
+            (E₁ * b - (6 : 𝕂)⁻¹ • (a ^ 3 * b)) +
+            (D₁ * D₂ - (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2)) +
+            ((2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) -
+              (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z)) +
+            ((2 : 𝕂)⁻¹ • P₂ ^ 2 - (2 : 𝕂)⁻¹ • P ^ 2) := by
+          -- This is additive rearrangement, but abel can't handle (c:𝕂)•x atoms.
+          -- Needs ×24 scalar clearing + noncomm_ring (same pattern as quartic_identity).
+          sorry
+        rw [h_regroup]
+        -- Now bound each group by triangle inequality
+        -- Group A: ‖F₁-(1/24)a⁴‖ = ‖G₁‖ ≤ s⁵ (by definition of G₁)
+        -- Group B: ‖F₂-(1/24)b⁴‖ = ‖G₂‖ ≤ s⁵
+        -- etc.
         sorry
       -- Group 2: ‖I₂-corr₂‖ ≤ 8s⁵ (I₂ refined by P→P₂+S)
       have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
