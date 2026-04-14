@@ -2644,14 +2644,62 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
           _ ≤ s ^ 4 * s :=
               mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 4) hβ_le (by positivity) (by positivity)
           _ = s ^ 5 := by ring
-      -- Composite quintic bounds: (5 terms ≤ s⁵ each) + (½|y⁴-z⁴| ≤ 4s⁵) + (cross terms ≤ 15s⁵)
-      -- + I₂ correction ≤ 7s⁵ → total ≤ 30s⁵ < 50s⁵.
+      -- Step 6a: Set up the I₁/I₂ decomposition (same as quartic proof)
+      have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+      set Q := a * D₂ + D₁ * b + D₁ * D₂ with hQ_def
+      set W_H1 := (2 : 𝕂) • (E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂) -
+          z * P - P * z - P ^ 2 with hW_H1_def
+      -- H1 identity: y-z-½[a,b]-½y² = ½W
+      have hH1 : y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 =
+          (2 : 𝕂)⁻¹ • W_H1 := by
+        suffices h : (2 : 𝕂) • (y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+            (2 : 𝕂)⁻¹ • y ^ 2) = (2 : 𝕂) • ((2 : 𝕂)⁻¹ • W_H1) by
+          have hinj : Function.Injective ((2 : 𝕂) • · : 𝔸 → 𝔸) := by
+            intro x₀ y₀ hxy; have := congrArg ((2 : 𝕂)⁻¹ • ·) hxy
+            simp only [smul_smul, inv_mul_cancel₀ h2ne, one_smul] at this; exact this
+          exact hinj h
+        rw [smul_smul, mul_inv_cancel₀ h2ne, one_smul]
+        simp only [hE₁_def, hE₂_def, hD₁_def, hD₂_def, hP_def, hy_def, hW_H1_def, hz_def,
+          smul_sub, smul_add, smul_smul, mul_inv_cancel₀ h2ne, one_smul, two_smul]
+        noncomm_ring
+      -- I₁ = ½W + ⅓z³ - C₃, I₂ = ⅓(y³-z³)
+      set I₁ := (2 : 𝕂)⁻¹ • W_H1 + (3 : 𝕂)⁻¹ • z ^ 3 -
+          bch_cubic_term 𝕂 a b with hI₁_def
+      set I₂ := (3 : 𝕂)⁻¹ • (y ^ 3 - z ^ 3) with hI₂_def
+      -- pieceB' = I₁ + I₂ - ¼y⁴ - C₄
+      have hpB_split : y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+          (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 -
+          bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b =
+          I₁ + I₂ - (4 : 𝕂)⁻¹ • y ^ 4 - bch_quartic_term 𝕂 a b := by
+        -- Rewrite y-z-½[a,b]-½y² = ½W by H1 identity
+        conv_lhs => rw [show y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+            (2 : 𝕂)⁻¹ • y ^ 2 = (2 : 𝕂)⁻¹ • W_H1 from hH1]
+        -- Now LHS = ½W+⅓y³-¼y⁴-C₃-C₄, RHS = I₁+I₂-¼y⁴-C₄
+        -- Expand I₁ and I₂ definitions and simplify ⅓(y³-z³) = ⅓y³-⅓z³
+        simp only [hI₁_def, hI₂_def, smul_sub]
+        abel
+      -- Step 6b: Apply quartic_identity to I₁
+      have hI₁_eq2 : I₁ = (2 : 𝕂)⁻¹ • W_H1 +
+          (3 : 𝕂)⁻¹ • z ^ 3 - bch_cubic_term 𝕂 a b := rfl
+      have hI₁_quartic : I₁ =
+          F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+          (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) -
+          (2 : 𝕂)⁻¹ • P ^ 2 := by
+        rw [hI₁_eq2]; exact quartic_identity 𝕂 (exp a) (exp b) a b
+      -- Step 6c: The algebraic decomposition identity
+      -- (chains quartic_identity + quintic_pure_identity + definitional substitutions)
+      -- This is the core algebraic step: rewrite pieceB' as quintic+ terms.
+      -- After substituting F=G+(1/24)x⁴ etc. and using QPI for degree-4 cancellation:
+      -- pieceB' = [sum of quintic+ terms bounded by individual norms]
       --
-      -- The algebraic identity connecting pieceB' to these quintic+ terms
-      -- follows from quartic_identity + quintic_pure_identity + chain of substitutions:
-      --   F = G + (1/24)x⁴, E = F + ⅙x³, D = E + ½x², P = P₂+S, E₁+E₂+Q = T₃+S_rest.
-      -- The degree-4 sum [A]+[B]+[C]+[D]+[E]-C₄ = 0 by quintic_pure_identity.
-      -- This leaves only quintic+ terms whose norms sum to ≤ 30s⁵.
+      -- For now, we bound via the quartic_identity decomposition:
+      -- ‖pieceB'‖ = ‖I₁+I₂-¼y⁴-C₄‖
+      -- = ‖(I₁-corr₁)+(I₂-corr₂)+(-¼)(y⁴-z⁴)‖  (degree-4 cancellation by QPI)
+      -- ≤ ‖I₁-corr₁‖ + ‖I₂-corr₂‖ + ¼‖y⁴-z⁴‖
+      --
+      -- The complete algebraic proof of the decomposition identity requires ~100 lines
+      -- of substitutions (F→G, E→F, D→E, S_rest→...) + noncomm_ring for each step.
+      -- For now this single sorry captures the algebraic rewriting.
       sorry
     -- Combine pieceA' + pieceB'
     have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
