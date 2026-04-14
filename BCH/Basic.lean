@@ -2300,12 +2300,10 @@ private theorem quintic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
     show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹)) = 2 from by norm_num,
     one_smul, mul_one]
   simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
-  -- The goal should now match quintic_pure_identity_cleared exactly
-  -- (both use AddMonoid.nsmul from NormedRing). Use rfl-level matching.
+  -- After clearing, the goal matches quintic_pure_identity_cleared up to nsmul instances.
   have h := @quintic_pure_identity_cleared 𝔸 (inferInstance) a b
   convert h using 2
-  -- Remaining subgoals are nsmul instance mismatches (NormedRing vs NormedAlgebra).
-  -- These are definitionally equal — both are AddMonoid.nsmul.
+  -- nsmul instance gap (NormedAlgebra vs NormedRing diamond). Does not block hpieceB.
   all_goals sorry
 
 set_option maxHeartbeats 128000000 in
@@ -2544,11 +2542,61 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
               linarith [hD₂_le]
           _ = Real.exp s - 1 - s := by rw [hs_def, Real.exp_add]; ring
       have hP_le_s2 : ‖P‖ ≤ s ^ 2 := le_trans hP_le hEs2
-      -- Step 4: Full algebraic decomposition + bound
-      -- pieceB' decomposes into quintic+ terms via quartic_identity + quintic_pure_identity.
-      -- Key sub-bounds: ‖G_i‖ ≤ s⁵, ‖a*F₂‖ ≤ s⁵, ‖F₁*b‖ ≤ s⁵, etc.
-      -- Degree-4 cancellation: quintic_pure_identity eliminates O(s⁴) terms.
-      -- Total of quintic+ terms ≤ 50*s⁵.
+      -- Step 4: Bound ‖y⁴-z⁴‖ ≤ 15s⁵ (quintic+ from y⁴ via telescoping)
+      have hy_le2 : ‖y‖ ≤ 2 * s := by
+        calc ‖y‖ ≤ Real.exp s - 1 := hy_le
+          _ ≤ s + s ^ 2 := by linarith [hEs2]
+          _ ≤ 2 * s := by nlinarith [sq_nonneg s]
+      have hy4z4 : ‖y ^ 4 - z ^ 4‖ ≤ 15 * s ^ 5 := by
+        -- y⁴-z⁴ = y³P+y²Pz+yPz²+Pz³ (non-commutative telescoping)
+        have htel : y ^ 4 - z ^ 4 = y ^ 3 * P + y ^ 2 * P * z +
+            y * P * z ^ 2 + P * z ^ 3 := by
+          simp only [hP_def, hz_def]; noncomm_ring
+        -- Bound each term using ‖y‖ ≤ 2s, ‖P‖ ≤ s², ‖z‖ ≤ s
+        have h1 : ‖y ^ 3 * P‖ ≤ (2*s)^3 * s^2 := by
+          calc _ ≤ ‖y ^ 3‖ * ‖P‖ := norm_mul_le _ _
+            _ ≤ ‖y‖^3 * ‖P‖ := by gcongr; exact norm_pow_le y 3
+            _ ≤ (2*s)^3 * s^2 := by
+                apply mul_le_mul (pow_le_pow_left₀ (norm_nonneg y) hy_le2 3) hP_le_s2
+                  (norm_nonneg _) (by positivity)
+        have h2 : ‖y ^ 2 * P * z‖ ≤ (2*s)^2 * s^2 * s := by
+          calc _ ≤ ‖y ^ 2 * P‖ * ‖z‖ := norm_mul_le _ _
+            _ ≤ (‖y‖^2 * ‖P‖) * ‖z‖ := by
+                gcongr
+                calc _ ≤ ‖y ^ 2‖ * ‖P‖ := norm_mul_le _ _
+                  _ ≤ _ := by gcongr; exact norm_pow_le y 2
+            _ ≤ ((2*s)^2 * s^2) * s := by
+                apply mul_le_mul _ hz_le (norm_nonneg _) (by positivity)
+                apply mul_le_mul (pow_le_pow_left₀ (norm_nonneg y) hy_le2 2) hP_le_s2
+                  (norm_nonneg _) (by positivity)
+        have h3 : ‖y * P * z ^ 2‖ ≤ 2*s * s^2 * s^2 := by
+          calc _ ≤ ‖y * P‖ * ‖z ^ 2‖ := norm_mul_le _ _
+            _ ≤ (‖y‖ * ‖P‖) * ‖z‖^2 := by
+                gcongr
+                · exact norm_mul_le _ _
+                · exact norm_pow_le z 2
+            _ ≤ (2*s * s^2) * s^2 := by
+                apply mul_le_mul _ (pow_le_pow_left₀ (norm_nonneg z) hz_le 2)
+                  (by positivity) (by positivity)
+                exact mul_le_mul hy_le2 hP_le_s2 (norm_nonneg _) (by positivity)
+        have h4 : ‖P * z ^ 3‖ ≤ s^2 * s^3 := by
+          calc _ ≤ ‖P‖ * ‖z ^ 3‖ := norm_mul_le _ _
+            _ ≤ ‖P‖ * ‖z‖^3 := by gcongr; exact norm_pow_le z 3
+            _ ≤ s^2 * s^3 := by
+                apply mul_le_mul hP_le_s2 (pow_le_pow_left₀ (norm_nonneg z) hz_le 3)
+                  (by positivity) (by positivity)
+        calc ‖y ^ 4 - z ^ 4‖ = ‖y ^ 3 * P + y ^ 2 * P * z +
+              y * P * z ^ 2 + P * z ^ 3‖ := by rw [htel]
+          _ ≤ ‖y ^ 3 * P‖ + ‖y ^ 2 * P * z‖ + ‖y * P * z ^ 2‖ + ‖P * z ^ 3‖ := by
+              calc _ ≤ ‖y ^ 3 * P + y ^ 2 * P * z + y * P * z ^ 2‖ + _ := norm_add_le _ _
+                _ ≤ (‖y ^ 3 * P + y ^ 2 * P * z‖ + _) + _ := by gcongr; exact norm_add_le _ _
+                _ ≤ _ := by linarith [norm_add_le (y ^ 3 * P) (y ^ 2 * P * z)]
+          _ ≤ (2*s)^3*s^2 + (2*s)^2*s^2*s + 2*s*s^2*s^2 + s^2*s^3 := by linarith
+          _ = 15 * s ^ 5 := by ring
+      -- Step 5: Full algebraic decomposition + degree-4 cancellation + norm bounds
+      -- Uses quartic_identity + quintic_pure_identity to decompose pieceB' into
+      -- quintic+ groups. The y⁴-z⁴ bound (hy4z4) is proved above.
+      -- Remaining: quartic_identity extraction + quintic_pure_identity cancellation.
       sorry
     -- Combine pieceA' + pieceB'
     have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
