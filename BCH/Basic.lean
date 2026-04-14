@@ -2734,8 +2734,10 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
         sorry
       -- Group 2: ‖I₂-corr₂‖ (I₂ refined by P→P₂+S)
       have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
-        -- I₂-corr₂ = ⅓(z²S+zSz+Sz²+zP²+PzP+P²z+P³) where S = P-P₂
-        -- Bounded by ⅓(3·s²·5s³ + 3·s·s⁴ + s⁶) ≤ ⅓(15+3+1)s⁵ ≈ 7s⁵ ≤ 8s⁵
+        -- I₂-corr₂ = ⅓(y³-z³-(z²P₂+zP₂z+P₂z²))
+        -- = ⅓(z²S+zSz+Sz²+zP²+PzP+P²z+P³) where S = P-P₂
+        -- Each z²S term: s²·5s³ = 5s⁵; each zP²: s·s⁴; P³ = s⁶.
+        -- Total: ⅓(15s⁵+3s⁵+s⁶) ≤ 7s⁵ ≤ 8s⁵.
         sorry
       -- Group 3: ¼‖y⁴-z⁴‖ ≤ ¼·15s⁵
       have hGroup3 : ‖(4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4)‖ ≤ 4 * s ^ 5 :=
