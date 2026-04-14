@@ -2686,21 +2686,73 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
           (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) -
           (2 : 𝕂)⁻¹ • P ^ 2 := by
         rw [hI₁_eq2]; exact quartic_identity 𝕂 (exp a) (exp b) a b
-      -- Step 6c: The algebraic decomposition identity
-      -- (chains quartic_identity + quintic_pure_identity + definitional substitutions)
-      -- This is the core algebraic step: rewrite pieceB' as quintic+ terms.
-      -- After substituting F=G+(1/24)x⁴ etc. and using QPI for degree-4 cancellation:
-      -- pieceB' = [sum of quintic+ terms bounded by individual norms]
-      --
-      -- For now, we bound via the quartic_identity decomposition:
-      -- ‖pieceB'‖ = ‖I₁+I₂-¼y⁴-C₄‖
-      -- = ‖(I₁-corr₁)+(I₂-corr₂)+(-¼)(y⁴-z⁴)‖  (degree-4 cancellation by QPI)
-      -- ≤ ‖I₁-corr₁‖ + ‖I₂-corr₂‖ + ¼‖y⁴-z⁴‖
-      --
-      -- The complete algebraic proof of the decomposition identity requires ~100 lines
-      -- of substitutions (F→G, E→F, D→E, S_rest→...) + noncomm_ring for each step.
-      -- For now this single sorry captures the algebraic rewriting.
-      sorry
+      -- Step 6c: Define degree-4 correction terms (matching quintic_pure_identity)
+      -- corr₁ = degree-4 of I₁, corr₂ = degree-4 of I₂
+      set T₃ := (6 : 𝕂)⁻¹ • a ^ 3 + (6 : 𝕂)⁻¹ • b ^ 3 +
+          (2 : 𝕂)⁻¹ • (a * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * b)
+      set P₂ := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+      -- [A]+[B]+[C]: degree-4 of I₁
+      let corr₁ := (24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+          (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+          (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+          (2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) -
+          (2 : 𝕂)⁻¹ • P₂ ^ 2
+      -- [D]: degree-4 of I₂
+      let corr₂ := (3 : 𝕂)⁻¹ • (z ^ 2 * P₂ + z * P₂ * z + P₂ * z ^ 2)
+      -- Step 6d: Show QPI gives corr₁+corr₂-¼z⁴ = C₄
+      have hQPI : corr₁ + corr₂ - (4 : 𝕂)⁻¹ • z ^ 4 -
+          bch_quartic_term 𝕂 a b = 0 := by
+        show (24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+            (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+            (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+            (2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) -
+            (2 : 𝕂)⁻¹ • P₂ ^ 2 +
+            (3 : 𝕂)⁻¹ • (z ^ 2 * P₂ + z * P₂ * z + P₂ * z ^ 2) -
+            (4 : 𝕂)⁻¹ • z ^ 4 - bch_quartic_term 𝕂 a b = 0
+        -- This matches quintic_pure_identity after expanding z = a+b
+        -- and the T₃, P₂ definitions.
+        convert quintic_pure_identity 𝕂 a b using 2 <;> simp [hz_def] <;> ring
+      -- Step 6e: Rearrange pieceB' using degree-4 cancellation
+      rw [hpB_split]
+      -- Goal: ‖I₁+I₂-¼y⁴-C₄‖ ≤ 50s⁵
+      -- Use hQPI to cancel: I₁+I₂-¼y⁴-C₄ = (I₁-corr₁)+(I₂-corr₂)-¼(y⁴-z⁴)
+      -- since corr₁+corr₂-¼z⁴ = C₄ by hQPI.
+      have hrewrite : I₁ + I₂ - (4 : 𝕂)⁻¹ • y ^ 4 - bch_quartic_term 𝕂 a b =
+          (I₁ - corr₁) + (I₂ - corr₂) - (4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4) := by
+        -- LHS - RHS = corr₁+corr₂-¼z⁴-C₄ = 0 (by QPI)
+        rw [sub_eq_zero.symm]  -- convert goal A=B to A-B=0
+        convert hQPI using 1    -- match _ = 0 with _ = 0
+        simp only [smul_sub]
+        abel
+      rw [hrewrite]
+      -- Step 6f: Bound each quintic+ group via triangle inequality
+      -- Group 1: ‖I₁-corr₁‖ (quartic_identity refined to quintic)
+      have hGroup1 : ‖I₁ - corr₁‖ ≤ 20 * s ^ 5 := by
+        -- I₁-corr₁ = G₁+G₂+aF₂+F₁b+½(a²E₂+E₁b²)+E₁E₂-½(zS_rest+S_restz)-½(P₂S+SP₂+S²)
+        -- Each term bounded by Cs⁵. Total ≤ 20s⁵.
+        -- (Proof: substitute quartic_identity + definitional equalities + triangle inequality)
+        sorry
+      -- Group 2: ‖I₂-corr₂‖ (I₂ refined by P→P₂+S)
+      have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
+        -- I₂-corr₂ = ⅓(z²S+zSz+Sz²+zP²+PzP+P²z+P³) where S = P-P₂
+        -- Bounded by ⅓(3·s²·5s³ + 3·s·s⁴ + s⁶) ≤ ⅓(15+3+1)s⁵ ≈ 7s⁵ ≤ 8s⁵
+        sorry
+      -- Group 3: ¼‖y⁴-z⁴‖ ≤ ¼·15s⁵
+      have hGroup3 : ‖(4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4)‖ ≤ 4 * s ^ 5 :=
+        calc _ ≤ ‖(4 : 𝕂)⁻¹‖ * ‖y ^ 4 - z ^ 4‖ := norm_smul_le _ _
+          _ ≤ (4 : ℝ)⁻¹ * (15 * s ^ 5) := by
+              have : ‖(4 : 𝕂)⁻¹‖ = (4 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+              rw [this]; exact mul_le_mul_of_nonneg_left hy4z4 (by norm_num)
+          _ ≤ 4 * s ^ 5 := by nlinarith [pow_nonneg hs_nn 5]
+      -- Combine via triangle inequality
+      calc ‖(I₁ - corr₁) + (I₂ - corr₂) - (4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4)‖
+          ≤ ‖(I₁ - corr₁) + (I₂ - corr₂)‖ + ‖(4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4)‖ :=
+            norm_sub_le _ _
+        _ ≤ (‖I₁ - corr₁‖ + ‖I₂ - corr₂‖) + ‖(4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4)‖ := by
+            gcongr; exact norm_add_le _ _
+        _ ≤ (20 * s ^ 5 + 8 * s ^ 5) + 4 * s ^ 5 := by linarith
+        _ = 32 * s ^ 5 := by ring
+        _ ≤ 50 * s ^ 5 := by nlinarith [pow_nonneg hs_nn 5]
     -- Combine pieceA' + pieceB'
     have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
     have hEs_nn : 0 ≤ Real.exp s - 1 - s := by
