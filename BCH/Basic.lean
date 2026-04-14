@@ -2745,9 +2745,9 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
         have hI₂_alg : I₂ - corr₂ = (3 : 𝕂)⁻¹ •
             (z ^ 2 * (P - P₂) + z * (P - P₂) * z + (P - P₂) * z ^ 2 +
              z * P ^ 2 + P * z * P + P ^ 2 * z + P ^ 3) := by
-          -- Factor out ⅓ then use ring identity hinner
-          -- I₂ = ⅓(y³-z³), corr₂ = ⅓(z²P₂+zP₂z+P₂z²) → diff = ⅓(hinner)
-          sorry -- algebraic: simp [hI₂_def] + smul_sub + hinner
+          -- Factor ⅓ from I₂-corr₂. Since y = P + z definitionally (by set defs),
+          -- the ring identity hinner is verified by Lean's kernel.
+          rw [hI₂_def, ← smul_sub, hinner]
         rw [hI₂_alg]
         -- Bound each of 7 terms using ‖P-P₂‖ ≤ 5s³, ‖P‖ ≤ s², ‖z‖ ≤ s
         have hSn : ‖P - P₂‖ ≤ 5 * s ^ 3 := hS_le
