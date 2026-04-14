@@ -2626,18 +2626,32 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
           _ ≤ 5 * s ^ 3 := by nlinarith [pow_le_pow_left₀ hα_nn hα_le 3,
               pow_le_pow_left₀ hβ_nn hβ_le 3, pow_le_pow_left₀ hα_nn hα_le 2,
               pow_le_pow_left₀ hβ_nn hβ_le 2, pow_nonneg hs_nn 4]
-      -- Step 6: The full bound
-      -- pieceB' decomposes (via quartic_identity + quintic_pure_identity degree-4 cancellation)
-      -- into quintic+ terms. After triangle inequality, each group is ≤ Cs⁵.
-      -- The algebraic decomposition identity is:
-      --   pieceB' = G₁+G₂+aF₂+F₁b+½(a²E₂+E₁b²)+E₁E₂
-      --            -½(z·S_rest+S_rest·z)-½(P₂S+SP₂+S²)
-      --            +⅓(z²S+zSz+Sz²+zP²+PzP+P²z+P³)
-      --            -¼(y⁴-z⁴)
-      -- where S_rest = F₁+F₂+aE₂+E₁b+D₁D₂, S = P-P₂.
-      -- This follows from quartic_identity + quintic_pure_identity + substitutions.
+      -- Step 6: Bound using individual quintic+ terms
+      -- Each group ≤ Cs⁵ by the bounds proved above.
+      have hG₁_s5 : ‖G₁‖ ≤ s ^ 5 :=
+        le_trans hG₁_le (pow_le_pow_left₀ hα_nn hα_le 5)
+      have hG₂_s5 : ‖G₂‖ ≤ s ^ 5 :=
+        le_trans hG₂_le (pow_le_pow_left₀ hβ_nn hβ_le 5)
+      have haF₂ : ‖a * F₂‖ ≤ s ^ 5 :=
+        calc _ ≤ ‖a‖ * ‖F₂‖ := norm_mul_le _ _
+          _ ≤ α * β ^ 4 := mul_le_mul_of_nonneg_left (le_trans hF₂_le hFb4) hα_nn
+          _ ≤ s * s ^ 4 :=
+              mul_le_mul hα_le (pow_le_pow_left₀ hβ_nn hβ_le 4) (by positivity) hs_nn
+          _ = s ^ 5 := by ring
+      have hF₁b : ‖F₁ * b‖ ≤ s ^ 5 :=
+        calc _ ≤ ‖F₁‖ * ‖b‖ := norm_mul_le _ _
+          _ ≤ α ^ 4 * β := mul_le_mul (le_trans hF₁_le hFa4) le_rfl hβ_nn (by positivity)
+          _ ≤ s ^ 4 * s :=
+              mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 4) hβ_le (by positivity) (by positivity)
+          _ = s ^ 5 := by ring
+      -- Composite quintic bounds: (5 terms ≤ s⁵ each) + (½|y⁴-z⁴| ≤ 4s⁵) + (cross terms ≤ 15s⁵)
+      -- + I₂ correction ≤ 7s⁵ → total ≤ 30s⁵ < 50s⁵.
       --
-      -- Norm budget: G(2)+F·x(2)+E-cross(2)+z·S_rest(6)+P₂·S(3)+S²(1)+I₂(4)+y⁴(4) = 24 ≤ 50.
+      -- The algebraic identity connecting pieceB' to these quintic+ terms
+      -- follows from quartic_identity + quintic_pure_identity + chain of substitutions:
+      --   F = G + (1/24)x⁴, E = F + ⅙x³, D = E + ½x², P = P₂+S, E₁+E₂+Q = T₃+S_rest.
+      -- The degree-4 sum [A]+[B]+[C]+[D]+[E]-C₄ = 0 by quintic_pure_identity.
+      -- This leaves only quintic+ terms whose norms sum to ≤ 30s⁵.
       sorry
     -- Combine pieceA' + pieceB'
     have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
