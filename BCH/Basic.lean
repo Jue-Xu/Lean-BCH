@@ -2750,16 +2750,21 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
             ((2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) -
               (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z)) +
             ((2 : 𝕂)⁻¹ • P₂ ^ 2 - (2 : 𝕂)⁻¹ • P ^ 2) := by
-          -- Additive rearrangement: matches terms from I₁ (quartic_identity)
-          -- with degree-4 terms from corr₁. After ×24 clearing, it's a ring identity.
-          -- (Same ×24+noncomm_ring pattern as quartic_identity, line 1634.)
-          sorry
-        -- After h_regroup, bound by triangle inequality on 7 groups.
-        -- Each group has a F, G, or S factor giving O(s⁵):
-        -- ‖G₁‖,‖G₂‖ ≤ s⁵; ‖aF₂‖,‖F₁b‖ ≤ s⁵;
-        -- ‖D₁D₂-¼a²b²‖ ≤ 2s⁵; cross ≤ 6s⁵; P² ≤ 4s⁵.
-        -- Total: 16s⁵ ≤ 20s⁵.
-        sorry
+          -- Expand corr₁ (let binding) explicitly so abel can see all atoms
+          change F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+              (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) -
+              (2 : 𝕂)⁻¹ • P ^ 2 -
+              ((24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+               (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+               (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+               (2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) -
+               (2 : 𝕂)⁻¹ • P₂ ^ 2) = _
+          abel
+        -- After h_regroup, bound 7 groups by triangle inequality.
+        -- Each group ≤ Cs⁵ from proved bounds (G_i≤s⁵, aF₂≤s⁵, F₁b≤s⁵, etc.).
+        -- Total: ≤ 20s⁵.
+        rw [h_regroup]
+        sorry -- norm bound: triangle inequality on 7 groups (all component bounds proved)
       -- Group 2: ‖I₂-corr₂‖ ≤ 8s⁵ (I₂ refined by P→P₂+S)
       have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
         -- Factor out ⅓: I₂-corr₂ = ⅓•((y³-z³)-(z²P₂+zP₂z+P₂z²))
