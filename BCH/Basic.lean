@@ -2764,7 +2764,19 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
         -- Each group ≤ Cs⁵ from proved bounds (G_i≤s⁵, aF₂≤s⁵, F₁b≤s⁵, etc.).
         -- Total: ≤ 20s⁵.
         rw [h_regroup]
-        sorry -- norm bound: triangle inequality on 7 groups (all component bounds proved)
+        -- Simplify each group using definitional identities
+        have hA : F₁ - (24 : 𝕂)⁻¹ • a ^ 4 = G₁ := by dsimp only
+        have hB : F₂ - (24 : 𝕂)⁻¹ • b ^ 4 = G₂ := by dsimp only
+        have hC : a * E₂ - (6 : 𝕂)⁻¹ • (a * b ^ 3) = a * F₂ := by
+          have : E₂ = F₂ + (6 : 𝕂)⁻¹ • b ^ 3 := by rw [hF₂_def]; abel
+          rw [this, mul_add, mul_smul_comm]; abel
+        have hDt : E₁ * b - (6 : 𝕂)⁻¹ • (a ^ 3 * b) = F₁ * b := by
+          have : E₁ = F₁ + (6 : 𝕂)⁻¹ • a ^ 3 := by rw [hF₁_def]; abel
+          rw [this, add_mul, smul_mul_assoc]; abel
+        rw [hA, hB, hC, hDt]
+        -- Remaining: bound ‖G₁+G₂+aF₂+F₁b+(D₁D₂-¼a²b²)+cross+P²‖ ≤ 20s⁵
+        -- Each sub-expression bounded by Cs⁵ from proved infrastructure.
+        sorry
       -- Group 2: ‖I₂-corr₂‖ ≤ 8s⁵ (I₂ refined by P→P₂+S)
       have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
         -- Factor out ⅓: I₂-corr₂ = ⅓•((y³-z³)-(z²P₂+zP₂z+P₂z²))
