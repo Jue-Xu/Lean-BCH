@@ -2773,10 +2773,143 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
         have hDt : E₁ * b - (6 : 𝕂)⁻¹ • (a ^ 3 * b) = F₁ * b := by
           have : E₁ = F₁ + (6 : 𝕂)⁻¹ • a ^ 3 := by rw [hF₁_def]; abel
           rw [this, add_mul, smul_mul_assoc]; abel
-        rw [hA, hB, hC, hDt]
-        -- Remaining: bound ‖G₁+G₂+aF₂+F₁b+(D₁D₂-¼a²b²)+cross+P²‖ ≤ 20s⁵
-        -- Each sub-expression bounded by Cs⁵ from proved infrastructure.
-        sorry
+        have hEt : D₁ * D₂ - (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) =
+            E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * E₂) + (2 : 𝕂)⁻¹ • (E₁ * b ^ 2) := by
+          have hd1 : D₁ = E₁ + (2 : 𝕂)⁻¹ • a ^ 2 := by rw [hE₁_def]; abel
+          have hd2 : D₂ = E₂ + (2 : 𝕂)⁻¹ • b ^ 2 := by rw [hE₂_def]; abel
+          rw [hd1, hd2]; simp only [add_mul, mul_add, smul_mul_assoc, mul_smul_comm,
+            smul_smul, show (2:𝕂)⁻¹*(2:𝕂)⁻¹=(4:𝕂)⁻¹ from by norm_num, smul_add]; abel
+        have hFt : (2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) -
+            (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) =
+            (2 : 𝕂)⁻¹ • (z * (T₃ - E₁ - E₂ - Q) + (T₃ - E₁ - E₂ - Q) * z) := by
+          rw [← smul_sub]; congr 1; noncomm_ring
+        have hGt : (2 : 𝕂)⁻¹ • P₂ ^ 2 - (2 : 𝕂)⁻¹ • P ^ 2 =
+            (2 : 𝕂)⁻¹ • (P₂ ^ 2 - P ^ 2) := (smul_sub _ _ _).symm
+        rw [hA, hB, hC, hDt, hEt, hFt, hGt]
+        have hT₃_exp : T₃ = (6:𝕂)⁻¹ • a^3 + (6:𝕂)⁻¹ • b^3 + (2:𝕂)⁻¹ • (a*b^2) +
+            (2:𝕂)⁻¹ • (a^2*b) := by dsimp only
+        have hSrest_eq : T₃ - E₁ - E₂ - Q = -(F₁+F₂+a*E₂+E₁*b+D₁*D₂) := by
+          simp only [hT₃_exp, hQ_def, hF₁_def, hF₂_def, hE₁_def, hE₂_def, hD₁_def, hD₂_def,
+            mul_add, add_mul, mul_sub, sub_mul, smul_mul_assoc, mul_smul_comm, smul_sub,
+            smul_add]; abel
+        -- Component s⁴ bounds
+        have hF₁s : ‖F₁‖ ≤ s^4 := le_trans (le_trans hF₁_le hFa4) (pow_le_pow_left₀ hα_nn hα_le 4)
+        have hF₂s : ‖F₂‖ ≤ s^4 := le_trans (le_trans hF₂_le hFb4) (pow_le_pow_left₀ hβ_nn hβ_le 4)
+        have haEs : ‖a*E₂‖ ≤ s^4 :=
+          calc _ ≤ ‖a‖*‖E₂‖ := norm_mul_le _ _
+            _ ≤ α*(β^3) := mul_le_mul_of_nonneg_left (le_trans hE₂_le hEb3) hα_nn
+            _ ≤ s*s^3 := mul_le_mul hα_le (pow_le_pow_left₀ hβ_nn hβ_le 3) (by positivity) hs_nn
+            _ = s^4 := by ring
+        have hEbs : ‖E₁*b‖ ≤ s^4 :=
+          calc _ ≤ ‖E₁‖*‖b‖ := norm_mul_le _ _
+            _ ≤ (α^3)*β := mul_le_mul (le_trans hE₁_le hEa3) le_rfl hβ_nn (by positivity)
+            _ ≤ s^3*s := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3) hβ_le (by positivity) (by positivity)
+            _ = s^4 := by ring
+        have hDDs : ‖D₁*D₂‖ ≤ s^4 :=
+          calc _ ≤ ‖D₁‖*‖D₂‖ := norm_mul_le _ _
+            _ ≤ (α^2)*(β^2) := mul_le_mul (le_trans hD₁_le hDa2) (le_trans hD₂_le hDb2)
+                (norm_nonneg _) (by positivity)
+            _ ≤ s^2*s^2 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+                (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
+            _ = s^4 := by ring
+        have hSrest_le : ‖T₃-E₁-E₂-Q‖ ≤ 5*s^4 := by
+          rw [hSrest_eq, norm_neg]; linarith [norm_add_le F₁ F₂,
+            norm_add_le (F₁+F₂) (a*E₂), norm_add_le (F₁+F₂+a*E₂) (E₁*b),
+            norm_add_le (F₁+F₂+a*E₂+E₁*b) (D₁*D₂)]
+        have h2_le : ‖(2:𝕂)⁻¹‖ ≤ 1 := by rw [norm_inv, RCLike.norm_ofNat]; norm_num
+        have h2eq : ‖(2:𝕂)⁻¹‖ = (2:ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+        have hP₂_le : ‖P₂‖ ≤ s^2 := by
+          have h1 : ‖a*b‖ ≤ α*β := norm_mul_le _ _
+          have h2 : ‖(2:𝕂)⁻¹•a^2‖ ≤ α^2 :=
+            calc _ ≤ 1*‖a‖^2 := by
+                  exact (norm_smul_le _ _).trans (mul_le_mul h2_le (norm_pow_le a 2)
+                    (norm_nonneg _) (by norm_num))
+              _ = α^2 := one_mul _
+          have h3 : ‖(2:𝕂)⁻¹•b^2‖ ≤ β^2 :=
+            calc _ ≤ 1*‖b‖^2 := by
+                  exact (norm_smul_le _ _).trans (mul_le_mul h2_le (norm_pow_le b 2)
+                    (norm_nonneg _) (by norm_num))
+              _ = β^2 := one_mul _
+          have n1 := norm_add_le (a*b+(2:𝕂)⁻¹•a^2) ((2:𝕂)⁻¹•b^2)
+          have n2 := norm_add_le (a*b) ((2:𝕂)⁻¹•a^2)
+          nlinarith [mul_nonneg hα_nn hβ_nn, show s^2 = α^2+2*α*β+β^2 from by rw [hs_def]; ring]
+        -- Group 5: ‖E₁E₂+½a²E₂+½E₁b²‖ ≤ 3s⁵
+        have b5 : ‖E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2)‖ ≤ 3*s^5 := by
+          have t1 : ‖E₁*E₂‖ ≤ s^5 :=
+            calc _ ≤ (α^3)*(β^3) :=
+                  (norm_mul_le _ _).trans (mul_le_mul (le_trans hE₁_le hEa3) (le_trans hE₂_le hEb3)
+                    (norm_nonneg _) (by positivity))
+              _ ≤ s^3*s^3 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3)
+                  (pow_le_pow_left₀ hβ_nn hβ_le 3) (by positivity) (by positivity)
+              _ = s^6 := by ring
+              _ ≤ s^5 := by nlinarith [pow_nonneg hs_nn 5]
+          have t2 : ‖(2:𝕂)⁻¹•(a^2*E₂)‖ ≤ s^5 := by
+            have ha2e : ‖a^2*E₂‖ ≤ α^2*β^3 :=
+              calc _ ≤ ‖a^2‖*‖E₂‖ := norm_mul_le _ _
+                _ ≤ (‖a‖^2)*(β^3) := mul_le_mul (norm_pow_le a 2)
+                    (le_trans hE₂_le hEb3) (norm_nonneg _) (by positivity)
+            calc _ ≤ 1*(α^2*β^3) :=
+                  (norm_smul_le _ _).trans (mul_le_mul h2_le ha2e (norm_nonneg _) (by norm_num))
+              _ ≤ s^2*s^3 := by nlinarith [pow_le_pow_left₀ hα_nn hα_le 2,
+                  pow_le_pow_left₀ hβ_nn hβ_le 3]
+              _ = s^5 := by ring
+          have t3 : ‖(2:𝕂)⁻¹•(E₁*b^2)‖ ≤ s^5 := by
+            have he1b : ‖E₁*b^2‖ ≤ α^3*β^2 :=
+              calc _ ≤ ‖E₁‖*‖b^2‖ := norm_mul_le _ _
+                _ ≤ (α^3)*(‖b‖^2) := mul_le_mul (le_trans hE₁_le hEa3)
+                    (norm_pow_le b 2) (norm_nonneg _) (by positivity)
+            calc _ ≤ 1*(α^3*β^2) :=
+                  (norm_smul_le _ _).trans (mul_le_mul h2_le he1b (norm_nonneg _) (by norm_num))
+              _ ≤ s^3*s^2 := by nlinarith [pow_le_pow_left₀ hα_nn hα_le 3,
+                  pow_le_pow_left₀ hβ_nn hβ_le 2]
+              _ = s^5 := by ring
+          linarith [norm_add_le (E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)) ((2:𝕂)⁻¹•(E₁*b^2)),
+            norm_add_le (E₁*E₂) ((2:𝕂)⁻¹•(a^2*E₂))]
+        -- Group 6: ‖½(z·Δ+Δ·z)‖ ≤ 5s⁵ where Δ=T₃-E₁-E₂-Q
+        have b6 : ‖(2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z)‖ ≤ 5*s^5 := by
+          have h1 : ‖z*(T₃-E₁-E₂-Q)‖ ≤ s*(5*s^4) :=
+            (norm_mul_le _ _).trans (mul_le_mul hz_le hSrest_le (norm_nonneg _) hs_nn)
+          have h2 : ‖(T₃-E₁-E₂-Q)*z‖ ≤ (5*s^4)*s :=
+            (norm_mul_le _ _).trans (mul_le_mul hSrest_le hz_le (norm_nonneg _) (by positivity))
+          calc _ ≤ (2:ℝ)⁻¹*(2*s*(5*s^4)) := by
+                rw [h2eq]; exact (norm_smul_le _ _).trans
+                  (mul_le_mul_of_nonneg_left (by linarith [norm_add_le (z*(T₃-E₁-E₂-Q))
+                    ((T₃-E₁-E₂-Q)*z)]) (by positivity))
+            _ = 5*s^5 := by ring
+        -- Group 7: ‖½(P₂²-P²)‖ ≤ 6s⁵
+        have b7 : ‖(2:𝕂)⁻¹•(P₂^2-P^2)‖ ≤ 6*s^5 := by
+          have hPd : P₂^2-P^2 = -(P₂*(P-P₂)+(P-P₂)*P₂+(P-P₂)^2) := by
+            have hp : P = P₂+(P-P₂) := by abel
+            rw [hp]; noncomm_ring
+          have hp1 : ‖P₂*(P-P₂)‖ ≤ s^2*(5*s^3) :=
+            (norm_mul_le _ _).trans (mul_le_mul hP₂_le hS_le (norm_nonneg _) (by positivity))
+          have hp2 : ‖(P-P₂)*P₂‖ ≤ (5*s^3)*s^2 :=
+            (norm_mul_le _ _).trans (mul_le_mul hS_le hP₂_le (norm_nonneg _) (by positivity))
+          have hp3 : ‖(P-P₂)^2‖ ≤ (5*s^3)^2 :=
+            (norm_pow_le _ 2).trans (pow_le_pow_left₀ (norm_nonneg _) hS_le 2)
+          rw [hPd, smul_neg, norm_neg]
+          calc _ ≤ (2:ℝ)⁻¹*(2*s^2*(5*s^3)+(5*s^3)^2) := by
+                rw [h2eq]; exact (norm_smul_le _ _).trans
+                  (mul_le_mul_of_nonneg_left (by linarith [
+                    norm_add_le (P₂*(P-P₂)+(P-P₂)*P₂) ((P-P₂)^2),
+                    norm_add_le (P₂*(P-P₂)) ((P-P₂)*P₂)]) (by positivity))
+            _ ≤ 6*s^5 := by nlinarith [pow_nonneg hs_nn 5, pow_nonneg hs_nn 6]
+        -- Final triangle inequality: 1+1+1+1+3+5+6 = 18 ≤ 20
+        calc _ ≤ ‖G₁‖+‖G₂‖+‖a*F₂‖+‖F₁*b‖+
+              ‖E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2)‖+
+              ‖(2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z)‖+
+              ‖(2:𝕂)⁻¹•(P₂^2-P^2)‖ := by
+            linarith [norm_add_le G₁ G₂, norm_add_le (G₁+G₂) (a*F₂),
+              norm_add_le (G₁+G₂+a*F₂) (F₁*b),
+              norm_add_le (G₁+G₂+a*F₂+F₁*b) (E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2)),
+              norm_add_le (G₁+G₂+a*F₂+F₁*b+(E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2)))
+                ((2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z)),
+              norm_add_le (G₁+G₂+a*F₂+F₁*b+(E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2))+
+                (2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z)) ((2:𝕂)⁻¹•(P₂^2-P^2))]
+          _ ≤ s^5+s^5+s^5+s^5+3*s^5+5*s^5+6*s^5 := by
+              linarith [hG₁_s5, hG₂_s5, haF₂, hF₁b, b5, b6, b7]
+          _ = 21 * s^5 := by ring
+          _ ≤ 50 * s^5 := by nlinarith [pow_nonneg hs_nn 5]
       -- Group 2: ‖I₂-corr₂‖ ≤ 8s⁵ (I₂ refined by P→P₂+S)
       have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
         -- Factor out ⅓: I₂-corr₂ = ⅓•((y³-z³)-(z²P₂+zP₂z+P₂z²))
