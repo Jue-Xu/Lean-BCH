@@ -3847,21 +3847,24 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
     --                 = (z + a') - (a+b) + ½(z·a' - a'·z) + C₃(z,a') + C₄(z,a') + R₂  [by R₂ def]
     --   z = (a'+b) + ½(a'b - ba') + C₃(a',b) + C₄(a',b) + R₁  [by R₁ def]
     -- After substitution + quartic identity for degree-4, get the stated form.
-    have hR₁_eq : z = (a' + b) + (2 : 𝕂)⁻¹ • (a' * b - b * a') +
-        bch_cubic_term 𝕂 a' b + bch_quartic_term 𝕂 a' b + R₁ := by
-      rw [hR₁_def, hW_def]; abel
-    have hR₂_eq : bch (𝕂 := 𝕂) z a' = (z + a') + (2 : 𝕂)⁻¹ • (z * a' - a' * z) +
-        bch_cubic_term 𝕂 z a' + bch_quartic_term 𝕂 z a' + R₂ := by
-      rw [hR₂_def]; abel
-    -- Apply the symmetric quartic identity
-    have hqi := symmetric_bch_quartic_identity (𝕂 := 𝕂) a b
-    -- Unfold sym_bch_cubic and sym_bch_cubic_poly
-    show bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) - (a + b) -
-        symmetric_bch_cubic_poly 𝕂 a b = _
-    -- The following `abel` will fail without the ring-level cancellation between
-    -- the original sym_E₃ form and the alt-form. We need to convert via the
-    -- algebraic identity sym_bch_cubic_poly = C₃(a',b) + (1/16)·[[a,b],a] + C₃(a'+b,a')
-    -- which is a noncomm_ring identity. Left as further work.
+    -- The proof of the decomposition identity combines three pieces:
+    -- (A) R₂-definition substitution: bch(z,a') = (z+a') + ½(z·a'-a'·z) + C₃(z,a') + C₄(z,a') + R₂
+    -- (B) R₁-definition substitution: z - (a'+b) = ½(a'b-ba') + C₃(a',b) + C₄(a',b) + R₁
+    -- (C) symmetric_bch_quartic_identity (already proved, see above).
+    -- (D) sym_E₃ alt-form identity: sym_bch_cubic_poly = C₃(a',b) + C₃(a'+b,a') - (1/16)·DC_a.
+    --
+    -- Combining (A) + (B) + expanding ½[W,a'] yields (see session derivation):
+    --   sym_bch_cubic(a,b) - sym_E₃(a,b) = R₁ + R₂ + ½[R₁,a'] + ½[C₄(a',b),a']
+    --      + [C₃(z,a') - C₃(a'+b,a') - C_d4]       (quintic residual from linear-in-w_rest of C₃)
+    --      + [C₄(z,a') - C₄(a'+b,a')]              (linear-in-W of C₄, ≥ degree 5)
+    --      + [½[C₃(a',b),a'] + C₄(a',b) + C_d4 + C₄(a'+b,a')]   ← 0 by (C)
+    --      + [C₃(a',b) + C₃(a'+b,a') - (1/16)·DC_a - sym_E₃]    ← 0 by (D)
+    --
+    -- Formalization status: (A), (B), (C) are available. (D) reduces to `noncomm_ring`
+    -- after scalar clearing, but runs into a ℕ-smul vs 𝕂-smul unification issue in Lean
+    -- (residual `n • c⁻¹ • x` patterns don't auto-simplify). The `module` tactic should
+    -- handle this if available; otherwise fine-grained `Nat.cast_smul_eq_nsmul` rewriting
+    -- is needed per term. Final assembly after (A), (B), (C), (D) is abel. Estimated 50 lines.
     sorry
   rw [hdecomp]
   -- TRIANGLE INEQUALITY + NORM BOUNDS
