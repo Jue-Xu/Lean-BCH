@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: H1, H2, M1, quintic BCH, symmetric E₃-extraction complete; 1 sorry remains (symmetric quintic remainder)
+## Status: H1, H2, M1, quintic BCH, symmetric quartic identity complete; 2 inner sorries remain in `norm_symmetric_bch_cubic_sub_poly_le`
 
 ## Goal
 
@@ -68,24 +68,39 @@ exp/log expansion.
 
 ## Remaining Sorry's
 
-### `norm_symmetric_bch_cubic_sub_poly_le` (line ~3669)
+### `norm_symmetric_bch_cubic_sub_poly_le` (line ~3750) — 2 inner sorries remain
 - **Statement:** `‖sym_bch_cubic(a,b) - sym_E₃(a,b)‖ ≤ 4000·s⁵` where
   `sym_E₃(a,b) = -(1/24)·[a,[a,b]] + (1/12)·[b,[b,a]]` is the cubic-polynomial
   part of the symmetric BCH expansion (definition `symmetric_bch_cubic_poly`).
 - **Downstream consumer:** `norm_symmetric_bch_cubic_sub_smul_le` small-s case
-  — now uses this theorem + `symmetric_bch_cubic_poly_smul` (homogeneity, ✓)
+  — uses this theorem + `symmetric_bch_cubic_poly_smul` (homogeneity, ✓)
   to close `‖E₃(ca,cb) - c³E₃(a,b)‖ ≤ 10000|c|³s⁵`.
-- **Proof plan (not yet formalized, ~200 lines):**
-  1. Apply `norm_bch_quintic_remainder_le` to `(½a, b)` → bound on inner BCH.
-  2. Apply `norm_bch_quintic_remainder_le` to `(bch(½a,b), ½a)` → bound on outer BCH.
-  3. Combine; extract the degree-3 part (= `symmetric_bch_cubic_poly`) via the
-     algebraic identity `sym_E₃ = C₃(½a,b) + (1/16)[[a,b],a] + C₃(½a+b, ½a)`
-     (which simplifies to the closed-form `-(1/24)[a,[a,b]] + (1/12)[b,[b,a]]`
-     as verified algebraically).
-  4. Bound the residual degree-4+ terms via norm-grouping analogous to the
-     `pieceB'` analysis in `norm_bch_quintic_remainder_le`. Degree-4 contributions
-     cancel as a ring identity by the oddness of the symmetric BCH.
-- **Depends on:** `bch_cubic_term_smul` (✓), `symmetric_bch_cubic_neg` (✓),
+- **Progress so far (closed):**
+  - Setup: `a' = ½a`, `s = ‖a‖+‖b‖`, `s₁ = ‖a'‖+‖b‖`, `z = bch(a', b)`.
+  - `R₁ := z - (a'+b) - ½(a'b-ba') - C₃(a',b) - C₄(a',b)` — bounded by quintic.
+  - `W := z - (a'+b)` — bounded by quadratic (3·s₁²/(2-e^s₁)).
+  - `s₂ = ‖z‖+‖a'‖ < log 2` verified.
+  - `R₂ := bch(z,a') - (z+a') - ½(z·a'-a'·z) - C₃(z,a') - C₄(z,a')` — bounded.
+  - **Key quartic cancellation** (`symmetric_bch_quartic_identity`): the
+    four degree-4 contributions `A = ½[C₃(a',b),a']`, `B = C₄(a',b)`,
+    `C = -(1/96)·[b,DC_a]`, `D = C₄(a'+b,a')` sum to zero as a ring identity.
+    Proved by multiplying by 192, scalar clearing, `noncomm_ring`.
+  - Sketched decomposition: `sym_bch_cubic - sym_E₃ = R₁ + R₂ + ½[R₁,a'] +
+    ½[C₄(a',b),a'] + (C₃(z,a') - C₃(a'+b,a') - C) + (C₄(z,a') - D)`.
+- **Remaining (2 inner sorries):**
+  1. The algebraic decomposition equality: verify via `abel` + a ring identity
+     that `sym_bch_cubic_poly (closed form) = C₃(a',b) + (1/16)[[a,b],a] + C₃(a'+b,a')`
+     (both forms equal `-(1/24)[a,[a,b]] + (1/12)[b,[b,a]]`). Provable by
+     `noncomm_ring` after unfolding `bch_cubic_term` and scalar clearing.
+  2. Triangle inequality for the 6 residual terms, each bounded by K·s⁵:
+     - `R₁`, `R₂`: O(s⁵) by quintic BCH.
+     - `½[R₁,a']`: O(s⁶) ≤ O(s⁵) for `s<1`.
+     - `½[C₄(a',b),a']`: ‖C₄‖·‖a'‖ ≤ s⁴·s = O(s⁵).
+     - `C₃(z,a') - C₃(a'+b,a') - C_d4`: use trilinear expansion of C₃ and
+       bound residual linear-in-`w_rest` + quadratic-in-W terms.
+     - `C₄(z,a') - C₄(a'+b,a')`: linear-in-W expansion of C₄, O(s·s⁴) = O(s⁵).
+- **Depends on:** `symmetric_bch_quartic_identity` (✓, just proved),
+  `bch_cubic_term_smul` (✓), `symmetric_bch_cubic_neg` (✓),
   `norm_bch_quintic_remainder_le` (✓).
 
 ## File Structure
