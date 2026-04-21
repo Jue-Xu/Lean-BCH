@@ -4,6 +4,42 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-04-21: Quintic BCH sorry-free — `quintic_pure_identity` closed
+
+**What:** Closed the last sorry in `norm_bch_quintic_remainder_le` by closing
+the `quintic_pure_identity` ring identity (line 2260). The fifth-order BCH
+theorem is now fully proved.
+
+**Problem:** Prior attempt converted against `quintic_pure_identity_cleared`
+(a scalar-free version) via `convert ... using 2`, leaving residual nsmul
+instance-equality goals from the `NormedAlgebra 𝕂` vs `NormedRing` nsmul
+diamond — couldn't be closed by `rfl`.
+
+**Solution:** Dropped the convert detour entirely. Two fixes make direct
+`noncomm_ring` work after scalar clearing:
+
+1. **Pre-expand powers:** Added `simp only [pow_succ, pow_zero, one_mul]`
+   before the main distribution pass. This unfolds `P₂^2`, `(a+b)^4`, etc.
+   into explicit products so that the `(2:𝕂)⁻¹ •` smuls hiding inside
+   `P₂ = ab + ½a² + ½b²` participate in scalar clearing.
+
+2. **Intermediate cancellation rules:** Added
+   `(12:𝕂) * (2:𝕂)⁻¹ = 6`, `(6:𝕂) * (2:𝕂)⁻¹ = 3`, `(4:𝕂) * (2:𝕂)⁻¹ = 2`,
+   `(8:𝕂) * (2:𝕂)⁻¹ = 4`, `(12:𝕂) * ((2:𝕂)⁻¹ * (2:𝕂)⁻¹) = 3` to handle
+   the partial-cancellation forms that simp produces when scalars combine
+   in different orders (e.g. after `(24:𝕂) * (2:𝕂)⁻¹ = 12` fires, the
+   remaining `(12:𝕂) * (2:𝕂)⁻¹` needed its own rule).
+
+After clearing, the goal is a pure ring/nsmul identity and `noncomm_ring`
+handles it directly — no dependency on `quintic_pure_identity_cleared`.
+
+**Status:** `norm_bch_quintic_remainder_le` is sorry-free. One sorry
+remains (small-s case of `norm_symmetric_bch_cubic_sub_smul_le`, line 3624)
+— requires a new *symmetric* BCH quintic remainder theorem to bridge from
+the regular BCH quintic to the symmetric composition.
+
+---
+
 ## 2026-04-02: M1 + documentation — Lie bracket bridge, README, CLAUDE.md
 
 **What:** Added Lie bracket notation wrappers (`norm_bch_sub_add_sub_lie_le`, etc.)

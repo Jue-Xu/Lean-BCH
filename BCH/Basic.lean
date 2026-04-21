@@ -3623,10 +3623,18 @@ theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
     linarith
   · -- Small s case: s² < 0.06. Requires the power series analysis.
     push_neg at hs_large
-    -- For the small-s case, the crude cubic bound is insufficient;
-    -- we need to exploit cancellation from degree-3 homogeneity.
-    -- The proof requires a power series decomposition of the symmetric BCH.
-    -- See plan file for detailed approach.
+    -- For the small-s case, the crude cubic bound 600|c|³s³ is insufficient.
+    -- We need: ‖sym_bch_cubic(a,b) - sym_E₃(a,b)‖ ≤ K·s⁵ for an explicit
+    -- cubic polynomial sym_E₃(a,b) (homogeneous of degree 3). Then by
+    -- homogeneity, sym_E₃(ca,cb) = c³·sym_E₃(a,b), and:
+    --   D(c) = sym_bch_cubic(ca,cb) - c³·sym_bch_cubic(a,b)
+    --        = [sym_bch_cubic(ca,cb) - c³·sym_E₃(a,b)] - c³·[sym_bch_cubic(a,b) - sym_E₃(a,b)]
+    --        ‖·‖ ≤ K·(|c|s)⁵ + |c|³·K·s⁵ ≤ 2K·|c|³s⁵.
+    --
+    -- INFRASTRUCTURE GAP: need a symmetric-BCH quintic remainder theorem,
+    -- obtainable from norm_bch_quintic_remainder_le (now closed) applied
+    -- twice through the composition bch(bch(½a, b), ½a). Estimated 200 lines.
+    -- See CLAUDE.md "Remaining Sorry's" for the full plan.
     sorry
 
 end

@@ -10,6 +10,20 @@
 - [x] **H1: Commutator extraction** — `‖bch(a,b) - (a+b) - [a,b]/2‖ ≤ 10s³/(2 - eˢ)` (cubic remainder bound)
 - [x] **H2: Symmetric BCH** — `‖bch(bch(a/2,b),a/2) - (a+b)‖ ≤ 300s³` for `s < 1/4` (Strang splitting)
 - [x] **M1: Lie bracket bridge** — `⁅a,b⁆ = a*b - b*a` via Mathlib's `LieRing.ofAssociativeRing`; BCH results restated with `⁅·,·⁆`
+- [x] **Quintic BCH** — `‖bch(a,b) - (a+b) - ½[a,b] - C₃ - C₄‖ ≤ 3000s⁵/(2-eˢ)` (`norm_bch_quintic_remainder_le`, sorry-free as of 2026-04-21)
+
+## Open
+
+### Symmetric BCH quintic (small-s case of `norm_symmetric_bch_cubic_sub_smul_le`)
+The large-s case (`s² ≥ 0.06`) is closed via the crude cubic bound. The small-s
+case (`s² < 0.06`) requires a *symmetric BCH quintic remainder* theorem
+analogous to `norm_bch_quintic_remainder_le`. Plan:
+1. Define `symmetric_bch_E₃(a,b)` as an explicit cubic polynomial obtained by
+   collecting cubic contributions from `norm_bch_quintic_remainder_le` applied
+   twice through `bch(bch(½a,b), ½a)`.
+2. Prove `‖sym_bch_cubic(a,b) - sym_E₃(a,b)‖ ≤ K·s⁵`.
+3. Combined with homogeneity of `sym_E₃`, this closes the small-s sorry.
+Estimated ~200 lines.
 
 ## High priority
 

@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: H1, H2, M1 complete; 2 sorry's remain (quintic BCH + symmetric quintic)
+## Status: H1, H2, M1, quintic BCH complete; 1 sorry remains (symmetric quintic small-s case)
 
 ## Goal
 
@@ -68,22 +68,25 @@ exp/log expansion.
 
 ## Remaining Sorry's
 
-### `norm_bch_quintic_remainder_le` (line ~2296)
-- **Statement:** `‖bch(a,b)-(a+b)-½[a,b]-C₃-C₄‖ ≤ 3000s⁵/(2-eˢ)`
-- **Approach:** Decompose pieceB' using quartic_identity, then bound the degree-4+
-  terms via norm grouping. The key groups:
-  1. Pure quintic terms: `G₁+G₂, aF₂+F₁b, ½a²E₂+½E₁b², E₁E₂` — each `O(s⁵)`
-  2. Cross terms: `-½(zT₄+T₄z)` where `T₄ = S-R₃` — `O(s·s⁴) = O(s⁵)`
-  3. Degree-4 group: `{-½P² + ⅓(z²P+zPz+Pz²) + pure_deg4 - ¼z⁴ - C₄}`
-     — collectively `O(s⁵)` since bch(ta,tb) = tZ₁+t²Z₂+t³Z₃+t⁴Z₄+O(t⁵)
-     and C₄ is exactly Z₄. The degree-4 terms are NOT zero as a ring identity
-     but their NORM is `O(s⁵)` via the BCH expansion structure.
-  4. Higher-P terms: `⅓(zP²+PzP+P²z+P³), -¼(y⁴ terms)` — `O(s²·s³) = O(s⁵)`
-- **Infrastructure:** All quintic log/exp bounds already proved.
-
-### `norm_symmetric_bch_cubic_sub_smul_le` (line ~2819)
-- **Statement:** `‖E₃(ca,cb) - c³E₃(a,b)‖ ≤ 10000|c|³s⁵`
-- **Depends on:** quintic BCH + oddness (`symmetric_bch_cubic_neg`, already proved).
+### `norm_symmetric_bch_cubic_sub_smul_le` small-s case (line ~3624)
+- **Statement:** `‖E₃(ca,cb) - c³E₃(a,b)‖ ≤ 10000|c|³s⁵` for `|c|≤1`, `s < 1/4`
+- **Large case** (`s² ≥ 0.06`, s ≥ 0.245): **closed** — crude bound
+  `‖D(c)‖ ≤ 600|c|³s³` ≤ `10000|c|³s⁵` directly.
+- **Small case** (`s² < 0.06`): **requires new infrastructure**.
+  The crude bound `600|c|³s³` is insufficient here — need to exploit the
+  fact that `sym_bch_cubic(a,b)` equals an explicit cubic polynomial in
+  `a, b` up to `O(s⁵)`, so the c³-scaling mismatch is itself `O(s⁵)`.
+- **Infrastructure needed:** A *symmetric BCH quintic remainder* theorem,
+  analogous to `norm_bch_quintic_remainder_le` but for the composition
+  `bch(bch(½a,b), ½a)`. Two ways to obtain:
+  1. Apply `norm_bch_quintic_remainder_le` twice (to inner and outer BCH),
+     then collect all cubic-polynomial contributions and bound the rest.
+     ~200 lines.
+  2. Taylor expansion via `hasDerivAt` at t=0 of `Z(ta, tb)`, similar to
+     the `symmetric_bch_add_neg` constancy argument. Uses analytic
+     infrastructure but bypasses explicit polynomial bookkeeping.
+- **Depends on:** `bch_cubic_term_smul` (homogeneity, ✓), `symmetric_bch_cubic_neg`
+  (oddness, ✓), `norm_bch_quintic_remainder_le` (✓).
 
 ## File Structure
 
