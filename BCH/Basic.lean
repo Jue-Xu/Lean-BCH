@@ -2278,6 +2278,8 @@ private theorem quintic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
     simp only [smul_smul, inv_mul_cancel₀ h24ne, one_smul] at this; exact this
   apply hinj; simp only [smul_zero]
   unfold bch_quartic_term
+  -- Expand powers first so scalar smuls inside (e.g. P₂^2) get distributed
+  simp only [pow_succ, pow_zero, one_mul]
   simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
     mul_add, add_mul, mul_sub, sub_mul]
   simp only [mul_assoc,
@@ -2287,12 +2289,19 @@ private theorem quintic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
     show (24 : 𝕂) * (4 : 𝕂)⁻¹ = 6 from by norm_num,
     show (24 : 𝕂) * (3 : 𝕂)⁻¹ = 8 from by norm_num,
     show (24 : 𝕂) * (2 : 𝕂)⁻¹ = 12 from by norm_num,
+    -- Intermediate products that may arise after partial clearing
+    show (12 : 𝕂) * (2 : 𝕂)⁻¹ = 6 from by norm_num,
+    show (6 : 𝕂) * (2 : 𝕂)⁻¹ = 3 from by norm_num,
+    show (4 : 𝕂) * (2 : 𝕂)⁻¹ = 2 from by norm_num,
+    show (8 : 𝕂) * (2 : 𝕂)⁻¹ = 4 from by norm_num,
     -- Two-level nesting
     show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by norm_num,
     show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 2 from by norm_num,
     show (24 : 𝕂) * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 2 from by norm_num,
     show (24 : 𝕂) * ((3 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 4 from by norm_num,
     show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹) = 4 from by norm_num,
+    -- Intermediate two-level
+    show (12 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 3 from by norm_num,
     -- Three-level nesting (from ⅓·P₂² and ½·P₂² where P₂ has ½ coefficients)
     show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 3 from by norm_num,
     show (24 : 𝕂) * ((3 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 2 from by norm_num,
@@ -2300,11 +2309,8 @@ private theorem quintic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
     show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹)) = 2 from by norm_num,
     one_smul, mul_one]
   simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
-  -- After clearing, the goal matches quintic_pure_identity_cleared up to nsmul instances.
-  have h := @quintic_pure_identity_cleared 𝔸 (inferInstance) a b
-  convert h using 2
-  -- nsmul instance gap (NormedAlgebra vs NormedRing diamond). Does not block hpieceB.
-  all_goals sorry
+  -- After clearing, the goal is a pure ring/nsmul identity provable by noncomm_ring.
+  noncomm_ring
 
 set_option maxHeartbeats 128000000 in
 include 𝕂 in
@@ -2830,9 +2836,14 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
                   exact (norm_smul_le _ _).trans (mul_le_mul h2_le (norm_pow_le b 2)
                     (norm_nonneg _) (by norm_num))
               _ = β^2 := one_mul _
-          have n1 := norm_add_le (a*b+(2:𝕂)⁻¹•a^2) ((2:𝕂)⁻¹•b^2)
-          have n2 := norm_add_le (a*b) ((2:𝕂)⁻¹•a^2)
-          nlinarith [mul_nonneg hα_nn hβ_nn, show s^2 = α^2+2*α*β+β^2 from by rw [hs_def]; ring]
+          have hP₂_triangle : ‖P₂‖ ≤ ‖a*b‖ + ‖(2:𝕂)⁻¹•a^2‖ + ‖(2:𝕂)⁻¹•b^2‖ := by
+            show ‖(a * b + (2 : 𝕂)⁻¹ • a ^ 2) + (2 : 𝕂)⁻¹ • b ^ 2‖ ≤ _
+            have n1 := norm_add_le (a * b + (2 : 𝕂)⁻¹ • a ^ 2) ((2 : 𝕂)⁻¹ • b ^ 2)
+            have n2 := norm_add_le (a * b) ((2 : 𝕂)⁻¹ • a ^ 2)
+            linarith
+          have hs2 : s^2 = α^2 + 2*α*β + β^2 := by rw [hs_def]; ring
+          have hαβ : 0 ≤ α * β := mul_nonneg hα_nn hβ_nn
+          linarith
         -- Group 5: ‖E₁E₂+½a²E₂+½E₁b²‖ ≤ 3s⁵
         have b5 : ‖E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2)‖ ≤ 3*s^5 := by
           have t1 : ‖E₁*E₂‖ ≤ s^5 :=
@@ -2850,8 +2861,10 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
                     (le_trans hE₂_le hEb3) (norm_nonneg _) (by positivity)
             calc _ ≤ 1*(α^2*β^3) :=
                   (norm_smul_le _ _).trans (mul_le_mul h2_le ha2e (norm_nonneg _) (by norm_num))
-              _ ≤ s^2*s^3 := by nlinarith [pow_le_pow_left₀ hα_nn hα_le 2,
-                  pow_le_pow_left₀ hβ_nn hβ_le 3]
+              _ ≤ s^2*s^3 := by
+                  rw [one_mul]
+                  exact mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+                    (pow_le_pow_left₀ hβ_nn hβ_le 3) (by positivity) (by positivity)
               _ = s^5 := by ring
           have t3 : ‖(2:𝕂)⁻¹•(E₁*b^2)‖ ≤ s^5 := by
             have he1b : ‖E₁*b^2‖ ≤ α^3*β^2 :=
@@ -2860,8 +2873,10 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
                     (norm_pow_le b 2) (norm_nonneg _) (by positivity)
             calc _ ≤ 1*(α^3*β^2) :=
                   (norm_smul_le _ _).trans (mul_le_mul h2_le he1b (norm_nonneg _) (by norm_num))
-              _ ≤ s^3*s^2 := by nlinarith [pow_le_pow_left₀ hα_nn hα_le 3,
-                  pow_le_pow_left₀ hβ_nn hβ_le 2]
+              _ ≤ s^3*s^2 := by
+                  rw [one_mul]
+                  exact mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3)
+                    (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
               _ = s^5 := by ring
           linarith [norm_add_le (E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)) ((2:𝕂)⁻¹•(E₁*b^2)),
             norm_add_le (E₁*E₂) ((2:𝕂)⁻¹•(a^2*E₂))]
@@ -2871,10 +2886,12 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
             (norm_mul_le _ _).trans (mul_le_mul hz_le hSrest_le (norm_nonneg _) hs_nn)
           have h2 : ‖(T₃-E₁-E₂-Q)*z‖ ≤ (5*s^4)*s :=
             (norm_mul_le _ _).trans (mul_le_mul hSrest_le hz_le (norm_nonneg _) (by positivity))
-          calc _ ≤ (2:ℝ)⁻¹*(2*s*(5*s^4)) := by
-                rw [h2eq]; exact (norm_smul_le _ _).trans
-                  (mul_le_mul_of_nonneg_left (by linarith [norm_add_le (z*(T₃-E₁-E₂-Q))
-                    ((T₃-E₁-E₂-Q)*z)]) (by positivity))
+          have htri := norm_add_le (z*(T₃-E₁-E₂-Q)) ((T₃-E₁-E₂-Q)*z)
+          have hsum : ‖z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z‖ ≤ 2*s*(5*s^4) := by linarith
+          calc ‖(2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z)‖
+              ≤ ‖(2:𝕂)⁻¹‖ * ‖z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z‖ := norm_smul_le _ _
+            _ ≤ (2:ℝ)⁻¹ * (2*s*(5*s^4)) := by
+                rw [h2eq]; exact mul_le_mul_of_nonneg_left hsum (by norm_num)
             _ = 5*s^5 := by ring
         -- Group 7: ‖½(P₂²-P²)‖ ≤ 6s⁵
         have b7 : ‖(2:𝕂)⁻¹•(P₂^2-P^2)‖ ≤ 6*s^5 := by
@@ -2888,28 +2905,33 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
           have hp3 : ‖(P-P₂)^2‖ ≤ (5*s^3)^2 :=
             (norm_pow_le _ 2).trans (pow_le_pow_left₀ (norm_nonneg _) hS_le 2)
           rw [hPd, smul_neg, norm_neg]
-          calc _ ≤ (2:ℝ)⁻¹*(2*s^2*(5*s^3)+(5*s^3)^2) := by
-                rw [h2eq]; exact (norm_smul_le _ _).trans
-                  (mul_le_mul_of_nonneg_left (by linarith [
-                    norm_add_le (P₂*(P-P₂)+(P-P₂)*P₂) ((P-P₂)^2),
-                    norm_add_le (P₂*(P-P₂)) ((P-P₂)*P₂)]) (by positivity))
+          have ht1 := norm_add_le (P₂*(P-P₂)+(P-P₂)*P₂) ((P-P₂)^2)
+          have ht2 := norm_add_le (P₂*(P-P₂)) ((P-P₂)*P₂)
+          have hsum : ‖P₂*(P-P₂)+(P-P₂)*P₂+(P-P₂)^2‖ ≤ 2*s^2*(5*s^3)+(5*s^3)^2 := by
+            linarith
+          calc ‖(2:𝕂)⁻¹•(P₂*(P-P₂)+(P-P₂)*P₂+(P-P₂)^2)‖
+              ≤ ‖(2:𝕂)⁻¹‖ * ‖P₂*(P-P₂)+(P-P₂)*P₂+(P-P₂)^2‖ := norm_smul_le _ _
+            _ ≤ (2:ℝ)⁻¹ * (2*s^2*(5*s^3)+(5*s^3)^2) := by
+                rw [h2eq]; exact mul_le_mul_of_nonneg_left hsum (by norm_num)
             _ ≤ 6*s^5 := by nlinarith [pow_nonneg hs_nn 5, pow_nonneg hs_nn 6]
         -- Final triangle inequality: 1+1+1+1+3+5+6 = 18 ≤ 20
-        calc _ ≤ ‖G₁‖+‖G₂‖+‖a*F₂‖+‖F₁*b‖+
+        have n1 := norm_add_le G₁ G₂
+        have n2 := norm_add_le (G₁+G₂) (a*F₂)
+        have n3 := norm_add_le (G₁+G₂+a*F₂) (F₁*b)
+        have n4 := norm_add_le (G₁+G₂+a*F₂+F₁*b) (E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2))
+        have n5 := norm_add_le
+          (G₁+G₂+a*F₂+F₁*b+(E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2)))
+          ((2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z))
+        have n6 := norm_add_le
+          (G₁+G₂+a*F₂+F₁*b+(E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2))+
+            (2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z))
+          ((2:𝕂)⁻¹•(P₂^2-P^2))
+        have hcomp_sum : ‖G₁‖+‖G₂‖+‖a*F₂‖+‖F₁*b‖+
               ‖E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2)‖+
               ‖(2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z)‖+
-              ‖(2:𝕂)⁻¹•(P₂^2-P^2)‖ := by
-            linarith [norm_add_le G₁ G₂, norm_add_le (G₁+G₂) (a*F₂),
-              norm_add_le (G₁+G₂+a*F₂) (F₁*b),
-              norm_add_le (G₁+G₂+a*F₂+F₁*b) (E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2)),
-              norm_add_le (G₁+G₂+a*F₂+F₁*b+(E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2)))
-                ((2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z)),
-              norm_add_le (G₁+G₂+a*F₂+F₁*b+(E₁*E₂+(2:𝕂)⁻¹•(a^2*E₂)+(2:𝕂)⁻¹•(E₁*b^2))+
-                (2:𝕂)⁻¹•(z*(T₃-E₁-E₂-Q)+(T₃-E₁-E₂-Q)*z)) ((2:𝕂)⁻¹•(P₂^2-P^2))]
-          _ ≤ s^5+s^5+s^5+s^5+3*s^5+5*s^5+6*s^5 := by
-              linarith [hG₁_s5, hG₂_s5, haF₂, hF₁b, b5, b6, b7]
-          _ = 21 * s^5 := by ring
-          _ ≤ 50 * s^5 := by nlinarith [pow_nonneg hs_nn 5]
+              ‖(2:𝕂)⁻¹•(P₂^2-P^2)‖ ≤ 18 * s^5 := by
+          linarith [hG₁_s5, hG₂_s5, haF₂, hF₁b, b5, b6, b7]
+        linarith [hcomp_sum, pow_nonneg hs_nn 5]
       -- Group 2: ‖I₂-corr₂‖ ≤ 8s⁵ (I₂ refined by P→P₂+S)
       have hGroup2 : ‖I₂ - corr₂‖ ≤ 8 * s ^ 5 := by
         -- Factor out ⅓: I₂-corr₂ = ⅓•((y³-z³)-(z²P₂+zP₂z+P₂z²))
@@ -3549,6 +3571,62 @@ theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
     ‖symmetric_bch_cubic 𝕂 ((↑c : 𝕂) • a) ((↑c : 𝕂) • b) -
       (↑c : 𝕂) ^ 3 • symmetric_bch_cubic 𝕂 a b‖ ≤
       10000 * |c| ^ 3 * (‖a‖ + ‖b‖) ^ 5 := by
-  sorry
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have hs14 : s < 1 / 4 := hab
+  -- Key fact: ‖c • a‖ + ‖c • b‖ = |c| · s ≤ s < 1/4
+  have hnorm_scale : ‖((↑c : 𝕂) • a)‖ + ‖((↑c : 𝕂) • b)‖ ≤ |c| * s := by
+    have hc_norm : ‖(↑c : 𝕂)‖ = |c| := by
+      rw [RCLike.norm_ofReal]
+    calc ‖((↑c : 𝕂) • a)‖ + ‖((↑c : 𝕂) • b)‖
+        ≤ ‖(↑c : 𝕂)‖ * ‖a‖ + ‖(↑c : 𝕂)‖ * ‖b‖ := by
+          gcongr <;> exact norm_smul_le _ _
+      _ = |c| * s := by rw [hc_norm]; ring
+  have hc_nn : 0 ≤ |c| := abs_nonneg c
+  have hcs_lt : |c| * s < 1 / 4 := by
+    calc |c| * s ≤ 1 * s := by gcongr
+      _ = s := one_mul s
+      _ < 1 / 4 := hs14
+  have hcs_14 : ‖((↑c : 𝕂) • a)‖ + ‖((↑c : 𝕂) • b)‖ < 1 / 4 :=
+    lt_of_le_of_lt hnorm_scale hcs_lt
+  -- H2 bound on E₃(ca,cb) and on E₃(a,b)
+  have h_E3_ca : ‖symmetric_bch_cubic 𝕂 ((↑c : 𝕂) • a) ((↑c : 𝕂) • b)‖ ≤
+      300 * (|c| * s) ^ 3 := by
+    calc _ ≤ 300 * (‖((↑c : 𝕂) • a)‖ + ‖((↑c : 𝕂) • b)‖) ^ 3 :=
+          norm_symmetric_bch_cubic_le (𝕂 := 𝕂) _ _ hcs_14
+      _ ≤ 300 * (|c| * s) ^ 3 := by gcongr
+  have h_E3_ab : ‖symmetric_bch_cubic 𝕂 a b‖ ≤ 300 * s ^ 3 :=
+    norm_symmetric_bch_cubic_le (𝕂 := 𝕂) a b hab
+  -- Crude bound: ‖D(c)‖ ≤ 600 |c|³ s³
+  have h_crude : ‖symmetric_bch_cubic 𝕂 ((↑c : 𝕂) • a) ((↑c : 𝕂) • b) -
+      (↑c : 𝕂) ^ 3 • symmetric_bch_cubic 𝕂 a b‖ ≤ 600 * |c| ^ 3 * s ^ 3 := by
+    have hsmul_norm : ‖(↑c : 𝕂) ^ 3 • symmetric_bch_cubic 𝕂 a b‖ ≤
+        |c| ^ 3 * (300 * s ^ 3) := by
+      have : ‖((↑c : 𝕂) ^ 3)‖ = |c| ^ 3 := by
+        rw [norm_pow, RCLike.norm_ofReal]
+      calc _ ≤ ‖((↑c : 𝕂) ^ 3)‖ * ‖symmetric_bch_cubic 𝕂 a b‖ := norm_smul_le _ _
+        _ ≤ |c| ^ 3 * (300 * s ^ 3) := by rw [this]; gcongr
+    calc ‖_‖ ≤ _ + _ := norm_sub_le _ _
+      _ ≤ 300 * (|c| * s) ^ 3 + |c| ^ 3 * (300 * s ^ 3) := by linarith
+      _ = 600 * |c| ^ 3 * s ^ 3 := by ring
+  -- Case split on s² vs 6/100
+  by_cases hs_large : 6 / 100 ≤ s ^ 2
+  · -- Large s case: crude bound suffices since 600 s³ ≤ 10000 s⁵ when s² ≥ 0.06
+    have h600 : 600 * |c| ^ 3 * s ^ 3 ≤ 10000 * |c| ^ 3 * s ^ 5 := by
+      have hc3_nn : 0 ≤ |c| ^ 3 := pow_nonneg hc_nn 3
+      have hs3_nn : 0 ≤ s ^ 3 := pow_nonneg hs_nn 3
+      have h1 : 600 * s ^ 3 ≤ 10000 * s ^ 5 := by
+        have hdiff : 10000 * s ^ 5 - 600 * s ^ 3 = s ^ 3 * (10000 * s ^ 2 - 600) := by ring
+        have h2 : 0 ≤ 10000 * s ^ 2 - 600 := by linarith
+        nlinarith [mul_nonneg hs3_nn h2]
+      nlinarith [h1, hc3_nn]
+    linarith
+  · -- Small s case: s² < 0.06. Requires the power series analysis.
+    push_neg at hs_large
+    -- For the small-s case, the crude cubic bound is insufficient;
+    -- we need to exploit cancellation from degree-3 homogeneity.
+    -- The proof requires a power series decomposition of the symmetric BCH.
+    -- See plan file for detailed approach.
+    sorry
 
 end
