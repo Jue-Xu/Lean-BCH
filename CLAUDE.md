@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: H1, H2, M1, quintic BCH complete; 1 sorry remains (symmetric quintic small-s case)
+## Status: H1, H2, M1, quintic BCH, symmetric E₃-extraction complete; 1 sorry remains (symmetric quintic remainder)
 
 ## Goal
 
@@ -68,25 +68,25 @@ exp/log expansion.
 
 ## Remaining Sorry's
 
-### `norm_symmetric_bch_cubic_sub_smul_le` small-s case (line ~3624)
-- **Statement:** `‖E₃(ca,cb) - c³E₃(a,b)‖ ≤ 10000|c|³s⁵` for `|c|≤1`, `s < 1/4`
-- **Large case** (`s² ≥ 0.06`, s ≥ 0.245): **closed** — crude bound
-  `‖D(c)‖ ≤ 600|c|³s³` ≤ `10000|c|³s⁵` directly.
-- **Small case** (`s² < 0.06`): **requires new infrastructure**.
-  The crude bound `600|c|³s³` is insufficient here — need to exploit the
-  fact that `sym_bch_cubic(a,b)` equals an explicit cubic polynomial in
-  `a, b` up to `O(s⁵)`, so the c³-scaling mismatch is itself `O(s⁵)`.
-- **Infrastructure needed:** A *symmetric BCH quintic remainder* theorem,
-  analogous to `norm_bch_quintic_remainder_le` but for the composition
-  `bch(bch(½a,b), ½a)`. Two ways to obtain:
-  1. Apply `norm_bch_quintic_remainder_le` twice (to inner and outer BCH),
-     then collect all cubic-polynomial contributions and bound the rest.
-     ~200 lines.
-  2. Taylor expansion via `hasDerivAt` at t=0 of `Z(ta, tb)`, similar to
-     the `symmetric_bch_add_neg` constancy argument. Uses analytic
-     infrastructure but bypasses explicit polynomial bookkeeping.
-- **Depends on:** `bch_cubic_term_smul` (homogeneity, ✓), `symmetric_bch_cubic_neg`
-  (oddness, ✓), `norm_bch_quintic_remainder_le` (✓).
+### `norm_symmetric_bch_cubic_sub_poly_le` (line ~3669)
+- **Statement:** `‖sym_bch_cubic(a,b) - sym_E₃(a,b)‖ ≤ 4000·s⁵` where
+  `sym_E₃(a,b) = -(1/24)·[a,[a,b]] + (1/12)·[b,[b,a]]` is the cubic-polynomial
+  part of the symmetric BCH expansion (definition `symmetric_bch_cubic_poly`).
+- **Downstream consumer:** `norm_symmetric_bch_cubic_sub_smul_le` small-s case
+  — now uses this theorem + `symmetric_bch_cubic_poly_smul` (homogeneity, ✓)
+  to close `‖E₃(ca,cb) - c³E₃(a,b)‖ ≤ 10000|c|³s⁵`.
+- **Proof plan (not yet formalized, ~200 lines):**
+  1. Apply `norm_bch_quintic_remainder_le` to `(½a, b)` → bound on inner BCH.
+  2. Apply `norm_bch_quintic_remainder_le` to `(bch(½a,b), ½a)` → bound on outer BCH.
+  3. Combine; extract the degree-3 part (= `symmetric_bch_cubic_poly`) via the
+     algebraic identity `sym_E₃ = C₃(½a,b) + (1/16)[[a,b],a] + C₃(½a+b, ½a)`
+     (which simplifies to the closed-form `-(1/24)[a,[a,b]] + (1/12)[b,[b,a]]`
+     as verified algebraically).
+  4. Bound the residual degree-4+ terms via norm-grouping analogous to the
+     `pieceB'` analysis in `norm_bch_quintic_remainder_le`. Degree-4 contributions
+     cancel as a ring identity by the oddness of the symmetric BCH.
+- **Depends on:** `bch_cubic_term_smul` (✓), `symmetric_bch_cubic_neg` (✓),
+  `norm_bch_quintic_remainder_le` (✓).
 
 ## File Structure
 

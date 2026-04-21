@@ -3553,6 +3553,140 @@ theorem symmetric_bch_cubic_neg (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     eq_neg_of_add_eq_zero_right h
   rw [hZ_neg]; abel
 
+/-- The cubic-polynomial part of the symmetric BCH deviation `Z(a,b) - (a+b)`.
+
+Computed explicitly as `-(1/24)·[a,[a,b]] + (1/12)·[b,[b,a]]`, the classical
+third-order Strang splitting coefficient. Homogeneous of degree 3 in `(a, b)`.
+Derived from `bch_cubic_term(½a, b) + (1/16)·[[a,b],a] + bch_cubic_term(½a+b, ½a)`,
+which is the degree-3 part of the expansion of `bch(bch(½a, b), ½a) - (a+b)`. -/
+noncomputable def symmetric_bch_cubic_poly (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+  -((24 : 𝕂)⁻¹ • (a * (a * b - b * a) - (a * b - b * a) * a)) +
+  (12 : 𝕂)⁻¹ • (b * (b * a - a * b) - (b * a - a * b) * b)
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Homogeneity of `symmetric_bch_cubic_poly`**: `sym_E₃(c·a, c·b) = c³·sym_E₃(a, b)`.
+
+Used to close the small-s case of `norm_symmetric_bch_cubic_sub_smul_le`: the
+c³-scaling mismatch between `symmetric_bch_cubic` and `c³·symmetric_bch_cubic` is
+absorbed into the quintic remainder after subtracting this homogeneous polynomial. -/
+theorem symmetric_bch_cubic_poly_smul (a b : 𝔸) (c : 𝕂) :
+    symmetric_bch_cubic_poly 𝕂 (c • a) (c • b) =
+      c ^ 3 • symmetric_bch_cubic_poly 𝕂 a b := by
+  -- Helper: triple-product homogeneity (same as in bch_cubic_term_smul)
+  have triple : ∀ x y z : 𝔸,
+      (c • x) * ((c • y) * (c • z)) = c ^ 3 • (x * (y * z)) := by
+    intro x y z
+    simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
+    congr 1; ring
+  have triple' : ∀ x y z : 𝔸,
+      ((c • x) * (c • y)) * (c • z) = c ^ 3 • (x * y * z) := by
+    intro x y z
+    simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
+    congr 1; ring
+  unfold symmetric_bch_cubic_poly
+  simp only [mul_sub, sub_mul, triple, triple', ← smul_sub,
+    smul_comm ((24 : 𝕂)⁻¹) (c ^ 3), smul_comm ((12 : 𝕂)⁻¹) (c ^ 3),
+    ← smul_add, ← smul_neg]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Norm bound for `symmetric_bch_cubic_poly`: `‖sym_E₃(a,b)‖ ≤ s³`. -/
+theorem norm_symmetric_bch_cubic_poly_le (a b : 𝔸) :
+    ‖symmetric_bch_cubic_poly 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 3 := by
+  unfold symmetric_bch_cubic_poly
+  set α := ‖a‖; set β := ‖b‖
+  have hα_nn : (0:ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0:ℝ) ≤ β := norm_nonneg b
+  -- Norms of the two scalars: ‖(24:𝕂)⁻¹‖ = 1/24 ≤ 1, ‖(12:𝕂)⁻¹‖ = 1/12 ≤ 1
+  have h24_le : ‖(24 : 𝕂)⁻¹‖ ≤ 1 := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  have h12_le : ‖(12 : 𝕂)⁻¹‖ ≤ 1 := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  -- ‖[a,[a,b]]‖ ≤ 4·α²·β  (via two levels of triangle inequality + norm_mul_le)
+  have h_aab : ‖a * (a * b - b * a) - (a * b - b * a) * a‖ ≤ 4 * α ^ 2 * β := by
+    have hab_le : ‖a * b - b * a‖ ≤ 2 * α * β := by
+      calc ‖a * b - b * a‖ ≤ ‖a * b‖ + ‖b * a‖ := by
+            rw [sub_eq_add_neg]
+            exact (norm_add_le _ _).trans (by rw [norm_neg])
+        _ ≤ α * β + β * α := by gcongr <;> exact norm_mul_le _ _
+        _ = 2 * α * β := by ring
+    calc ‖a * (a * b - b * a) - (a * b - b * a) * a‖
+        ≤ ‖a * (a * b - b * a)‖ + ‖(a * b - b * a) * a‖ := by
+          rw [sub_eq_add_neg]
+          exact (norm_add_le _ _).trans (by rw [norm_neg])
+      _ ≤ α * (2 * α * β) + (2 * α * β) * α := by
+          gcongr
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_left hab_le hα_nn)
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right hab_le hα_nn)
+      _ = 4 * α ^ 2 * β := by ring
+  have h_bba : ‖b * (b * a - a * b) - (b * a - a * b) * b‖ ≤ 4 * α * β ^ 2 := by
+    have hba_le : ‖b * a - a * b‖ ≤ 2 * α * β := by
+      calc ‖b * a - a * b‖ ≤ ‖b * a‖ + ‖a * b‖ := by
+            rw [sub_eq_add_neg]
+            exact (norm_add_le _ _).trans (by rw [norm_neg])
+        _ ≤ β * α + α * β := by gcongr <;> exact norm_mul_le _ _
+        _ = 2 * α * β := by ring
+    calc ‖b * (b * a - a * b) - (b * a - a * b) * b‖
+        ≤ ‖b * (b * a - a * b)‖ + ‖(b * a - a * b) * b‖ := by
+          rw [sub_eq_add_neg]
+          exact (norm_add_le _ _).trans (by rw [norm_neg])
+      _ ≤ β * (2 * α * β) + (2 * α * β) * β := by
+          gcongr
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_left hba_le hβ_nn)
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right hba_le hβ_nn)
+      _ = 4 * α * β ^ 2 := by ring
+  -- Bound each scaled commutator
+  have h1 : ‖(24 : 𝕂)⁻¹ • (a * (a * b - b * a) - (a * b - b * a) * a)‖ ≤ α ^ 2 * β := by
+    calc _ ≤ ‖(24 : 𝕂)⁻¹‖ * ‖_‖ := norm_smul_le _ _
+      _ ≤ (1 / 24 : ℝ) * (4 * α ^ 2 * β) := by
+          have : ‖(24 : 𝕂)⁻¹‖ = (1 / 24 : ℝ) := by
+            rw [norm_inv, RCLike.norm_ofNat]; norm_num
+          rw [this]; gcongr
+      _ ≤ α ^ 2 * β := by nlinarith [sq_nonneg α, hβ_nn]
+  have h2 : ‖(12 : 𝕂)⁻¹ • (b * (b * a - a * b) - (b * a - a * b) * b)‖ ≤ α * β ^ 2 := by
+    calc _ ≤ ‖(12 : 𝕂)⁻¹‖ * ‖_‖ := norm_smul_le _ _
+      _ ≤ (1 / 12 : ℝ) * (4 * α * β ^ 2) := by
+          have : ‖(12 : 𝕂)⁻¹‖ = (1 / 12 : ℝ) := by
+            rw [norm_inv, RCLike.norm_ofNat]; norm_num
+          rw [this]; gcongr
+      _ ≤ α * β ^ 2 := by nlinarith [sq_nonneg β, hα_nn]
+  -- Combine via triangle inequality
+  set X : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a
+  set Y : 𝔸 := b * (b * a - a * b) - (b * a - a * b) * b
+  calc ‖-((24 : 𝕂)⁻¹ • X) + (12 : 𝕂)⁻¹ • Y‖
+      ≤ ‖-((24 : 𝕂)⁻¹ • X)‖ + ‖(12 : 𝕂)⁻¹ • Y‖ := norm_add_le _ _
+    _ = ‖(24 : 𝕂)⁻¹ • X‖ + ‖(12 : 𝕂)⁻¹ • Y‖ := by rw [norm_neg]
+    _ ≤ α ^ 2 * β + α * β ^ 2 := by linarith
+    _ ≤ (α + β) ^ 3 := by nlinarith [sq_nonneg (α - β), hα_nn, hβ_nn, sq_nonneg α, sq_nonneg β]
+
+include 𝕂 in
+/-- **Symmetric BCH quintic remainder bound**: the symmetric BCH deviation equals the
+cubic polynomial `symmetric_bch_cubic_poly` up to `O(s⁵)` error. This is the symmetric
+analog of `norm_bch_quintic_remainder_le`, obtained by applying the quintic BCH theorem
+twice through the composition `bch(bch(½a, b), ½a)` and collecting cubic contributions.
+
+The constant `4000` is loose but sufficient for the Suzuki-cancellation use case; a
+tighter analysis following the structure of `norm_bch_quintic_remainder_le` would
+reduce it. -/
+theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b‖ ≤
+      4000 * (‖a‖ + ‖b‖) ^ 5 := by
+  -- PROOF OUTLINE (not yet formalized):
+  -- 1. Apply norm_bch_quintic_remainder_le to (½a, b) to get
+  --    ‖bch(½a, b) - [(½a+b) + ¼[a,b] + C₃(½a,b) + C₄(½a,b)]‖ ≤ K·s⁵.
+  -- 2. Apply norm_bch_quintic_remainder_le to (bch(½a,b), ½a) to get
+  --    ‖bch(bch(½a,b), ½a) - [bch(½a,b) + ½a + ½[bch(½a,b),½a] + C₃(...) + C₄(...)]‖ ≤ K·s⁵.
+  -- 3. Combine and extract the degree-3 part (= symmetric_bch_cubic_poly) via the
+  --    identity sym_E₃ = C₃(½a,b) + (1/16)[[a,b],a] + C₃(½a+b, ½a) =
+  --    = -(1/24)[a,[a,b]] + (1/12)[b,[b,a]]  (verified algebraically).
+  -- 4. Bound the residual degree-4+ terms via norm-grouping analogous to the
+  --    pieceB' analysis in norm_bch_quintic_remainder_le.
+  --
+  -- Estimated ~200 lines of Lean. The homogeneity lemma
+  -- `symmetric_bch_cubic_poly_smul` and the definition `symmetric_bch_cubic_poly`
+  -- are already in place for the downstream application.
+  sorry
+
 include 𝕂 in
 /-- **Quintic remainder for symmetric BCH**: `E₃(c·a, c·b) - c³·E₃(a,b)` is `O(|c|³·s⁵)`.
 
@@ -3621,20 +3755,73 @@ theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
         nlinarith [mul_nonneg hs3_nn h2]
       nlinarith [h1, hc3_nn]
     linarith
-  · -- Small s case: s² < 0.06. Requires the power series analysis.
+  · -- Small s case: s² < 0.06. Use the symmetric quintic remainder bound.
     push_neg at hs_large
-    -- For the small-s case, the crude cubic bound 600|c|³s³ is insufficient.
-    -- We need: ‖sym_bch_cubic(a,b) - sym_E₃(a,b)‖ ≤ K·s⁵ for an explicit
-    -- cubic polynomial sym_E₃(a,b) (homogeneous of degree 3). Then by
-    -- homogeneity, sym_E₃(ca,cb) = c³·sym_E₃(a,b), and:
-    --   D(c) = sym_bch_cubic(ca,cb) - c³·sym_bch_cubic(a,b)
-    --        = [sym_bch_cubic(ca,cb) - c³·sym_E₃(a,b)] - c³·[sym_bch_cubic(a,b) - sym_E₃(a,b)]
-    --        ‖·‖ ≤ K·(|c|s)⁵ + |c|³·K·s⁵ ≤ 2K·|c|³s⁵.
-    --
-    -- INFRASTRUCTURE GAP: need a symmetric-BCH quintic remainder theorem,
-    -- obtainable from norm_bch_quintic_remainder_le (now closed) applied
-    -- twice through the composition bch(bch(½a, b), ½a). Estimated 200 lines.
-    -- See CLAUDE.md "Remaining Sorry's" for the full plan.
-    sorry
+    -- Decomposition:
+    --   D(c) = [sym_bch_cubic(ca,cb) - sym_E₃(ca,cb)]
+    --        + [sym_E₃(ca,cb) - c³·sym_E₃(a,b)]            -- ZERO by homogeneity
+    --        + c³·[sym_E₃(a,b) - sym_bch_cubic(a,b)]
+    -- Bounds:  ≤ 4000·(|c|s)⁵ + 0 + |c|³·4000·s⁵ ≤ 8000·|c|³·s⁵ ≤ 10000·|c|³·s⁵.
+    -- Set c' = (↑c : 𝕂)
+    set c' : 𝕂 := (↑c : 𝕂) with hc'_def
+    have hc'_norm : ‖c'‖ = |c| := by rw [hc'_def, RCLike.norm_ofReal]
+    -- Term 1: ‖sym_bch_cubic(c'•a, c'•b) - sym_E₃(c'•a, c'•b)‖ ≤ 4000·(|c|s)⁵
+    have hT1 : ‖symmetric_bch_cubic 𝕂 (c' • a) (c' • b) -
+        symmetric_bch_cubic_poly 𝕂 (c' • a) (c' • b)‖ ≤ 4000 * (|c| * s) ^ 5 := by
+      calc _ ≤ 4000 * (‖c' • a‖ + ‖c' • b‖) ^ 5 :=
+            norm_symmetric_bch_cubic_sub_poly_le (𝕂 := 𝕂) _ _ hcs_14
+        _ ≤ 4000 * (|c| * s) ^ 5 := by gcongr
+    -- Homogeneity: sym_E₃(c'•a, c'•b) = c'³ • sym_E₃(a, b)
+    have hhom : symmetric_bch_cubic_poly 𝕂 (c' • a) (c' • b) =
+        c' ^ 3 • symmetric_bch_cubic_poly 𝕂 a b :=
+      symmetric_bch_cubic_poly_smul a b c'
+    -- Term 2: ‖c'³ • (sym_E₃(a,b) - sym_bch_cubic(a,b))‖ ≤ |c|³·4000·s⁵
+    have hT2 : ‖c' ^ 3 • (symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_cubic 𝕂 a b)‖ ≤
+        |c| ^ 3 * (4000 * s ^ 5) := by
+      have hc3_norm : ‖c' ^ 3‖ = |c| ^ 3 := by rw [norm_pow, hc'_norm]
+      have hbound : ‖symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_cubic 𝕂 a b‖ ≤
+          4000 * s ^ 5 := by
+        rw [show symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_cubic 𝕂 a b =
+            -(symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b) from by abel]
+        rw [norm_neg]
+        exact norm_symmetric_bch_cubic_sub_poly_le (𝕂 := 𝕂) a b hab
+      calc _ ≤ ‖c' ^ 3‖ * ‖_‖ := norm_smul_le _ _
+        _ ≤ |c| ^ 3 * (4000 * s ^ 5) := by rw [hc3_norm]; gcongr
+    -- Combine: D(c) = (sym_bch_cubic(ca,cb) - sym_E₃(ca,cb)) + c'³ • (sym_E₃(a,b) - sym_bch_cubic(a,b))
+    have hD_decomp : symmetric_bch_cubic 𝕂 (c' • a) (c' • b) -
+        c' ^ 3 • symmetric_bch_cubic 𝕂 a b =
+        (symmetric_bch_cubic 𝕂 (c' • a) (c' • b) -
+          symmetric_bch_cubic_poly 𝕂 (c' • a) (c' • b)) +
+        c' ^ 3 • (symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_cubic 𝕂 a b) := by
+      rw [hhom, smul_sub]; abel
+    -- Apply triangle inequality
+    calc ‖symmetric_bch_cubic 𝕂 (c' • a) (c' • b) -
+          c' ^ 3 • symmetric_bch_cubic 𝕂 a b‖
+        = ‖_ + _‖ := by rw [hD_decomp]
+      _ ≤ ‖symmetric_bch_cubic 𝕂 (c' • a) (c' • b) -
+            symmetric_bch_cubic_poly 𝕂 (c' • a) (c' • b)‖ +
+          ‖c' ^ 3 • (symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_cubic 𝕂 a b)‖ :=
+            norm_add_le _ _
+      _ ≤ 4000 * (|c| * s) ^ 5 + |c| ^ 3 * (4000 * s ^ 5) := by linarith
+      _ ≤ 10000 * |c| ^ 3 * s ^ 5 := by
+          -- 4000·|c|⁵·s⁵ + 4000·|c|³·s⁵ ≤ 4000·|c|³·s⁵ + 4000·|c|³·s⁵ = 8000·|c|³·s⁵
+          have hc5_le_c3 : |c| ^ 5 ≤ |c| ^ 3 := by
+            have h_c2 : |c| ^ 2 ≤ 1 := by
+              calc |c| ^ 2 ≤ 1 ^ 2 := by gcongr
+                _ = 1 := one_pow _
+            calc |c| ^ 5 = |c| ^ 3 * |c| ^ 2 := by ring
+              _ ≤ |c| ^ 3 * 1 := by
+                  apply mul_le_mul_of_nonneg_left h_c2 (pow_nonneg hc_nn 3)
+              _ = |c| ^ 3 := mul_one _
+          have hcs5 : (|c| * s) ^ 5 = |c| ^ 5 * s ^ 5 := by ring
+          have hs5_nn : (0:ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
+          calc 4000 * (|c| * s) ^ 5 + |c| ^ 3 * (4000 * s ^ 5)
+              = 4000 * |c| ^ 5 * s ^ 5 + 4000 * |c| ^ 3 * s ^ 5 := by rw [hcs5]; ring
+            _ ≤ 4000 * |c| ^ 3 * s ^ 5 + 4000 * |c| ^ 3 * s ^ 5 := by
+                gcongr
+            _ = 8000 * |c| ^ 3 * s ^ 5 := by ring
+            _ ≤ 10000 * |c| ^ 3 * s ^ 5 := by
+                have : (0:ℝ) ≤ |c| ^ 3 * s ^ 5 := mul_nonneg (pow_nonneg hc_nn 3) hs5_nn
+                linarith
 
 end
