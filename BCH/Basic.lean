@@ -3659,6 +3659,85 @@ theorem norm_symmetric_bch_cubic_poly_le (a b : 𝔸) :
     _ ≤ α ^ 2 * β + α * β ^ 2 := by linarith
     _ ≤ (α + β) ^ 3 := by nlinarith [sq_nonneg (α - β), hα_nn, hβ_nn, sq_nonneg α, sq_nonneg β]
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Key quartic cancellation for symmetric BCH**: the four degree-4 contributions to
+`sym_bch_cubic - sym_E₃` sum to zero as a ring identity.
+
+Specifically, writing `a' = ½a`, the four contributions are:
+- A := ½[C₃(a',b), a']  (from the half-commutator ½[w, a'] expansion, w = z-(a'+b))
+- B := C₄(a',b)         (the inner BCH quartic)
+- C := -(1/96)·[b, DC_a]  (the linear-in-w₂ part of [C₃(z,a') - C₃(a'+b,a')],
+                           where w₂ = ½(a'b-ba'); equals (1/12)·([(a'+b),[w₂,a']] +
+                           [w₂,[(a'+b),a']] + [a',[a',w₂]]) — verified algebraically)
+- D := C₄(a'+b, a')     (the constant part of C₄(z, a'))
+
+The identity `A + B + C + D = 0` holds because, after expansion:
+- A + D contributes `(1/48)·[DC_b, a]` (the [DC_a,a] terms cancel between A and D).
+- B + C contributes `-(1/48)·[b, DC_a]`.
+- And `[DC_b, a] = [b, DC_a]` is itself an associative-algebra identity (both expand
+  to `b²a² - 2baba + 2abab - a²b²`). -/
+private theorem symmetric_bch_quartic_identity (a b : 𝔸) :
+    (2 : 𝕂)⁻¹ • (bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
+                  ((2 : 𝕂)⁻¹ • a) * bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) +
+      bch_quartic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+      -((96 : 𝕂)⁻¹ • (b * (a * (a * b - b * a) - (a * b - b * a) * a) -
+                       (a * (a * b - b * a) - (a * b - b * a) * a) * b)) +
+      bch_quartic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) = 0 := by
+  -- Multiply through by 96 and verify by noncomm_ring after scalar clearing.
+  have h192ne : (192 : 𝕂) ≠ 0 := by exact_mod_cast (show (192 : ℕ) ≠ 0 by norm_num)
+  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+  have hinj : Function.Injective ((192 : 𝕂) • · : 𝔸 → 𝔸) := by
+    intro x y hxy
+    have := congrArg ((192 : 𝕂)⁻¹ • ·) hxy
+    simp only [smul_smul, inv_mul_cancel₀ h192ne, one_smul] at this; exact this
+  apply hinj; simp only [smul_zero]
+  unfold bch_cubic_term bch_quartic_term
+  -- Distribute scalars through the algebraic expression
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul, mul_sub, sub_mul]
+  -- Clear scalar products (192 * various c⁻¹ combinations)
+  simp only [mul_assoc,
+    inv_mul_cancel₀ h2ne, mul_inv_cancel₀ h192ne,
+    show (192 : 𝕂) * (2 : 𝕂)⁻¹ = 96 from by norm_num,
+    show (192 : 𝕂) * (12 : 𝕂)⁻¹ = 16 from by norm_num,
+    show (192 : 𝕂) * (24 : 𝕂)⁻¹ = 8 from by norm_num,
+    show (192 : 𝕂) * (96 : 𝕂)⁻¹ = 2 from by norm_num,
+    -- Two-level
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 48 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹) = 8 from by norm_num,
+    show (192 : 𝕂) * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 8 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * (24 : 𝕂)⁻¹) = 4 from by norm_num,
+    show (192 : 𝕂) * ((24 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 4 from by norm_num,
+    -- Three-level
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹)) = 4 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 4 from by norm_num,
+    show (192 : 𝕂) * ((12 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 4 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (24 : 𝕂)⁻¹)) = 2 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((24 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 2 from by norm_num,
+    show (192 : 𝕂) * ((24 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 2 from by norm_num,
+    -- Four-level (for C₄(a',b) and C₄(a'+b,a') nested scaling)
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (24 : 𝕂)⁻¹))) = 1 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹))) = 2 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((12 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹))) = 2 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹))) = 2 from by norm_num,
+    show (192 : 𝕂) * ((24 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹))) = 1 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((24 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹))) = 1 from by norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((24 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹))) = 1 from by norm_num,
+    -- Five-level (four 2⁻¹ and one 12⁻¹ → product = 1/192)
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((12 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)))) = 1 from by
+      norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((12 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)))) = 1 from by
+      norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)))) = 1 from by
+      norm_num,
+    show (192 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹)))) = 1 from by
+      norm_num,
+    show (192 : 𝕂) * ((12 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)))) = 1 from by
+      norm_num,
+    one_smul, mul_one]
+  -- After clearing, the goal is a pure ring identity provable by noncomm_ring.
+  noncomm_ring
+
 include 𝕂 in
 /-- **Symmetric BCH quintic remainder bound**: the symmetric BCH deviation equals the
 cubic polynomial `symmetric_bch_cubic_poly` up to `O(s⁵)` error. This is the symmetric
