@@ -3774,13 +3774,99 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
     linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
       (by norm_num : (1:ℝ)/4 < 5/6)]
   have hs₁_lt_log2 : s₁ < Real.log 2 := by linarith
-  -- Given the substantial infrastructure required to close this
-  -- (symmetric_bch_quartic_identity has been proved; it suffices to decompose
-  -- sym_bch_cubic - sym_E₃ via two applications of norm_bch_quintic_remainder_le
-  -- and bound the residual quintic+ terms), the norm-bound machinery is left
-  -- as future work. Estimated ~150 additional lines of Lean.
-  -- See CLAUDE.md for the full proof plan and symmetric_bch_quartic_identity
-  -- for the key ring identity (which cancels all degree-4 contributions).
+  -- Inner BCH: z = bch(a', b)
+  set z := bch (𝕂 := 𝕂) a' b with hz_def
+  -- Quintic remainder of inner BCH: R₁ = z - (a'+b) - ½(a'b-ba') - C₃(a',b) - C₄(a',b)
+  set R₁ := z - (a' + b) - (2 : 𝕂)⁻¹ • (a' * b - b * a') -
+      bch_cubic_term 𝕂 a' b - bch_quartic_term 𝕂 a' b with hR₁_def
+  -- Bound: ‖R₁‖ ≤ 3000·s₁⁵/(2-exp(s₁))
+  have hR₁_le : ‖R₁‖ ≤ 3000 * s₁ ^ 5 / (2 - Real.exp s₁) := by
+    rw [hR₁_def]
+    exact norm_bch_quintic_remainder_le (𝕂 := 𝕂) a' b hs₁_lt_log2
+  -- Quadratic bound: ‖z - (a'+b)‖ ≤ 3·s₁²/(2-exp(s₁))
+  have hexp_s₁_lt : Real.exp s₁ < 2 := by
+    calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs₁_lt_log2
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom₁ : 0 < 2 - Real.exp s₁ := by linarith
+  set W := z - (a' + b) with hW_def
+  have hW_le : ‖W‖ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    rw [hW_def]; exact norm_bch_sub_add_le (𝕂 := 𝕂) a' b hs₁_lt_log2
+  -- s₂ = ‖z‖ + ‖a'‖ < log 2 (for the second quintic application)
+  have hexp_le : Real.exp s₁ ≤ 1 + s₁ + s₁ ^ 2 := by
+    nlinarith [real_exp_third_order_le_cube hs₁_nn (by linarith : s₁ < 5/6)]
+  have hdenom_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp s₁ := by nlinarith
+  have hquad_bound : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 3 / 11 := by
+    rw [div_le_div_iff₀ hdenom₁ (by norm_num : (0:ℝ) < 11)]
+    nlinarith [sq_nonneg s₁, sq_nonneg (1/4 - s₁)]
+  have hz_le : ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    calc ‖z‖ = ‖(z - (a' + b)) + (a' + b)‖ := by congr 1; abel
+      _ ≤ ‖z - (a' + b)‖ + ‖a' + b‖ := norm_add_le _ _
+      _ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) + s₁ := by
+          have hsum : ‖a' + b‖ ≤ s₁ := norm_add_le _ _
+          linarith [hW_le, hW_def]
+      _ = s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by ring
+  have hln2_611 : (6 : ℝ) / 11 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 6/11)
+      (by norm_num : (6:ℝ)/11 < 5/6)]
+  have hs₂_lt_log2 : ‖z‖ + ‖a'‖ < Real.log 2 := by
+    calc ‖z‖ + ‖a'‖ ≤ (s₁ + 3 / 11) + ‖a'‖ := by linarith [hz_le, hquad_bound]
+      _ ≤ s + 3 / 11 := by linarith [ha'_le_s]
+      _ < 1/4 + 3 / 11 := by linarith
+      _ = 23 / 44 := by norm_num
+      _ < 6 / 11 := by norm_num
+      _ < Real.log 2 := hln2_611
+  -- Outer quintic remainder: R₂ = bch(z,a') - (z+a') - ½(z·a'-a'·z) - C₃(z,a') - C₄(z,a')
+  set R₂ := bch (𝕂 := 𝕂) z a' - (z + a') - (2 : 𝕂)⁻¹ • (z * a' - a' * z) -
+      bch_cubic_term 𝕂 z a' - bch_quartic_term 𝕂 z a' with hR₂_def
+  have hR₂_le : ‖R₂‖ ≤ 3000 * (‖z‖ + ‖a'‖) ^ 5 / (2 - Real.exp (‖z‖ + ‖a'‖)) := by
+    rw [hR₂_def]
+    exact norm_bch_quintic_remainder_le (𝕂 := 𝕂) z a' hs₂_lt_log2
+  -- Key commutator helper: ¼[(a'b - ba'), a'] = -(1/16)·DC_a
+  set DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a with hDC_a_def
+  -- KEY DECOMPOSITION: sym_bch_cubic - sym_E₃ as a sum of 6 terms.
+  -- 1. R₁ + R₂  (each O(s⁵) by quintic BCH)
+  -- 2. ½[R₁, a']     (O(s·s⁵) = O(s⁶) ≤ O(s⁵))
+  -- 3. ½[C₄(a',b), a']     (O(s⁴·s) = O(s⁵))
+  -- 4. quartic_identity_sum = 0 (by symmetric_bch_quartic_identity)
+  -- 5. C₃(z,a') - C₃(a'+b, a') - C_d4  (O(s⁵) residual after subtracting
+  --    the degree-4 part; the degree-4 part is C_d4 = -(1/96)·[b, DC_a])
+  -- 6. C₄(z,a') - C₄(a'+b, a')  (O(s⁵) residual after degree-4)
+  --
+  -- The algebraic decomposition (provable by `abel` after unfolding R₁, R₂ and
+  -- the sym_E₃ → alt form rewrite, plus the quartic identity for degree-4 cancel):
+  have hdecomp : symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b =
+      R₁ + R₂ +
+      (2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁) +
+      (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+      (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+        -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+      (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') := by
+    -- Combine:
+    --   sym_bch_cubic = bch(z,a') - (a+b)
+    --                 = (z + a') - (a+b) + ½(z·a' - a'·z) + C₃(z,a') + C₄(z,a') + R₂  [by R₂ def]
+    --   z = (a'+b) + ½(a'b - ba') + C₃(a',b) + C₄(a',b) + R₁  [by R₁ def]
+    -- After substitution + quartic identity for degree-4, get the stated form.
+    have hR₁_eq : z = (a' + b) + (2 : 𝕂)⁻¹ • (a' * b - b * a') +
+        bch_cubic_term 𝕂 a' b + bch_quartic_term 𝕂 a' b + R₁ := by
+      rw [hR₁_def, hW_def]; abel
+    have hR₂_eq : bch (𝕂 := 𝕂) z a' = (z + a') + (2 : 𝕂)⁻¹ • (z * a' - a' * z) +
+        bch_cubic_term 𝕂 z a' + bch_quartic_term 𝕂 z a' + R₂ := by
+      rw [hR₂_def]; abel
+    -- Apply the symmetric quartic identity
+    have hqi := symmetric_bch_quartic_identity (𝕂 := 𝕂) a b
+    -- Unfold sym_bch_cubic and sym_bch_cubic_poly
+    show bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) - (a + b) -
+        symmetric_bch_cubic_poly 𝕂 a b = _
+    -- The following `abel` will fail without the ring-level cancellation between
+    -- the original sym_E₃ form and the alt-form. We need to convert via the
+    -- algebraic identity sym_bch_cubic_poly = C₃(a',b) + (1/16)·[[a,b],a] + C₃(a'+b,a')
+    -- which is a noncomm_ring identity. Left as further work.
+    sorry
+  rw [hdecomp]
+  -- TRIANGLE INEQUALITY + NORM BOUNDS
+  -- Each term is bounded by K·s⁵. Total ≤ 4000·s⁵.
+  -- Remaining work: bound each of the 6 terms.
   sorry
 
 include 𝕂 in
