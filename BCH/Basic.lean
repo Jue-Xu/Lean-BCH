@@ -3738,6 +3738,7 @@ private theorem symmetric_bch_quartic_identity (a b : 𝔸) :
   -- After clearing, the goal is a pure ring identity provable by noncomm_ring.
   noncomm_ring
 
+set_option maxHeartbeats 800000 in
 include 𝕂 in
 /-- **Symmetric BCH quintic remainder bound**: the symmetric BCH deviation equals the
 cubic polynomial `symmetric_bch_cubic_poly` up to `O(s⁵)` error. This is the symmetric
@@ -3750,20 +3751,36 @@ reduce it. -/
 theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b‖ ≤
       4000 * (‖a‖ + ‖b‖) ^ 5 := by
-  -- PROOF OUTLINE (not yet formalized):
-  -- 1. Apply norm_bch_quintic_remainder_le to (½a, b) to get
-  --    ‖bch(½a, b) - [(½a+b) + ¼[a,b] + C₃(½a,b) + C₄(½a,b)]‖ ≤ K·s⁵.
-  -- 2. Apply norm_bch_quintic_remainder_le to (bch(½a,b), ½a) to get
-  --    ‖bch(bch(½a,b), ½a) - [bch(½a,b) + ½a + ½[bch(½a,b),½a] + C₃(...) + C₄(...)]‖ ≤ K·s⁵.
-  -- 3. Combine and extract the degree-3 part (= symmetric_bch_cubic_poly) via the
-  --    identity sym_E₃ = C₃(½a,b) + (1/16)[[a,b],a] + C₃(½a+b, ½a) =
-  --    = -(1/24)[a,[a,b]] + (1/12)[b,[b,a]]  (verified algebraically).
-  -- 4. Bound the residual degree-4+ terms via norm-grouping analogous to the
-  --    pieceB' analysis in norm_bch_quintic_remainder_le.
-  --
-  -- Estimated ~200 lines of Lean. The homogeneity lemma
-  -- `symmetric_bch_cubic_poly_smul` and the definition `symmetric_bch_cubic_poly`
-  -- are already in place for the downstream application.
+  -- SETUP: a' = ½a, s = ‖a‖+‖b‖, s₁ = ‖a'‖+‖b‖ ≤ s, z = bch(a', b)
+  set a' : 𝔸 := (2 : 𝕂)⁻¹ • a with ha'_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set s₁ := ‖a'‖ + ‖b‖ with hs₁_def
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ ‖a‖ / 2 := by
+    calc ‖a'‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  have ha'_le_s : ‖a'‖ ≤ s := by
+    calc ‖a'‖ ≤ ‖a‖ / 2 := ha'_le
+      _ ≤ ‖a‖ := by linarith [norm_nonneg a]
+      _ ≤ s := le_add_of_nonneg_right (norm_nonneg b)
+  have hs_nn : 0 ≤ s := by positivity
+  have hs_lt : s < 1 / 4 := hab
+  have hs1 : s < 1 := by linarith
+  have hs₁_le : s₁ ≤ s := by
+    show ‖a'‖ + ‖b‖ ≤ ‖a‖ + ‖b‖; linarith [ha'_le, norm_nonneg a]
+  have hs₁_nn : 0 ≤ s₁ := by positivity
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
+      (by norm_num : (1:ℝ)/4 < 5/6)]
+  have hs₁_lt_log2 : s₁ < Real.log 2 := by linarith
+  -- Given the substantial infrastructure required to close this
+  -- (symmetric_bch_quartic_identity has been proved; it suffices to decompose
+  -- sym_bch_cubic - sym_E₃ via two applications of norm_bch_quintic_remainder_le
+  -- and bound the residual quintic+ terms), the norm-bound machinery is left
+  -- as future work. Estimated ~150 additional lines of Lean.
+  -- See CLAUDE.md for the full proof plan and symmetric_bch_quartic_identity
+  -- for the key ring identity (which cancels all degree-4 contributions).
   sorry
 
 include 𝕂 in
