@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: H1, H2, M1, quintic BCH, symmetric quartic identity complete; 2 inner sorries remain in `norm_symmetric_bch_cubic_sub_poly_le`
+## Status: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form identity, decomposition equality complete; 1 inner sorry (triangle inequality) remains in `norm_symmetric_bch_cubic_sub_poly_le`
 
 ## Goal
 
@@ -68,7 +68,7 @@ exp/log expansion.
 
 ## Remaining Sorry's
 
-### `norm_symmetric_bch_cubic_sub_poly_le` (line ~3750) — 2 inner sorries remain
+### `norm_symmetric_bch_cubic_sub_poly_le` (line ~3750) — 1 inner sorry (constant adjustment + triangle ineq)
 - **Statement:** `‖sym_bch_cubic(a,b) - sym_E₃(a,b)‖ ≤ 4000·s⁵` where
   `sym_E₃(a,b) = -(1/24)·[a,[a,b]] + (1/12)·[b,[b,a]]` is the cubic-polynomial
   part of the symmetric BCH expansion (definition `symmetric_bch_cubic_poly`).
@@ -87,19 +87,19 @@ exp/log expansion.
     Proved by multiplying by 192, scalar clearing, `noncomm_ring`.
   - Sketched decomposition: `sym_bch_cubic - sym_E₃ = R₁ + R₂ + ½[R₁,a'] +
     ½[C₄(a',b),a'] + (C₃(z,a') - C₃(a'+b,a') - C) + (C₄(z,a') - D)`.
-- **Remaining (2 inner sorries):**
-  1. The algebraic decomposition equality: verify via `abel` + a ring identity
-     that `sym_bch_cubic_poly (closed form) = C₃(a',b) + (1/16)[[a,b],a] + C₃(a'+b,a')`
-     (both forms equal `-(1/24)[a,[a,b]] + (1/12)[b,[b,a]]`). Provable by
-     `noncomm_ring` after unfolding `bch_cubic_term` and scalar clearing.
-  2. Triangle inequality for the 6 residual terms, each bounded by K·s⁵:
-     - `R₁`, `R₂`: O(s⁵) by quintic BCH.
-     - `½[R₁,a']`: O(s⁶) ≤ O(s⁵) for `s<1`.
-     - `½[C₄(a',b),a']`: ‖C₄‖·‖a'‖ ≤ s⁴·s = O(s⁵).
-     - `C₃(z,a') - C₃(a'+b,a') - C_d4`: use trilinear expansion of C₃ and
-       bound residual linear-in-`w_rest` + quadratic-in-W terms.
-     - `C₄(z,a') - C₄(a'+b,a')`: linear-in-W expansion of C₄, O(s·s⁴) = O(s⁵).
-- **Depends on:** `symmetric_bch_quartic_identity` (✓, just proved),
+- **Closed (algebraic core):**
+  - `symmetric_bch_cubic_poly_alt_form`: ring identity `sym_E₃ = C₃(a',b) + C₃(a'+b,a') - (1/16)·DC_a`.
+  - The decomposition equality: `sym_bch_cubic - sym_E₃ = R₁ + R₂ + ½[R₁,a'] + ½[C₄(a',b),a']
+    + (C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]) + (C₄(z,a') - C₄(a'+b,a'))`.
+    Closed via `linear_combination (norm := abel)` with `(2:𝕂)⁻¹•a + (2:𝕂)⁻¹•a = a`.
+- **Remaining (1 inner sorry — constant adjustment needed):**
+  Triangle inequality bounding 6 terms by K·s⁵. Detailed analysis shows the
+  stated constant `4000` is too small: `R₂` alone contributes ~400000·s⁵ at
+  worst case (s ≈ 1/4) due to `s₂ = ‖z‖+‖a'‖ ≈ 0.523 ≫ s`. To close:
+  (a) Increase helper constant `4000` → ~10⁶ and downstream `10000` → ~2·10⁶.
+  (b) Restructure helper bound as `K·s⁵/(2-exp(2s))` — analogous to existing
+      `norm_bch_quintic_remainder_le` form; absorbs divergence near s=1/4.
+- **Depends on:** `symmetric_bch_quartic_identity` (✓), `symmetric_bch_cubic_poly_alt_form` (✓),
   `bch_cubic_term_smul` (✓), `symmetric_bch_cubic_neg` (✓),
   `norm_bch_quintic_remainder_le` (✓).
 
