@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form identity, decomposition equality complete; 1 inner sorry (triangle inequality) remains in `norm_symmetric_bch_cubic_sub_poly_le`
+## Status: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, R₁/R₂/T3/T4 bounds complete; 1 sorry remains in `norm_symmetric_bch_cubic_sub_poly_le` (terms 5 and 6 of the triangle inequality, requiring ring-level expansion of C₃/C₄ differences)
 
 ## Goal
 
@@ -92,13 +92,20 @@ exp/log expansion.
   - The decomposition equality: `sym_bch_cubic - sym_E₃ = R₁ + R₂ + ½[R₁,a'] + ½[C₄(a',b),a']
     + (C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]) + (C₄(z,a') - C₄(a'+b,a'))`.
     Closed via `linear_combination (norm := abel)` with `(2:𝕂)⁻¹•a + (2:𝕂)⁻¹•a = a`.
-- **Remaining (1 inner sorry — constant adjustment needed):**
-  Triangle inequality bounding 6 terms by K·s⁵. Detailed analysis shows the
-  stated constant `4000` is too small: `R₂` alone contributes ~400000·s⁵ at
-  worst case (s ≈ 1/4) due to `s₂ = ‖z‖+‖a'‖ ≈ 0.523 ≫ s`. To close:
-  (a) Increase helper constant `4000` → ~10⁶ and downstream `10000` → ~2·10⁶.
-  (b) Restructure helper bound as `K·s⁵/(2-exp(2s))` — analogous to existing
-      `norm_bch_quintic_remainder_le` form; absorbs divergence near s=1/4.
+- **Constants updated (2026-04-22):** helper `10⁷·s⁵`, downstream `2·10⁷·|c|³·s⁵`.
+- **Triangle inequality progress (4 of 6 terms closed):**
+  - R₁ ≤ 5000·s⁵ ✓
+  - R₂ ≤ 5·10⁶·s⁵ ✓ (uses `Real.exp_bound'` for tight denom estimate)
+  - ½(R₁·a' - a'·R₁) ≤ 1000·s⁵ ✓
+  - ½(C₄(a',b)·a' - a'·C₄(a',b)) ≤ s⁵ ✓
+- **Remaining 1 sorry — terms 5 and 6:**
+  - Term 5: `C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]`. Crude norm
+    bound gives O(s³), insufficient. Need ring identity expanding the
+    C₃ difference and showing the (96)⁻¹·[b,DC_a] cancels its degree-2-in-W₂ part.
+  - Term 6: `C₄(z,a') - C₄(a'+b,a')`. Need ring identity:
+    `= -(1/24)·[a', [a'+b,[W,a']] + [W,[a'+b,a']] + [W,[W,a']]]` where W = z-(a'+b).
+    Then norm bounds give O(s⁵).
+  - Both ~30 lines of `noncomm_ring` after careful setup.
 - **Depends on:** `symmetric_bch_quartic_identity` (✓), `symmetric_bch_cubic_poly_alt_form` (✓),
   `bch_cubic_term_smul` (✓), `symmetric_bch_cubic_neg` (✓),
   `norm_bch_quintic_remainder_le` (✓).
