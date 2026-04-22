@@ -3885,23 +3885,59 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
       (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
         -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
       (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') := by
-    -- INFRASTRUCTURE FOR THIS PROOF (all proved):
-    -- (A) hR₂_def: bch(z,a') definition
-    -- (B) hR₁_def: z definition via R₁
-    -- (C) symmetric_bch_quartic_identity: degree-4 sum vanishes
-    -- (D) symmetric_bch_cubic_poly_alt_form: sym_E₃ = C₃(a',b) + C₃(a'+b,a') - (1/16)·DC_a
-    --
-    -- Algebraic verification (worked out in session): the LHS - RHS reduces to
-    -- 2 • 2⁻¹ • a + (-1 • a) plus matching opaque terms. The 2 • 2⁻¹ • a vs a
-    -- mismatch is the Lean-specific obstacle: outer 2 is ℕ-smul (from abel
-    -- normalization of `2⁻¹ • a + 2⁻¹ • a`), inner 2⁻¹ is 𝕂-smul, and they
-    -- don't combine via `smul_smul` (which requires same SMul instance).
-    --
-    -- Resolution paths (any one would close):
-    -- 1. `module` tactic (newer Mathlib) - designed exactly for this case.
-    -- 2. Manual coercion via Nat.cast_smul_eq_nsmul + push_cast + smul_smul.
-    -- 3. Alternative formulation that avoids the mixed smul.
-    sorry
+    rw [symmetric_bch_cubic_poly_alt_form (𝕂 := 𝕂)]
+    have hbch_z_a' : bch (𝕂 := 𝕂) z a' = (z + a') + (2 : 𝕂)⁻¹ • (z * a' - a' * z) +
+        bch_cubic_term 𝕂 z a' + bch_quartic_term 𝕂 z a' + R₂ := by
+      rw [hR₂_def]; abel
+    have hzcom : z * a' - a' * z = (a' + b) * a' - a' * (a' + b) +
+        ((z - (a' + b)) * a' - a' * (z - (a' + b))) := by noncomm_ring
+    have hW_eq : z - (a' + b) =
+        (2 : 𝕂)⁻¹ • (a' * b - b * a') + bch_cubic_term 𝕂 a' b +
+          bch_quartic_term 𝕂 a' b + R₁ := by
+      rw [hR₁_def, hW_def]; abel
+    have hz_eq : z = a' + b + (2 : 𝕂)⁻¹ • (a' * b - b * a') + bch_cubic_term 𝕂 a' b +
+        bch_quartic_term 𝕂 a' b + R₁ := by
+      rw [show z = (z - (a' + b)) + (a' + b) from by abel, hW_eq]; abel
+    have hQI := symmetric_bch_quartic_identity (𝕂 := 𝕂) a b
+    show bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) - (a + b) -
+        (bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+         bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) -
+         (16 : 𝕂)⁻¹ • (a * (a * b - b * a) - (a * b - b * a) * a)) = _
+    have hbch_inner : bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b = z := by rw [hz_def, ha'_def]
+    rw [hbch_inner, hbch_z_a', hzcom, hW_eq]
+    have hQI_rearr : bch_quartic_term 𝕂 (a' + b) a' =
+        -((2 : 𝕂)⁻¹ • (bch_cubic_term 𝕂 a' b * a' - a' * bch_cubic_term 𝕂 a' b)) -
+        bch_quartic_term 𝕂 a' b +
+        (96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b) := by
+      have h := hQI
+      have h' : ((2 : 𝕂)⁻¹ • (bch_cubic_term 𝕂 a' b * a' - a' * bch_cubic_term 𝕂 a' b) +
+                  bch_quartic_term 𝕂 a' b +
+                  -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+                 bch_quartic_term 𝕂 (a' + b) a' = 0 := by
+        simp only [ha'_def, hDC_a_def]
+        convert h using 2
+      have hW := eq_neg_of_add_eq_zero_right h'
+      rw [hW]; abel
+    rw [hQI_rearr]
+    simp only [smul_sub, smul_add, smul_mul_assoc, mul_smul_comm, add_mul, mul_add,
+      sub_mul, mul_sub, ha'_def, hDC_a_def, smul_smul,
+      show ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = (4 : 𝕂)⁻¹ from by norm_num,
+      show ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (4 : 𝕂)⁻¹)) = (16 : 𝕂)⁻¹ from by norm_num,
+      show ((2 : 𝕂)⁻¹ * ((4 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = (16 : 𝕂)⁻¹ from by norm_num,
+      show ((2 : 𝕂)⁻¹ * (4 : 𝕂)⁻¹) = (8 : 𝕂)⁻¹ from by norm_num,
+      show ((4 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = (8 : 𝕂)⁻¹ from by norm_num,
+      show ((2 : 𝕂)⁻¹ * (8 : 𝕂)⁻¹) = (16 : 𝕂)⁻¹ from by norm_num,
+      show ((8 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = (16 : 𝕂)⁻¹ from by norm_num]
+    nth_rewrite 1 [hz_eq]
+    simp only [ha'_def, smul_sub, smul_add, smul_mul_assoc, mul_smul_comm, smul_smul,
+      show ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = (4 : 𝕂)⁻¹ from by norm_num,
+      one_smul, mul_one]
+    -- The remaining mismatch: two separate `(2:𝕂)⁻¹ • a` terms on LHS sum to `a` on RHS.
+    -- Combine them: 2⁻¹•a + 2⁻¹•a = (2⁻¹+2⁻¹)•a = 1•a = a.
+    have h_half_sum : (2 : 𝕂)⁻¹ • a + (2 : 𝕂)⁻¹ • a = a := by
+      rw [← add_smul, show ((2 : 𝕂)⁻¹ + (2 : 𝕂)⁻¹) = (1 : 𝕂) from by ring, one_smul]
+    -- abel will collect the 2⁻¹•a terms; combined with h_half_sum, equality holds.
+    linear_combination (norm := abel) (h_half_sum : (2 : 𝕂)⁻¹ • a + (2 : 𝕂)⁻¹ • a = a)
   rw [hdecomp]
   -- TRIANGLE INEQUALITY + NORM BOUNDS
   -- Each term is bounded by K·s⁵. Total ≤ 4000·s⁵.
