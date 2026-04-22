@@ -11,19 +11,31 @@
 - [x] **H2: Symmetric BCH** — `‖bch(bch(a/2,b),a/2) - (a+b)‖ ≤ 300s³` for `s < 1/4` (Strang splitting)
 - [x] **M1: Lie bracket bridge** — `⁅a,b⁆ = a*b - b*a` via Mathlib's `LieRing.ofAssociativeRing`; BCH results restated with `⁅·,·⁆`
 - [x] **Quintic BCH** — `‖bch(a,b) - (a+b) - ½[a,b] - C₃ - C₄‖ ≤ 3000s⁵/(2-eˢ)` (`norm_bch_quintic_remainder_le`, sorry-free as of 2026-04-21)
+- [x] **Symmetric BCH quartic identity** (`symmetric_bch_quartic_identity`, 2026-04-22) — degree-4 cancellation: `½[C₃(a',b),a'] + C₄(a',b) - (1/96)[b,DC_a] + C₄(a'+b,a') = 0`.
+- [x] **Symmetric BCH cubic poly definition + homogeneity** (`symmetric_bch_cubic_poly`, `_smul`, `_le`, 2026-04-22).
+- [x] **Symmetric BCH alt-form identity** (`symmetric_bch_cubic_poly_alt_form`, 2026-04-22) — closed-form ↔ alt-form ring identity.
+- [x] **Symmetric BCH cubic-quintic decomposition** (inside `norm_symmetric_bch_cubic_sub_poly_le`, 2026-04-22) — `sym_bch_cubic - sym_E₃ = R₁ + R₂ + ½[R₁,a'] + ½[C₄(a',b),a'] + (C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]) + (C₄(z,a') - C₄(a'+b,a'))`.
+- [x] **`norm_symmetric_bch_cubic_sub_smul_le`** main user-facing theorem (sorry-free contingent on helper).
 
 ## Open
 
-### Symmetric BCH quintic (small-s case of `norm_symmetric_bch_cubic_sub_smul_le`)
-The large-s case (`s² ≥ 0.06`) is closed via the crude cubic bound. The small-s
-case (`s² < 0.06`) requires a *symmetric BCH quintic remainder* theorem
-analogous to `norm_bch_quintic_remainder_le`. Plan:
-1. Define `symmetric_bch_E₃(a,b)` as an explicit cubic polynomial obtained by
-   collecting cubic contributions from `norm_bch_quintic_remainder_le` applied
-   twice through `bch(bch(½a,b), ½a)`.
-2. Prove `‖sym_bch_cubic(a,b) - sym_E₃(a,b)‖ ≤ K·s⁵`.
-3. Combined with homogeneity of `sym_E₃`, this closes the small-s sorry.
-Estimated ~200 lines.
+### `norm_symmetric_bch_cubic_sub_poly_le` triangle inequality + constant adjustment
+The algebraic core (decomposition equality, quartic identity, alt-form identity)
+is fully proven. Only the final triangle inequality bounding 6 terms by K·s⁵
+remains. Detailed analysis revealed the stated constant `4000` is mathematically
+too small: `R₂` alone yields `~400000·s⁵` at s near 1/4 because `s₂ = ‖z‖+‖a'‖
+≈ 0.523 ≫ s` near the boundary.
+
+**Two paths to close:**
+- **(a)** Bump helper constant `4000` → `~10⁶` and downstream (`norm_symmetric_bch_cubic_sub_smul_le`)
+  constant `10000` → `~2·10⁶`. Straightforward but changes public-facing constants.
+- **(b)** Restructure helper bound as `K·s⁵/(2-exp(2s))` analogous to
+  `norm_bch_quintic_remainder_le`. More elegant; absorbs divergence near s=1/4.
+  Requires updating downstream consumer to handle the denominator.
+
+After picking a path: bound each of 6 terms (R₁, R₂, ½[R₁,a'], ½[C₄(a',b),a'],
+the C₃-residual, the C₄-residual) by triangle inequality + Lipschitz-style
+estimates on C₃, C₄ as functions of their arguments. Estimated ~80–100 lines.
 
 ## High priority
 

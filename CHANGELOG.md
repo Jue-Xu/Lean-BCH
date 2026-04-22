@@ -4,6 +4,60 @@ Lab notes: completed tasks, failed approaches, and key decisions.
 
 ---
 
+## 2026-04-22: Symmetric BCH quintic — algebraic core complete
+
+**What:** Closed the algebraic core of `norm_symmetric_bch_cubic_sub_poly_le`,
+the symmetric BCH quintic remainder theorem. All ring identities and the
+decomposition equality are proven; only a constant-bound bookkeeping step
+remains (the stated constant `4000` is mathematically too small).
+
+**Closed this session:**
+
+1. **`symmetric_bch_quartic_identity`** — the four degree-4 contributions
+   to `sym_bch_cubic - sym_E₃` sum to zero as a ring identity:
+   `½[C₃(a',b),a'] + C₄(a',b) + (-(1/96)·[b,DC_a]) + C₄(a'+b,a') = 0`.
+   Proved via 192-scaling + scalar clearing (5-level deep) + `noncomm_ring`.
+   Mathematical content: `[DC_b, a] = [b, DC_a]` (both expand to
+   `b²a² - 2baba + 2abab - a²b²` in any associative algebra).
+
+2. **`symmetric_bch_cubic_poly_alt_form`** — closed-form and alt-form
+   representations of `sym_E₃` agree:
+   `-(1/24)[a,[a,b]] + (1/12)[b,[b,a]] = C₃(½a,b) + C₃(½a+b,½a) - (1/16)·DC_a`.
+   Proved via 48-scaling + 3-level scalar clearing + `ofNat_smul_eq_nsmul`
+   + `noncomm_ring`.
+
+3. **`symmetric_bch_cubic_poly`** + **`symmetric_bch_cubic_poly_smul`** —
+   the explicit cubic-poly definition of sym_E₃ and its c³-homogeneity.
+
+4. **Decomposition equality** (inside `norm_symmetric_bch_cubic_sub_poly_le`):
+   ```
+   sym_bch_cubic - sym_E₃ = R₁ + R₂ + ½[R₁,a'] + ½[C₄(a',b),a']
+                          + (C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a])
+                          + (C₄(z,a') - C₄(a'+b,a'))
+   ```
+   Proved by combining (A) R₂-def substitution, (B) R₁-def substitution,
+   (C) the quartic identity, (D) the alt-form identity. Final step uses
+   `linear_combination (norm := abel)` with the witness
+   `(2:𝕂)⁻¹•a + (2:𝕂)⁻¹•a = a` to bridge a mixed ℕ-smul/𝕂-smul gap that
+   `smul_smul` couldn't close directly.
+
+5. **`norm_symmetric_bch_cubic_sub_smul_le`** (main user-facing theorem) is
+   now sorry-free — both large-s (crude bound) and small-s (helper-based)
+   cases closed, contingent on the helper bound holding.
+
+**Open issue:** the helper's stated constant `4000·s⁵` is mathematically
+incorrect for s near 1/4 — `R₂` alone yields `~400000·s⁵` because
+`s₂ = ‖z‖+‖a'‖ ≈ 0.523 ≫ s` near the boundary. To close the remaining
+triangle-inequality sorry, the helper bound needs either a larger constant
+(~10⁶) or a denominator `(2-exp(2s))` analogous to `norm_bch_quintic_remainder_le`.
+
+**Build:** Clean: 26:41.90; Cached: 23:43.32; Incremental BCH module: ~10s.
+
+**Commit count this session:** 13 commits totaling significant Lean code
+(several hundred lines), 1 sorry remaining (constant-bound bookkeeping).
+
+---
+
 ## 2026-04-21: Quintic BCH sorry-free — `quintic_pure_identity` closed
 
 **What:** Closed the last sorry in `norm_bch_quintic_remainder_le` by closing
