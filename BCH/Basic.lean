@@ -4054,11 +4054,15 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
       _ ≤ s ^ 4 * (s / 2) := mul_le_mul hC₄_s4 ha'_s (norm_nonneg _) (by positivity)
       _ ≤ s ^ 5 := by nlinarith [pow_nonneg hs_nn 5, hs_lt]
   -- TERMS 5-6: require ring-level expansion of C₃/C₄ differences.
-  -- Term 5 needs: C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a] = (linear-in-W_rest) +
-  -- (quadratic-in-W), where W_rest = R₁ + C₃(a',b) + C₄(a',b) (degree ≥ 3) and W = z-(a'+b).
-  -- Term 6 needs: C₄(z,a') - C₄(a'+b,a') = -(1/24)·[a',[a'+b,[W,a']] + [W,[a'+b,a']] +
-  -- [W,[W,a']]], all O(s⁵).
-  -- Each requires a separate noncomm_ring identity (~30 lines each).
+  -- Term 5 needs: C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a] = (1/12)·([(a'+b),[W_rest,a']]
+  --   + [W_rest,[(a'+b),a']] + [a',[a',W_rest]]) + (1/12)·[W,[W,a']]
+  --   where W_rest = R₁ + C₃(a',b) + C₄(a',b) (degree ≥ 3) and W = z-(a'+b).
+  --   The (96)⁻¹·[b,DC_a] term cancels the linear-in-W₂ part.
+  -- Term 6 needs: C₄(z,a') - C₄(a'+b,a') = -(1/24)·(a'·INNER_6 - INNER_6·a')
+  --   where INNER_6 = [a'+b,[W,a']] + [W,[a'+b,a']] + [W,[W,a']]
+  -- Each requires: (i) a noncomm_ring identity after z = (a'+b) + W substitution
+  -- and (ii) norm bounds via triangle inequality + ‖W‖ ≤ 48·s²/11 + ‖a'‖ ≤ s/2 + ‖a'+b‖ ≤ 3s/2.
+  -- ~30-40 lines each.
   sorry
   -- BEGIN_TRIANGLE_PROOF (paused)
   /-
