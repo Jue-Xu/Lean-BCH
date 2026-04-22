@@ -3781,7 +3781,7 @@ private theorem symmetric_bch_quartic_identity (a b : 𝔸) :
   -- After clearing, the goal is a pure ring identity provable by noncomm_ring.
   noncomm_ring
 
-set_option maxHeartbeats 800000 in
+set_option maxHeartbeats 16000000 in
 include 𝕂 in
 /-- **Symmetric BCH quintic remainder bound**: the symmetric BCH deviation equals the
 cubic polynomial `symmetric_bch_cubic_poly` up to `O(s⁵)` error. This is the symmetric
@@ -3956,12 +3956,109 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
       have hs5_nn : (0 : ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
       nlinarith [hdenom_lb, hs_pow, hs5_nn]
     linarith
-  -- TERMS 2-6: Each is bounded by K_i·s⁵. Sum dominated by R₂ (~6·10⁶·s⁵).
-  -- The R₂ bound requires a tighter estimate of (2-exp(s₂))⁻¹ at s₂ ≈ 57/88,
-  -- which the 5th-order Taylor bound `exp(s) ≤ 1+s+s²/2+s³/6+s⁴/24+s⁵` is too
-  -- loose to provide (gives exp(57/88) ≤ 2.02, while we need ≤ 1.99 for any
-  -- useful denom bound). A 6th-order Taylor or direct numerical estimate via
-  -- `Real.exp_lt_exp_of_lt` would close this.
+  -- Bounds on ‖z‖, s₂ = ‖z‖+‖a'‖.
+  have hz_mult : ‖z‖ ≤ 23/11 * s := by
+    have h1 : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 12 * s / 11 := by
+      rw [div_le_iff₀ hdenom₁]
+      nlinarith [hdenom_lb, hs₁_nn, sq_nonneg s₁, hs₁_le, hs_nn,
+        mul_nonneg hs₁_nn hs_nn, hab]
+    calc ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := hz_le
+      _ ≤ s + 12 * s / 11 := by linarith
+      _ = 23/11 * s := by ring
+  have hs₂_mult : ‖z‖ + ‖a'‖ ≤ 57/22 * s := by
+    calc ‖z‖ + ‖a'‖ ≤ 23/11 * s + s/2 := by linarith [hz_mult, ha'_s]
+      _ = 57/22 * s := by ring
+  -- ‖z‖+‖a'‖ ≤ 57/88 (absolute) since s ≤ 1/4
+  have hs₂_le_const : ‖z‖ + ‖a'‖ ≤ 57 / 88 := by
+    calc ‖z‖ + ‖a'‖ ≤ 57/22 * s := hs₂_mult
+      _ ≤ 57/22 * (1/4) := by
+          have : s ≤ 1/4 := by linarith
+          have : (0:ℝ) ≤ 57/22 := by norm_num
+          nlinarith
+      _ = 57 / 88 := by ring
+  have hdenom₂_pos : 0 < 2 - Real.exp (‖z‖ + ‖a'‖) := by
+    have : Real.exp (‖z‖ + ‖a'‖) < 2 := by
+      calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs₂_lt_log2
+        _ = 2 := Real.exp_log (by norm_num)
+    linarith
+  -- Tight denom bound via Real.exp_bound' (6th-order Taylor with tight remainder):
+  -- exp(57/88) ≤ Σ_{k=0}^5 (57/88)^k/k! + (57/88)^6 · 7/(720·6) ≤ 1.912
+  have hexp_57 : Real.exp (57/88) ≤ 23 / 12 := by
+    have h := Real.exp_bound' (show (0:ℝ) ≤ 57/88 by norm_num)
+      (show (57:ℝ)/88 ≤ 1 by norm_num) (show 0 < 6 by norm_num)
+    -- ∑_{m=0}^5 = 1 + x + x²/2 + x³/6 + x⁴/24 + x⁵/120; remainder = x⁶·7/(720·6)
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, Nat.factorial,
+      pow_zero, pow_one, pow_succ, zero_add] at h
+    nlinarith [h, sq_nonneg ((57:ℝ)/88)]
+  have hexp_s₂_le : Real.exp (‖z‖ + ‖a'‖) ≤ Real.exp (57/88) :=
+    Real.exp_monotone hs₂_le_const
+  have hdenom₂_lb : (1 : ℝ) / 12 ≤ 2 - Real.exp (‖z‖ + ‖a'‖) := by
+    linarith [hexp_s₂_le, hexp_57]
+  -- TERM 2: ‖R₂‖ ≤ K_R₂ · s⁵
+  -- R₂ ≤ 3000·(s₂)⁵/(2-exp(s₂)) ≤ 3000·(57/22·s)⁵·12 = 3000·12·(57/22)⁵·s⁵
+  -- ≈ 3000·12·116.76 = 4,203,360 → use 5,000,000 with margin.
+  have hR₂_s5 : ‖R₂‖ ≤ 5000000 * s ^ 5 := by
+    have h1 : ‖R₂‖ ≤ 3000 * (‖z‖ + ‖a'‖) ^ 5 / (2 - Real.exp (‖z‖ + ‖a'‖)) := hR₂_le
+    have hX_s5 : 3000 * (‖z‖ + ‖a'‖) ^ 5 / (2 - Real.exp (‖z‖ + ‖a'‖)) ≤
+                 5000000 * s ^ 5 := by
+      rw [div_le_iff₀ hdenom₂_pos]
+      have h_pow : (‖z‖ + ‖a'‖) ^ 5 ≤ (57/22 * s) ^ 5 :=
+        pow_le_pow_left₀ (by positivity) hs₂_mult 5
+      have h_pow_eq : (57/22 * s) ^ 5 = (57/22)^5 * s ^ 5 := by ring
+      have hs5_nn : (0 : ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
+      nlinarith [hdenom₂_lb, h_pow, hs5_nn]
+    linarith
+  -- TERM 3: ‖(2:𝕂)⁻¹·(R₁·a' - a'·R₁)‖ ≤ ‖R₁‖·‖a'‖ ≤ 5000·s⁵·s/2 ≤ 5000·s⁵·(1/8) = 625·s⁵
+  have hT3 : ‖(2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁)‖ ≤ 1000 * s ^ 5 := by
+    have h2_inv : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+    have hcomm_bound : ‖R₁ * a' - a' * R₁‖ ≤ 2 * ‖R₁‖ * ‖a'‖ := by
+      calc ‖R₁ * a' - a' * R₁‖
+          ≤ ‖R₁ * a'‖ + ‖a' * R₁‖ := by
+            rw [sub_eq_add_neg]
+            exact (norm_add_le _ _).trans (by rw [norm_neg])
+        _ ≤ ‖R₁‖ * ‖a'‖ + ‖a'‖ * ‖R₁‖ := by gcongr <;> exact norm_mul_le _ _
+        _ = 2 * ‖R₁‖ * ‖a'‖ := by ring
+    calc ‖(2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁)‖
+        ≤ ‖(2 : 𝕂)⁻¹‖ * ‖R₁ * a' - a' * R₁‖ := norm_smul_le _ _
+      _ = (2 : ℝ)⁻¹ * ‖R₁ * a' - a' * R₁‖ := by rw [h2_inv]
+      _ ≤ (2 : ℝ)⁻¹ * (2 * ‖R₁‖ * ‖a'‖) := by
+          apply mul_le_mul_of_nonneg_left hcomm_bound (by norm_num)
+      _ = ‖R₁‖ * ‖a'‖ := by ring
+      _ ≤ (5000 * s ^ 5) * (s / 2) := mul_le_mul hR₁_s5 ha'_s (norm_nonneg _) (by positivity)
+      _ ≤ 1000 * s ^ 5 := by nlinarith [pow_nonneg hs_nn 5, hs_lt]
+  -- TERM 4: ‖(2:𝕂)⁻¹·(C₄(a',b)·a' - a'·C₄(a',b))‖ ≤ ‖C₄(a',b)‖·‖a'‖ ≤ s₁⁴·s/2 ≤ s⁵/2
+  have hC₄_s4 : ‖bch_quartic_term 𝕂 a' b‖ ≤ s ^ 4 := by
+    calc ‖bch_quartic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 4 := norm_bch_quartic_term_le a' b
+      _ = s₁ ^ 4 := by rw [← hs₁_def]
+      _ ≤ s ^ 4 := pow_le_pow_left₀ hs₁_nn hs₁_le 4
+  have hT4 : ‖(2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' -
+      a' * bch_quartic_term 𝕂 a' b)‖ ≤ s ^ 5 := by
+    have h2_inv : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+    have hcomm_bound : ‖bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b‖ ≤
+        2 * ‖bch_quartic_term 𝕂 a' b‖ * ‖a'‖ := by
+      calc ‖bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b‖
+          ≤ ‖bch_quartic_term 𝕂 a' b * a'‖ + ‖a' * bch_quartic_term 𝕂 a' b‖ := by
+            rw [sub_eq_add_neg]
+            exact (norm_add_le _ _).trans (by rw [norm_neg])
+        _ ≤ ‖bch_quartic_term 𝕂 a' b‖ * ‖a'‖ + ‖a'‖ * ‖bch_quartic_term 𝕂 a' b‖ := by
+            gcongr <;> exact norm_mul_le _ _
+        _ = 2 * ‖bch_quartic_term 𝕂 a' b‖ * ‖a'‖ := by ring
+    calc ‖(2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b)‖
+        ≤ ‖(2 : 𝕂)⁻¹‖ * ‖bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b‖ :=
+          norm_smul_le _ _
+      _ = (2 : ℝ)⁻¹ * ‖bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b‖ := by
+          rw [h2_inv]
+      _ ≤ (2 : ℝ)⁻¹ * (2 * ‖bch_quartic_term 𝕂 a' b‖ * ‖a'‖) :=
+          mul_le_mul_of_nonneg_left hcomm_bound (by norm_num)
+      _ = ‖bch_quartic_term 𝕂 a' b‖ * ‖a'‖ := by ring
+      _ ≤ s ^ 4 * (s / 2) := mul_le_mul hC₄_s4 ha'_s (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 5 := by nlinarith [pow_nonneg hs_nn 5, hs_lt]
+  -- TERMS 5-6: require ring-level expansion of C₃/C₄ differences.
+  -- Term 5 needs: C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a] = (linear-in-W_rest) +
+  -- (quadratic-in-W), where W_rest = R₁ + C₃(a',b) + C₄(a',b) (degree ≥ 3) and W = z-(a'+b).
+  -- Term 6 needs: C₄(z,a') - C₄(a'+b,a') = -(1/24)·[a',[a'+b,[W,a']] + [W,[a'+b,a']] +
+  -- [W,[W,a']]], all O(s⁵).
+  -- Each requires a separate noncomm_ring identity (~30 lines each).
   sorry
   -- BEGIN_TRIANGLE_PROOF (paused)
   /-
