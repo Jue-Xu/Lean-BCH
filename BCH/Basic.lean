@@ -3941,17 +3941,27 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
     -- abel will collect the 2⁻¹•a terms; combined with h_half_sum, equality holds.
     linear_combination (norm := abel) (h_half_sum : (2 : 𝕂)⁻¹ • a + (2 : 𝕂)⁻¹ • a = a)
   rw [hdecomp]
-  -- TRIANGLE INEQUALITY + NORM BOUNDS for the 6 terms in the decomposition.
-  -- Each term is bounded by K·s⁵ with constants:
-  --   R₁: ≤ 5000·s⁵ (from quintic BCH at s₁ ≤ s, denom ≥ 11/16)
-  --   R₂: ≤ 6·10⁶·s⁵ (dominant; from quintic BCH at s₂ ≤ 57s/22)
-  --   ½[R₁,a']: ≤ 5000·s⁵
-  --   ½[C₄(a',b),a']: ≤ s⁵
-  --   C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]: ≤ 500·s⁵ (crude triangle)
-  --   C₄(z,a') - C₄(a'+b,a'): ≤ 1000·s⁵
-  -- Sum ≤ ~6·10⁶ < 10⁷.
-  -- Implementation: routine norm_add_le / norm_smul_le / norm_mul_le chains
-  -- mirroring the pieceB analysis in norm_bch_quintic_remainder_le. ~80 lines.
+  -- Setup: ‖a'‖ ≤ s/2, ‖a‖ ≤ s, ‖b‖ ≤ s.
+  have ha_s : ‖a‖ ≤ s := by have := norm_nonneg b; linarith [hs_def]
+  have hb_s : ‖b‖ ≤ s := by have := norm_nonneg a; linarith [hs_def]
+  have ha'_s : ‖a'‖ ≤ s / 2 := by
+    calc ‖a'‖ ≤ ‖a‖ / 2 := ha'_le
+      _ ≤ s / 2 := by linarith
+  -- TERM 1: ‖R₁‖ ≤ 5000 · s⁵ (PROVED)
+  have hR₁_s5 : ‖R₁‖ ≤ 5000 * s ^ 5 := by
+    have h1 : ‖R₁‖ ≤ 3000 * s₁ ^ 5 / (2 - Real.exp s₁) := hR₁_le
+    have hX_s5 : 3000 * s₁ ^ 5 / (2 - Real.exp s₁) ≤ 5000 * s ^ 5 := by
+      rw [div_le_iff₀ hdenom₁]
+      have hs_pow : s₁ ^ 5 ≤ s ^ 5 := pow_le_pow_left₀ hs₁_nn hs₁_le 5
+      have hs5_nn : (0 : ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
+      nlinarith [hdenom_lb, hs_pow, hs5_nn]
+    linarith
+  -- TERMS 2-6: Each is bounded by K_i·s⁵. Sum dominated by R₂ (~6·10⁶·s⁵).
+  -- The R₂ bound requires a tighter estimate of (2-exp(s₂))⁻¹ at s₂ ≈ 57/88,
+  -- which the 5th-order Taylor bound `exp(s) ≤ 1+s+s²/2+s³/6+s⁴/24+s⁵` is too
+  -- loose to provide (gives exp(57/88) ≤ 2.02, while we need ≤ 1.99 for any
+  -- useful denom bound). A 6th-order Taylor or direct numerical estimate via
+  -- `Real.exp_lt_exp_of_lt` would close this.
   sorry
   -- BEGIN_TRIANGLE_PROOF (paused)
   /-
