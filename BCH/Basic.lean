@@ -3660,6 +3660,49 @@ theorem norm_symmetric_bch_cubic_poly_le (a b : 𝔸) :
     _ ≤ (α + β) ^ 3 := by nlinarith [sq_nonneg (α - β), hα_nn, hβ_nn, sq_nonneg α, sq_nonneg β]
 
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **sym_E₃ alt-form identity**: the closed-form `symmetric_bch_cubic_poly` equals
+the alt form `C₃(½a,b) + C₃(½a+b,½a) - (1/16)·DC_a`, where `DC_a = a·[a,b] - [a,b]·a`.
+
+This is the key step relating the explicit polynomial definition to the form that
+arises from applying `norm_bch_quintic_remainder_le` twice through the symmetric
+composition. Verified by multiplying both sides by 48, clearing scalars, and
+`noncomm_ring`. -/
+private theorem symmetric_bch_cubic_poly_alt_form (a b : 𝔸) :
+    symmetric_bch_cubic_poly 𝕂 a b =
+      bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+      bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) -
+      (16 : 𝕂)⁻¹ • (a * (a * b - b * a) - (a * b - b * a) * a) := by
+  have h48ne : (48 : 𝕂) ≠ 0 := by exact_mod_cast (show (48 : ℕ) ≠ 0 by norm_num)
+  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+  have hinj : Function.Injective ((48 : 𝕂) • · : 𝔸 → 𝔸) := by
+    intro x y hxy
+    have := congrArg ((48 : 𝕂)⁻¹ • ·) hxy
+    simp only [smul_smul, inv_mul_cancel₀ h48ne, one_smul] at this; exact this
+  apply hinj
+  unfold symmetric_bch_cubic_poly bch_cubic_term
+  -- Distribute scalars (matching pattern of symmetric_bch_quartic_identity)
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul, mul_sub, sub_mul]
+  -- Clear scalar products
+  simp only [mul_assoc,
+    inv_mul_cancel₀ h2ne, mul_inv_cancel₀ h48ne,
+    show (48 : 𝕂) * (12 : 𝕂)⁻¹ = 4 from by norm_num,
+    show (48 : 𝕂) * (16 : 𝕂)⁻¹ = 3 from by norm_num,
+    show (48 : 𝕂) * (24 : 𝕂)⁻¹ = 2 from by norm_num,
+    -- Two-level
+    show (48 : 𝕂) * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹) = 2 from by norm_num,
+    show (48 : 𝕂) * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 2 from by norm_num,
+    -- Three-level (a'·a'·... patterns from C₃(½a, b))
+    show (48 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹)) = 1 from by norm_num,
+    show (48 : 𝕂) * ((2 : 𝕂)⁻¹ * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 1 from by norm_num,
+    show (48 : 𝕂) * ((12 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 1 from by norm_num,
+    one_smul, mul_one]
+  -- Convert ofNat 𝕂-smul to ℕ-smul so subsequent simp/noncomm_ring see uniform form
+  simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
+  -- Pure ring identity (with nested nsmul/zsmul), provable by noncomm_ring.
+  noncomm_ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **Key quartic cancellation for symmetric BCH**: the four degree-4 contributions to
 `sym_bch_cubic - sym_E₃` sum to zero as a ring identity.
 
@@ -3842,29 +3885,25 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
       (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
         -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
       (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') := by
-    -- Combine:
-    --   sym_bch_cubic = bch(z,a') - (a+b)
-    --                 = (z + a') - (a+b) + ½(z·a' - a'·z) + C₃(z,a') + C₄(z,a') + R₂  [by R₂ def]
-    --   z = (a'+b) + ½(a'b - ba') + C₃(a',b) + C₄(a',b) + R₁  [by R₁ def]
-    -- After substitution + quartic identity for degree-4, get the stated form.
-    -- The proof of the decomposition identity combines three pieces:
-    -- (A) R₂-definition substitution: bch(z,a') = (z+a') + ½(z·a'-a'·z) + C₃(z,a') + C₄(z,a') + R₂
-    -- (B) R₁-definition substitution: z - (a'+b) = ½(a'b-ba') + C₃(a',b) + C₄(a',b) + R₁
-    -- (C) symmetric_bch_quartic_identity (already proved, see above).
-    -- (D) sym_E₃ alt-form identity: sym_bch_cubic_poly = C₃(a',b) + C₃(a'+b,a') - (1/16)·DC_a.
+    -- INFRASTRUCTURE NOW COMPLETE for this proof:
+    -- (A) R₂-def: bch(z,a') = (z+a') + ½(z·a'-a'·z) + C₃(z,a') + C₄(z,a') + R₂  ← `hR₂_def`
+    -- (B) R₁-def: z - (a'+b) = ½(a'b-ba') + C₃(a',b) + C₄(a',b) + R₁          ← `hR₁_def`
+    -- (C) symmetric_bch_quartic_identity (proved): degree-4 sum vanishes.
+    -- (D) symmetric_bch_cubic_poly_alt_form (proved): sym_E₃ = C₃(a',b) + C₃(a'+b,a') - (1/16)·DC_a.
     --
-    -- Combining (A) + (B) + expanding ½[W,a'] yields (see session derivation):
-    --   sym_bch_cubic(a,b) - sym_E₃(a,b) = R₁ + R₂ + ½[R₁,a'] + ½[C₄(a',b),a']
-    --      + [C₃(z,a') - C₃(a'+b,a') - C_d4]       (quintic residual from linear-in-w_rest of C₃)
-    --      + [C₄(z,a') - C₄(a'+b,a')]              (linear-in-W of C₄, ≥ degree 5)
-    --      + [½[C₃(a',b),a'] + C₄(a',b) + C_d4 + C₄(a'+b,a')]   ← 0 by (C)
-    --      + [C₃(a',b) + C₃(a'+b,a') - (1/16)·DC_a - sym_E₃]    ← 0 by (D)
+    -- Combining (A), (B), (D), expanding the ½(z·a'-a'·z) commutator using
+    -- z = (a'+b) + W with W = R₁ + ½(a'b-ba') + C₃(a',b) + C₄(a',b), and
+    -- collecting terms (verified algebraically in session notes):
     --
-    -- Formalization status: (A), (B), (C) are available. (D) reduces to `noncomm_ring`
-    -- after scalar clearing, but runs into a ℕ-smul vs 𝕂-smul unification issue in Lean
-    -- (residual `n • c⁻¹ • x` patterns don't auto-simplify). The `module` tactic should
-    -- handle this if available; otherwise fine-grained `Nat.cast_smul_eq_nsmul` rewriting
-    -- is needed per term. Final assembly after (A), (B), (C), (D) is abel. Estimated 50 lines.
+    -- sym_bch_cubic - sym_E₃ - (RHS)
+    --   = ½[C₃(a',b),a'] + C₄(a',b) - (96)⁻¹·[b,DC_a] + C₄(a'+b,a')   (modulo abel)
+    --   = 0 by symmetric_bch_quartic_identity (C).
+    --
+    -- Remaining technical obstacle: the abel verification needs to treat C₃(z,a')
+    -- and C₄(z,a') as opaque atoms (don't rewrite z inside them) while expanding
+    -- z elsewhere. Lean's `rw [hz_eq]` rewrites z everywhere uniformly, breaking
+    -- the abel match. A `conv` block or context-restricted rewrite would close this.
+    -- Estimated 30 more lines.
     sorry
   rw [hdecomp]
   -- TRIANGLE INEQUALITY + NORM BOUNDS
