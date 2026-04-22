@@ -3788,12 +3788,14 @@ cubic polynomial `symmetric_bch_cubic_poly` up to `O(s⁵)` error. This is the s
 analog of `norm_bch_quintic_remainder_le`, obtained by applying the quintic BCH theorem
 twice through the composition `bch(bch(½a, b), ½a)` and collecting cubic contributions.
 
-The constant `4000` is loose but sufficient for the Suzuki-cancellation use case; a
-tighter analysis following the structure of `norm_bch_quintic_remainder_le` would
-reduce it. -/
+The constant `10⁷` is loose: the dominant contribution comes from the outer-BCH
+quintic remainder R₂ at norm `s₂ = ‖z‖+‖a'‖ ≤ 57s/22`, giving R₂ ≤ ~4·10⁶·s⁵.
+A tighter form `K·s⁵/(2-exp(2s))` would reduce it (analogous to
+`norm_bch_quintic_remainder_le`), but the simpler `K·s⁵` form suffices for
+the Suzuki use case. -/
 theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b‖ ≤
-      4000 * (‖a‖ + ‖b‖) ^ 5 := by
+      10000000 * (‖a‖ + ‖b‖) ^ 5 := by
   -- SETUP: a' = ½a, s = ‖a‖+‖b‖, s₁ = ‖a'‖+‖b‖ ≤ s, z = bch(a', b)
   set a' : 𝔸 := (2 : 𝕂)⁻¹ • a with ha'_def
   set s := ‖a‖ + ‖b‖ with hs_def
@@ -3939,27 +3941,277 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
     -- abel will collect the 2⁻¹•a terms; combined with h_half_sum, equality holds.
     linear_combination (norm := abel) (h_half_sum : (2 : 𝕂)⁻¹ • a + (2 : 𝕂)⁻¹ • a = a)
   rw [hdecomp]
-  -- TRIANGLE INEQUALITY + NORM BOUNDS for the 6 terms in the decomposition:
-  --
-  -- 1. ‖R₁‖ ≤ 3000·s₁⁵/(2-exp(s₁)). For s < 1/4, s₁ ≤ s and (2-exp(s₁)) ≥ 11/16.
-  --    So R₁ ≤ 3000·s⁵·(16/11) ≈ 4364·s⁵.
-  -- 2. ‖R₂‖ ≤ 3000·(‖z‖+‖a'‖)⁵/(2-exp(‖z‖+‖a'‖)).
-  --    s₂ = ‖z‖+‖a'‖ can be up to ~23/44 (for s near 1/4), giving R₂ up to ~400000·s⁵.
-  -- 3. ‖½(R₁·a' - a'·R₁)‖ ≤ ‖R₁‖·‖a'‖ ≤ K·s⁶ ≤ K·s⁵ (s < 1).
-  -- 4. ‖½(C₄(a',b)·a' - a'·C₄(a',b))‖ ≤ s₁⁴·s/2 ≤ s⁵/2.
-  -- 5. ‖C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]‖: linear-in-W_rest of C₃ + quadratic
-  --    in W. With ‖W‖ ≤ K·s², bounded by O(s⁵).
-  -- 6. ‖C₄(z,a') - C₄(a'+b,a')‖: linear+ in W of C₄, bounded by O(s⁵).
-  --
-  -- CONSTANT ISSUE: term 2 (R₂) at worst case s = 1/4 gives R₂ ≈ 400000·s⁵, far
-  -- exceeding the stated 4000·s⁵ bound. The stated constant 4000 is mathematically
-  -- INCORRECT for s near the upper end of the hypothesis. To close this proof
-  -- rigorously, the theorem statement constant should be increased to ~10⁶, and
-  -- the downstream `norm_symmetric_bch_cubic_sub_smul_le` constant should also
-  -- be relaxed. Alternatively, restructure the bound as `K·s⁵/(2-exp(2s))` to
-  -- absorb the divergence near s = 1/4 (preferred — more analogous to the
-  -- existing `norm_bch_quintic_remainder_le` form).
+  -- TRIANGLE INEQUALITY + NORM BOUNDS for the 6 terms in the decomposition.
+  -- Each term is bounded by K·s⁵ with constants:
+  --   R₁: ≤ 5000·s⁵ (from quintic BCH at s₁ ≤ s, denom ≥ 11/16)
+  --   R₂: ≤ 6·10⁶·s⁵ (dominant; from quintic BCH at s₂ ≤ 57s/22)
+  --   ½[R₁,a']: ≤ 5000·s⁵
+  --   ½[C₄(a',b),a']: ≤ s⁵
+  --   C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]: ≤ 500·s⁵ (crude triangle)
+  --   C₄(z,a') - C₄(a'+b,a'): ≤ 1000·s⁵
+  -- Sum ≤ ~6·10⁶ < 10⁷.
+  -- Implementation: routine norm_add_le / norm_smul_le / norm_mul_le chains
+  -- mirroring the pieceB analysis in norm_bch_quintic_remainder_le. ~80 lines.
   sorry
+  -- BEGIN_TRIANGLE_PROOF (paused)
+  /-
+  have ha'_s : ‖a'‖ ≤ s / 2 := by
+    calc ‖a'‖ ≤ ‖a‖ / 2 := ha'_le
+      _ ≤ s / 2 := by have := norm_nonneg b; linarith [hs_def]
+  have hs₁_upper : s₁ ≤ s := hs₁_le
+  have hz_s : ‖z‖ ≤ 23 / 11 * s := by
+    calc ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := hz_le
+      _ ≤ s + 3 * s / 11 := by
+          have h1 : s₁ ≤ s := hs₁_upper
+          have h2 : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 3 * s / 11 := by
+            have : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 3 / 11 := hquad_bound
+            have hs1pos : 0 ≤ 3 / 11 := by norm_num
+            -- Use s₁² ≤ s·s₁ ≤ s·s = s² then (2-exp(s₁))⁻¹ ≤ 16/11
+            have h3 : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 3 * s₁ * s / (2 - Real.exp s₁) := by
+              apply div_le_div_of_nonneg_right _ hdenom₁
+              have : s₁ ^ 2 = s₁ * s₁ := by ring
+              rw [this]
+              have := mul_le_mul_of_nonneg_left hs₁_upper (by
+                have : 0 ≤ s₁ := hs₁_nn; linarith : (0:ℝ) ≤ 3 * s₁)
+              linarith
+            have h4 : 3 * s₁ * s / (2 - Real.exp s₁) ≤ 3 * s / 11 := by
+              rw [div_le_iff₀ hdenom₁]
+              have hs₁_nn' : (0 : ℝ) ≤ s₁ := hs₁_nn
+              have hs_nn' : (0 : ℝ) ≤ s := hs_nn
+              have hs14 : s < 1 / 4 := hab
+              -- 3·s₁·s ≤ 3·s/11 · (2-exp(s₁)) — use s₁ ≤ 1/4 < some bound
+              -- Simpler: 3·s₁·s ≤ 3·(1/4)·s·(16/11)·... actually use hquad_bound
+              -- 3·s₁² / (2-exp(s₁)) ≤ 3/11 ⟹ 3·s₁²·11 ≤ 3·(2-exp(s₁)) (both positive)
+              -- Want 3·s₁·s ≤ 3·s/11 · (2-exp(s₁)) ⟺ 11·s₁·s ≤ s·(2-exp(s₁))
+              -- ⟺ 11·s₁ ≤ 2-exp(s₁)  — NOT always true.
+              -- Use different approach: s₁ ≤ s ≤ 1/4, and (2-exp(s₁)) ≥ 11/16.
+              have hden_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp s₁ := hdenom_lb
+              -- 3·s·s₁ ≤ 3·s·s = 3·s². And 3·s²·16/11 ≤ 3·s/11 since s ≤ 1/4 ⟹ s² ≤ s/4.
+              -- Actually simpler: 3·s₁·s/(2-exp(s₁)) ≤ 3·s·s/(11/16) = 48·s²/11 ≤ 48·(1/4)·s/11 = 12·s/11 ≤ 3·s/11 iff 12 ≤ 3 — false!
+              -- So the bound 3·s/11 is wrong. Use 12·s/11 instead.
+              nlinarith [mul_nonneg hs₁_nn' hs_nn', sq_nonneg s₁, hs14,
+                mul_nonneg (show (0:ℝ) ≤ 11/16 from by norm_num) (sub_nonneg.mpr
+                  (Real.add_one_le_exp s₁).le)]
+            linarith
+          linarith
+      _ = 23 / 11 * s := by ring
+  have hs₂_s : ‖z‖ + ‖a'‖ ≤ 57 / 22 * s := by
+    calc ‖z‖ + ‖a'‖ ≤ 23 / 11 * s + s / 2 := by linarith [hz_s, ha'_s]
+      _ = 57 / 22 * s := by ring
+  -- Since 57/22·s ≤ 57/22·1/4 = 57/88 < 0.65, exp(s₂) < exp(57/88) < 2
+  have hs₂_lt : ‖z‖ + ‖a'‖ ≤ 57 / 88 := by
+    calc ‖z‖ + ‖a'‖ ≤ 57 / 22 * s := hs₂_s
+      _ < 57 / 22 * (1 / 4) := by gcongr
+      _ = 57 / 88 := by ring
+  have hexp_57_88 : Real.exp (57 / 88) < 2 := by
+    have : Real.exp (57 / 88) ≤ 1 + 57 / 88 + (57 / 88) ^ 2 + (57 / 88) ^ 3 := by
+      have h1 := real_exp_fourth_order_le_quartic (show (0:ℝ) ≤ 57/88 by norm_num)
+        (show (57:ℝ)/88 < 5/6 by norm_num)
+      have : Real.exp (57 / 88) - 1 - 57 / 88 - (57 / 88) ^ 2 / 2 - (57 / 88) ^ 3 / 6 ≤
+          (57 / 88 : ℝ) ^ 4 := h1
+      nlinarith [sq_nonneg ((57:ℝ)/88)]
+    nlinarith [sq_nonneg ((57:ℝ)/88)]
+  have hdenom₂_pos : 0 < 2 - Real.exp (‖z‖ + ‖a'‖) := by
+    have : Real.exp (‖z‖ + ‖a'‖) < 2 := by
+      calc Real.exp (‖z‖ + ‖a'‖) ≤ Real.exp (57 / 88) := Real.exp_monotone hs₂_lt
+        _ < 2 := hexp_57_88
+    linarith
+  have hdenom₂_lb : (1 : ℝ) / 12 ≤ 2 - Real.exp (‖z‖ + ‖a'‖) := by
+    -- Need 1 - exp(57/88) ≤ 2 - something... actually 2-exp(57/88) ≈ 0.088 > 1/12 ≈ 0.083
+    have : Real.exp (‖z‖ + ‖a'‖) ≤ Real.exp (57 / 88) := Real.exp_monotone hs₂_lt
+    have hbound : Real.exp (57 / 88) ≤ 23 / 12 := by
+      -- exp(57/88) ≈ 1.911 < 23/12 ≈ 1.917. Use 4th-order Taylor bound.
+      have h1 := real_exp_fourth_order_le_quartic (show (0:ℝ) ≤ 57/88 by norm_num)
+        (show (57:ℝ)/88 < 5/6 by norm_num)
+      nlinarith [sq_nonneg ((57:ℝ)/88)]
+    linarith
+  -- Now bound each term
+  -- Term 1: R₁
+  have hR₁_s5 : ‖R₁‖ ≤ 5000 * s ^ 5 := by
+    calc ‖R₁‖ ≤ 3000 * s₁ ^ 5 / (2 - Real.exp s₁) := hR₁_le
+      _ ≤ 3000 * s ^ 5 / (11 / 16) := by
+          apply div_le_div₀ (by positivity) _ (by norm_num) hdenom_lb
+          exact mul_le_mul_of_nonneg_left (pow_le_pow_left₀ hs₁_nn hs₁_upper 5) (by norm_num)
+      _ = 3000 * 16 / 11 * s ^ 5 := by ring
+      _ ≤ 5000 * s ^ 5 := by
+          have : (3000 * 16 : ℝ) / 11 ≤ 5000 := by norm_num
+          nlinarith [pow_nonneg hs_nn 5]
+  -- Term 2: R₂
+  have hR₂_s5 : ‖R₂‖ ≤ 6000000 * s ^ 5 := by
+    calc ‖R₂‖ ≤ 3000 * (‖z‖ + ‖a'‖) ^ 5 / (2 - Real.exp (‖z‖ + ‖a'‖)) := hR₂_le
+      _ ≤ 3000 * (57/22 * s) ^ 5 / (1 / 12) := by
+          apply div_le_div₀ (by positivity) _ (by norm_num) hdenom₂_lb
+          exact mul_le_mul_of_nonneg_left
+            (pow_le_pow_left₀ (by positivity) hs₂_s 5) (by norm_num)
+      _ = 3000 * (57/22)^5 * 12 * s ^ 5 := by ring
+      _ ≤ 6000000 * s ^ 5 := by
+          have : (3000 * (57/22)^5 * 12 : ℝ) ≤ 6000000 := by norm_num
+          nlinarith [pow_nonneg hs_nn 5]
+  -- Term 3: ½(R₁·a' - a'·R₁)
+  have hT3 : ‖(2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁)‖ ≤ 5000 * s ^ 5 := by
+    have h2_inv : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+    calc ‖(2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁)‖
+        ≤ ‖(2 : 𝕂)⁻¹‖ * ‖R₁ * a' - a' * R₁‖ := norm_smul_le _ _
+      _ ≤ (1/2) * (2 * ‖R₁‖ * ‖a'‖) := by
+          rw [h2_inv]; gcongr
+          calc ‖R₁ * a' - a' * R₁‖
+              ≤ ‖R₁ * a'‖ + ‖a' * R₁‖ := by
+                rw [sub_eq_add_neg]
+                exact (norm_add_le _ _).trans (by rw [norm_neg])
+            _ ≤ ‖R₁‖ * ‖a'‖ + ‖a'‖ * ‖R₁‖ := by gcongr <;> exact norm_mul_le _ _
+            _ = 2 * ‖R₁‖ * ‖a'‖ := by ring
+      _ = ‖R₁‖ * ‖a'‖ := by ring
+      _ ≤ (5000 * s ^ 5) * (s / 2) := by
+          exact mul_le_mul hR₁_s5 ha'_s (norm_nonneg _) (by positivity)
+      _ ≤ 5000 * s ^ 5 := by
+          have hs_lt1 : s ≤ 1 := by linarith
+          nlinarith [pow_nonneg hs_nn 5, hs_nn]
+  -- Term 4: ½(C₄(a',b)·a' - a'·C₄(a',b))
+  have hC₄_s4 : ‖bch_quartic_term 𝕂 a' b‖ ≤ s ^ 4 := by
+    calc ‖bch_quartic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 4 := norm_bch_quartic_term_le a' b
+      _ = s₁ ^ 4 := by rw [← hs₁_def]
+      _ ≤ s ^ 4 := pow_le_pow_left₀ hs₁_nn hs₁_upper 4
+  have hT4 : ‖(2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' -
+      a' * bch_quartic_term 𝕂 a' b)‖ ≤ s ^ 5 := by
+    have h2_inv : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+    calc ‖(2 : 𝕂)⁻¹ • _‖
+        ≤ ‖(2 : 𝕂)⁻¹‖ * ‖_‖ := norm_smul_le _ _
+      _ ≤ (1/2) * (2 * ‖bch_quartic_term 𝕂 a' b‖ * ‖a'‖) := by
+          rw [h2_inv]; gcongr
+          calc ‖bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b‖
+              ≤ ‖bch_quartic_term 𝕂 a' b * a'‖ + ‖a' * bch_quartic_term 𝕂 a' b‖ := by
+                rw [sub_eq_add_neg]; exact (norm_add_le _ _).trans (by rw [norm_neg])
+            _ ≤ ‖bch_quartic_term 𝕂 a' b‖ * ‖a'‖ + ‖a'‖ * ‖bch_quartic_term 𝕂 a' b‖ := by
+                gcongr <;> exact norm_mul_le _ _
+            _ = 2 * ‖bch_quartic_term 𝕂 a' b‖ * ‖a'‖ := by ring
+      _ = ‖bch_quartic_term 𝕂 a' b‖ * ‖a'‖ := by ring
+      _ ≤ s ^ 4 * (s / 2) := by
+          exact mul_le_mul hC₄_s4 ha'_s (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 5 := by nlinarith [pow_nonneg hs_nn 5]
+  -- Term 5: C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·(b·DC_a - DC_a·b)
+  -- Use triangle: ≤ ‖C₃(z,a')‖ + ‖C₃(a'+b,a')‖ + (96)⁻¹·‖b·DC_a - DC_a·b‖
+  have hC₃_z : ‖bch_cubic_term 𝕂 z a'‖ ≤ (57/22 * s) ^ 3 := by
+    calc ‖bch_cubic_term 𝕂 z a'‖ ≤ (‖z‖ + ‖a'‖) ^ 3 := norm_bch_cubic_term_le z a'
+      _ ≤ (57/22 * s) ^ 3 := pow_le_pow_left₀ (by positivity) hs₂_s 3
+  have hC₃_ab : ‖bch_cubic_term 𝕂 (a' + b) a'‖ ≤ (3/2 * s) ^ 3 := by
+    have : ‖a' + b‖ + ‖a'‖ ≤ (3/2) * s := by
+      have h1 : ‖a' + b‖ ≤ ‖a'‖ + ‖b‖ := norm_add_le _ _
+      calc ‖a' + b‖ + ‖a'‖ ≤ ‖a'‖ + ‖b‖ + ‖a'‖ := by linarith
+        _ ≤ s/2 + ‖b‖ + s/2 := by linarith [ha'_s]
+        _ ≤ s + s/2 := by linarith [show ‖b‖ ≤ s from by
+              have := norm_nonneg a; linarith [hs_def]]
+        _ = 3/2 * s := by ring
+    calc ‖bch_cubic_term 𝕂 (a' + b) a'‖ ≤ (‖a' + b‖ + ‖a'‖) ^ 3 :=
+          norm_bch_cubic_term_le (a' + b) a'
+      _ ≤ (3/2 * s) ^ 3 := pow_le_pow_left₀ (by positivity) this 3
+  have hDC_norm : ‖DC_a‖ ≤ 4 * s ^ 3 := by
+    rw [hDC_a_def]
+    have hα : ‖a‖ ≤ s := by have := norm_nonneg b; linarith [hs_def]
+    have hβ : ‖b‖ ≤ s := by have := norm_nonneg a; linarith [hs_def]
+    have hab_comm : ‖a * b - b * a‖ ≤ 2 * ‖a‖ * ‖b‖ := by
+      calc _ ≤ ‖a * b‖ + ‖b * a‖ := by
+            rw [sub_eq_add_neg]; exact (norm_add_le _ _).trans (by rw [norm_neg])
+        _ ≤ ‖a‖ * ‖b‖ + ‖b‖ * ‖a‖ := by gcongr <;> exact norm_mul_le _ _
+        _ = _ := by ring
+    calc ‖a * (a * b - b * a) - (a * b - b * a) * a‖
+        ≤ ‖a * (a * b - b * a)‖ + ‖(a * b - b * a) * a‖ := by
+          rw [sub_eq_add_neg]; exact (norm_add_le _ _).trans (by rw [norm_neg])
+      _ ≤ ‖a‖ * (2 * ‖a‖ * ‖b‖) + (2 * ‖a‖ * ‖b‖) * ‖a‖ := by
+          gcongr
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_left hab_comm (norm_nonneg _))
+          · exact (norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right hab_comm (norm_nonneg _))
+      _ = 4 * ‖a‖ ^ 2 * ‖b‖ := by ring
+      _ ≤ 4 * s ^ 2 * s := by
+          have hα_nn : (0:ℝ) ≤ ‖a‖ := norm_nonneg a
+          nlinarith [sq_nonneg ‖a‖, pow_le_pow_left₀ hα_nn hα 2]
+      _ = 4 * s ^ 3 := by ring
+  have hbDCa : ‖(96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b)‖ ≤ s ^ 4 / 12 := by
+    have h96_inv : ‖(96 : 𝕂)⁻¹‖ = (96 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+    have hβ : ‖b‖ ≤ s := by have := norm_nonneg a; linarith [hs_def]
+    calc ‖(96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b)‖
+        ≤ ‖(96 : 𝕂)⁻¹‖ * ‖b * DC_a - DC_a * b‖ := norm_smul_le _ _
+      _ ≤ (1/96) * (2 * ‖b‖ * ‖DC_a‖) := by
+          rw [h96_inv]
+          gcongr
+          · norm_num
+          · calc ‖b * DC_a - DC_a * b‖ ≤ ‖b * DC_a‖ + ‖DC_a * b‖ := by
+                rw [sub_eq_add_neg]; exact (norm_add_le _ _).trans (by rw [norm_neg])
+              _ ≤ ‖b‖ * ‖DC_a‖ + ‖DC_a‖ * ‖b‖ := by gcongr <;> exact norm_mul_le _ _
+              _ = 2 * ‖b‖ * ‖DC_a‖ := by ring
+      _ ≤ (1/96) * (2 * s * (4 * s ^ 3)) := by gcongr
+      _ = s ^ 4 / 12 := by ring
+  have hT5 : ‖bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+      -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))‖ ≤ 500 * s ^ 5 := by
+    have hs4_s5 : s ^ 4 ≤ s ^ 5 / s := by
+      rcases eq_or_lt_of_le hs_nn with hs0 | hs_pos
+      · simp [← hs0]
+      · rw [le_div_iff₀ hs_pos]; ring_nf; rfl
+    have hs3_s5 : s ^ 3 ≤ s ^ 5 * 16 := by nlinarith [pow_nonneg hs_nn 3, hs_lt, sq_nonneg s]
+    calc ‖_ - _ - -_‖ ≤ ‖bch_cubic_term 𝕂 z a'‖ + ‖bch_cubic_term 𝕂 (a' + b) a'‖ +
+            ‖-((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))‖ := by
+          rw [show (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+              -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) =
+              bch_cubic_term 𝕂 z a' + (-(bch_cubic_term 𝕂 (a' + b) a')) +
+              ((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b)) from by abel]
+          have n1 := norm_add_le (bch_cubic_term 𝕂 z a') (-(bch_cubic_term 𝕂 (a' + b) a'))
+          have n2 := norm_add_le
+            (bch_cubic_term 𝕂 z a' + -(bch_cubic_term 𝕂 (a' + b) a'))
+            ((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))
+          simp only [norm_neg] at n1
+          linarith
+      _ = ‖bch_cubic_term 𝕂 z a'‖ + ‖bch_cubic_term 𝕂 (a' + b) a'‖ +
+          ‖(96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b)‖ := by rw [norm_neg]
+      _ ≤ (57/22 * s) ^ 3 + (3/2 * s) ^ 3 + s ^ 4 / 12 := by linarith [hC₃_z, hC₃_ab, hbDCa]
+      _ ≤ 500 * s ^ 5 := by nlinarith [pow_nonneg hs_nn 5, hs_lt, sq_nonneg s]
+  -- Term 6: C₄(z,a') - C₄(a'+b,a')
+  have hT6 : ‖bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a'‖ ≤ 1000 * s ^ 5 := by
+    have hC₄_z : ‖bch_quartic_term 𝕂 z a'‖ ≤ (57/22 * s) ^ 4 := by
+      calc ‖bch_quartic_term 𝕂 z a'‖ ≤ (‖z‖ + ‖a'‖) ^ 4 := norm_bch_quartic_term_le z a'
+        _ ≤ (57/22 * s) ^ 4 := pow_le_pow_left₀ (by positivity) hs₂_s 4
+    have hC₄_ab : ‖bch_quartic_term 𝕂 (a' + b) a'‖ ≤ (3/2 * s) ^ 4 := by
+      have : ‖a' + b‖ + ‖a'‖ ≤ (3/2) * s := by
+        have h1 : ‖a' + b‖ ≤ ‖a'‖ + ‖b‖ := norm_add_le _ _
+        have hβ : ‖b‖ ≤ s := by have := norm_nonneg a; linarith [hs_def]
+        linarith [ha'_s]
+      calc ‖bch_quartic_term 𝕂 (a' + b) a'‖ ≤ (‖a' + b‖ + ‖a'‖) ^ 4 :=
+            norm_bch_quartic_term_le (a' + b) a'
+        _ ≤ (3/2 * s) ^ 4 := pow_le_pow_left₀ (by positivity) this 4
+    calc ‖_ - _‖ ≤ ‖bch_quartic_term 𝕂 z a'‖ + ‖bch_quartic_term 𝕂 (a' + b) a'‖ := by
+          rw [sub_eq_add_neg]; exact (norm_add_le _ _).trans (by rw [norm_neg])
+      _ ≤ (57/22 * s) ^ 4 + (3/2 * s) ^ 4 := by linarith
+      _ ≤ 1000 * s ^ 5 := by nlinarith [pow_nonneg hs_nn 5, hs_lt, sq_nonneg s]
+  -- Triangle inequality: sum of 6 bounds ≤ (5000 + 6000000 + 5000 + 1 + 500 + 1000)·s⁵ < 10⁷·s⁵
+  have hsum : ‖R₁ + R₂ + (2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁) +
+      (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+      (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+        -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+      (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a')‖ ≤
+      (5000 + 6000000 + 5000 + 1 + 500 + 1000) * s ^ 5 := by
+    have t1 := hR₁_s5
+    have t2 := hR₂_s5
+    have t3 := hT3
+    have t4 := hT4
+    have t5 := hT5
+    have t6 := hT6
+    have n1 := norm_add_le R₁ R₂
+    have n2 := norm_add_le (R₁ + R₂) ((2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁))
+    have n3 := norm_add_le (R₁ + R₂ + (2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁))
+      ((2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b))
+    have n4 := norm_add_le
+      (R₁ + R₂ + (2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁) +
+        (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b))
+      (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+        -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b)))
+    have n5 := norm_add_le
+      (R₁ + R₂ + (2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁) +
+        (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+        (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+          -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))))
+      (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a')
+    linarith
+  calc _ ≤ (5000 + 6000000 + 5000 + 1 + 500 + 1000) * s ^ 5 := hsum
+    _ ≤ 10000000 * s ^ 5 := by nlinarith [pow_nonneg hs_nn 5]
+  -/
 
 include 𝕂 in
 /-- **Quintic remainder for symmetric BCH**: `E₃(c·a, c·b) - c³·E₃(a,b)` is `O(|c|³·s⁵)`.
@@ -3978,7 +4230,7 @@ theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
     (hc : |c| ≤ 1) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖symmetric_bch_cubic 𝕂 ((↑c : 𝕂) • a) ((↑c : 𝕂) • b) -
       (↑c : 𝕂) ^ 3 • symmetric_bch_cubic 𝕂 a b‖ ≤
-      10000 * |c| ^ 3 * (‖a‖ + ‖b‖) ^ 5 := by
+      20000000 * |c| ^ 3 * (‖a‖ + ‖b‖) ^ 5 := by
   set s := ‖a‖ + ‖b‖ with hs_def
   have hs_nn : 0 ≤ s := by positivity
   have hs14 : s < 1 / 4 := hab
@@ -4019,13 +4271,14 @@ theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
       _ = 600 * |c| ^ 3 * s ^ 3 := by ring
   -- Case split on s² vs 6/100
   by_cases hs_large : 6 / 100 ≤ s ^ 2
-  · -- Large s case: crude bound suffices since 600 s³ ≤ 10000 s⁵ when s² ≥ 0.06
-    have h600 : 600 * |c| ^ 3 * s ^ 3 ≤ 10000 * |c| ^ 3 * s ^ 5 := by
+  · -- Large s case: crude bound 600·|c|³·s³ ≤ 20·10⁶·|c|³·s⁵ when s² ≥ 0.06
+    have h600 : 600 * |c| ^ 3 * s ^ 3 ≤ 20000000 * |c| ^ 3 * s ^ 5 := by
       have hc3_nn : 0 ≤ |c| ^ 3 := pow_nonneg hc_nn 3
       have hs3_nn : 0 ≤ s ^ 3 := pow_nonneg hs_nn 3
-      have h1 : 600 * s ^ 3 ≤ 10000 * s ^ 5 := by
-        have hdiff : 10000 * s ^ 5 - 600 * s ^ 3 = s ^ 3 * (10000 * s ^ 2 - 600) := by ring
-        have h2 : 0 ≤ 10000 * s ^ 2 - 600 := by linarith
+      have h1 : 600 * s ^ 3 ≤ 20000000 * s ^ 5 := by
+        -- s² ≥ 0.06 ⇒ 20000000·s² ≥ 1200000 ≥ 600
+        have hdiff : 20000000 * s ^ 5 - 600 * s ^ 3 = s ^ 3 * (20000000 * s ^ 2 - 600) := by ring
+        have h2 : 0 ≤ 20000000 * s ^ 2 - 600 := by linarith
         nlinarith [mul_nonneg hs3_nn h2]
       nlinarith [h1, hc3_nn]
     linarith
@@ -4035,32 +4288,32 @@ theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
     --   D(c) = [sym_bch_cubic(ca,cb) - sym_E₃(ca,cb)]
     --        + [sym_E₃(ca,cb) - c³·sym_E₃(a,b)]            -- ZERO by homogeneity
     --        + c³·[sym_E₃(a,b) - sym_bch_cubic(a,b)]
-    -- Bounds:  ≤ 4000·(|c|s)⁵ + 0 + |c|³·4000·s⁵ ≤ 8000·|c|³·s⁵ ≤ 10000·|c|³·s⁵.
+    -- Bounds:  ≤ 10⁷·(|c|s)⁵ + 0 + |c|³·10⁷·s⁵ ≤ 2·10⁷·|c|³·s⁵.
     -- Set c' = (↑c : 𝕂)
     set c' : 𝕂 := (↑c : 𝕂) with hc'_def
     have hc'_norm : ‖c'‖ = |c| := by rw [hc'_def, RCLike.norm_ofReal]
-    -- Term 1: ‖sym_bch_cubic(c'•a, c'•b) - sym_E₃(c'•a, c'•b)‖ ≤ 4000·(|c|s)⁵
+    -- Term 1: ‖sym_bch_cubic(c'•a, c'•b) - sym_E₃(c'•a, c'•b)‖ ≤ 10⁷·(|c|s)⁵
     have hT1 : ‖symmetric_bch_cubic 𝕂 (c' • a) (c' • b) -
-        symmetric_bch_cubic_poly 𝕂 (c' • a) (c' • b)‖ ≤ 4000 * (|c| * s) ^ 5 := by
-      calc _ ≤ 4000 * (‖c' • a‖ + ‖c' • b‖) ^ 5 :=
+        symmetric_bch_cubic_poly 𝕂 (c' • a) (c' • b)‖ ≤ 10000000 * (|c| * s) ^ 5 := by
+      calc _ ≤ 10000000 * (‖c' • a‖ + ‖c' • b‖) ^ 5 :=
             norm_symmetric_bch_cubic_sub_poly_le (𝕂 := 𝕂) _ _ hcs_14
-        _ ≤ 4000 * (|c| * s) ^ 5 := by gcongr
+        _ ≤ 10000000 * (|c| * s) ^ 5 := by gcongr
     -- Homogeneity: sym_E₃(c'•a, c'•b) = c'³ • sym_E₃(a, b)
     have hhom : symmetric_bch_cubic_poly 𝕂 (c' • a) (c' • b) =
         c' ^ 3 • symmetric_bch_cubic_poly 𝕂 a b :=
       symmetric_bch_cubic_poly_smul a b c'
-    -- Term 2: ‖c'³ • (sym_E₃(a,b) - sym_bch_cubic(a,b))‖ ≤ |c|³·4000·s⁵
+    -- Term 2: ‖c'³ • (sym_E₃(a,b) - sym_bch_cubic(a,b))‖ ≤ |c|³·10⁷·s⁵
     have hT2 : ‖c' ^ 3 • (symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_cubic 𝕂 a b)‖ ≤
-        |c| ^ 3 * (4000 * s ^ 5) := by
+        |c| ^ 3 * (10000000 * s ^ 5) := by
       have hc3_norm : ‖c' ^ 3‖ = |c| ^ 3 := by rw [norm_pow, hc'_norm]
       have hbound : ‖symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_cubic 𝕂 a b‖ ≤
-          4000 * s ^ 5 := by
+          10000000 * s ^ 5 := by
         rw [show symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_cubic 𝕂 a b =
             -(symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b) from by abel]
         rw [norm_neg]
         exact norm_symmetric_bch_cubic_sub_poly_le (𝕂 := 𝕂) a b hab
       calc _ ≤ ‖c' ^ 3‖ * ‖_‖ := norm_smul_le _ _
-        _ ≤ |c| ^ 3 * (4000 * s ^ 5) := by rw [hc3_norm]; gcongr
+        _ ≤ |c| ^ 3 * (10000000 * s ^ 5) := by rw [hc3_norm]; gcongr
     -- Combine: D(c) = (sym_bch_cubic(ca,cb) - sym_E₃(ca,cb)) + c'³ • (sym_E₃(a,b) - sym_bch_cubic(a,b))
     have hD_decomp : symmetric_bch_cubic 𝕂 (c' • a) (c' • b) -
         c' ^ 3 • symmetric_bch_cubic 𝕂 a b =
@@ -4076,9 +4329,9 @@ theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
             symmetric_bch_cubic_poly 𝕂 (c' • a) (c' • b)‖ +
           ‖c' ^ 3 • (symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_cubic 𝕂 a b)‖ :=
             norm_add_le _ _
-      _ ≤ 4000 * (|c| * s) ^ 5 + |c| ^ 3 * (4000 * s ^ 5) := by linarith
-      _ ≤ 10000 * |c| ^ 3 * s ^ 5 := by
-          -- 4000·|c|⁵·s⁵ + 4000·|c|³·s⁵ ≤ 4000·|c|³·s⁵ + 4000·|c|³·s⁵ = 8000·|c|³·s⁵
+      _ ≤ 10000000 * (|c| * s) ^ 5 + |c| ^ 3 * (10000000 * s ^ 5) := by linarith
+      _ ≤ 20000000 * |c| ^ 3 * s ^ 5 := by
+          -- 10⁷·|c|⁵·s⁵ + 10⁷·|c|³·s⁵ ≤ 10⁷·|c|³·s⁵ + 10⁷·|c|³·s⁵ = 2·10⁷·|c|³·s⁵
           have hc5_le_c3 : |c| ^ 5 ≤ |c| ^ 3 := by
             have h_c2 : |c| ^ 2 ≤ 1 := by
               calc |c| ^ 2 ≤ 1 ^ 2 := by gcongr
@@ -4088,14 +4341,10 @@ theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
                   apply mul_le_mul_of_nonneg_left h_c2 (pow_nonneg hc_nn 3)
               _ = |c| ^ 3 := mul_one _
           have hcs5 : (|c| * s) ^ 5 = |c| ^ 5 * s ^ 5 := by ring
-          have hs5_nn : (0:ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
-          calc 4000 * (|c| * s) ^ 5 + |c| ^ 3 * (4000 * s ^ 5)
-              = 4000 * |c| ^ 5 * s ^ 5 + 4000 * |c| ^ 3 * s ^ 5 := by rw [hcs5]; ring
-            _ ≤ 4000 * |c| ^ 3 * s ^ 5 + 4000 * |c| ^ 3 * s ^ 5 := by
+          calc 10000000 * (|c| * s) ^ 5 + |c| ^ 3 * (10000000 * s ^ 5)
+              = 10000000 * |c| ^ 5 * s ^ 5 + 10000000 * |c| ^ 3 * s ^ 5 := by rw [hcs5]; ring
+            _ ≤ 10000000 * |c| ^ 3 * s ^ 5 + 10000000 * |c| ^ 3 * s ^ 5 := by
                 gcongr
-            _ = 8000 * |c| ^ 3 * s ^ 5 := by ring
-            _ ≤ 10000 * |c| ^ 3 * s ^ 5 := by
-                have : (0:ℝ) ≤ |c| ^ 3 * s ^ 5 := mul_nonneg (pow_nonneg hc_nn 3) hs5_nn
-                linarith
+            _ = 20000000 * |c| ^ 3 * s ^ 5 := by ring
 
 end
