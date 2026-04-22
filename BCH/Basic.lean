@@ -3939,9 +3939,26 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
     -- abel will collect the 2⁻¹•a terms; combined with h_half_sum, equality holds.
     linear_combination (norm := abel) (h_half_sum : (2 : 𝕂)⁻¹ • a + (2 : 𝕂)⁻¹ • a = a)
   rw [hdecomp]
-  -- TRIANGLE INEQUALITY + NORM BOUNDS
-  -- Each term is bounded by K·s⁵. Total ≤ 4000·s⁵.
-  -- Remaining work: bound each of the 6 terms.
+  -- TRIANGLE INEQUALITY + NORM BOUNDS for the 6 terms in the decomposition:
+  --
+  -- 1. ‖R₁‖ ≤ 3000·s₁⁵/(2-exp(s₁)). For s < 1/4, s₁ ≤ s and (2-exp(s₁)) ≥ 11/16.
+  --    So R₁ ≤ 3000·s⁵·(16/11) ≈ 4364·s⁵.
+  -- 2. ‖R₂‖ ≤ 3000·(‖z‖+‖a'‖)⁵/(2-exp(‖z‖+‖a'‖)).
+  --    s₂ = ‖z‖+‖a'‖ can be up to ~23/44 (for s near 1/4), giving R₂ up to ~400000·s⁵.
+  -- 3. ‖½(R₁·a' - a'·R₁)‖ ≤ ‖R₁‖·‖a'‖ ≤ K·s⁶ ≤ K·s⁵ (s < 1).
+  -- 4. ‖½(C₄(a',b)·a' - a'·C₄(a',b))‖ ≤ s₁⁴·s/2 ≤ s⁵/2.
+  -- 5. ‖C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]‖: linear-in-W_rest of C₃ + quadratic
+  --    in W. With ‖W‖ ≤ K·s², bounded by O(s⁵).
+  -- 6. ‖C₄(z,a') - C₄(a'+b,a')‖: linear+ in W of C₄, bounded by O(s⁵).
+  --
+  -- CONSTANT ISSUE: term 2 (R₂) at worst case s = 1/4 gives R₂ ≈ 400000·s⁵, far
+  -- exceeding the stated 4000·s⁵ bound. The stated constant 4000 is mathematically
+  -- INCORRECT for s near the upper end of the hypothesis. To close this proof
+  -- rigorously, the theorem statement constant should be increased to ~10⁶, and
+  -- the downstream `norm_symmetric_bch_cubic_sub_smul_le` constant should also
+  -- be relaxed. Alternatively, restructure the bound as `K·s⁵/(2-exp(2s))` to
+  -- absorb the divergence near s = 1/4 (preferred — more analogous to the
+  -- existing `norm_bch_quintic_remainder_le` form).
   sorry
 
 include 𝕂 in
