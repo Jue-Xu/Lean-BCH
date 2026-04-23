@@ -1328,6 +1328,85 @@ theorem norm_commutator_near_V_le (V a b : 𝔸) (α β : 𝕂) :
             _ ≤ ‖δa‖ * ‖δb‖ + ‖δb‖ * ‖δa‖ := by gcongr <;> exact norm_mul_le _ _
             _ = 2 * ‖δa‖ * ‖δb‖ := by ring
 
+/-! ### Specialization: commutator bound for `[4·X, Y]` in the Suzuki setting
+
+Combining `norm_commutator_near_V_le` (slice 8) and
+`norm_strangBlock_log_sub_linear_le` (slice 4) yields a concrete bound on
+`‖[4•X, Y] ‖` in terms of `η_p := ‖p·τ‖·(‖A‖+‖B‖)` and
+`η_{1-4p} := ‖(1-4p)·τ‖·(‖A‖+‖B‖)`. This bound is `O(R⁴)` uniformly.
+-/
+
+include 𝕂 in
+/-- **Commutator bound for the Suzuki-5 symmetric BCH arguments**: for
+`X = strangBlock_log A B p τ` and `Y = strangBlock_log A B (1-4p) τ`,
+  `‖(4·X)·Y - Y·(4·X)‖` is bounded by an explicit expression involving only
+`η_p = ‖p·τ‖·(‖A‖+‖B‖)` and `η_{1-4p} = ‖(1-4p)·τ‖·(‖A‖+‖B‖)`.
+
+The expression is a polynomial that's `O(η_p·η_{1-4p}³) + O(η_p³·η_{1-4p})` as
+the leading term, thus O(R⁴) when η_p, η_{1-4p} ≤ R. -/
+theorem norm_comm_4X_Y_le (A B : 𝔸) (p τ : 𝕂)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4) :
+    ‖(((4 : 𝕂) • strangBlock_log 𝕂 A B p τ) * strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+        strangBlock_log 𝕂 A B (1 - 4 * p) τ * ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))‖ ≤
+      2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+        (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+      2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+        (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+          10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) +
+      2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+            10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+        (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by
+  set X := strangBlock_log 𝕂 A B p τ with hX_def
+  set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
+  set V := A + B with hV_def
+  -- Apply norm_commutator_near_V_le with a = 4•X, b = Y, α = 4p·τ, β = (1-4p)·τ.
+  have hcomm := norm_commutator_near_V_le (𝕂 := 𝕂) V ((4 : 𝕂) • X) Y
+    ((4 : 𝕂) * p * τ) ((1 - 4 * p) * τ)
+  -- ‖a - α•V‖ = ‖4•X - 4p·τ•V‖ = 4·‖X - p·τ•V‖
+  -- Using triangle with T_p = p·τ•V + (p·τ)³•E_sym:
+  -- ‖X - p·τ•V‖ ≤ ‖X - T_p‖ + ‖(p·τ)³•E_sym‖ ≤ (p·τ)³·(‖A‖+‖B‖)³ + 10⁷·η_p⁵
+  have hδa : ‖(4 : 𝕂) • X - (4 * p * τ : 𝕂) • V‖ ≤
+      4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+           10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by
+    -- 4•X - (4p·τ)•V = 4•(X - (p·τ)•V)
+    have hsmul_eq : (4 : 𝕂) • X - (4 * p * τ : 𝕂) • V = (4 : 𝕂) • (X - (p * τ : 𝕂) • V) := by
+      rw [smul_sub, smul_smul]
+      congr 2
+      ring
+    rw [hsmul_eq]
+    -- ‖4•(X - (p·τ)•V)‖ ≤ 4·‖X - (p·τ)•V‖
+    have h4_norm : ‖(4 : 𝕂) • (X - (p * τ : 𝕂) • V)‖ ≤ 4 * ‖X - (p * τ : 𝕂) • V‖ := by
+      have h4_scalar_norm : ‖(4 : 𝕂)‖ = 4 := by rw [RCLike.norm_ofNat]
+      calc ‖(4 : 𝕂) • (X - (p * τ : 𝕂) • V)‖ ≤ ‖(4 : 𝕂)‖ * ‖X - (p * τ : 𝕂) • V‖ :=
+            norm_smul_le _ _
+        _ = 4 * ‖X - (p * τ : 𝕂) • V‖ := by rw [h4_scalar_norm]
+    refine le_trans h4_norm ?_
+    -- Now: 4·‖X - (p·τ)•V‖ ≤ 4·(‖X - T_p‖ + ‖(p·τ)³•E_sym‖)
+    have hlin := norm_strangBlock_log_sub_linear_le (𝕂 := 𝕂) A B p τ hp
+    -- hlin : ‖strangBlock_log - (p·τ)•(A+B)‖ ≤ η³ + 10⁷·η⁵
+    -- But hlin has bound (‖p·τ‖·(‖A‖+‖B‖))³, not ‖p·τ‖³·(‖A‖+‖B‖)³. They are equal.
+    have : (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 = ‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 := by ring
+    gcongr
+    calc ‖X - (p * τ : 𝕂) • V‖
+        ≤ _ := hlin
+      _ = ‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+          10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5 := by rw [this]
+  have hδb : ‖Y - ((1 - 4 * p) * τ : 𝕂) • V‖ ≤
+      ‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+        10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5 := by
+    have hlin := norm_strangBlock_log_sub_linear_le (𝕂 := 𝕂) A B (1 - 4 * p) τ h1m4p
+    have : (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 =
+        ‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 := by ring
+    calc ‖Y - ((1 - 4 * p) * τ : 𝕂) • V‖ ≤ _ := hlin
+      _ = ‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5 := by rw [this]
+  -- Now apply hcomm with hδa and hδb as the bounds on "δa" and "δb".
+  refine le_trans hcomm ?_
+  gcongr
+
 /-! ### Final form of M4a (statement deferred to a later session)
 
 The full theorem `norm_suzuki5_bch_sub_smul_sub_cubic_le`, asserting
