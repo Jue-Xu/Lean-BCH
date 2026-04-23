@@ -905,6 +905,75 @@ theorem norm_strangBlock_log_sub_target_le (A B : 𝔸) (c τ : 𝕂)
   convert key using 2
   abel
 
+/-! ### Sum of 5-block targets
+
+The sum of the 5 Strang-block targets with coefficients `(p, p, 1-4p, p, p)` equals
+the expected form `τ•(A+B) + τ³·C₃(p)·E_sym(A,B)`. This is the algebraic identity
+that will combine with per-block bounds to yield the M4a main theorem.
+-/
+
+include 𝕂 in
+/-- The sum of per-block targets equals the M4a main target.
+
+The linear sum: `Σc_i = p+p+(1-4p)+p+p = 1`, giving `τ•(A+B)` overall.
+The cubic sum: `Σc_i³ = 4p³+(1-4p)³ = C₃(p)`, giving `τ³·C₃(p)·E_sym` overall. -/
+theorem suzuki5_targets_sum (A B : 𝔸) (p τ : 𝕂) :
+    strangBlock_log_target 𝕂 A B p τ +
+    strangBlock_log_target 𝕂 A B p τ +
+    strangBlock_log_target 𝕂 A B (1 - 4 * p) τ +
+    strangBlock_log_target 𝕂 A B p τ +
+    strangBlock_log_target 𝕂 A B p τ =
+    τ • (A + B) +
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B := by
+  unfold strangBlock_log_target suzuki5_bch_cubic_coeff
+  -- Collect linear and cubic contributions separately.
+  set V := A + B with hV_def
+  set E := symmetric_bch_cubic_poly 𝕂 A B with hE_def
+  -- Coefficients (Σc_i)·τ = τ for the linear part
+  have h_lin_sum : (p * τ) + (p * τ) + ((1 - 4 * p) * τ) + (p * τ) + (p * τ) = τ := by ring
+  -- Coefficients Σc_i³·τ³ for the cubic part
+  have h_cub_sum : (p * τ) ^ 3 + (p * τ) ^ 3 + ((1 - 4 * p) * τ) ^ 3 + (p * τ) ^ 3 +
+      (p * τ) ^ 3 = τ ^ 3 * (4 * p ^ 3 + (1 - 4 * p) ^ 3) := by ring
+  -- Group the LHS into linear + cubic
+  have hsplit :
+      ((p * τ) • V + (p * τ) ^ 3 • E) +
+      ((p * τ) • V + (p * τ) ^ 3 • E) +
+      (((1 - 4 * p) * τ) • V + ((1 - 4 * p) * τ) ^ 3 • E) +
+      ((p * τ) • V + (p * τ) ^ 3 • E) +
+      ((p * τ) • V + (p * τ) ^ 3 • E) =
+      ((p * τ) • V + (p * τ) • V + ((1 - 4 * p) * τ) • V + (p * τ) • V + (p * τ) • V) +
+      ((p * τ) ^ 3 • E + (p * τ) ^ 3 • E + ((1 - 4 * p) * τ) ^ 3 • E + (p * τ) ^ 3 • E +
+        (p * τ) ^ 3 • E) := by
+    abel
+  rw [hsplit]
+  -- Combine V-part: sum of smul's = (Σc_iτ)•V = τ•V
+  rw [show (p * τ) • V + (p * τ) • V + ((1 - 4 * p) * τ) • V + (p * τ) • V +
+          (p * τ) • V =
+          ((p * τ) + (p * τ) + ((1 - 4 * p) * τ) + (p * τ) + (p * τ)) • V from by
+        simp only [add_smul],
+      h_lin_sum]
+  -- Combine E-part similarly
+  rw [show (p * τ) ^ 3 • E + (p * τ) ^ 3 • E + ((1 - 4 * p) * τ) ^ 3 • E + (p * τ) ^ 3 • E +
+          (p * τ) ^ 3 • E =
+          ((p * τ) ^ 3 + (p * τ) ^ 3 + ((1 - 4 * p) * τ) ^ 3 + (p * τ) ^ 3 +
+            (p * τ) ^ 3) • E from by simp only [add_smul],
+      h_cub_sum]
+
+/-! ### Per-block bounds under the M4a regime
+
+Translating the local regime `‖(c*τ)•A‖ + ‖(c*τ)•B‖ < 1/4` to global R-based
+bounds. We need the regime to hold for both `c = p` and `c = 1-4p`. -/
+
+include 𝕂 in
+/-- Norm bound for Strang block args: `‖(c*τ)•A‖ + ‖(c*τ)•B‖ ≤ ‖c‖·‖τ‖·(‖A‖+‖B‖)`. -/
+lemma strangBlock_arg_norm_le (A B : 𝔸) (c τ : 𝕂) :
+    ‖(c * τ) • A‖ + ‖(c * τ) • B‖ ≤ ‖c‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by
+  have hcτ : ‖(c * τ : 𝕂)‖ = ‖c‖ * ‖τ‖ := norm_mul _ _
+  calc ‖(c * τ) • A‖ + ‖(c * τ) • B‖
+      ≤ ‖c * τ‖ * ‖A‖ + ‖c * τ‖ * ‖B‖ := by gcongr <;> exact norm_smul_le _ _
+    _ = ‖c * τ‖ * (‖A‖ + ‖B‖) := by ring
+    _ = ‖c‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by rw [hcτ]
+
 /-! ### Final form of M4a (statement deferred to a later session)
 
 The full theorem `norm_suzuki5_bch_sub_smul_sub_cubic_le`, asserting
@@ -920,7 +989,7 @@ at 20M heartbeats. The recommended path forward is:
 2. Use `exp_symmetric_bch` per block to access `bch(bch(cτA/2, cτB), cτA/2)`.
 3. Use `norm_symmetric_bch_cubic_sub_poly_le` per block to relate to E_sym.
 4. Compose via 4 outer BCH applications, tracking cubic and quartic remainders.
-5. Combine with the cubic coefficient sum identity 4p³+(1-4p)³ = C₃(p).
+5. Combine with `suzuki5_targets_sum` (above) for the sum-of-targets identity.
 
 This will be tackled in a subsequent session. -/
 
