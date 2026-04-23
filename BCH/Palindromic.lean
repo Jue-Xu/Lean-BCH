@@ -812,6 +812,111 @@ Vanishes precisely under the Suzuki cubic-cancellation condition. -/
 def suzuki5_bch_cubic_coeff (𝕂 : Type*) [Field 𝕂] (p : 𝕂) : 𝕂 :=
   4 * p ^ 3 + (1 - 4 * p) ^ 3
 
+/-- The Suzuki cubic-cancellation condition: `4p³ + (1-4p)³ = 0`. The standard
+choice is `p = 1/(4 - 4^(1/3))`, the real root of the cubic. Under this
+condition, the τ³ correction in `suzuki5_bch` vanishes, leaving the leading
+error at τ⁵ — the Suzuki S₄ fourth-order property. -/
+def IsSuzukiCubic {𝕂 : Type*} [Field 𝕂] (p : 𝕂) : Prop :=
+  suzuki5_bch_cubic_coeff 𝕂 p = 0
+
+/-- Restating: `IsSuzukiCubic p ↔ 4p³ + (1-4p)³ = 0`, by definitional unfolding. -/
+lemma IsSuzukiCubic_iff {𝕂 : Type*} [Field 𝕂] (p : 𝕂) :
+    IsSuzukiCubic p ↔ 4 * p ^ 3 + (1 - 4 * p) ^ 3 = 0 := Iff.rfl
+
+/-! ### Per-block cubic structure (foundational lemmas for M4a)
+
+Each Strang block `S_c(τ)` has logarithm
+  `log(S_c(τ)) = bch(bch((cτ/2)•A, (cτ)•B), (cτ/2)•A) = (cτ)•V + (cτ)³•E_sym + O(s⁵)`
+where V = A+B and E_sym = symmetric_bch_cubic_poly. The constants are tracked
+through the existing `norm_symmetric_bch_cubic_sub_poly_le` from BCH/Basic.lean.
+-/
+
+/-- The "ideal" log of a Strang block: the polynomial `cτ•(A+B) + (cτ)³•E_sym(A,B)`
+that approximates the actual log up to O(s⁵). Used as the comparison target for the
+per-block cubic analysis. -/
+noncomputable def strangBlock_log_target (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (A B : 𝔸) (c τ : 𝕂) : 𝔸 :=
+  (c * τ) • (A + B) + (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B
+
+/-- The actual log of a Strang block: `bch(bch((cτ/2)•A, (cτ)•B), (cτ/2)•A)`.
+
+By `exp_symmetric_bch`, this satisfies `exp(strangBlock_log) = strangBlock`,
+provided `‖cτ•A‖ + ‖cτ•B‖ < 1/4`. -/
+noncomputable def strangBlock_log (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (A B : 𝔸) (c τ : 𝕂) : 𝔸 :=
+  bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • ((c * τ) • A)) ((c * τ) • B))
+    ((2 : 𝕂)⁻¹ • ((c * τ) • A))
+
+include 𝕂 in
+/-- Round-trip: `exp(strangBlock_log A B c τ) = strangBlock A B c τ` whenever
+`‖(cτ)•A‖ + ‖(cτ)•B‖ < 1/4`. The output is the Strang block in the form
+`exp((cτ/2)•A) · exp((cτ)•B) · exp((cτ/2)•A)`. -/
+theorem exp_strangBlock_log (A B : 𝔸) (c τ : 𝕂)
+    (h : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ < 1 / 4) :
+    exp (strangBlock_log 𝕂 A B c τ) = strangBlock A B c τ := by
+  unfold strangBlock_log strangBlock
+  -- Apply exp_symmetric_bch with a = cτ•A, b = cτ•B; matches via smul re-association.
+  have key := exp_symmetric_bch (𝕂 := 𝕂) ((c * τ) • A) ((c * τ) • B) h
+  -- key gives: exp(bch(bch(½(cτ•A), cτ•B), ½(cτ•A))) =
+  --           exp(½•(cτ•A)) · exp(cτ•B) · exp(½•(cτ•A))
+  -- We need the RHS to match `exp((cτ/2)•A) * exp((cτ)•B) * exp((cτ/2)•A)`.
+  -- Since (1/2)•(c*τ)•A = (c*τ/2)•A by smul associativity:
+  rw [key]
+  congr 2
+  · rw [smul_smul]; congr 1; ring
+  · rw [smul_smul]; congr 1; ring
+
+include 𝕂 in
+/-- **Per-block cubic bound (M4a per-block)**: each Strang block's log differs
+from the target `cτ•(A+B) + (cτ)³•E_sym(A,B)` by at most `K·s⁵` where
+`s = ‖cτ•A‖ + ‖cτ•B‖`. Direct application of `norm_symmetric_bch_cubic_sub_poly_le`
+to the Strang composition.
+
+Note: the `(c*τ)•(A+B)` regrouping uses smul-distributivity. -/
+theorem norm_strangBlock_log_sub_target_le (A B : 𝔸) (c τ : 𝕂)
+    (h : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ < 1 / 4) :
+    ‖strangBlock_log 𝕂 A B c τ - strangBlock_log_target 𝕂 A B c τ‖ ≤
+      10000000 * (‖(c * τ) • A‖ + ‖(c * τ) • B‖) ^ 5 := by
+  unfold strangBlock_log strangBlock_log_target
+  -- Apply `norm_symmetric_bch_cubic_sub_poly_le` with a = cτ•A, b = cτ•B.
+  -- The conclusion: ‖sym_bch_cubic - sym_E₃‖ ≤ 10⁷·s⁵ where sym_bch_cubic =
+  -- bch(bch(½a,b),½a) - (a+b).
+  have key := norm_symmetric_bch_cubic_sub_poly_le (𝕂 := 𝕂) ((c * τ) • A) ((c * τ) • B) h
+  -- key : ‖bch(bch(½cτA, cτB), ½cτA) - (cτA+cτB) - sym_E₃(cτA, cτB)‖ ≤ 10⁷·s⁵
+  -- Rewrite (cτA+cτB) = cτ•(A+B) and sym_E₃(cτA, cτB) = (cτ)³•sym_E₃(A,B).
+  unfold symmetric_bch_cubic at key
+  -- key now uses bch(...) - (cτA+cτB) - symmetric_bch_cubic_poly(cτA, cτB)
+  have hsmul_dist : (c * τ) • A + (c * τ) • B = (c * τ) • (A + B) := by
+    rw [smul_add]
+  have hsym_hom : symmetric_bch_cubic_poly 𝕂 ((c * τ) • A) ((c * τ) • B) =
+      (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B :=
+    symmetric_bch_cubic_poly_smul A B (c * τ)
+  -- Massage key to match the goal's expression.
+  rw [hsmul_dist, hsym_hom] at key
+  -- Now key matches goal modulo grouping of subtraction.
+  convert key using 2
+  abel
+
+/-! ### Final form of M4a (statement deferred to a later session)
+
+The full theorem `norm_suzuki5_bch_sub_smul_sub_cubic_le`, asserting
+
+  ‖suzuki5_bch A B p τ - τ•(A+B) - τ³ • C₃(p) • E_sym(A,B)‖ ≤ K · R⁴
+
+with `R = suzuki5ArgNormBound A B p τ`, requires an iterated-BCH expansion across
+the 5-Strang composition and a careful tracking of cross-block commutators. The
+Lean-Trotter project's direct-module attempt at the analogous identity timed out
+at 20M heartbeats. The recommended path forward is:
+
+1. Use `suzuki5Product_eq_strangBlock_prod` (above) to factor S(τ) as 5 Strang blocks.
+2. Use `exp_symmetric_bch` per block to access `bch(bch(cτA/2, cτB), cτA/2)`.
+3. Use `norm_symmetric_bch_cubic_sub_poly_le` per block to relate to E_sym.
+4. Compose via 4 outer BCH applications, tracking cubic and quartic remainders.
+5. Combine with the cubic coefficient sum identity 4p³+(1-4p)³ = C₃(p).
+
+This will be tackled in a subsequent session. -/
+
 end
 
 end BCH
