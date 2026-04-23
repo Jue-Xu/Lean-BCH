@@ -27,6 +27,8 @@ satisfying `exp(Z) = exp(a) · exp(b)`, defined for ‖a‖ + ‖b‖ < ln 2.
 import BCH.LogSeries
 import Mathlib.Algebra.Lie.OfAssociative
 
+namespace BCH
+
 noncomputable section
 
 open scoped Nat
@@ -4610,3 +4612,5 @@ theorem norm_symmetric_bch_cubic_sub_smul_le (a b : 𝔸) (c : ℝ)
             _ = 20000000 * |c| ^ 3 * s ^ 5 := by ring
 
 end
+
+end BCH

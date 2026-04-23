@@ -28,6 +28,8 @@ import Mathlib.Analysis.Calculus.SmoothSeries
 import Mathlib.Analysis.Calculus.FDeriv.Mul
 import Mathlib.Tactic
 
+namespace BCH
+
 noncomputable section
 
 open Finset NormedSpace Topology
@@ -661,3 +663,5 @@ theorem exp_logOnePlus (x : 𝔸) (hx : ‖x‖ < 1) :
       (fun t ht => (hQderiv t (ht_bound t ht)).deriv) h1_mem h0_mem
 
 end
+
+end BCH
