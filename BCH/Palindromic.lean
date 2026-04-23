@@ -424,6 +424,287 @@ theorem suzuki5_bch_neg (A B : 𝔸) (p τ : 𝕂)
     _ = logOnePlus (𝕂 := 𝕂) (exp (-Z) - 1) := by rw [hexp_flip]
     _ = -Z := hlnegZ
 
+/-! ### Leading-order remainder for suzuki5_bch (M3b)
+
+We prove `‖suzuki5_bch A B p τ - τ • (A+B)‖` is `O(τ²)` by splitting
+
+  `‖log(1+(S-1)) - τ(A+B)‖ ≤ ‖log(1+(S-1)) - (S-1)‖ + ‖(S-1) - τ(A+B)‖`
+
+Both pieces are `O(τ²)`:
+
+1. `‖logOnePlus(y) - y‖ ≤ ‖y‖²/(1-‖y‖)` from `LogSeries.lean`.
+2. `‖S(τ) - 1 - ∑ᵢzᵢ‖ ≤ exp(R) - 1 - R` proved by induction on the number of
+   factors, using the three invariants (‖S_k‖ bound, ‖S_k-1‖ bound, linear bound).
+3. `∑ᵢ zᵢ = τ•(A+B)` because the A-coefficients sum to 1 (p/2+p+(1-3p)/2+(1-3p)/2+p+p/2 = 1)
+   and the B-coefficients sum to 1 (p+p+(1-4p)+p+p = 1).
+-/
+
+include 𝕂 in
+/-- Multiplicative norm preservation: if `‖y‖ ≤ exp(r)`, then `‖y · exp(x)‖ ≤ exp(r+‖x‖)`. -/
+lemma norm_mul_exp_le_of_norm_le (y x : 𝔸) {r : ℝ}
+    (hy : ‖y‖ ≤ Real.exp r) :
+    ‖y * exp x‖ ≤ Real.exp (r + ‖x‖) := by
+  have hexp_x : ‖exp x‖ ≤ Real.exp ‖x‖ := norm_exp_le (𝕂 := 𝕂) x
+  calc ‖y * exp x‖
+      ≤ ‖y‖ * ‖exp x‖ := norm_mul_le _ _
+    _ ≤ Real.exp r * Real.exp ‖x‖ :=
+        mul_le_mul hy hexp_x (norm_nonneg _) (Real.exp_pos _).le
+    _ = Real.exp (r + ‖x‖) := by rw [← Real.exp_add]
+
+include 𝕂 in
+/-- Three-invariant inductive step. Given bounds on `‖y‖`, `‖y-1‖`, and `‖y-1-u‖`
+(the "linear remainder"), extending by one factor `exp(z)` preserves all three bounds
+with `r` replaced by `r + ‖z‖` and `u` by `u + z`. -/
+lemma norm_mul_exp_sub_linear_le (y u z : 𝔸) {r : ℝ} (hr : 0 ≤ r)
+    (hy_norm : ‖y‖ ≤ Real.exp r)
+    (hy_sub_one : ‖y - 1‖ ≤ Real.exp r - 1)
+    (hy_lin : ‖y - 1 - u‖ ≤ Real.exp r - 1 - r) :
+    ‖y * exp z - 1 - (u + z)‖ ≤ Real.exp (r + ‖z‖) - 1 - (r + ‖z‖) := by
+  letI : NormedAlgebra ℝ 𝔸 := NormedAlgebra.restrictScalars ℝ 𝕂 𝔸
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  -- y * exp z - 1 - (u + z) = (y - 1 - u) + (y - 1) * z + y * (exp z - 1 - z)
+  have heq : y * exp z - 1 - (u + z) =
+      (y - 1 - u) + (y - 1) * z + y * (exp z - 1 - z) := by noncomm_ring
+  have hexp_sub_sub : ‖exp z - 1 - z‖ ≤ Real.exp ‖z‖ - 1 - ‖z‖ :=
+    norm_exp_sub_one_sub_le (𝕂 := 𝕂) z
+  have hexp_r_nn : 0 ≤ Real.exp r := (Real.exp_pos _).le
+  have hexp_r_sub_one_nn : 0 ≤ Real.exp r - 1 := by linarith [Real.add_one_le_exp r]
+  have hexp_z_sub_sub_nn : 0 ≤ Real.exp ‖z‖ - 1 - ‖z‖ := by
+    have := Real.add_one_le_exp ‖z‖
+    nlinarith [norm_nonneg z, Real.exp_pos ‖z‖]
+  rw [heq]
+  calc ‖(y - 1 - u) + (y - 1) * z + y * (exp z - 1 - z)‖
+      ≤ ‖(y - 1 - u) + (y - 1) * z‖ + ‖y * (exp z - 1 - z)‖ := norm_add_le _ _
+    _ ≤ ‖y - 1 - u‖ + ‖(y - 1) * z‖ + ‖y * (exp z - 1 - z)‖ := by
+        gcongr; exact norm_add_le _ _
+    _ ≤ ‖y - 1 - u‖ + ‖y - 1‖ * ‖z‖ + ‖y‖ * ‖exp z - 1 - z‖ := by
+        gcongr <;> exact norm_mul_le _ _
+    _ ≤ (Real.exp r - 1 - r) + (Real.exp r - 1) * ‖z‖ +
+          Real.exp r * (Real.exp ‖z‖ - 1 - ‖z‖) := by
+        gcongr
+    _ = Real.exp (r + ‖z‖) - 1 - (r + ‖z‖) := by
+        rw [Real.exp_add]; ring
+
+include 𝕂 in
+/-- Bound for `‖suzuki5Product - 1 - (sum of 11 exponent args)‖`.
+
+Proved inductively across the 11 factors via `norm_mul_exp_sub_linear_le`,
+tracking the three invariants in parallel with those from the M2a bound. -/
+theorem norm_suzuki5Product_sub_one_sub_linear_le (A B : 𝔸) (p τ : 𝕂) :
+    let R := ‖(p / 2 * τ) • A‖ + ‖(p * τ) • B‖ + ‖(p * τ) • A‖ + ‖(p * τ) • B‖ +
+              ‖((1 - 3 * p) / 2 * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ +
+              ‖((1 - 3 * p) / 2 * τ) • A‖ + ‖(p * τ) • B‖ + ‖(p * τ) • A‖ +
+              ‖(p * τ) • B‖ + ‖(p / 2 * τ) • A‖
+    let u := (p / 2 * τ) • A + (p * τ) • B + (p * τ) • A + (p * τ) • B +
+              ((1 - 3 * p) / 2 * τ) • A + ((1 - 4 * p) * τ) • B +
+              ((1 - 3 * p) / 2 * τ) • A + (p * τ) • B + (p * τ) • A +
+              (p * τ) • B + (p / 2 * τ) • A
+    ‖suzuki5Product A B p τ - 1 - u‖ ≤ Real.exp R - 1 - R := by
+  intro R u
+  unfold suzuki5Product
+  set z₁ := (p / 2 * τ) • A with hz₁
+  set z₂ := (p * τ) • B with hz₂
+  set z₃ := (p * τ) • A with hz₃
+  set z₄ := (p * τ) • B with hz₄
+  set z₅ := ((1 - 3 * p) / 2 * τ) • A with hz₅
+  set z₆ := ((1 - 4 * p) * τ) • B with hz₆
+  set z₇ := ((1 - 3 * p) / 2 * τ) • A with hz₇
+  set z₈ := (p * τ) • B with hz₈
+  set z₉ := (p * τ) • A with hz₉
+  set z₁₀ := (p * τ) • B with hz₁₀
+  set z₁₁ := (p / 2 * τ) • A with hz₁₁
+  -- Base case (k = 1): y = exp z₁, u = z₁.
+  -- Invariants: ‖y‖ ≤ exp‖z₁‖, ‖y-1‖ ≤ exp‖z₁‖-1, ‖y-1-z₁‖ ≤ exp‖z₁‖-1-‖z₁‖
+  have hA₁ : ‖exp z₁‖ ≤ Real.exp ‖z₁‖ := norm_exp_le (𝕂 := 𝕂) _
+  have hB₁ : ‖exp z₁ - 1‖ ≤ Real.exp ‖z₁‖ - 1 := norm_exp_sub_one_le (𝕂 := 𝕂) _
+  have hC₁ : ‖exp z₁ - 1 - z₁‖ ≤ Real.exp ‖z₁‖ - 1 - ‖z₁‖ :=
+    norm_exp_sub_one_sub_le (𝕂 := 𝕂) _
+  -- Package the three invariants via the helper norm_mul_exp_sub_linear_le.
+  -- Also propagate norm bounds via norm_mul_exp_le_of_norm_le and norm_mul_exp_sub_one_le.
+  -- Step 2: extend to exp z₁ * exp z₂.
+  have hA₂ : ‖exp z₁ * exp z₂‖ ≤ Real.exp (‖z₁‖ + ‖z₂‖) :=
+    norm_mul_exp_le_of_norm_le (𝕂 := 𝕂) _ _ hA₁
+  have hB₂ : ‖exp z₁ * exp z₂ - 1‖ ≤ Real.exp (‖z₁‖ + ‖z₂‖) - 1 :=
+    norm_mul_exp_sub_one_le (𝕂 := 𝕂) _ _ (norm_nonneg _) hB₁
+  have hC₂ : ‖exp z₁ * exp z₂ - 1 - (z₁ + z₂)‖ ≤
+      Real.exp (‖z₁‖ + ‖z₂‖) - 1 - (‖z₁‖ + ‖z₂‖) :=
+    norm_mul_exp_sub_linear_le (𝕂 := 𝕂) _ _ _ (norm_nonneg _) hA₁ hB₁ hC₁
+  -- Step 3
+  have hA₃ : ‖exp z₁ * exp z₂ * exp z₃‖ ≤ Real.exp ((‖z₁‖ + ‖z₂‖) + ‖z₃‖) :=
+    norm_mul_exp_le_of_norm_le (𝕂 := 𝕂) _ _ hA₂
+  have hB₃ : ‖exp z₁ * exp z₂ * exp z₃ - 1‖ ≤ Real.exp ((‖z₁‖ + ‖z₂‖) + ‖z₃‖) - 1 :=
+    norm_mul_exp_sub_one_le (𝕂 := 𝕂) _ _ (by positivity) hB₂
+  have hC₃ : ‖exp z₁ * exp z₂ * exp z₃ - 1 - ((z₁ + z₂) + z₃)‖ ≤
+      Real.exp ((‖z₁‖ + ‖z₂‖) + ‖z₃‖) - 1 - ((‖z₁‖ + ‖z₂‖) + ‖z₃‖) :=
+    norm_mul_exp_sub_linear_le (𝕂 := 𝕂) _ _ _ (by positivity) hA₂ hB₂ hC₂
+  -- Step 4
+  have hA₄ : ‖exp z₁ * exp z₂ * exp z₃ * exp z₄‖ ≤ Real.exp (((‖z₁‖ + ‖z₂‖) + ‖z₃‖) + ‖z₄‖) :=
+    norm_mul_exp_le_of_norm_le (𝕂 := 𝕂) _ _ hA₃
+  have hB₄ : ‖exp z₁ * exp z₂ * exp z₃ * exp z₄ - 1‖ ≤
+      Real.exp (((‖z₁‖ + ‖z₂‖) + ‖z₃‖) + ‖z₄‖) - 1 :=
+    norm_mul_exp_sub_one_le (𝕂 := 𝕂) _ _ (by positivity) hB₃
+  have hC₄ : ‖exp z₁ * exp z₂ * exp z₃ * exp z₄ - 1 - (((z₁ + z₂) + z₃) + z₄)‖ ≤
+      Real.exp (((‖z₁‖ + ‖z₂‖) + ‖z₃‖) + ‖z₄‖) - 1 - (((‖z₁‖ + ‖z₂‖) + ‖z₃‖) + ‖z₄‖) :=
+    norm_mul_exp_sub_linear_le (𝕂 := 𝕂) _ _ _ (by positivity) hA₃ hB₃ hC₃
+  -- Step 5
+  have hA₅ := norm_mul_exp_le_of_norm_le (𝕂 := 𝕂) (_ : 𝔸) z₅ hA₄
+  have hB₅ := norm_mul_exp_sub_one_le (𝕂 := 𝕂) (_ : 𝔸) z₅ (by positivity : (0:ℝ) ≤ _) hB₄
+  have hC₅ := norm_mul_exp_sub_linear_le (𝕂 := 𝕂) (_ : 𝔸) _ z₅ (by positivity) hA₄ hB₄ hC₄
+  -- Step 6
+  have hA₆ := norm_mul_exp_le_of_norm_le (𝕂 := 𝕂) (_ : 𝔸) z₆ hA₅
+  have hB₆ := norm_mul_exp_sub_one_le (𝕂 := 𝕂) (_ : 𝔸) z₆ (by positivity) hB₅
+  have hC₆ := norm_mul_exp_sub_linear_le (𝕂 := 𝕂) (_ : 𝔸) _ z₆ (by positivity) hA₅ hB₅ hC₅
+  -- Step 7
+  have hA₇ := norm_mul_exp_le_of_norm_le (𝕂 := 𝕂) (_ : 𝔸) z₇ hA₆
+  have hB₇ := norm_mul_exp_sub_one_le (𝕂 := 𝕂) (_ : 𝔸) z₇ (by positivity) hB₆
+  have hC₇ := norm_mul_exp_sub_linear_le (𝕂 := 𝕂) (_ : 𝔸) _ z₇ (by positivity) hA₆ hB₆ hC₆
+  -- Step 8
+  have hA₈ := norm_mul_exp_le_of_norm_le (𝕂 := 𝕂) (_ : 𝔸) z₈ hA₇
+  have hB₈ := norm_mul_exp_sub_one_le (𝕂 := 𝕂) (_ : 𝔸) z₈ (by positivity) hB₇
+  have hC₈ := norm_mul_exp_sub_linear_le (𝕂 := 𝕂) (_ : 𝔸) _ z₈ (by positivity) hA₇ hB₇ hC₇
+  -- Step 9
+  have hA₉ := norm_mul_exp_le_of_norm_le (𝕂 := 𝕂) (_ : 𝔸) z₉ hA₈
+  have hB₉ := norm_mul_exp_sub_one_le (𝕂 := 𝕂) (_ : 𝔸) z₉ (by positivity) hB₈
+  have hC₉ := norm_mul_exp_sub_linear_le (𝕂 := 𝕂) (_ : 𝔸) _ z₉ (by positivity) hA₈ hB₈ hC₈
+  -- Step 10
+  have hA₁₀ := norm_mul_exp_le_of_norm_le (𝕂 := 𝕂) (_ : 𝔸) z₁₀ hA₉
+  have hB₁₀ := norm_mul_exp_sub_one_le (𝕂 := 𝕂) (_ : 𝔸) z₁₀ (by positivity) hB₉
+  have hC₁₀ := norm_mul_exp_sub_linear_le (𝕂 := 𝕂) (_ : 𝔸) _ z₁₀ (by positivity) hA₉ hB₉ hC₉
+  -- Step 11
+  have hC₁₁ := norm_mul_exp_sub_linear_le (𝕂 := 𝕂) (_ : 𝔸) _ z₁₁ (by positivity) hA₁₀ hB₁₀ hC₁₀
+  convert hC₁₁ using 2 <;> ring
+
+include 𝕂 in
+/-- Coefficient sum identity: the 11 exponent arguments of `suzuki5Product`
+sum to `τ • (A + B)`. The A-coefficients sum to 1 (`p/2+p+(1-3p)/2+(1-3p)/2+p+p/2 = 1`)
+and the B-coefficients sum to 1 (`p+p+(1-4p)+p+p = 1`). -/
+lemma suzuki5_linear_sum (A B : 𝔸) (p τ : 𝕂) :
+    (p / 2 * τ) • A + (p * τ) • B + (p * τ) • A + (p * τ) • B +
+    ((1 - 3 * p) / 2 * τ) • A + ((1 - 4 * p) * τ) • B +
+    ((1 - 3 * p) / 2 * τ) • A + (p * τ) • B + (p * τ) • A +
+    (p * τ) • B + (p / 2 * τ) • A = τ • (A + B) := by
+  -- Collect A-terms and B-terms separately using ← add_smul, then combine.
+  have hA_terms : (p / 2 * τ) • A + (p * τ) • A + ((1 - 3 * p) / 2 * τ) • A +
+                  ((1 - 3 * p) / 2 * τ) • A + (p * τ) • A + (p / 2 * τ) • A = τ • A := by
+    simp only [← add_smul]
+    congr 1; ring
+  have hB_terms : (p * τ) • B + (p * τ) • B + ((1 - 4 * p) * τ) • B + (p * τ) • B +
+                  (p * τ) • B = τ • B := by
+    simp only [← add_smul]
+    congr 1; ring
+  -- Rearrange and combine
+  have hsplit : (p / 2 * τ) • A + (p * τ) • B + (p * τ) • A + (p * τ) • B +
+                ((1 - 3 * p) / 2 * τ) • A + ((1 - 4 * p) * τ) • B +
+                ((1 - 3 * p) / 2 * τ) • A + (p * τ) • B + (p * τ) • A +
+                (p * τ) • B + (p / 2 * τ) • A =
+      ((p / 2 * τ) • A + (p * τ) • A + ((1 - 3 * p) / 2 * τ) • A +
+       ((1 - 3 * p) / 2 * τ) • A + (p * τ) • A + (p / 2 * τ) • A) +
+      ((p * τ) • B + (p * τ) • B + ((1 - 4 * p) * τ) • B + (p * τ) • B + (p * τ) • B) := by
+    abel
+  rw [hsplit, hA_terms, hB_terms, ← smul_add]
+
+include 𝕂 in
+/-- **M3b** — leading-order bound: `‖suzuki5_bch A B p τ - τ•(A+B)‖` is `O(τ²)`.
+Explicitly bounded by `(exp R - 1 - R) + (exp R - 1)²/(2 - exp R)` where
+`R = suzuki5ArgNormBound A B p τ < log 2`. Both pieces are `O(R²) = O(τ²·s²)`
+as `R → 0`. -/
+theorem norm_suzuki5_bch_sub_smul_le (A B : 𝔸) (p τ : 𝕂)
+    (h : suzuki5ArgNormBound A B p τ < Real.log 2) :
+    ‖suzuki5_bch 𝕂 A B p τ - τ • (A + B)‖ ≤
+      (Real.exp (suzuki5ArgNormBound A B p τ) - 1 -
+         suzuki5ArgNormBound A B p τ) +
+      (Real.exp (suzuki5ArgNormBound A B p τ) - 1) ^ 2 /
+        (2 - Real.exp (suzuki5ArgNormBound A B p τ)) := by
+  -- Split via triangle inequality:
+  --   ‖logOnePlus(S-1) - τ•(A+B)‖
+  --     ≤ ‖logOnePlus(S-1) - (S-1)‖ + ‖(S-1) - τ•(A+B)‖
+  -- First piece bounded by norm_logOnePlus_sub_le.
+  -- Second piece bounded by norm_suzuki5Product_sub_one_sub_linear_le + linear_sum identity.
+  set R := suzuki5ArgNormBound A B p τ with hR_def
+  -- The argument-norm sum is bounded by R (from M2a sum_arg_norms_le_bound)
+  have hsum := sum_arg_norms_le_bound (𝕂 := 𝕂) A B p τ
+  -- Unfold suzuki5_bch
+  unfold suzuki5_bch
+  set y := suzuki5Product A B p τ - 1 with hy_def
+  -- ‖y‖ bound
+  have hy_norm_lt_one : ‖y‖ < 1 := norm_suzuki5Product_sub_one_lt_one (𝕂 := 𝕂) A B p τ h
+  have hy_norm_le : ‖y‖ ≤ Real.exp R - 1 := by
+    have h1 := norm_suzuki5Product_sub_one_le (𝕂 := 𝕂) A B p τ
+    -- ‖S - 1‖ ≤ exp(∑‖zᵢ‖) - 1 ≤ exp R - 1
+    have := Real.exp_le_exp.mpr hsum
+    have : Real.exp (‖(p / 2 * τ) • A‖ + ‖(p * τ) • B‖ + ‖(p * τ) • A‖ + ‖(p * τ) • B‖ +
+                      ‖((1 - 3 * p) / 2 * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ +
+                      ‖((1 - 3 * p) / 2 * τ) • A‖ + ‖(p * τ) • B‖ + ‖(p * τ) • A‖ +
+                      ‖(p * τ) • B‖ + ‖(p / 2 * τ) • A‖) ≤ Real.exp R := this
+    linarith [h1]
+  -- First piece: ‖logOnePlus(y) - y‖ ≤ ‖y‖²/(1 - ‖y‖)
+  have hlog_sub : ‖logOnePlus (𝕂 := 𝕂) y - y‖ ≤ ‖y‖ ^ 2 / (1 - ‖y‖) :=
+    norm_logOnePlus_sub_le (𝕂 := 𝕂) y hy_norm_lt_one
+  -- Second piece: ‖y - τ•(A+B)‖ = ‖S(τ) - 1 - ∑zᵢ‖ ≤ exp R - 1 - R
+  have hlin := norm_suzuki5Product_sub_one_sub_linear_le (𝕂 := 𝕂) A B p τ
+  simp only at hlin
+  -- Use the linear_sum identity to replace the sum with τ•(A+B).
+  -- But hlin uses the explicit sum of zᵢ, which via suzuki5_linear_sum = τ•(A+B).
+  have hy_linear : y - τ • (A + B) = suzuki5Product A B p τ - 1 -
+      ((p / 2 * τ) • A + (p * τ) • B + (p * τ) • A + (p * τ) • B +
+       ((1 - 3 * p) / 2 * τ) • A + ((1 - 4 * p) * τ) • B +
+       ((1 - 3 * p) / 2 * τ) • A + (p * τ) • B + (p * τ) • A +
+       (p * τ) • B + (p / 2 * τ) • A) := by
+    rw [← suzuki5_linear_sum (𝕂 := 𝕂) A B p τ, hy_def]
+  -- Bound on the "sum of argument norms" ≤ R
+  have hsum_bound := sum_arg_norms_le_bound (𝕂 := 𝕂) A B p τ
+  have hlin' : ‖y - τ • (A + B)‖ ≤ Real.exp R - 1 - R := by
+    rw [hy_linear]
+    refine le_trans hlin ?_
+    -- exp(sum_args) - 1 - sum_args ≤ exp R - 1 - R since f(x) = exp(x) - 1 - x is monotone for x ≥ 0
+    have hmono : ∀ {a b : ℝ}, 0 ≤ a → a ≤ b → Real.exp a - 1 - a ≤ Real.exp b - 1 - b := by
+      intro a b ha hab
+      have hexp_a_ge_one : 1 ≤ Real.exp a := Real.one_le_exp ha
+      have hba_nn : 0 ≤ b - a := by linarith
+      have hexp_ba_ge : 1 + (b - a) ≤ Real.exp (b - a) := by
+        have := Real.add_one_le_exp (b - a); linarith
+      have hexp_ab : Real.exp b = Real.exp a * Real.exp (b - a) := by
+        rw [← Real.exp_add]; congr 1; ring
+      -- exp b ≥ exp a * (1 + (b - a)) = exp a + exp a * (b - a) ≥ exp a + (b - a)
+      have h1 : Real.exp a + Real.exp a * (b - a) ≤ Real.exp b := by
+        rw [hexp_ab]
+        have : Real.exp a * (1 + (b - a)) ≤ Real.exp a * Real.exp (b - a) :=
+          mul_le_mul_of_nonneg_left hexp_ba_ge (Real.exp_pos a).le
+        linarith
+      have h2 : (b - a) ≤ Real.exp a * (b - a) := by
+        have := mul_le_mul_of_nonneg_right hexp_a_ge_one hba_nn
+        linarith
+      linarith
+    have hsum_nn : 0 ≤
+      ‖(p / 2 * τ) • A‖ + ‖(p * τ) • B‖ + ‖(p * τ) • A‖ + ‖(p * τ) • B‖ +
+      ‖((1 - 3 * p) / 2 * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ +
+      ‖((1 - 3 * p) / 2 * τ) • A‖ + ‖(p * τ) • B‖ + ‖(p * τ) • A‖ +
+      ‖(p * τ) • B‖ + ‖(p / 2 * τ) • A‖ := by positivity
+    exact hmono hsum_nn hsum_bound
+  -- Combine via triangle inequality
+  have hy_sq_bound : ‖y‖ ^ 2 ≤ (Real.exp R - 1) ^ 2 := by
+    apply sq_le_sq'
+    · linarith [norm_nonneg y, sq_nonneg ‖y‖]
+    · exact hy_norm_le
+  have hden : 2 - Real.exp R ≤ 1 - ‖y‖ := by
+    -- ‖y‖ ≤ exp R - 1, so 1 - ‖y‖ ≥ 1 - (exp R - 1) = 2 - exp R
+    linarith [hy_norm_le]
+  have hden_pos : 0 < 2 - Real.exp R := by
+    have : Real.exp R < 2 := by
+      calc Real.exp R < Real.exp (Real.log 2) := Real.exp_strictMono h
+        _ = 2 := Real.exp_log (by norm_num)
+    linarith
+  have hden_left_pos : 0 < 1 - ‖y‖ := by linarith
+  calc ‖logOnePlus (𝕂 := 𝕂) y - τ • (A + B)‖
+      = ‖(logOnePlus (𝕂 := 𝕂) y - y) + (y - τ • (A + B))‖ := by congr 1; abel
+    _ ≤ ‖logOnePlus (𝕂 := 𝕂) y - y‖ + ‖y - τ • (A + B)‖ := norm_add_le _ _
+    _ ≤ ‖y‖ ^ 2 / (1 - ‖y‖) + (Real.exp R - 1 - R) := by gcongr
+    _ ≤ (Real.exp R - 1) ^ 2 / (2 - Real.exp R) + (Real.exp R - 1 - R) := by
+        have : ‖y‖ ^ 2 / (1 - ‖y‖) ≤ (Real.exp R - 1) ^ 2 / (2 - Real.exp R) :=
+          div_le_div₀ (sq_nonneg _) hy_sq_bound hden_pos hden
+        linarith
+    _ = (Real.exp R - 1 - R) + (Real.exp R - 1) ^ 2 / (2 - Real.exp R) := by ring
+
 end
 
 end BCH
