@@ -705,6 +705,113 @@ theorem norm_suzuki5_bch_sub_smul_le (A B : 𝔸) (p τ : 𝕂)
         linarith
     _ = (Real.exp R - 1 - R) + (Real.exp R - 1) ^ 2 / (2 - Real.exp R) := by ring
 
+/-! ### Strang block decomposition (M4a setup)
+
+The Suzuki 5-block product decomposes as a 5-fold composition of Strang blocks
+with coefficients `(p, p, 1-4p, p, p)`. Adjacent A-half exponentials merge by
+`[A, A] = 0`. This decomposition is the algebraic backbone of M4a: each Strang
+block has a known cubic correction `c³·E_sym(A,B)`, and the 5-fold composition
+sums these (cross-block commutators contribute only at order τ⁴).
+-/
+
+/-- A single Strang block: `exp((c·τ/2)•A) · exp((c·τ)•B) · exp((c·τ/2)•A)`. -/
+noncomputable def strangBlock (A B : 𝔸) (c τ : 𝕂) : 𝔸 :=
+  exp ((c * τ / 2) • A) * exp ((c * τ) • B) * exp ((c * τ / 2) • A)
+
+include 𝕂 in
+/-- Merging of A-exponentials: `exp(α•A) · exp(β•A) = exp((α+β)•A)`
+    since `[A, A] = 0`. -/
+lemma exp_smul_mul_exp_smul_self (A : 𝔸) (α β : 𝕂) :
+    exp (α • A) * exp (β • A) = exp ((α + β) • A) := by
+  letI : NormedAlgebra ℝ 𝔸 := NormedAlgebra.restrictScalars ℝ 𝕂 𝔸
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  have h_comm : Commute (α • A) (β • A) :=
+    ((Commute.refl A).smul_left α).smul_right β
+  rw [← exp_add_of_commute h_comm, ← add_smul]
+
+include 𝕂 in
+/-- The Suzuki 5-block product factors as `S_p · S_p · S_{1-4p} · S_p · S_p`,
+    where `S_c(τ) = exp((c·τ/2)•A)·exp((c·τ)•B)·exp((c·τ/2)•A)` is the Strang
+    block with coefficient `c`. The decomposition uses 4 A-merges:
+    `e(p·τ/2)·e(p·τ/2) → e(p·τ)` (twice, at the joins of the two pairs of S_p) and
+    `e(p·τ/2)·e((1-4p)·τ/2) → e((1-3p)/2·τ)` (twice, at the joins involving S_{1-4p}). -/
+theorem suzuki5Product_eq_strangBlock_prod (A B : 𝔸) (p τ : 𝕂) :
+    suzuki5Product A B p τ =
+      strangBlock A B p τ * strangBlock A B p τ *
+      strangBlock A B (1 - 4 * p) τ *
+      strangBlock A B p τ * strangBlock A B p τ := by
+  -- Strategy: rewrite both sides to a common 11-factor form with adjacent
+  -- A-half exponentials merged into single A-exponentials.
+  -- Set abbreviations for the merged A-exponentials.
+  -- `hP_full = exp(p·τ·A)` arises from merging two `hP_half`s.
+  -- `hPQ = exp((1-3p)/2·τ·A)` arises from merging hP_half + hQ_half.
+  unfold suzuki5Product strangBlock
+  -- The two equivalent forms of the half coefficient.
+  have hp_halves : (p * τ / 2 + p * τ / 2 : 𝕂) = p * τ := by ring
+  have hpq_halves_left : (p * τ / 2 + (1 - 4 * p) * τ / 2 : 𝕂) = (1 - 3 * p) / 2 * τ := by ring
+  have hpq_halves_right : ((1 - 4 * p) * τ / 2 + p * τ / 2 : 𝕂) = (1 - 3 * p) / 2 * τ := by ring
+  -- Rewrite RHS adjacent A halves into single A-exps.
+  rw [show
+      exp ((p * τ / 2) • A) * exp ((p * τ) • B) * exp ((p * τ / 2) • A) *
+      (exp ((p * τ / 2) • A) * exp ((p * τ) • B) * exp ((p * τ / 2) • A)) *
+      (exp (((1 - 4 * p) * τ / 2) • A) * exp (((1 - 4 * p) * τ) • B) *
+        exp (((1 - 4 * p) * τ / 2) • A)) *
+      (exp ((p * τ / 2) • A) * exp ((p * τ) • B) * exp ((p * τ / 2) • A)) *
+      (exp ((p * τ / 2) • A) * exp ((p * τ) • B) * exp ((p * τ / 2) • A)) =
+      exp ((p * τ / 2) • A) * exp ((p * τ) • B) *
+      (exp ((p * τ / 2) • A) * exp ((p * τ / 2) • A)) * exp ((p * τ) • B) *
+      (exp ((p * τ / 2) • A) * exp (((1 - 4 * p) * τ / 2) • A)) *
+      exp (((1 - 4 * p) * τ) • B) *
+      (exp (((1 - 4 * p) * τ / 2) • A) * exp ((p * τ / 2) • A)) *
+      exp ((p * τ) • B) *
+      (exp ((p * τ / 2) • A) * exp ((p * τ / 2) • A)) * exp ((p * τ) • B) *
+      exp ((p * τ / 2) • A) from by noncomm_ring]
+  -- Apply merging 4 times then collapse the scalar additions via composition
+  -- of `exp_smul_mul_exp_smul_self` with the scalar identity.
+  have merge_pp : ∀ X : 𝔸,
+      exp ((p * τ / 2) • X) * exp ((p * τ / 2) • X) = exp ((p * τ) • X) := by
+    intro X
+    rw [exp_smul_mul_exp_smul_self (𝕂 := 𝕂) X (p * τ / 2) (p * τ / 2)]
+    congr 1
+    rw [show (p * τ / 2 + p * τ / 2 : 𝕂) = p * τ from by ring]
+  have merge_pq : ∀ X : 𝔸,
+      exp ((p * τ / 2) • X) * exp (((1 - 4 * p) * τ / 2) • X) =
+        exp (((1 - 3 * p) / 2 * τ) • X) := by
+    intro X
+    rw [exp_smul_mul_exp_smul_self (𝕂 := 𝕂) X (p * τ / 2) ((1 - 4 * p) * τ / 2)]
+    congr 1
+    rw [show (p * τ / 2 + (1 - 4 * p) * τ / 2 : 𝕂) = (1 - 3 * p) / 2 * τ from by ring]
+  have merge_qp : ∀ X : 𝔸,
+      exp (((1 - 4 * p) * τ / 2) • X) * exp ((p * τ / 2) • X) =
+        exp (((1 - 3 * p) / 2 * τ) • X) := by
+    intro X
+    rw [exp_smul_mul_exp_smul_self (𝕂 := 𝕂) X ((1 - 4 * p) * τ / 2) (p * τ / 2)]
+    congr 1
+    rw [show ((1 - 4 * p) * τ / 2 + p * τ / 2 : 𝕂) = (1 - 3 * p) / 2 * τ from by ring]
+  simp only [merge_pp, merge_pq, merge_qp]
+  -- Now both sides match modulo the LHS p/2·τ vs RHS p·τ/2 form.
+  have hP_alt : exp ((p / 2 * τ) • A) = exp ((p * τ / 2) • A) := by
+    rw [div_mul_eq_mul_div]
+  rw [hP_alt]
+
+/-! ### Cubic coefficient and the symmetric BCH cubic structure
+
+The τ³ coefficient of `suzuki5_bch` is `C₃(p) := 4p³ + (1-4p)³`. This is the
+sum of cubes of the 5 Strang block coefficients `(p, p, 1-4p, p, p)`.
+Cross-block commutators only contribute at τ⁴ and higher, so the τ³ coefficient
+is simply the sum of per-block contributions.
+
+The cubic "shape" `E_sym(A,B) := -(1/24)·[A,[A,B]] + (1/12)·[B,[B,A]]` is the
+symmetric Strang splitting cubic, encoded as `symmetric_bch_cubic_poly` in
+`BCH/Basic.lean`.
+-/
+
+/-- The τ³ scalar coefficient of `suzuki5_bch`: `C₃(p) := 4p³ + (1-4p)³`.
+This is the sum of cubes of the 5 Strang coefficients `(p, p, 1-4p, p, p)`.
+Vanishes precisely under the Suzuki cubic-cancellation condition. -/
+def suzuki5_bch_cubic_coeff (𝕂 : Type*) [Field 𝕂] (p : 𝕂) : 𝕂 :=
+  4 * p ^ 3 + (1 - 4 * p) ^ 3
+
 end
 
 end BCH
