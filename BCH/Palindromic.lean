@@ -1613,6 +1613,62 @@ theorem norm_suzuki5_bch_sub_smul_sub_cubic_le (A B : 𝔸) (p τ : 𝕂)
         nlinarith [h_comm_bound, norm_nonneg (((4 : 𝕂) • X) * Y - Y * ((4 : 𝕂) • X)),
                    norm_nonneg ((4 : 𝕂) • X), norm_nonneg Y]
 
+/-! ### M4b: cubic vanishing under IsSuzukiCubic
+
+Under the Suzuki condition `4p³ + (1-4p)³ = 0`, the cubic coefficient vanishes
+and M4a collapses to a direct O(R⁴) bound on `suzuki5_bch - τ•(A+B)`.
+-/
+
+include 𝕂 in
+/-- **M4b**: under the Suzuki cubic-cancellation condition, the cubic correction
+term vanishes, giving the sharper bound
+
+  `‖suzuki5_bch A B p τ - τ•(A+B)‖ ≤ (M4a bound)`
+
+which is O(R⁴) — an order-of-magnitude improvement over M3b's O(R²). -/
+theorem norm_suzuki5_bch_sub_smul_le_of_IsSuzukiCubic (A B : 𝔸) (p τ : 𝕂)
+    (hSuzuki : IsSuzukiCubic p)
+    (hR : suzuki5ArgNormBound A B p τ < Real.log 2)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (hreg : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+            ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ < 1 / 4)
+    (hZ1 : ‖suzuki5_bch 𝕂 A B p τ‖ < Real.log 2)
+    (hZ2 : ‖bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))‖ < Real.log 2) :
+    ‖suzuki5_bch 𝕂 A B p τ - τ • (A + B)‖ ≤
+      4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) +
+      10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5 +
+      10000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                  ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 5 +
+      (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                   ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+        (2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+          (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+            10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+        2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+          (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+            10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) +
+        2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+              10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+          (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+            10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) := by
+  -- Under IsSuzukiCubic, the cubic coefficient is zero so the cubic term vanishes.
+  have h_coef_zero : suzuki5_bch_cubic_coeff 𝕂 p = 0 :=
+    suzuki5_bch_cubic_coeff_eq_zero_of_IsSuzukiCubic hSuzuki
+  have h_cubic_zero :
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B = 0 := by
+    rw [h_coef_zero, mul_zero, zero_smul]
+  have h_eq : suzuki5_bch 𝕂 A B p τ - τ • (A + B) =
+      suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B := by
+    rw [h_cubic_zero, sub_zero]
+  rw [h_eq]
+  exact norm_suzuki5_bch_sub_smul_sub_cubic_le (𝕂 := 𝕂) A B p τ hR hp h1m4p hreg hZ1 hZ2
+
 end
 
 end BCH
