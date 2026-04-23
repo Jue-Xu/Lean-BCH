@@ -1873,6 +1873,103 @@ theorem norm_pow_add_sub_pow_le (X δ : 𝔸) :
             push_cast
             ring
 
+/-! ### Exp-Lipschitz lemma
+
+Bound on `‖exp(X + δ) - exp(X)‖` in terms of `‖δ‖` and the exp of the maximum of
+the two arguments. Proved by summing the telescoping bound over the exp series:
+
+  `exp(X+δ) - exp(X) = ∑' n ≥ 1, (n!)⁻¹ • ((X+δ)^n - X^n)`
+
+bounded term-by-term using `norm_pow_add_sub_pow_le`. The resulting series telescopes
+to `‖δ‖ · Real.exp(‖X‖+‖δ‖)`. -/
+
+include 𝕂 in
+/-- **Exp-Lipschitz**: `‖exp(X + δ) - exp(X)‖ ≤ ‖δ‖ · Real.exp(‖X‖ + ‖δ‖)`. -/
+theorem norm_exp_add_sub_exp_le (X δ : 𝔸) :
+    ‖exp (X + δ) - exp X‖ ≤ ‖δ‖ * Real.exp (‖X‖ + ‖δ‖) := by
+  have hMnn : 0 ≤ ‖X‖ + ‖δ‖ := add_nonneg (norm_nonneg _) (norm_nonneg _)
+  have hδnn : 0 ≤ ‖δ‖ := norm_nonneg _
+  -- exp(X+δ) - exp(X) = ∑' n, (n!)⁻¹ • ((X+δ)^n - X^n)
+  have hfXδ :
+      Summable (fun n => ((Nat.factorial n)⁻¹ : 𝕂) • (X + δ) ^ n) := by
+    simpa using NormedSpace.expSeries_summable' (𝕂 := 𝕂) (X + δ)
+  have hfX :
+      Summable (fun n => ((Nat.factorial n)⁻¹ : 𝕂) • X ^ n) := by
+    simpa using NormedSpace.expSeries_summable' (𝕂 := 𝕂) X
+  have hf_summ :
+      Summable (fun n => ((Nat.factorial n)⁻¹ : 𝕂) • ((X + δ) ^ n - X ^ n)) := by
+    have := hfXδ.sub hfX
+    refine this.congr (fun n => ?_)
+    rw [smul_sub]
+  have hexp_sub : exp (X + δ) - exp X =
+      ∑' n, ((Nat.factorial n)⁻¹ : 𝕂) • ((X + δ) ^ n - X ^ n) := by
+    have h1 :
+        exp (X + δ) = ∑' n, (((Nat.factorial n)⁻¹ : 𝕂) • (X + δ) ^ n) := by
+      have h :=
+        (NormedSpace.exp_series_hasSum_exp' (𝕂 := 𝕂) (X + δ)).tsum_eq.symm
+      simpa using h
+    have h2 :
+        exp X = ∑' n, (((Nat.factorial n)⁻¹ : 𝕂) • X ^ n) := by
+      have h := (NormedSpace.exp_series_hasSum_exp' (𝕂 := 𝕂) X).tsum_eq.symm
+      simpa using h
+    rw [h1, h2, ← hfXδ.tsum_sub hfX]
+    congr 1
+    funext n
+    rw [smul_sub]
+  rw [hexp_sub]
+  -- Shift: the n=0 term vanishes, so ∑' n, f n = ∑' n, f (n+1)
+  have hf0 :
+      ((Nat.factorial 0)⁻¹ : 𝕂) • ((X + δ) ^ 0 - X ^ 0) = (0 : 𝔸) := by simp
+  have h_shift :
+      ∑' n, ((Nat.factorial n)⁻¹ : 𝕂) • ((X + δ) ^ n - X ^ n) =
+      ∑' n, ((Nat.factorial (n + 1))⁻¹ : 𝕂) •
+        ((X + δ) ^ (n + 1) - X ^ (n + 1)) := by
+    rw [hf_summ.tsum_eq_zero_add, hf0, zero_add]
+  rw [h_shift]
+  -- Bound term-by-term.
+  have h_term : ∀ n : ℕ,
+      ‖((Nat.factorial (n + 1))⁻¹ : 𝕂) •
+        ((X + δ) ^ (n + 1) - X ^ (n + 1))‖ ≤
+        ((Nat.factorial n)⁻¹ : ℝ) * ‖δ‖ * (‖X‖ + ‖δ‖) ^ n := by
+    intro n
+    have h_fact_eq :
+        ((Nat.factorial (n + 1)) : ℝ) = (n + 1 : ℝ) * ((Nat.factorial n) : ℝ) := by
+      push_cast [Nat.factorial_succ]; ring
+    have hn1_pos : (0 : ℝ) < (n + 1 : ℝ) := by positivity
+    have hnfact_pos : (0 : ℝ) < ((Nat.factorial n) : ℝ) := by
+      exact_mod_cast Nat.factorial_pos n
+    have h_n1_fact_pos : (0 : ℝ) < ((Nat.factorial (n + 1)) : ℝ) := by
+      rw [h_fact_eq]; positivity
+    calc ‖((Nat.factorial (n + 1))⁻¹ : 𝕂) •
+            ((X + δ) ^ (n + 1) - X ^ (n + 1))‖
+        ≤ ‖((Nat.factorial (n + 1))⁻¹ : 𝕂)‖ *
+            ‖(X + δ) ^ (n + 1) - X ^ (n + 1)‖ := norm_smul_le _ _
+      _ = ((Nat.factorial (n + 1))⁻¹ : ℝ) *
+            ‖(X + δ) ^ (n + 1) - X ^ (n + 1)‖ := by
+          congr 1
+          rw [norm_inv, RCLike.norm_natCast]
+      _ ≤ ((Nat.factorial (n + 1))⁻¹ : ℝ) *
+            ((n + 1 : ℝ) * ‖δ‖ * (‖X‖ + ‖δ‖) ^ n) := by
+          gcongr
+          exact norm_pow_add_sub_pow_le X δ n
+      _ = ((Nat.factorial n)⁻¹ : ℝ) * ‖δ‖ * (‖X‖ + ‖δ‖) ^ n := by
+          rw [h_fact_eq]
+          field_simp
+  -- Real.exp series.
+  have h_real_exp :
+      HasSum (fun n => ((Nat.factorial n)⁻¹ : ℝ) * (‖X‖ + ‖δ‖) ^ n)
+        (Real.exp (‖X‖ + ‖δ‖)) := by
+    have h := NormedSpace.exp_series_hasSum_exp' (𝕂 := ℝ) (𝔸 := ℝ) (‖X‖ + ‖δ‖)
+    simp only [smul_eq_mul] at h
+    rwa [congr_fun Real.exp_eq_exp_ℝ (‖X‖ + ‖δ‖)]
+  have h_exp_sum :
+      HasSum (fun n => ((Nat.factorial n)⁻¹ : ℝ) * ‖δ‖ * (‖X‖ + ‖δ‖) ^ n)
+        (‖δ‖ * Real.exp (‖X‖ + ‖δ‖)) := by
+    have := h_real_exp.mul_left ‖δ‖
+    refine this.congr_fun ?_
+    intro n; ring
+  exact tsum_of_norm_bounded h_exp_sum h_term
+
 /-! ### M6: Iterated Suzuki product and exponential form
 
 Connects the Suzuki-5 BCH to iterated products. Since `suzuki5_bch` commutes with
