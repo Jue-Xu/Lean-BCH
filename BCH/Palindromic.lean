@@ -2073,3 +2073,153 @@ slice 9 commutator bound. This assembly is deferred to a subsequent session;
 the existing M4b bound is sufficient for downstream Trotter h4 applications
 by bounding each term individually.
 -/
+
+/-! ### M6 main theorem: Trotter h4 bound for iterated Suzuki-5
+
+Combining `s4Func_eq_exp_nsmul` (rewriting the iterated product as a single
+exponential), exp-Lipschitz `norm_exp_add_sub_exp_le`, and the scaled M4b
+bound `norm_nsmul_suzuki5_bch_sub_smul_le_of_IsSuzukiCubic`, we obtain the
+Trotter h4 bound
+
+  ‖s4Func A B p (t/n) n - exp(t•(A+B))‖ ≤ ‖δ‖ · exp(‖t•V‖ + ‖δ‖)
+
+where `δ = n • (suzuki5_bch A B p (t/n) - (t/n) • (A+B))` is the cumulative
+BCH error after n Suzuki steps. Under `IsSuzukiCubic p`, `‖δ‖ = O(|t|⁵·s⁵/n⁴)`
+(from scaled M4b with τ = t/n), closing the O(1/n⁴) convergence rate.
+-/
+
+include 𝕂 in
+/-- **M6 (exp-Lipschitz form)**: the iterated Suzuki-5 product is close to
+`exp(t•(A+B))` with error bounded by the cumulative BCH discrepancy times an
+exp-Lipschitz factor. This reduces Trotter h4 to the scaled M4b bound.
+
+Strategy:
+1. `s4Func A B p (t/n) n = exp(n • suzuki5_bch A B p (t/n))` via M2b round-trip.
+2. `n • suzuki5_bch = t • V + δ` where `δ = n • (suzuki5_bch - (t/n) • V)`.
+3. Apply `norm_exp_add_sub_exp_le`. -/
+theorem norm_s4Func_sub_exp_le (A B : 𝔸) (p t : 𝕂) (n : ℕ) (hn : n ≠ 0)
+    (hR : suzuki5ArgNormBound A B p (t / n) < Real.log 2) :
+    ‖s4Func 𝕂 A B p (t / n) n - exp (t • (A + B))‖ ≤
+      ‖(n : 𝕂) • (suzuki5_bch 𝕂 A B p (t / n) - (t / n) • (A + B))‖ *
+      Real.exp (‖t • (A + B)‖ +
+        ‖(n : 𝕂) • (suzuki5_bch 𝕂 A B p (t / n) - (t / n) • (A + B))‖) := by
+  have hn_ne : (n : 𝕂) ≠ 0 := by exact_mod_cast hn
+  -- Step 1: s4Func = exp((n : 𝕂) • suzuki5_bch)
+  rw [s4Func_eq_exp_nsmul (𝕂 := 𝕂) A B p (t / n) n hR]
+  -- Step 2: decompose (n : 𝕂) • Z = t • V + δ where δ := (n : 𝕂) • (Z - (t/n)•V)
+  set Z := suzuki5_bch 𝕂 A B p (t / n) with hZ_def
+  set V := A + B with hV_def
+  set δ := (n : 𝕂) • (Z - (t / n) • V) with hδ_def
+  have hcast : (n : 𝕂) * (t / n) = t := by field_simp
+  have h_decomp : (n : 𝕂) • Z = t • V + δ := by
+    rw [hδ_def, smul_sub, smul_smul, hcast]
+    abel
+  rw [h_decomp]
+  exact norm_exp_add_sub_exp_le (𝕂 := 𝕂) (t • V) δ
+
+include 𝕂 in
+/-- **M6 Trotter h4 bound (IsSuzukiCubic form)**: combining M6 with the scaled M4b
+bound yields an explicit O(1/n⁴) convergence rate for the Suzuki-5 splitting.
+
+The bound is
+
+  ‖s4Func A B p (t/n) n - exp(t•(A+B))‖ ≤ ‖δ‖ · exp(‖t•V‖ + ‖δ‖),  ‖δ‖ ≤ n · M4b
+
+and with τ = t/n, `n · M4b = K(p) · |t|⁵ · s⁵ / n⁴` (after tracking constants). -/
+theorem norm_s4Func_sub_exp_le_of_IsSuzukiCubic (A B : 𝔸) (p t : 𝕂) (n : ℕ)
+    (hn : n ≠ 0)
+    (hSuzuki : IsSuzukiCubic p)
+    (hR : suzuki5ArgNormBound A B p (t / n) < Real.log 2)
+    (hp : ‖(p * (t / n)) • A‖ + ‖(p * (t / n)) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * (t / n)) • A‖ + ‖((1 - 4 * p) * (t / n)) • B‖ < 1 / 4)
+    (hreg : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p (t / n)‖ +
+            ‖strangBlock_log 𝕂 A B (1 - 4 * p) (t / n)‖ < 1 / 4)
+    (hZ1 : ‖suzuki5_bch 𝕂 A B p (t / n)‖ < Real.log 2)
+    (hZ2 : ‖bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p (t / n)))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) (t / n)))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p (t / n)))‖ < Real.log 2) :
+    ‖s4Func 𝕂 A B p (t / n) n - exp (t • (A + B))‖ ≤
+      ((n : ℝ) *
+        (4 * (10000000 * (‖(p * (t / n)) • A‖ + ‖(p * (t / n)) • B‖) ^ 5) +
+         10000000 *
+           (‖((1 - 4 * p) * (t / n)) • A‖ + ‖((1 - 4 * p) * (t / n)) • B‖) ^ 5 +
+         10000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p (t / n)‖ +
+                     ‖strangBlock_log 𝕂 A B (1 - 4 * p) (t / n)‖) ^ 5 +
+         (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p (t / n)‖ +
+                      ‖strangBlock_log 𝕂 A B (1 - 4 * p) (t / n)‖) *
+           (2 * ‖((4 * p * (t / n) : 𝕂)) • (A + B)‖ *
+             (‖((1 - 4 * p) * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+               10000000 *
+                 (‖((1 - 4 * p) * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+           2 * ‖(((1 - 4 * p) * (t / n) : 𝕂)) • (A + B)‖ *
+             (4 * (‖(p * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+               10000000 * (‖(p * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) +
+           2 * (4 * (‖(p * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                 10000000 * (‖(p * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+             (‖((1 - 4 * p) * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+               10000000 *
+                 (‖((1 - 4 * p) * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)))) *
+      Real.exp (‖t • (A + B)‖ +
+        (n : ℝ) *
+        (4 * (10000000 * (‖(p * (t / n)) • A‖ + ‖(p * (t / n)) • B‖) ^ 5) +
+         10000000 *
+           (‖((1 - 4 * p) * (t / n)) • A‖ + ‖((1 - 4 * p) * (t / n)) • B‖) ^ 5 +
+         10000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p (t / n)‖ +
+                     ‖strangBlock_log 𝕂 A B (1 - 4 * p) (t / n)‖) ^ 5 +
+         (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p (t / n)‖ +
+                      ‖strangBlock_log 𝕂 A B (1 - 4 * p) (t / n)‖) *
+           (2 * ‖((4 * p * (t / n) : 𝕂)) • (A + B)‖ *
+             (‖((1 - 4 * p) * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+               10000000 *
+                 (‖((1 - 4 * p) * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+           2 * ‖(((1 - 4 * p) * (t / n) : 𝕂)) • (A + B)‖ *
+             (4 * (‖(p * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+               10000000 * (‖(p * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) +
+           2 * (4 * (‖(p * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                 10000000 * (‖(p * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+             (‖((1 - 4 * p) * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+               10000000 *
+                 (‖((1 - 4 * p) * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)))) := by
+  -- Apply M6 exp-Lipschitz form
+  have h_m6 := norm_s4Func_sub_exp_le (𝕂 := 𝕂) A B p t n hn hR
+  -- Bound ‖δ‖ via scaled M4b
+  have h_scaled_m4b := norm_nsmul_suzuki5_bch_sub_smul_le_of_IsSuzukiCubic
+    (𝕂 := 𝕂) A B p (t / n) n hSuzuki hR hp h1m4p hreg hZ1 hZ2
+  -- Final bound: combine via monotonicity of exp
+  set δ_norm := ‖(n : 𝕂) • (suzuki5_bch 𝕂 A B p (t / n) -
+    (t / n) • (A + B))‖ with hδ_norm_def
+  set M4b_bound := (n : ℝ) *
+    (4 * (10000000 * (‖(p * (t / n)) • A‖ + ‖(p * (t / n)) • B‖) ^ 5) +
+     10000000 *
+       (‖((1 - 4 * p) * (t / n)) • A‖ + ‖((1 - 4 * p) * (t / n)) • B‖) ^ 5 +
+     10000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p (t / n)‖ +
+                 ‖strangBlock_log 𝕂 A B (1 - 4 * p) (t / n)‖) ^ 5 +
+     (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p (t / n)‖ +
+                  ‖strangBlock_log 𝕂 A B (1 - 4 * p) (t / n)‖) *
+       (2 * ‖((4 * p * (t / n) : 𝕂)) • (A + B)‖ *
+         (‖((1 - 4 * p) * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+           10000000 *
+             (‖((1 - 4 * p) * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+       2 * ‖(((1 - 4 * p) * (t / n) : 𝕂)) • (A + B)‖ *
+         (4 * (‖(p * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+           10000000 * (‖(p * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) +
+       2 * (4 * (‖(p * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+             10000000 * (‖(p * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+         (‖((1 - 4 * p) * (t / n) : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+           10000000 *
+             (‖((1 - 4 * p) * (t / n) : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5))) with hM4b_bound_def
+  have hδ_le : δ_norm ≤ M4b_bound := h_scaled_m4b
+  have hδ_nn : 0 ≤ δ_norm := norm_nonneg _
+  have hExp_pos : 0 < Real.exp (‖t • (A + B)‖ + δ_norm) := Real.exp_pos _
+  have hExp_le :
+      Real.exp (‖t • (A + B)‖ + δ_norm) ≤
+      Real.exp (‖t • (A + B)‖ + M4b_bound) := by
+    apply Real.exp_le_exp.mpr
+    linarith
+  have hM4b_nn : 0 ≤ M4b_bound := le_trans hδ_nn hδ_le
+  calc ‖s4Func 𝕂 A B p (t / n) n - exp (t • (A + B))‖
+      ≤ δ_norm * Real.exp (‖t • (A + B)‖ + δ_norm) := h_m6
+    _ ≤ M4b_bound * Real.exp (‖t • (A + B)‖ + M4b_bound) := by
+        apply mul_le_mul hδ_le hExp_le hExp_pos.le hM4b_nn
