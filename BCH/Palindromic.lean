@@ -974,6 +974,72 @@ lemma strangBlock_arg_norm_le (A B : 𝔸) (c τ : 𝕂) :
     _ = ‖c * τ‖ * (‖A‖ + ‖B‖) := by ring
     _ = ‖c‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by rw [hcτ]
 
+/-! ### Cubic-order norm bound for `strangBlock_log - cτ•V`
+
+This is the "linear remainder" of strangBlock_log: after subtracting the leading
+linear term `cτ•V`, what's left is bounded cubically in `η := ‖cτ‖·(‖A‖+‖B‖)`.
+The natural norm to use here is `η` rather than `σ = ‖cτ•A‖+‖cτ•B‖`, because
+the cubic polynomial `E_sym(A,B)` has norm `≤ (‖A‖+‖B‖)³`, not `≤ σ³`. We have
+`σ ≤ η`, so per-block cubic bounds in `σ` also lift to bounds in `η`.
+-/
+
+include 𝕂 in
+/-- **Linear remainder for a Strang block** (cubic-order bound in `η = ‖cτ‖·(‖A‖+‖B‖)`):
+  `‖strangBlock_log A B c τ - (c*τ)•(A+B)‖ ≤ η³ + 10⁷·η⁵`.
+
+The bound follows from the per-block cubic bound
+`norm_strangBlock_log_sub_target_le` (which is σ⁵, but σ ≤ η so also ≤ η⁵) and
+the cubic-polynomial norm bound `norm_symmetric_bch_cubic_poly_le`. -/
+theorem norm_strangBlock_log_sub_linear_le (A B : 𝔸) (c τ : 𝕂)
+    (h : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ < 1 / 4) :
+    ‖strangBlock_log 𝕂 A B c τ - (c * τ) • (A + B)‖ ≤
+      (‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 +
+        10000000 * (‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5 := by
+  set σ := ‖(c * τ) • A‖ + ‖(c * τ) • B‖ with hσ_def
+  set η := ‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖) with hη_def
+  -- σ ≤ η (via norm_smul_le on each summand)
+  have hσ_le_η : σ ≤ η := by
+    rw [hσ_def, hη_def]
+    calc ‖(c * τ) • A‖ + ‖(c * τ) • B‖
+        ≤ ‖(c * τ : 𝕂)‖ * ‖A‖ + ‖(c * τ : 𝕂)‖ * ‖B‖ := by
+          gcongr <;> exact norm_smul_le _ _
+      _ = ‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖) := by ring
+  have hσ_nn : 0 ≤ σ := by rw [hσ_def]; positivity
+  -- Per-block cubic bound: ‖sb_log - target‖ ≤ 10⁷·σ⁵ ≤ 10⁷·η⁵
+  have hcubic_bound := norm_strangBlock_log_sub_target_le (𝕂 := 𝕂) A B c τ h
+  unfold strangBlock_log_target at hcubic_bound
+  have hcubic_bound' :
+      ‖strangBlock_log 𝕂 A B c τ -
+        ((c * τ) • (A + B) + (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B)‖ ≤
+      10000000 * η ^ 5 := by
+    refine le_trans hcubic_bound ?_
+    have : σ ^ 5 ≤ η ^ 5 := by
+      gcongr
+    linarith
+  -- Bound ‖(cτ)³·E_sym‖ ≤ η³
+  have hE_bound : ‖(c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B‖ ≤ η ^ 3 := by
+    calc ‖(c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B‖
+        ≤ ‖((c * τ : 𝕂)) ^ 3‖ * ‖symmetric_bch_cubic_poly 𝕂 A B‖ := norm_smul_le _ _
+      _ ≤ ‖(c * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 := by
+          gcongr
+          · rw [norm_pow]
+          · exact norm_symmetric_bch_cubic_poly_le (𝕂 := 𝕂) _ _
+      _ = η ^ 3 := by rw [hη_def]; ring
+  -- Triangle inequality
+  have heq : strangBlock_log 𝕂 A B c τ - (c * τ) • (A + B) =
+      (strangBlock_log 𝕂 A B c τ -
+        ((c * τ) • (A + B) + (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B)) +
+      (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B := by abel
+  calc ‖strangBlock_log 𝕂 A B c τ - (c * τ) • (A + B)‖
+      = ‖(strangBlock_log 𝕂 A B c τ -
+          ((c * τ) • (A + B) + (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B)) +
+        (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B‖ := by rw [heq]
+    _ ≤ ‖strangBlock_log 𝕂 A B c τ -
+          ((c * τ) • (A + B) + (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B)‖ +
+        ‖(c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B‖ := norm_add_le _ _
+    _ ≤ 10000000 * η ^ 5 + η ^ 3 := by linarith
+    _ = η ^ 3 + 10000000 * η ^ 5 := by ring
+
 /-! ### Final form of M4a (statement deferred to a later session)
 
 The full theorem `norm_suzuki5_bch_sub_smul_sub_cubic_le`, asserting
