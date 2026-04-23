@@ -823,6 +823,13 @@ def IsSuzukiCubic {𝕂 : Type*} [Field 𝕂] (p : 𝕂) : Prop :=
 lemma IsSuzukiCubic_iff {𝕂 : Type*} [Field 𝕂] (p : 𝕂) :
     IsSuzukiCubic p ↔ 4 * p ^ 3 + (1 - 4 * p) ^ 3 = 0 := Iff.rfl
 
+/-- **M4b precursor**: under `IsSuzukiCubic p`, the τ³ coefficient vanishes.
+This is a definitional one-liner. The full M4b — that `suzuki5_bch` itself
+has no τ³ term under `IsSuzukiCubic` — follows once M4a is established. -/
+lemma suzuki5_bch_cubic_coeff_eq_zero_of_IsSuzukiCubic
+    {𝕂 : Type*} [Field 𝕂] {p : 𝕂} (h : IsSuzukiCubic p) :
+    suzuki5_bch_cubic_coeff 𝕂 p = 0 := h
+
 /-! ### Per-block cubic structure (foundational lemmas for M4a)
 
 Each Strang block `S_c(τ)` has logarithm
