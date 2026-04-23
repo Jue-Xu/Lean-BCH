@@ -364,6 +364,66 @@ theorem exp_suzuki5_bch (A B : 𝔸) (p τ : 𝕂)
   rw [exp_logOnePlus (𝕂 := 𝕂) (suzuki5Product A B p τ - 1) hnorm]
   abel
 
+/-! ### Oddness of suzuki5_bch (M3a)
+
+The palindromic reflection identity `S(τ) · S(-τ) = 1` lifts to the log level:
+`suzuki5_bch A B p (-τ) = -suzuki5_bch A B p τ`.
+
+Proof structure: from `exp(Z) · exp(Z') = 1` (with `Z := suzuki5_bch τ`,
+`Z' := suzuki5_bch (-τ)`) we derive `exp(Z') = exp(-Z)` by left-multiplying
+by `exp(-Z)`. Then applying `logOnePlus_exp_sub_one` to both sides gives
+`Z' = -Z`, provided `‖Z‖, ‖Z'‖ < log 2`.
+-/
+
+include 𝕂 in
+/-- The argument-norm bound is invariant under `τ → -τ`. -/
+lemma suzuki5ArgNormBound_neg (A B : 𝔸) (p τ : 𝕂) :
+    suzuki5ArgNormBound A B p (-τ) = suzuki5ArgNormBound A B p τ := by
+  unfold suzuki5ArgNormBound
+  rw [norm_neg]
+
+include 𝕂 in
+/-- **M3a** — oddness: `suzuki5_bch A B p (-τ) = -suzuki5_bch A B p τ` in the regime
+where (i) the coefficient regime `suzuki5ArgNormBound A B p τ < log 2` holds (which
+is τ-symmetric), and (ii) both `‖suzuki5_bch(τ)‖` and `‖suzuki5_bch(-τ)‖` are `< log 2`
+(needed for log injectivity). -/
+theorem suzuki5_bch_neg (A B : 𝔸) (p τ : 𝕂)
+    (hregime : suzuki5ArgNormBound A B p τ < Real.log 2)
+    (hZτ : ‖suzuki5_bch 𝕂 A B p τ‖ < Real.log 2)
+    (hZnegτ : ‖suzuki5_bch 𝕂 A B p (-τ)‖ < Real.log 2) :
+    suzuki5_bch 𝕂 A B p (-τ) = -suzuki5_bch 𝕂 A B p τ := by
+  set Z := suzuki5_bch 𝕂 A B p τ with hZ_def
+  set Z' := suzuki5_bch 𝕂 A B p (-τ) with hZ'_def
+  -- exp(Z) = S(τ), exp(Z') = S(-τ)
+  have hexpZ : exp Z = suzuki5Product A B p τ :=
+    exp_suzuki5_bch (𝕂 := 𝕂) A B p τ hregime
+  have hexpZ' : exp Z' = suzuki5Product A B p (-τ) := by
+    apply exp_suzuki5_bch (𝕂 := 𝕂) A B p (-τ)
+    rw [suzuki5ArgNormBound_neg (𝕂 := 𝕂)]; exact hregime
+  -- exp(Z) · exp(Z') = 1
+  have hprod : exp Z * exp Z' = 1 := by
+    rw [hexpZ, hexpZ']
+    exact suzuki5Product_mul_neg_eq_one (𝕂 := 𝕂) A B p τ
+  -- exp(-Z) · exp(Z) = 1
+  have hneg_Z : exp (-Z) * exp Z = 1 := exp_neg_mul_exp (𝕂 := 𝕂) Z
+  -- Derive exp(Z') = exp(-Z) via left-multiplying hprod by exp(-Z)
+  have hexp_flip : exp Z' = exp (-Z) := by
+    calc exp Z'
+        = 1 * exp Z' := by rw [one_mul]
+      _ = (exp (-Z) * exp Z) * exp Z' := by rw [hneg_Z]
+      _ = exp (-Z) * (exp Z * exp Z') := by rw [mul_assoc]
+      _ = exp (-Z) * 1 := by rw [hprod]
+      _ = exp (-Z) := by rw [mul_one]
+  -- Log injectivity on both sides
+  have hlZ' : logOnePlus (𝕂 := 𝕂) (exp Z' - 1) = Z' :=
+    logOnePlus_exp_sub_one (𝕂 := 𝕂) Z' hZnegτ
+  have hlnegZ : logOnePlus (𝕂 := 𝕂) (exp (-Z) - 1) = -Z := by
+    apply logOnePlus_exp_sub_one (𝕂 := 𝕂) (-Z)
+    rw [norm_neg]; exact hZτ
+  calc Z' = logOnePlus (𝕂 := 𝕂) (exp Z' - 1) := hlZ'.symm
+    _ = logOnePlus (𝕂 := 𝕂) (exp (-Z) - 1) := by rw [hexp_flip]
+    _ = -Z := hlnegZ
+
 end
 
 end BCH
