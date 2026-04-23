@@ -1702,6 +1702,85 @@ theorem norm_strangBlock_log_le (A B : 𝔸) (c τ : 𝕂)
         gcongr
     _ = η + η ^ 3 + 10000000 * η ^ 5 := by ring
 
+/-! ### Reduction of per-block argument norms to `R`
+
+Useful building blocks for M5 (clean quintic form). Show that the per-block
+argument norms `η_c := ‖c·τ‖·(‖A‖+‖B‖)` are bounded by explicit multiples of
+`R := suzuki5ArgNormBound A B p τ`.
+-/
+
+include 𝕂 in
+/-- `η_p := ‖p·τ‖·(‖A‖+‖B‖) ≤ (7/12)·R`, where `R = suzuki5ArgNormBound A B p τ`.
+Derived from the structure of `suzuki5ArgNormBound`:
+  `R ≥ 3·‖p‖·‖τ‖·‖A‖ + 4·‖p‖·‖τ‖·‖B‖` ⟹ `‖p·τ‖·‖A‖ ≤ R/3`, `‖p·τ‖·‖B‖ ≤ R/4`. -/
+theorem norm_p_tau_s_le_R (A B : 𝔸) (p τ : 𝕂) :
+    ‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖) ≤ (7 / 12) * suzuki5ArgNormBound A B p τ := by
+  unfold suzuki5ArgNormBound
+  have hnorm_eq : ‖(p * τ : 𝕂)‖ = ‖p‖ * ‖τ‖ := norm_mul _ _
+  have hpnn : 0 ≤ ‖p‖ := norm_nonneg _
+  have hτnn : 0 ≤ ‖τ‖ := norm_nonneg _
+  have hAnn : 0 ≤ ‖A‖ := norm_nonneg _
+  have hBnn : 0 ≤ ‖B‖ := norm_nonneg _
+  have h13pnn : 0 ≤ ‖1 - 3 * p‖ := norm_nonneg _
+  have h14pnn : 0 ≤ ‖1 - 4 * p‖ := norm_nonneg _
+  rw [hnorm_eq]
+  -- We want: ‖p‖·‖τ‖·(‖A‖+‖B‖) ≤ (7/12) · ‖τ‖·((3‖p‖+‖1-3p‖)·‖A‖ + (4‖p‖+‖1-4p‖)·‖B‖)
+  -- LHS = ‖p‖·‖τ‖·‖A‖ + ‖p‖·‖τ‖·‖B‖
+  -- 12·LHS = 12·‖p‖·‖τ‖·‖A‖ + 12·‖p‖·‖τ‖·‖B‖
+  -- RHS = 7·‖τ‖·((3‖p‖+‖1-3p‖)·‖A‖ + (4‖p‖+‖1-4p‖)·‖B‖)
+  --     = 21·‖p‖·‖τ‖·‖A‖ + 7·‖1-3p‖·‖τ‖·‖A‖ + 28·‖p‖·‖τ‖·‖B‖ + 7·‖1-4p‖·‖τ‖·‖B‖
+  -- Need 12·LHS ≤ 12·RHS, equivalently LHS ≤ RHS.
+  nlinarith [hpnn, hτnn, hAnn, hBnn, h13pnn, h14pnn,
+             mul_nonneg hpnn hτnn,
+             mul_nonneg (mul_nonneg hpnn hτnn) hAnn,
+             mul_nonneg (mul_nonneg hpnn hτnn) hBnn,
+             mul_nonneg (mul_nonneg h13pnn hτnn) hAnn,
+             mul_nonneg (mul_nonneg h14pnn hτnn) hBnn]
+
+include 𝕂 in
+/-- `η_{1-4p} := ‖(1-4p)·τ‖·(‖A‖+‖B‖) ≤ 2·R`, where `R = suzuki5ArgNormBound A B p τ`.
+Derived from the same structure:
+  `R ≥ ‖1-4p‖·‖τ‖·‖A‖` (via `‖1-4p‖ ≤ 3‖p‖+‖1-3p‖`) and `R ≥ ‖1-4p‖·‖τ‖·‖B‖`. -/
+theorem norm_1m4p_tau_s_le_R (A B : 𝔸) (p τ : 𝕂) :
+    ‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖) ≤ 2 * suzuki5ArgNormBound A B p τ := by
+  unfold suzuki5ArgNormBound
+  have hnorm_eq : ‖((1 - 4 * p) * τ : 𝕂)‖ = ‖1 - 4 * p‖ * ‖τ‖ := norm_mul _ _
+  have hpnn : 0 ≤ ‖p‖ := norm_nonneg _
+  have hτnn : 0 ≤ ‖τ‖ := norm_nonneg _
+  have hAnn : 0 ≤ ‖A‖ := norm_nonneg _
+  have hBnn : 0 ≤ ‖B‖ := norm_nonneg _
+  have h13pnn : 0 ≤ ‖1 - 3 * p‖ := norm_nonneg _
+  have h14pnn : 0 ≤ ‖1 - 4 * p‖ := norm_nonneg _
+  -- Key inequality: ‖1 - 4p‖ = ‖(1-3p) - p‖ ≤ ‖1-3p‖ + ‖p‖
+  have h14p_bound : ‖1 - 4 * p‖ ≤ ‖1 - 3 * p‖ + ‖p‖ := by
+    have : (1 - 4 * p : 𝕂) = (1 - 3 * p) - p := by ring
+    rw [this]
+    exact norm_sub_le _ _
+  -- Hence ‖1-4p‖ ≤ 3‖p‖ + ‖1-3p‖ (since ‖p‖ ≤ 3‖p‖).
+  have h14p_bound2 : ‖1 - 4 * p‖ ≤ 3 * ‖p‖ + ‖1 - 3 * p‖ := by linarith
+  rw [hnorm_eq]
+  -- Split into the A and B contributions.
+  -- A part: ‖1-4p‖·‖τ‖·‖A‖ ≤ (3‖p‖+‖1-3p‖)·‖τ‖·‖A‖ ≤ 2·(3‖p‖+‖1-3p‖)·‖τ‖·‖A‖
+  have hA_part : ‖1 - 4 * p‖ * ‖τ‖ * ‖A‖ ≤
+      2 * ((3 * ‖p‖ + ‖1 - 3 * p‖) * ‖τ‖ * ‖A‖) := by
+    have : ‖1 - 4 * p‖ * ‖τ‖ * ‖A‖ ≤ (3 * ‖p‖ + ‖1 - 3 * p‖) * ‖τ‖ * ‖A‖ := by
+      gcongr
+    linarith [mul_nonneg (mul_nonneg (add_nonneg (mul_nonneg (by norm_num : (0 : ℝ) ≤ 3) hpnn) h13pnn) hτnn) hAnn]
+  -- B part: ‖1-4p‖·‖τ‖·‖B‖ ≤ (4‖p‖+‖1-4p‖)·‖τ‖·‖B‖ ≤ 2·(4‖p‖+‖1-4p‖)·‖τ‖·‖B‖
+  have hB_part : ‖1 - 4 * p‖ * ‖τ‖ * ‖B‖ ≤
+      2 * ((4 * ‖p‖ + ‖1 - 4 * p‖) * ‖τ‖ * ‖B‖) := by
+    have : ‖1 - 4 * p‖ * ‖τ‖ * ‖B‖ ≤ (4 * ‖p‖ + ‖1 - 4 * p‖) * ‖τ‖ * ‖B‖ := by
+      have : ‖1 - 4 * p‖ ≤ 4 * ‖p‖ + ‖1 - 4 * p‖ := by linarith
+      gcongr
+    linarith [mul_nonneg (mul_nonneg (add_nonneg (mul_nonneg (by norm_num : (0 : ℝ) ≤ 4) hpnn) h14pnn) hτnn) hBnn]
+  -- Combine using `mul_add` and `add_mul`.
+  calc ‖1 - 4 * p‖ * ‖τ‖ * (‖A‖ + ‖B‖)
+      = ‖1 - 4 * p‖ * ‖τ‖ * ‖A‖ + ‖1 - 4 * p‖ * ‖τ‖ * ‖B‖ := by ring
+    _ ≤ 2 * ((3 * ‖p‖ + ‖1 - 3 * p‖) * ‖τ‖ * ‖A‖) +
+        2 * ((4 * ‖p‖ + ‖1 - 4 * p‖) * ‖τ‖ * ‖B‖) := by linarith
+    _ = 2 * (‖τ‖ * ((3 * ‖p‖ + ‖1 - 3 * p‖) * ‖A‖ + (4 * ‖p‖ + ‖1 - 4 * p‖) * ‖B‖)) := by
+        ring
+
 /-! ### Status note: M5 (clean quintic bound)
 
 Under IsSuzukiCubic, M4b's sprawling bound is already O(|τ|⁵·(‖A‖+‖B‖)⁵):
