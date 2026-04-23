@@ -1171,6 +1171,96 @@ theorem suzuki5_bch_eq_symmetric_bch (A B : 𝔸) (p τ : 𝕂)
     _ = logOnePlus (𝕂 := 𝕂) (exp Z₂ - 1) := by rw [hexp_eq]
     _ = Z₂ := hlog2
 
+/-! ### Commutator-based norm bound for symm_bch_cubic_poly
+
+The key observation: `symm_bch_cubic_poly(a, b) = -(1/24)·[a,[a,b]] - (1/12)·[b,[a,b]]`
+is *expressed entirely via the commutator* `[a,b] = a·b - b·a`. Hence its norm is
+bounded linearly by `‖[a,b]‖`:
+  `‖symm_bch_cubic_poly(a,b)‖ ≤ (1/6)·(‖a‖+‖b‖)·‖a·b - b·a‖`.
+
+This is CRUCIAL for the M4a bound: when `a ≈ α·V` and `b ≈ β·V` (V = A+B), the
+commutator `[a, b]` is O(R⁴) (because `[V, V] = 0` kills the leading term),
+giving `symm_bch_cubic_poly(4X, Y) = O(R⁵)`.
+-/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Commutator-based bound for `symmetric_bch_cubic_poly`**:
+  `‖symm_bch_cubic_poly(a, b)‖ ≤ (1/6)·(‖a‖+‖b‖)·‖a*b - b*a‖`.
+
+Proof: symm_bch_cubic_poly(a,b) = -(1/24)·[a,[a,b]] - (1/12)·[b,[a,b]] (both inner
+commutators are built from [a,b]). Bound via `‖[x, y]‖ ≤ 2‖x‖·‖y‖`. -/
+theorem norm_symmetric_bch_cubic_poly_le_commutator (a b : 𝔸) :
+    ‖symmetric_bch_cubic_poly 𝕂 a b‖ ≤
+      (6 : ℝ)⁻¹ * (‖a‖ + ‖b‖) * ‖a * b - b * a‖ := by
+  set C : 𝔸 := a * b - b * a with hC_def
+  set s := ‖a‖ + ‖b‖
+  -- Rewrite symm_bch_cubic_poly using C:
+  --   a·b - b·a = C
+  --   b·a - a·b = -C
+  -- symm_bch_cubic_poly = -(1/24)·(a·C - C·a) + (1/12)·(b·(-C) - (-C)·b)
+  --                    = -(1/24)·(a·C - C·a) - (1/12)·(b·C - C·b)
+  have h_rewrite : symmetric_bch_cubic_poly 𝕂 a b =
+      -((24 : 𝕂)⁻¹ • (a * C - C * a)) - (12 : 𝕂)⁻¹ • (b * C - C * b) := by
+    unfold symmetric_bch_cubic_poly
+    -- Direct algebraic identity via hC_def and the smul/ring manipulations.
+    rw [hC_def]
+    -- Goal: -((24:𝕂)⁻¹ • (a*(ab-ba) - (ab-ba)*a)) + (12:𝕂)⁻¹ • (b*(ba-ab) - (ba-ab)*b) =
+    --        -((24:𝕂)⁻¹ • (a*(ab-ba) - (ab-ba)*a)) - (12:𝕂)⁻¹ • (b*(ab-ba) - (ab-ba)*b)
+    -- The (b·_ - _·b) terms differ by a sign: ba-ab = -(ab-ba).
+    -- Clear smuls by injectivity-on-24 and injectivity-on-12 approach.
+    have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+    have h3ne : (3 : 𝕂) ≠ 0 := by exact_mod_cast (show (3 : ℕ) ≠ 0 by norm_num)
+    have h12ne : (12 : 𝕂) ≠ 0 := by exact_mod_cast (show (12 : ℕ) ≠ 0 by norm_num)
+    have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
+    have hinj : Function.Injective ((24 : 𝕂) • · : 𝔸 → 𝔸) := by
+      intro x y hxy
+      have := congrArg ((24 : 𝕂)⁻¹ • ·) hxy
+      simp only [smul_smul, inv_mul_cancel₀ h24ne, one_smul] at this; exact this
+    apply hinj
+    simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
+      mul_add, add_mul, mul_sub, sub_mul, mul_assoc,
+      inv_mul_cancel₀ h24ne,
+      show (24 : 𝕂) * (12 : 𝕂)⁻¹ = 2 from by norm_num,
+      one_smul]
+    noncomm_ring
+  rw [h_rewrite]
+  -- Bound each scalar-smul'd commutator.
+  have h24 : ‖((24 : 𝕂)⁻¹ : 𝕂)‖ = (1 / 24 : ℝ) := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  have h12 : ‖((12 : 𝕂)⁻¹ : 𝕂)‖ = (1 / 12 : ℝ) := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  have hCa : ‖a * C - C * a‖ ≤ 2 * ‖a‖ * ‖C‖ := by
+    calc ‖a * C - C * a‖ ≤ ‖a * C‖ + ‖C * a‖ := by
+          rw [sub_eq_add_neg]
+          exact (norm_add_le _ _).trans (by rw [norm_neg])
+      _ ≤ ‖a‖ * ‖C‖ + ‖C‖ * ‖a‖ := by gcongr <;> exact norm_mul_le _ _
+      _ = 2 * ‖a‖ * ‖C‖ := by ring
+  have hCb : ‖b * C - C * b‖ ≤ 2 * ‖b‖ * ‖C‖ := by
+    calc ‖b * C - C * b‖ ≤ ‖b * C‖ + ‖C * b‖ := by
+          rw [sub_eq_add_neg]
+          exact (norm_add_le _ _).trans (by rw [norm_neg])
+      _ ≤ ‖b‖ * ‖C‖ + ‖C‖ * ‖b‖ := by gcongr <;> exact norm_mul_le _ _
+      _ = 2 * ‖b‖ * ‖C‖ := by ring
+  have hs1 : ‖(24 : 𝕂)⁻¹ • (a * C - C * a)‖ ≤ (1 / 12 : ℝ) * ‖a‖ * ‖C‖ := by
+    calc _ ≤ ‖(24 : 𝕂)⁻¹‖ * ‖a * C - C * a‖ := norm_smul_le _ _
+      _ ≤ (1 / 24 : ℝ) * (2 * ‖a‖ * ‖C‖) := by rw [h24]; gcongr
+      _ = (1 / 12 : ℝ) * ‖a‖ * ‖C‖ := by ring
+  have hs2 : ‖(12 : 𝕂)⁻¹ • (b * C - C * b)‖ ≤ (1 / 6 : ℝ) * ‖b‖ * ‖C‖ := by
+    calc _ ≤ ‖(12 : 𝕂)⁻¹‖ * ‖b * C - C * b‖ := norm_smul_le _ _
+      _ ≤ (1 / 12 : ℝ) * (2 * ‖b‖ * ‖C‖) := by rw [h12]; gcongr
+      _ = (1 / 6 : ℝ) * ‖b‖ * ‖C‖ := by ring
+  have ha_nn : 0 ≤ ‖a‖ := norm_nonneg _
+  have hb_nn : 0 ≤ ‖b‖ := norm_nonneg _
+  have hC_nn : 0 ≤ ‖C‖ := norm_nonneg _
+  calc ‖-((24 : 𝕂)⁻¹ • (a * C - C * a)) - (12 : 𝕂)⁻¹ • (b * C - C * b)‖
+      ≤ ‖-((24 : 𝕂)⁻¹ • (a * C - C * a))‖ + ‖(12 : 𝕂)⁻¹ • (b * C - C * b)‖ :=
+        norm_sub_le _ _
+    _ = ‖(24 : 𝕂)⁻¹ • (a * C - C * a)‖ + ‖(12 : 𝕂)⁻¹ • (b * C - C * b)‖ := by rw [norm_neg]
+    _ ≤ (1 / 12 : ℝ) * ‖a‖ * ‖C‖ + (1 / 6 : ℝ) * ‖b‖ * ‖C‖ := by linarith
+    _ ≤ (6 : ℝ)⁻¹ * s * ‖C‖ := by
+        show _ ≤ (6 : ℝ)⁻¹ * (‖a‖ + ‖b‖) * ‖C‖
+        nlinarith
+
 /-! ### Final form of M4a (statement deferred to a later session)
 
 The full theorem `norm_suzuki5_bch_sub_smul_sub_cubic_le`, asserting
