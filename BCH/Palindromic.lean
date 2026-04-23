@@ -337,6 +337,33 @@ theorem norm_suzuki5Product_sub_one_lt_one (A B : 𝔸) (p τ : 𝕂)
       _ = 2 := Real.exp_log (by norm_num)
   linarith
 
+/-! ### Definition of `suzuki5_bch` and exp round-trip (M2b)
+
+In the regime where `‖S(τ) - 1‖ < 1`, define
+  `suzuki5_bch A B p τ := logOnePlus(suzuki5Product A B p τ - 1)`
+and prove that `exp(suzuki5_bch A B p τ) = suzuki5Product A B p τ`, using the
+existing `exp_logOnePlus : exp(logOnePlus x) = 1 + x` for `‖x‖ < 1`.
+-/
+
+/-- The Suzuki 5-block BCH element: the unique `Z` with `exp(Z) = suzuki5Product A B p τ`
+in the small-coefficient regime. Defined as `logOnePlus(S(τ) - 1)`. -/
+noncomputable def suzuki5_bch (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (A B : 𝔸) (p τ : 𝕂) : 𝔸 :=
+  logOnePlus (𝕂 := 𝕂) (suzuki5Product A B p τ - 1)
+
+include 𝕂 in
+/-- **M2b** — exp round-trip: `exp(suzuki5_bch A B p τ) = suzuki5Product A B p τ`
+in the small-coefficient regime `suzuki5ArgNormBound A B p τ < log 2`. -/
+theorem exp_suzuki5_bch (A B : 𝔸) (p τ : 𝕂)
+    (h : suzuki5ArgNormBound A B p τ < Real.log 2) :
+    exp (suzuki5_bch 𝕂 A B p τ) = suzuki5Product A B p τ := by
+  unfold suzuki5_bch
+  have hnorm : ‖suzuki5Product A B p τ - 1‖ < 1 :=
+    norm_suzuki5Product_sub_one_lt_one (𝕂 := 𝕂) A B p τ h
+  rw [exp_logOnePlus (𝕂 := 𝕂) (suzuki5Product A B p τ - 1) hnorm]
+  abel
+
 end
 
 end BCH
