@@ -1059,6 +1059,118 @@ theorem strangBlock_mul_self (A B : 𝔸) (c τ : 𝕂)
   letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
   rw [← exp_add_of_commute (Commute.refl X), ← two_smul 𝕂]
 
+/-! ### Symmetric-BCH decomposition of suzuki5_bch
+
+Combining the 5-Strang factorization with A-merging gives
+  `S(τ) = S_p² · S_{1-4p} · S_p² = A·C·A`
+where `A = exp(2·logS_p)` and `C = exp(logS_{1-4p})`. By `exp_symmetric_bch`
+on `(4·logS_p, logS_{1-4p})`, we obtain
+  `exp(bch(bch(2·logS_p, logS_{1-4p}), 2·logS_p)) = S(τ)`.
+Log injectivity then gives
+  `suzuki5_bch = bch(bch(2·logS_p, logS_{1-4p}), 2·logS_p)`.
+
+This reduces the iterated-BCH problem to a SINGLE symmetric-BCH application,
+enabling direct use of `norm_symmetric_bch_cubic_sub_poly_le` for the M4a bound.
+-/
+
+include 𝕂 in
+/-- The Suzuki 5-block product reassembles as `A·C·A` with `A = S_p²` and `C = S_{1-4p}`. -/
+theorem suzuki5Product_eq_ACA (A B : 𝔸) (p τ : 𝕂) :
+    suzuki5Product A B p τ =
+      (strangBlock A B p τ * strangBlock A B p τ) *
+      strangBlock A B (1 - 4 * p) τ *
+      (strangBlock A B p τ * strangBlock A B p τ) := by
+  rw [suzuki5Product_eq_strangBlock_prod]
+  noncomm_ring
+
+include 𝕂 in
+/-- `exp(bch(bch(2•logS_p, logS_{1-4p}), 2•logS_p)) = suzuki5Product A B p τ`
+under the regime `‖4•logS_p‖ + ‖logS_{1-4p}‖ < 1/4` (hypothesis for
+`exp_symmetric_bch`) and `‖p·τ•A‖+‖p·τ•B‖ < 1/4`, `‖(1-4p)·τ•A‖+‖(1-4p)·τ•B‖ < 1/4`
+(per-block hypotheses for `exp_strangBlock_log`). -/
+theorem exp_suzuki5_symmetric_bch (A B : 𝔸) (p τ : 𝕂)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (hreg : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+            ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ < 1 / 4) :
+    exp (bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))) =
+    suzuki5Product A B p τ := by
+  set X := strangBlock_log 𝕂 A B p τ with hX_def
+  set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
+  -- Apply exp_symmetric_bch with a = 4•X, b = Y.
+  have key := exp_symmetric_bch (𝕂 := 𝕂) ((4 : 𝕂) • X) Y hreg
+  -- key: exp(bch(bch(2⁻¹•(4•X), Y), 2⁻¹•(4•X))) = exp(2⁻¹•(4•X))·exp(Y)·exp(2⁻¹•(4•X))
+  rw [key]
+  -- Now: exp(2⁻¹•(4•X)) = exp(2•X) (since 2⁻¹•4 = 2)
+  have h_scalar : (2 : 𝕂)⁻¹ • ((4 : 𝕂) • X) = (2 : 𝕂) • X := by
+    rw [smul_smul]
+    congr 1
+    show (2 : 𝕂)⁻¹ * 4 = 2
+    norm_num
+  rw [h_scalar]
+  -- Now: exp(2•X)·exp(Y)·exp(2•X) = strangBlock²·strangBlock_{1-4p}·strangBlock²
+  -- Use strangBlock_mul_self and exp_strangBlock_log.
+  have hexp2X : exp ((2 : 𝕂) • X) = strangBlock A B p τ * strangBlock A B p τ := by
+    rw [← strangBlock_mul_self (𝕂 := 𝕂) A B p τ hp]
+  have hexpY : exp Y = strangBlock A B (1 - 4 * p) τ :=
+    exp_strangBlock_log (𝕂 := 𝕂) A B (1 - 4 * p) τ h1m4p
+  rw [hexp2X, hexpY]
+  -- Now: S_p²·S_{1-4p}·S_p² = suzuki5Product
+  rw [suzuki5Product_eq_ACA]
+
+include 𝕂 in
+/-- **Key M4a decomposition**: `suzuki5_bch A B p τ = symmetric_bch(4•X, Y)`
+where `X = strangBlock_log A B p τ` and `Y = strangBlock_log A B (1-4p) τ`.
+
+Equivalently: `suzuki5_bch = bch(bch(2•X, Y), 2•X)`.
+
+Hypotheses:
+- Per-block regimes for `p` and `1-4p`: `‖cτ•A‖ + ‖cτ•B‖ < 1/4`.
+- Symmetric-BCH regime: `‖4•X‖ + ‖Y‖ < 1/4`.
+- Log injectivity: the overall 5-block argument norm bound `R < log 2` and
+  `‖suzuki5_bch‖ < log 2`, `‖bch(bch(2•X,Y),2•X)‖ < log 2`. -/
+theorem suzuki5_bch_eq_symmetric_bch (A B : 𝔸) (p τ : 𝕂)
+    (hR : suzuki5ArgNormBound A B p τ < Real.log 2)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (hreg : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+            ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ < 1 / 4)
+    (hZ1 : ‖suzuki5_bch 𝕂 A B p τ‖ < Real.log 2)
+    (hZ2 : ‖bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))‖ < Real.log 2) :
+    suzuki5_bch 𝕂 A B p τ =
+    bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)) := by
+  set Z₁ := suzuki5_bch 𝕂 A B p τ
+  set Z₂ := bch (𝕂 := 𝕂)
+    (bch (𝕂 := 𝕂)
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+      (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+    ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+  -- exp(Z₁) = S(τ), exp(Z₂) = S(τ), so exp(Z₁) = exp(Z₂).
+  have hexp1 : exp Z₁ = suzuki5Product A B p τ := exp_suzuki5_bch (𝕂 := 𝕂) A B p τ hR
+  have hexp2 : exp Z₂ = suzuki5Product A B p τ :=
+    exp_suzuki5_symmetric_bch (𝕂 := 𝕂) A B p τ hp h1m4p hreg
+  have hexp_eq : exp Z₁ = exp Z₂ := by rw [hexp1, hexp2]
+  -- By log injectivity: logOnePlus(exp Z - 1) = Z for ‖Z‖ < log 2.
+  have hlog1 : logOnePlus (𝕂 := 𝕂) (exp Z₁ - 1) = Z₁ :=
+    logOnePlus_exp_sub_one (𝕂 := 𝕂) Z₁ hZ1
+  have hlog2 : logOnePlus (𝕂 := 𝕂) (exp Z₂ - 1) = Z₂ :=
+    logOnePlus_exp_sub_one (𝕂 := 𝕂) Z₂ hZ2
+  calc Z₁ = logOnePlus (𝕂 := 𝕂) (exp Z₁ - 1) := hlog1.symm
+    _ = logOnePlus (𝕂 := 𝕂) (exp Z₂ - 1) := by rw [hexp_eq]
+    _ = Z₂ := hlog2
+
 /-! ### Final form of M4a (statement deferred to a later session)
 
 The full theorem `norm_suzuki5_bch_sub_smul_sub_cubic_le`, asserting
