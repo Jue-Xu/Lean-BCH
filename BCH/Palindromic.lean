@@ -1859,6 +1859,61 @@ theorem s4Func_eq_exp_nsmul (A B : 𝔸) (p τ : 𝕂) (n : ℕ)
     rw [← Nat.cast_smul_eq_nsmul 𝕂]
   rw [h_smul_eq, exp_nsmul]
 
+/-! ### Scaled M4b bound: `‖n • (suzuki5_bch - τ•V)‖`
+
+For Trotter h4, we want the error of `exp(n • suzuki5_bch)` vs `exp(n·τ•V)`,
+which by exp-Lipschitz-like arguments scales with `‖n • (suzuki5_bch - τ•V)‖`.
+Bounded as `n` times M4b's bound. -/
+
+include 𝕂 in
+/-- `‖n • (suzuki5_bch - τ•V)‖ ≤ n · (M4b bound)` under IsSuzukiCubic.
+Useful for Trotter-h4 error analysis: setting τ = t/n, this gives
+`‖n • (suzuki5_bch(t/n) - (t/n)•V)‖ ≤ n · K · |t/n|⁵ · s⁵ = K · t⁵ · s⁵ / n⁴`. -/
+theorem norm_nsmul_suzuki5_bch_sub_smul_le_of_IsSuzukiCubic (A B : 𝔸) (p τ : 𝕂) (n : ℕ)
+    (hSuzuki : IsSuzukiCubic p)
+    (hR : suzuki5ArgNormBound A B p τ < Real.log 2)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (hreg : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+            ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ < 1 / 4)
+    (hZ1 : ‖suzuki5_bch 𝕂 A B p τ‖ < Real.log 2)
+    (hZ2 : ‖bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))‖ < Real.log 2) :
+    ‖(n : 𝕂) • (suzuki5_bch 𝕂 A B p τ - τ • (A + B))‖ ≤
+      (n : ℝ) *
+      (4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) +
+       10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5 +
+       10000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                   ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 5 +
+       (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                    ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+         (2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+           (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+             10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+         2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+           (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+             10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) +
+         2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+               10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+           (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+             10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5))) := by
+  -- ‖(n : 𝕂) • X‖ ≤ n · ‖X‖ via norm_smul_le + ‖n:𝕂‖ = n.
+  have hn_norm : ‖((n : 𝕂) : 𝕂)‖ = n := by
+    rw [RCLike.norm_natCast]
+  have h_smul_bound : ‖(n : 𝕂) • (suzuki5_bch 𝕂 A B p τ - τ • (A + B))‖ ≤
+      n * ‖suzuki5_bch 𝕂 A B p τ - τ • (A + B)‖ := by
+    calc ‖(n : 𝕂) • (suzuki5_bch 𝕂 A B p τ - τ • (A + B))‖
+        ≤ ‖((n : 𝕂) : 𝕂)‖ * ‖suzuki5_bch 𝕂 A B p τ - τ • (A + B)‖ := norm_smul_le _ _
+      _ = n * ‖suzuki5_bch 𝕂 A B p τ - τ • (A + B)‖ := by rw [hn_norm]
+  refine le_trans h_smul_bound ?_
+  have h_m4b := norm_suzuki5_bch_sub_smul_le_of_IsSuzukiCubic (𝕂 := 𝕂) A B p τ
+    hSuzuki hR hp h1m4p hreg hZ1 hZ2
+  have hn_nn : (0 : ℝ) ≤ n := Nat.cast_nonneg _
+  gcongr
+
 /-! ### Status note: M5 (clean quintic bound)
 
 Under IsSuzukiCubic, M4b's sprawling bound is already O(|τ|⁵·(‖A‖+‖B‖)⁵):
