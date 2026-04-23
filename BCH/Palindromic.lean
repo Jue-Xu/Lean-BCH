@@ -1040,6 +1040,25 @@ theorem norm_strangBlock_log_sub_linear_le (A B : 𝔸) (c τ : 𝕂)
     _ ≤ 10000000 * η ^ 5 + η ^ 3 := by linarith
     _ = η ^ 3 + 10000000 * η ^ 5 := by ring
 
+/-! ### Logarithm of a squared Strang block
+
+Since any element commutes with itself, `S_c(τ) · S_c(τ) = exp(2·strangBlock_log)`.
+This gives `log(S_c · S_c) = 2 · strangBlock_log`, bypassing iterated BCH.
+-/
+
+include 𝕂 in
+/-- Squared Strang block: `S_c · S_c = exp(2 · strangBlock_log)`. Follows from
+`S_c = exp(strangBlock_log)` (via `exp_strangBlock_log`) plus commutativity with itself. -/
+theorem strangBlock_mul_self (A B : 𝔸) (c τ : 𝕂)
+    (h : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ < 1 / 4) :
+    strangBlock A B c τ * strangBlock A B c τ =
+      exp ((2 : 𝕂) • strangBlock_log 𝕂 A B c τ) := by
+  rw [← exp_strangBlock_log (𝕂 := 𝕂) A B c τ h]
+  set X := strangBlock_log 𝕂 A B c τ
+  letI : NormedAlgebra ℝ 𝔸 := NormedAlgebra.restrictScalars ℝ 𝕂 𝔸
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  rw [← exp_add_of_commute (Commute.refl X), ← two_smul 𝕂]
+
 /-! ### Final form of M4a (statement deferred to a later session)
 
 The full theorem `norm_suzuki5_bch_sub_smul_sub_cubic_le`, asserting
