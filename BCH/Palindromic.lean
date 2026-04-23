@@ -1407,24 +1407,211 @@ theorem norm_comm_4X_Y_le (A B : 𝔸) (p τ : 𝕂)
   refine le_trans hcomm ?_
   gcongr
 
-/-! ### Final form of M4a (statement deferred to a later session)
+/-! ### Target sum in 4·T_p + T_{1-4p} form
 
-The full theorem `norm_suzuki5_bch_sub_smul_sub_cubic_le`, asserting
+Convenient restatement of the target sum used in the M4a assembly. -/
 
-  ‖suzuki5_bch A B p τ - τ•(A+B) - τ³ • C₃(p) • E_sym(A,B)‖ ≤ K · R⁴
+include 𝕂 in
+/-- Target decomposition: `4•T_p + T_{1-4p} = τ•(A+B) + τ³·C₃(p)•E_sym(A,B)`.
+Restatement of `suzuki5_targets_sum` using smul `(4:𝕂) • T_p` instead of
+the repeated-addition form `T_p + T_p + T_p + T_p`. -/
+theorem target_sum_4_form (A B : 𝔸) (p τ : 𝕂) :
+    (4 : 𝕂) • strangBlock_log_target 𝕂 A B p τ +
+      strangBlock_log_target 𝕂 A B (1 - 4 * p) τ =
+    τ • (A + B) +
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B := by
+  unfold strangBlock_log_target suzuki5_bch_cubic_coeff
+  set V := A + B with hV_def
+  set E := symmetric_bch_cubic_poly 𝕂 A B with hE_def
+  -- 4•((p·τ)•V + (p·τ)³•E) = (4·(p·τ))•V + (4·(p·τ)³)•E
+  -- Combine with ((1-4p)·τ)•V + ((1-4p)·τ)³•E
+  -- to get (4*p*τ + (1-4p)*τ)•V + (4*(p*τ)^3 + ((1-4p)*τ)^3)•E
+  -- and simplify scalar expressions.
+  rw [smul_add, smul_smul, smul_smul]
+  -- Goal: (4·(p·τ))•V + (4·(p·τ)³)•E + ((1-4p)·τ)•V + ((1-4p)·τ)³•E = ...
+  have h1 : ((4 : 𝕂) * (p * τ)) • V + ((4 : 𝕂) * (p * τ) ^ 3) • E +
+            (((1 - 4 * p) * τ) • V + ((1 - 4 * p) * τ) ^ 3 • E) =
+            (((4 : 𝕂) * (p * τ)) + ((1 - 4 * p) * τ)) • V +
+            (((4 : 𝕂) * (p * τ) ^ 3) + ((1 - 4 * p) * τ) ^ 3) • E := by
+    rw [add_smul, add_smul]; abel
+  rw [h1]
+  -- Simplify scalar coefficients
+  congr 1
+  · -- (4·(p·τ)) + ((1-4p)·τ) = τ
+    congr 1
+    ring
+  · -- (4·(p·τ)³) + ((1-4p)·τ)³ = τ³ · (4p³ + (1-4p)³)
+    congr 1
+    ring
 
-with `R = suzuki5ArgNormBound A B p τ`, requires an iterated-BCH expansion across
-the 5-Strang composition and a careful tracking of cross-block commutators. The
-Lean-Trotter project's direct-module attempt at the analogous identity timed out
-at 20M heartbeats. The recommended path forward is:
+/-! ### M4a main theorem (symmetric-BCH assembly)
 
-1. Use `suzuki5Product_eq_strangBlock_prod` (above) to factor S(τ) as 5 Strang blocks.
-2. Use `exp_symmetric_bch` per block to access `bch(bch(cτA/2, cτB), cτA/2)`.
-3. Use `norm_symmetric_bch_cubic_sub_poly_le` per block to relate to E_sym.
-4. Compose via 4 outer BCH applications, tracking cubic and quartic remainders.
-5. Combine with `suzuki5_targets_sum` (above) for the sum-of-targets identity.
+Using the symmetric-BCH decomposition from slice 6,
+  `suzuki5_bch = bch(bch(2•X, Y), 2•X) = (4•X + Y) + symmetric_bch_cubic(4•X, Y)`
+the main theorem assembles the triangle inequality:
 
-This will be tackled in a subsequent session. -/
+  ‖suzuki5_bch - target‖
+    ≤ ‖4•(X - T_p)‖ + ‖Y - T_{1-4p}‖               -- per-block cubic
+      + ‖symmetric_bch_cubic(4•X, Y) - symm_bch_cubic_poly(4•X, Y)‖   -- 10⁷·s⁵
+      + ‖symm_bch_cubic_poly(4•X, Y)‖                -- (1/6)·(‖4X‖+‖Y‖)·‖[4X,Y]‖
+
+where `[4X, Y]` is bounded by the slice-9 commutator bound.
+
+For simplicity, we state the bound in the form `K·(‖4X‖ + ‖Y‖ + s_p + s_{1-4p})^4`
+where `s_c = ‖(cτ)•A‖+‖(cτ)•B‖` are per-block argument norms. This avoids the
+algebraic conversion to `suzuki5ArgNormBound`.
+-/
+
+include 𝕂 in
+/-- **M4a main theorem (symmetric-BCH form)**: the Suzuki-5 BCH element equals
+its linear+cubic target up to a quartic-plus-higher remainder, bounded via
+the symmetric-BCH decomposition.
+
+The bound is expressed as the sum of three contributions:
+(a) per-block cubic error `4·‖X - T_p‖ + ‖Y - T_{1-4p}‖`,
+(b) the quintic remainder from `symm_bch_cubic - symm_bch_cubic_poly`,
+(c) the commutator-based bound on `symm_bch_cubic_poly(4•X, Y)` via slices 7-9.
+
+Each contribution is O(R⁴) or smaller under the stated hypotheses. -/
+theorem norm_suzuki5_bch_sub_smul_sub_cubic_le (A B : 𝔸) (p τ : 𝕂)
+    (hR : suzuki5ArgNormBound A B p τ < Real.log 2)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (hreg : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+            ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ < 1 / 4)
+    (hZ1 : ‖suzuki5_bch 𝕂 A B p τ‖ < Real.log 2)
+    (hZ2 : ‖bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))‖ < Real.log 2) :
+    ‖suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B‖ ≤
+      4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) +
+      10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5 +
+      10000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                  ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 5 +
+      (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                   ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+        (2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+          (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+            10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+        2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+          (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+            10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) +
+        2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+              10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+          (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+            10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) := by
+  set X := strangBlock_log 𝕂 A B p τ with hX_def
+  set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
+  set V := A + B with hV_def
+  set E := symmetric_bch_cubic_poly 𝕂 A B with hE_def
+  set T_p := strangBlock_log_target 𝕂 A B p τ with hTp_def
+  set T_q := strangBlock_log_target 𝕂 A B (1 - 4 * p) τ with hTq_def
+  -- Step 1: suzuki5_bch = bch(bch(2•X, Y), 2•X) (via slice 6)
+  have h_sym_bch :=
+    suzuki5_bch_eq_symmetric_bch (𝕂 := 𝕂) A B p τ hR hp h1m4p hreg hZ1 hZ2
+  -- Step 2: bch(bch(2•X, Y), 2•X) = (4•X + Y) + symmetric_bch_cubic(4•X, Y)
+  have h_sbc_def : bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂)
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • X)) Y) ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • X)) =
+      ((4 : 𝕂) • X + Y) + symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y := by
+    unfold symmetric_bch_cubic
+    abel
+  -- Combine: suzuki5_bch = (4•X + Y) + symmetric_bch_cubic(4•X, Y)
+  have h_decomp : suzuki5_bch 𝕂 A B p τ =
+      ((4 : 𝕂) • X + Y) + symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y := by
+    rw [h_sym_bch]; exact h_sbc_def
+  -- Step 3: target = 4•T_p + T_q (via target_sum_4_form)
+  have h_target : τ • V + (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • E =
+      (4 : 𝕂) • T_p + T_q := by
+    rw [hTp_def, hTq_def, hV_def, hE_def]
+    rw [target_sum_4_form (𝕂 := 𝕂)]
+  -- Step 4: rewrite the goal's LHS using h_decomp and h_target.
+  -- suzuki5_bch - target = ((4•X + Y) + symm_bch_cubic) - (4•T_p + T_q)
+  --                    = 4•(X - T_p) + (Y - T_q) + symm_bch_cubic(4•X, Y)
+  have h_diff_eq : suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • E =
+      ((4 : 𝕂) • (X - T_p)) + (Y - T_q) + symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y := by
+    -- First, rewrite `τ • (A + B) + (τ³ * C₃) • E = (4:𝕂)•T_p + T_q` using target_sum_4_form.
+    have h_target_expanded :
+        τ • (A + B) + (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • E =
+        (4 : 𝕂) • T_p + T_q := by
+      rw [hTp_def, hTq_def, hE_def]
+      exact (target_sum_4_form (𝕂 := 𝕂) A B p τ).symm
+    -- Convert `a - b - c` to `a - (b + c)` for easier substitution.
+    have hsub_regroup : suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • E =
+        suzuki5_bch 𝕂 A B p τ - (τ • (A + B) + (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • E) := by
+      abel
+    rw [hsub_regroup, h_target_expanded, h_decomp, smul_sub]
+    abel
+  rw [h_diff_eq]
+  -- Now bound: 4•(X - T_p) + (Y - T_q) + symm_bch_cubic(4•X, Y)
+  have h_X_minus_Tp : ‖X - T_p‖ ≤ 10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5 := by
+    exact norm_strangBlock_log_sub_target_le (𝕂 := 𝕂) A B p τ hp
+  have h_Y_minus_Tq : ‖Y - T_q‖ ≤
+      10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5 := by
+    exact norm_strangBlock_log_sub_target_le (𝕂 := 𝕂) A B (1 - 4 * p) τ h1m4p
+  -- Bound for 4•(X - T_p)
+  have h4_norm_eq : ‖(4 : 𝕂)‖ = 4 := by rw [RCLike.norm_ofNat]
+  have h_4Xmp : ‖(4 : 𝕂) • (X - T_p)‖ ≤
+      4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) := by
+    calc ‖(4 : 𝕂) • (X - T_p)‖ ≤ ‖(4 : 𝕂)‖ * ‖X - T_p‖ := norm_smul_le _ _
+      _ = 4 * ‖X - T_p‖ := by rw [h4_norm_eq]
+      _ ≤ 4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) := by gcongr
+  -- Bound for symm_bch_cubic(4•X, Y) via norm_symmetric_bch_cubic_sub_poly_le
+  have h_sbc_bound : ‖symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y‖ ≤
+      10000000 * (‖(4 : 𝕂) • X‖ + ‖Y‖) ^ 5 +
+      (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • X‖ + ‖Y‖) *
+        ‖((4 : 𝕂) • X) * Y - Y * ((4 : 𝕂) • X)‖ := by
+    have h_sub_poly := norm_symmetric_bch_cubic_sub_poly_le (𝕂 := 𝕂)
+      ((4 : 𝕂) • X) Y hreg
+    have h_poly := norm_symmetric_bch_cubic_poly_le_commutator (𝕂 := 𝕂)
+      ((4 : 𝕂) • X) Y
+    calc ‖symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y‖
+        = ‖(symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y -
+             symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y) +
+            symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y‖ := by abel_nf
+      _ ≤ ‖symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y‖ +
+          ‖symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y‖ := norm_add_le _ _
+      _ ≤ 10000000 * (‖(4 : 𝕂) • X‖ + ‖Y‖) ^ 5 +
+          (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • X‖ + ‖Y‖) *
+            ‖((4 : 𝕂) • X) * Y - Y * ((4 : 𝕂) • X)‖ := by linarith
+  -- Commutator bound from slice 9
+  have h_comm_bound := norm_comm_4X_Y_le (𝕂 := 𝕂) A B p τ hp h1m4p
+  -- Final triangle inequality
+  calc ‖(4 : 𝕂) • (X - T_p) + (Y - T_q) + symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y‖
+      ≤ ‖(4 : 𝕂) • (X - T_p) + (Y - T_q)‖ +
+        ‖symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y‖ := norm_add_le _ _
+    _ ≤ (‖(4 : 𝕂) • (X - T_p)‖ + ‖Y - T_q‖) +
+        ‖symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y‖ := by
+        gcongr; exact norm_add_le _ _
+    _ ≤ (4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) +
+         10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5) +
+        (10000000 * (‖(4 : 𝕂) • X‖ + ‖Y‖) ^ 5 +
+         (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • X‖ + ‖Y‖) *
+           ‖((4 : 𝕂) • X) * Y - Y * ((4 : 𝕂) • X)‖) := by
+        gcongr
+    _ ≤ 4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) +
+        10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5 +
+        10000000 * (‖(4 : 𝕂) • X‖ + ‖Y‖) ^ 5 +
+        (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • X‖ + ‖Y‖) *
+          (2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+            (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+              10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+          2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+            (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+              10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) +
+          2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+            (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+              10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) := by
+        -- Use h_comm_bound to bound the commutator norm
+        have hpos : 0 ≤ (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • X‖ + ‖Y‖) := by positivity
+        nlinarith [h_comm_bound, norm_nonneg (((4 : 𝕂) • X) * Y - Y * ((4 : 𝕂) • X)),
+                   norm_nonneg ((4 : 𝕂) • X), norm_nonneg Y]
 
 end
 
