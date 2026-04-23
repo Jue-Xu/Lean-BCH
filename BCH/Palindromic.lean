@@ -1781,6 +1781,49 @@ theorem norm_1m4p_tau_s_le_R (A B : 𝔸) (p τ : 𝕂) :
     _ = 2 * (‖τ‖ * ((3 * ‖p‖ + ‖1 - 3 * p‖) * ‖A‖ + (4 * ‖p‖ + ‖1 - 4 * p‖) * ‖B‖)) := by
         ring
 
+/-! ### Bound on `‖4•X‖ + ‖Y‖` in terms of `R = suzuki5ArgNormBound`
+
+Combining `norm_strangBlock_log_le` with the η_c ≤ R reduction lemmas gives
+an explicit bound on the composite norm `‖4•X‖ + ‖Y‖` — essential for M5's
+clean quintic form.
+-/
+
+include 𝕂 in
+/-- **Composite norm bound**: `‖4•X‖ + ‖Y‖` is bounded by an explicit expression
+in η_p and η_{1-4p}. Each is bounded by a polynomial in the respective argument
+norm via `norm_strangBlock_log_le`. -/
+theorem norm_4X_plus_Y_le_eta (A B : 𝔸) (p τ : 𝕂)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4) :
+    ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+      ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ ≤
+      4 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖) +
+           (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 +
+           10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+      (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖) +
+       (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 +
+       10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by
+  -- ‖4•X‖ ≤ ‖4‖·‖X‖ = 4·‖X‖
+  have h4X : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ ≤
+      4 * ‖strangBlock_log 𝕂 A B p τ‖ := by
+    have h4_norm : ‖(4 : 𝕂)‖ = 4 := by rw [RCLike.norm_ofNat]
+    calc ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖
+        ≤ ‖(4 : 𝕂)‖ * ‖strangBlock_log 𝕂 A B p τ‖ := norm_smul_le _ _
+      _ = 4 * ‖strangBlock_log 𝕂 A B p τ‖ := by rw [h4_norm]
+  -- ‖X‖ bound
+  have hX_bound := norm_strangBlock_log_le (𝕂 := 𝕂) A B p τ hp
+  have hY_bound := norm_strangBlock_log_le (𝕂 := 𝕂) A B (1 - 4 * p) τ h1m4p
+  calc ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+       ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖
+      ≤ 4 * ‖strangBlock_log 𝕂 A B p τ‖ +
+        ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ := by linarith
+    _ ≤ 4 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖) +
+            (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 +
+            10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) +
+        (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖) +
+         (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 +
+         10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by gcongr
+
 /-! ### Status note: M5 (clean quintic bound)
 
 Under IsSuzukiCubic, M4b's sprawling bound is already O(|τ|⁵·(‖A‖+‖B‖)⁵):
