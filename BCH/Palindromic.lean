@@ -1824,6 +1824,55 @@ theorem norm_4X_plus_Y_le_eta (A B : 𝔸) (p τ : 𝕂)
          (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 +
          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by gcongr
 
+/-! ### Telescoping norm bound for `(X + δ)^n - X^n`
+
+The key analytic input for exp-Lipschitz: `‖(X+δ)^(n+1) - X^(n+1)‖ ≤ (n+1)·‖δ‖·(‖X‖+‖δ‖)^n`.
+Proved by induction using the identity
+  `(X+δ)^(n+2) - X^(n+2) = X · ((X+δ)^(n+1) - X^(n+1)) + δ · (X+δ)^(n+1)`. -/
+
+/-- Telescoping norm bound: `‖(X + δ)^(n+1) - X^(n+1)‖ ≤ (n+1) · ‖δ‖ · (‖X‖+‖δ‖)^n`. -/
+theorem norm_pow_add_sub_pow_le (X δ : 𝔸) :
+    ∀ n : ℕ, ‖(X + δ) ^ (n + 1) - X ^ (n + 1)‖ ≤
+      (n + 1 : ℝ) * ‖δ‖ * (‖X‖ + ‖δ‖) ^ n
+  | 0 => by
+      have : (X + δ) ^ 1 - X ^ 1 = δ := by rw [pow_one, pow_one]; abel
+      rw [this]; simp
+  | n + 1 => by
+      -- identity: (X+δ)^(n+2) - X^(n+2) = X · ((X+δ)^(n+1) - X^(n+1)) + δ · (X+δ)^(n+1)
+      have ih := norm_pow_add_sub_pow_le X δ n
+      have h_id : (X + δ) ^ (n + 1 + 1) - X ^ (n + 1 + 1) =
+          X * ((X + δ) ^ (n + 1) - X ^ (n + 1)) + δ * (X + δ) ^ (n + 1) := by
+        rw [pow_succ' (X + δ) (n + 1), pow_succ' X (n + 1), add_mul]
+        noncomm_ring
+      rw [h_id]
+      have hXnn : 0 ≤ ‖X‖ := norm_nonneg _
+      have hδnn : 0 ≤ ‖δ‖ := norm_nonneg _
+      have hMnn : 0 ≤ ‖X‖ + ‖δ‖ := add_nonneg hXnn hδnn
+      have hMn_nn : 0 ≤ (‖X‖ + ‖δ‖) ^ n := pow_nonneg hMnn n
+      have hMn1_nn : 0 ≤ (‖X‖ + ‖δ‖) ^ (n + 1) := pow_nonneg hMnn (n + 1)
+      have hcoef_nn : 0 ≤ (n + 1 : ℝ) * ‖δ‖ * (‖X‖ + ‖δ‖) ^ n := by positivity
+      -- `‖(X+δ)^(n+1)‖ ≤ (‖X‖+‖δ‖)^(n+1)`
+      have h_pow_Xδ : ‖(X + δ) ^ (n + 1)‖ ≤ (‖X‖ + ‖δ‖) ^ (n + 1) := by
+        calc ‖(X + δ) ^ (n + 1)‖ ≤ ‖X + δ‖ ^ (n + 1) := norm_pow_le _ _
+          _ ≤ (‖X‖ + ‖δ‖) ^ (n + 1) := by
+              gcongr
+              exact norm_add_le _ _
+      calc ‖X * ((X + δ) ^ (n + 1) - X ^ (n + 1)) + δ * (X + δ) ^ (n + 1)‖
+          ≤ ‖X * ((X + δ) ^ (n + 1) - X ^ (n + 1))‖ + ‖δ * (X + δ) ^ (n + 1)‖ :=
+            norm_add_le _ _
+        _ ≤ ‖X‖ * ‖(X + δ) ^ (n + 1) - X ^ (n + 1)‖ +
+            ‖δ‖ * ‖(X + δ) ^ (n + 1)‖ := by
+            gcongr <;> exact norm_mul_le _ _
+        _ ≤ ‖X‖ * ((n + 1 : ℝ) * ‖δ‖ * (‖X‖ + ‖δ‖) ^ n) +
+            ‖δ‖ * (‖X‖ + ‖δ‖) ^ (n + 1) := by gcongr
+        _ ≤ (‖X‖ + ‖δ‖) * ((n + 1 : ℝ) * ‖δ‖ * (‖X‖ + ‖δ‖) ^ n) +
+            ‖δ‖ * (‖X‖ + ‖δ‖) ^ (n + 1) := by
+            have h_le : ‖X‖ ≤ ‖X‖ + ‖δ‖ := by linarith
+            gcongr
+        _ = ((n + 1 : ℕ) + 1 : ℝ) * ‖δ‖ * (‖X‖ + ‖δ‖) ^ (n + 1) := by
+            push_cast
+            ring
+
 /-! ### M6: Iterated Suzuki product and exponential form
 
 Connects the Suzuki-5 BCH to iterated products. Since `suzuki5_bch` commutes with
