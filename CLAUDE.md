@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, R₁/R₂/T3/T4 bounds complete; 1 sorry remains in `norm_symmetric_bch_cubic_sub_poly_le` (terms 5 and 6 of the triangle inequality, requiring ring-level expansion of C₃/C₄ differences)
+## Status: **BCH/Basic.lean is sorry-free (2026-04-23).** H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete.
 
 ## Goal
 
@@ -68,47 +68,27 @@ exp/log expansion.
 
 ## Remaining Sorry's
 
-### `norm_symmetric_bch_cubic_sub_poly_le` (line ~3750) — 1 inner sorry (constant adjustment + triangle ineq)
-- **Statement:** `‖sym_bch_cubic(a,b) - sym_E₃(a,b)‖ ≤ 4000·s⁵` where
-  `sym_E₃(a,b) = -(1/24)·[a,[a,b]] + (1/12)·[b,[b,a]]` is the cubic-polynomial
-  part of the symmetric BCH expansion (definition `symmetric_bch_cubic_poly`).
-- **Downstream consumer:** `norm_symmetric_bch_cubic_sub_smul_le` small-s case
-  — uses this theorem + `symmetric_bch_cubic_poly_smul` (homogeneity, ✓)
-  to close `‖E₃(ca,cb) - c³E₃(a,b)‖ ≤ 10000|c|³s⁵`.
-- **Progress so far (closed):**
-  - Setup: `a' = ½a`, `s = ‖a‖+‖b‖`, `s₁ = ‖a'‖+‖b‖`, `z = bch(a', b)`.
-  - `R₁ := z - (a'+b) - ½(a'b-ba') - C₃(a',b) - C₄(a',b)` — bounded by quintic.
-  - `W := z - (a'+b)` — bounded by quadratic (3·s₁²/(2-e^s₁)).
-  - `s₂ = ‖z‖+‖a'‖ < log 2` verified.
-  - `R₂ := bch(z,a') - (z+a') - ½(z·a'-a'·z) - C₃(z,a') - C₄(z,a')` — bounded.
-  - **Key quartic cancellation** (`symmetric_bch_quartic_identity`): the
-    four degree-4 contributions `A = ½[C₃(a',b),a']`, `B = C₄(a',b)`,
-    `C = -(1/96)·[b,DC_a]`, `D = C₄(a'+b,a')` sum to zero as a ring identity.
-    Proved by multiplying by 192, scalar clearing, `noncomm_ring`.
-  - Sketched decomposition: `sym_bch_cubic - sym_E₃ = R₁ + R₂ + ½[R₁,a'] +
-    ½[C₄(a',b),a'] + (C₃(z,a') - C₃(a'+b,a') - C) + (C₄(z,a') - D)`.
-- **Closed (algebraic core):**
-  - `symmetric_bch_cubic_poly_alt_form`: ring identity `sym_E₃ = C₃(a',b) + C₃(a'+b,a') - (1/16)·DC_a`.
-  - The decomposition equality: `sym_bch_cubic - sym_E₃ = R₁ + R₂ + ½[R₁,a'] + ½[C₄(a',b),a']
-    + (C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]) + (C₄(z,a') - C₄(a'+b,a'))`.
-    Closed via `linear_combination (norm := abel)` with `(2:𝕂)⁻¹•a + (2:𝕂)⁻¹•a = a`.
-- **Constants updated (2026-04-22):** helper `10⁷·s⁵`, downstream `2·10⁷·|c|³·s⁵`.
-- **Triangle inequality progress (4 of 6 terms closed):**
-  - R₁ ≤ 5000·s⁵ ✓
-  - R₂ ≤ 5·10⁶·s⁵ ✓ (uses `Real.exp_bound'` for tight denom estimate)
-  - ½(R₁·a' - a'·R₁) ≤ 1000·s⁵ ✓
-  - ½(C₄(a',b)·a' - a'·C₄(a',b)) ≤ s⁵ ✓
-- **Remaining 1 sorry — terms 5 and 6:**
-  - Term 5: `C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]`. Crude norm
-    bound gives O(s³), insufficient. Need ring identity expanding the
-    C₃ difference and showing the (96)⁻¹·[b,DC_a] cancels its degree-2-in-W₂ part.
-  - Term 6: `C₄(z,a') - C₄(a'+b,a')`. Need ring identity:
-    `= -(1/24)·[a', [a'+b,[W,a']] + [W,[a'+b,a']] + [W,[W,a']]]` where W = z-(a'+b).
-    Then norm bounds give O(s⁵).
-  - Both ~30 lines of `noncomm_ring` after careful setup.
-- **Depends on:** `symmetric_bch_quartic_identity` (✓), `symmetric_bch_cubic_poly_alt_form` (✓),
-  `bch_cubic_term_smul` (✓), `symmetric_bch_cubic_neg` (✓),
-  `norm_bch_quintic_remainder_le` (✓).
+None. The final two triangle-inequality terms were closed on 2026-04-23:
+
+- **Term 6** (`C₄(z,a') - C₄(a'+b,a')` ≤ 2·s⁵): proved via the ring identity
+  `DC_z - DC_p = S6` (noncomm_ring after z = (a'+b)+W) where S6 is an explicit
+  three-commutator sum, each containing at least one `W`. Norm bounds use
+  `‖W‖ ≤ 48·s²/11` and `‖a'+b‖ ≤ 3s/2`.
+- **Term 5** (`C₃(z,a') - C₃(a'+b,a') + (96)⁻¹·[b,DC_a]` ≤ 500·s⁵): proved by
+  splitting into three sub-identities:
+  1. `Id1`: `C₃(p+W,a') - C₃(p,a') = (12)⁻¹·(L(W) + Q(W))` (noncomm_ring after
+     12-injective scalar clearing);
+  2. `Id2` (key cancellation): `(12)⁻¹·L(W₂) + (96)⁻¹·(b·DC_a - DC_a·b) = 0`
+     where `W₂ = (2)⁻¹·(a'b - ba')` — pure ring identity in `a, b` proved by
+     192-injective scalar clearing + ~20 `show (192 * products of inverses) = K`
+     simp lemmas + `noncomm_ring`;
+  3. `Id3`: linearity `L(W) = L(W_rest) + L(W₂)` where `W_rest = W - W₂` (noncomm_ring).
+  Combining gives `Term5 = (12)⁻¹·L(W_rest) + (12)⁻¹·Q(W)`, where `W_rest =
+  R₁ + C₃(a',b) + C₄(a',b)` has norm `O(s³)` and `W` has norm `O(s²)`.
+  Final: `(7/12)·s²·‖W_rest‖ + (4/12)·‖W‖²·‖a'‖ ≤ 183·s⁵ + 2·s⁵ ≤ 250·s⁵`.
+- **Triangle inequality:** `R₁ + R₂ + T3 + T4 + T5 + T6 ≤ 5000 + 5·10⁶ + 1000 + 1
+  + 500 + 2 = 5,006,503 < 10⁷`, matching the statement's `10⁷·s⁵` constant.
+- Downstream `norm_symmetric_bch_cubic_sub_smul_le` (`2·10⁷·|c|³·s⁵`) also closed.
 
 ## File Structure
 
