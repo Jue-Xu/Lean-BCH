@@ -1261,6 +1261,73 @@ theorem norm_symmetric_bch_cubic_poly_le_commutator (a b : 𝔸) :
         show _ ≤ (6 : ℝ)⁻¹ * (‖a‖ + ‖b‖) * ‖C‖
         nlinarith
 
+/-! ### Commutator bound for elements close to scalar multiples of V
+
+When `a ≈ α·V` and `b ≈ β·V` (i.e., both are close to scalar multiples of a
+common element `V`), the commutator `[a, b]` is small: the leading term
+`[α•V, β•V] = αβ·[V,V] = 0` vanishes by scalar-commutativity, leaving only
+contributions involving the "remainders" `a - α•V` and `b - β•V`.
+-/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Commutator bound near V**: for any `V, a, b : 𝔸` and scalars `α, β : 𝕂`,
+  `‖a·b - b·a‖ ≤ 2·‖α•V‖·‖b - β•V‖ + 2·‖β•V‖·‖a - α•V‖ + 2·‖a - α•V‖·‖b - β•V‖`.
+
+Proof: write `a = α•V + δ_a` and `b = β•V + δ_b`. Then
+  `a·b - b·a = (α•V)(β•V) - (β•V)(α•V) + (α•V)·δ_b - δ_b·(α•V)
+             + δ_a·(β•V) - (β•V)·δ_a + δ_a·δ_b - δ_b·δ_a`.
+The first pair cancels since scalars commute (`αβ·V² - βα·V² = 0`). -/
+theorem norm_commutator_near_V_le (V a b : 𝔸) (α β : 𝕂) :
+    ‖a * b - b * a‖ ≤
+      2 * ‖α • V‖ * ‖b - β • V‖ + 2 * ‖β • V‖ * ‖a - α • V‖ +
+      2 * ‖a - α • V‖ * ‖b - β • V‖ := by
+  set δa := a - α • V with hδa_def
+  set δb := b - β • V with hδb_def
+  have ha_eq : a = α • V + δa := by rw [hδa_def]; abel
+  have hb_eq : b = β • V + δb := by rw [hδb_def]; abel
+  -- `(α•V) * (β•V) = (β•V) * (α•V)` since scalars commute.
+  have h_comm_V : (α • V) * (β • V) = (β • V) * (α • V) := by
+    rw [smul_mul_assoc, mul_smul_comm, smul_smul,
+        smul_mul_assoc, mul_smul_comm, smul_smul, mul_comm β α]
+  -- Expand a·b - b·a using distributive law manually (noncomm_ring has issues with smul).
+  have hexpand : a * b - b * a =
+      ((α • V) * δb - δb * (α • V)) + (δa * (β • V) - (β • V) * δa) +
+      (δa * δb - δb * δa) := by
+    have h1 : a * b = (α • V) * (β • V) + (α • V) * δb + δa * (β • V) + δa * δb := by
+      rw [ha_eq, hb_eq]
+      -- ((α•V) + δa) * ((β•V) + δb) expansion
+      rw [add_mul, mul_add, mul_add]
+      abel
+    have h2 : b * a = (β • V) * (α • V) + (β • V) * δa + δb * (α • V) + δb * δa := by
+      rw [ha_eq, hb_eq]
+      rw [add_mul, mul_add, mul_add]
+      abel
+    rw [h1, h2, h_comm_V]
+    abel
+  rw [hexpand]
+  calc ‖((α • V) * δb - δb * (α • V)) + (δa * (β • V) - (β • V) * δa) +
+          (δa * δb - δb * δa)‖
+      ≤ ‖((α • V) * δb - δb * (α • V)) + (δa * (β • V) - (β • V) * δa)‖ +
+        ‖δa * δb - δb * δa‖ := norm_add_le _ _
+    _ ≤ (‖(α • V) * δb - δb * (α • V)‖ + ‖δa * (β • V) - (β • V) * δa‖) +
+        ‖δa * δb - δb * δa‖ := by gcongr; exact norm_add_le _ _
+    _ ≤ 2 * ‖α • V‖ * ‖δb‖ + 2 * ‖β • V‖ * ‖δa‖ + 2 * ‖δa‖ * ‖δb‖ := by
+        gcongr
+        · calc ‖(α • V) * δb - δb * (α • V)‖
+              ≤ ‖(α • V) * δb‖ + ‖δb * (α • V)‖ := norm_sub_le _ _
+            _ ≤ ‖α • V‖ * ‖δb‖ + ‖δb‖ * ‖α • V‖ := by
+                gcongr <;> exact norm_mul_le _ _
+            _ = 2 * ‖α • V‖ * ‖δb‖ := by ring
+        · calc ‖δa * (β • V) - (β • V) * δa‖
+              ≤ ‖δa * (β • V)‖ + ‖(β • V) * δa‖ := norm_sub_le _ _
+            _ ≤ ‖δa‖ * ‖β • V‖ + ‖β • V‖ * ‖δa‖ := by
+                gcongr <;> exact norm_mul_le _ _
+            _ = 2 * ‖β • V‖ * ‖δa‖ := by ring
+        · calc ‖δa * δb - δb * δa‖
+              ≤ ‖δa * δb‖ + ‖δb * δa‖ := norm_sub_le _ _
+            _ ≤ ‖δa‖ * ‖δb‖ + ‖δb‖ * ‖δa‖ := by gcongr <;> exact norm_mul_le _ _
+            _ = 2 * ‖δa‖ * ‖δb‖ := by ring
+
 /-! ### Final form of M4a (statement deferred to a later session)
 
 The full theorem `norm_suzuki5_bch_sub_smul_sub_cubic_le`, asserting
