@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: **BCH/Basic.lean is sorry-free (2026-04-23).** H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete.
+## Status: **BCH/Basic.lean and BCH/Palindromic.lean are sorry-free (2026-04-23).** Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, and **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic.
 
 ## Goal
 
@@ -95,5 +95,6 @@ None. The final two triangle-inequality terms were closed on 2026-04-23:
 ```
 BCH/
 ├── LogSeries.lean    ← log(1+x) series definition, summability, exp∘log = id
-└── Basic.lean        ← exp bounds, BCH definition, H1, H2, Lie bracket bridge
+├── Basic.lean        ← exp bounds, BCH definition, H1, H2, Lie bracket bridge
+└── Palindromic.lean  ← Suzuki-5 palindromic product, M1–M4b, M6 Trotter h4
 ```
