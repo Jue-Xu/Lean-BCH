@@ -1824,6 +1824,41 @@ theorem norm_4X_plus_Y_le_eta (A B : 𝔸) (p τ : 𝕂)
          (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 +
          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by gcongr
 
+/-! ### M6: Iterated Suzuki product and exponential form
+
+Connects the Suzuki-5 BCH to iterated products. Since `suzuki5_bch` commutes with
+itself, `S(τ)^n = exp(n • suzuki5_bch)`. Combined with M4b, this gives
+`S(τ)^n = exp(n·τ·(A+B) + n·δ)` where `‖δ‖ = O(|τ|⁵·s⁵)` under IsSuzukiCubic,
+yielding the `O(1/n⁴)` Trotter-h4 rate.
+-/
+
+/-- The `n`-fold iterated Suzuki-5 product: matches `Lean-Trotter`'s `s4Func`
+interpretation for fixed Suzuki parameter `p`. -/
+noncomputable def s4Func (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (A B : 𝔸) (p τ : 𝕂) (n : ℕ) : 𝔸 :=
+  (suzuki5Product A B p τ) ^ n
+
+include 𝕂 in
+/-- **Exponential form of the iterated Suzuki-5 product**: in the regime where
+`suzuki5_bch` is well-defined, `s4Func A B p τ n = exp(n • suzuki5_bch A B p τ)`.
+
+Follows from `exp(suzuki5_bch) = S(τ)` (M2b round-trip) + `exp(n•x) = exp(x)^n`
+(since any element commutes with itself). -/
+theorem s4Func_eq_exp_nsmul (A B : 𝔸) (p τ : 𝕂) (n : ℕ)
+    (h : suzuki5ArgNormBound A B p τ < Real.log 2) :
+    s4Func 𝕂 A B p τ n = exp ((n : 𝕂) • suzuki5_bch 𝕂 A B p τ) := by
+  letI : NormedAlgebra ℝ 𝔸 := NormedAlgebra.restrictScalars ℝ 𝕂 𝔸
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  unfold s4Func
+  have hexp : exp (suzuki5_bch 𝕂 A B p τ) = suzuki5Product A B p τ :=
+    exp_suzuki5_bch (𝕂 := 𝕂) A B p τ h
+  rw [← hexp]
+  -- Convert (n : 𝕂) smul to ℕ nsmul to use exp_nsmul
+  have h_smul_eq : ((n : 𝕂) • suzuki5_bch 𝕂 A B p τ) = n • suzuki5_bch 𝕂 A B p τ := by
+    rw [← Nat.cast_smul_eq_nsmul 𝕂]
+  rw [h_smul_eq, exp_nsmul]
+
 /-! ### Status note: M5 (clean quintic bound)
 
 Under IsSuzukiCubic, M4b's sprawling bound is already O(|τ|⁵·(‖A‖+‖B‖)⁵):
