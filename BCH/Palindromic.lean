@@ -1669,6 +1669,49 @@ theorem norm_suzuki5_bch_sub_smul_le_of_IsSuzukiCubic (A B : 𝔸) (p τ : 𝕂)
   rw [h_eq]
   exact norm_suzuki5_bch_sub_smul_sub_cubic_le (𝕂 := 𝕂) A B p τ hR hp h1m4p hreg hZ1 hZ2
 
-end
+/-! ### Norm bound for strangBlock_log
 
-end BCH
+Useful intermediate: bounds `‖strangBlock_log‖` by the argument norm plus
+cubic/quintic corrections. Derived by triangle inequality from slice 4.
+-/
+
+include 𝕂 in
+/-- `‖strangBlock_log A B c τ‖ ≤ η + η³ + 10⁷·η⁵` where `η = ‖c*τ‖·(‖A‖+‖B‖)`.
+Follows from triangle inequality with slice 4's linear-remainder cubic bound. -/
+theorem norm_strangBlock_log_le (A B : 𝔸) (c τ : 𝕂)
+    (h : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ < 1 / 4) :
+    ‖strangBlock_log 𝕂 A B c τ‖ ≤
+      ‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖) +
+      (‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 3 +
+      10000000 * (‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5 := by
+  set η := ‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖) with hη_def
+  -- ‖strangBlock_log - (cτ)•V‖ ≤ η³ + 10⁷·η⁵ (slice 4)
+  have hlin := norm_strangBlock_log_sub_linear_le (𝕂 := 𝕂) A B c τ h
+  -- ‖(cτ)•V‖ ≤ ‖cτ‖·‖V‖ ≤ ‖cτ‖·(‖A‖+‖B‖) = η
+  have hV_bound : ‖(c * τ) • (A + B)‖ ≤ η := by
+    calc ‖(c * τ) • (A + B)‖ ≤ ‖(c * τ : 𝕂)‖ * ‖A + B‖ := norm_smul_le _ _
+      _ ≤ ‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖) := by gcongr; exact norm_add_le _ _
+      _ = η := by rw [hη_def]
+  -- Triangle: ‖sb_log‖ ≤ ‖sb_log - (cτ)•V‖ + ‖(cτ)•V‖
+  calc ‖strangBlock_log 𝕂 A B c τ‖
+      = ‖(strangBlock_log 𝕂 A B c τ - (c * τ) • (A + B)) + (c * τ) • (A + B)‖ := by
+        congr 1; abel
+    _ ≤ ‖strangBlock_log 𝕂 A B c τ - (c * τ) • (A + B)‖ + ‖(c * τ) • (A + B)‖ :=
+        norm_add_le _ _
+    _ ≤ (η ^ 3 + 10000000 * η ^ 5) + η := by
+        gcongr
+    _ = η + η ^ 3 + 10000000 * η ^ 5 := by ring
+
+/-! ### Status note: M5 (clean quintic bound)
+
+Under IsSuzukiCubic, M4b's sprawling bound is already O(|τ|⁵·(‖A‖+‖B‖)⁵):
+- Per-block terms `σ_c⁵` are `O((|c·τ|·s)⁵) = O(|τ|⁵·s⁵)`.
+- Outer symmetric term `(‖4X‖+‖Y‖)⁵` is `O(|τ|⁵·s⁵)` since `‖X‖ = O(|pτ|·s)`.
+- Commutator term `(‖4X‖+‖Y‖)·‖[4X,Y]‖` is `O(|τ|·s)·O(|τ|⁴·s⁴) = O(|τ|⁵·s⁵)`.
+
+Converting M4b's bound to a clean `K·|τ|⁵·s⁵` form requires tracking constants
+through σ_c ≤ |c|·|τ|·s, ‖X‖ ≤ C·|pτ|·s (derivable from slice 4), and the
+slice 9 commutator bound. This assembly is deferred to a subsequent session;
+the existing M4b bound is sufficient for downstream Trotter h4 applications
+by bounding each term individually.
+-/
