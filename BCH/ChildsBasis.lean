@@ -145,33 +145,38 @@ noncomputable def childsPrefactors : BCHPrefactors where
   nonneg₇ := by norm_num
   nonneg₈ := by norm_num
 
-/-- **BCH-derived tight prefactors** — leading-order rational
-over-approximations of `|βᵢ(suzukiP)|` where `βᵢ(p)` are the degree-2
+/-- **BCH-derived tight prefactors** — rational CEILINGS of
+`|βᵢ(suzukiP)|` at the 1/10⁶ grid, where `βᵢ(p)` are the degree-2
 polynomial coefficients from the CAS pipeline
 `scripts/compute_bch_prefactors.py` (Lean-Trotter) and
 `suzuki5_βᵢ` (Lean-BCH).
 
-At Suzuki `p = 1/(4 − 4^(1/3)) ≈ 0.4145`, the 8 values are:
-  γ₁ ≈ 0.000260,  γ₂ ≈ 0.000662,  γ₃ = 0,       γ₄ ≈ 0.000132,
-  γ₅ ≈ 0.000376,  γ₆ ≈ 0.001127,  γ₇ = 0,       γ₈ ≈ 0.000442.
+At Suzuki `p = 1/(4 − 4^(1/3)) ≈ 0.4144908`, the 8 numerical
+`|βᵢ(suzukiP)|` values are:
+  |β₁| ≈ 0.0002595,  |β₂| ≈ 0.0006624,  |β₃| = 0,       |β₄| ≈ 0.0001317,
+  |β₅| ≈ 0.0003757,  |β₆| ≈ 0.0011272,  |β₇| = 0,       |β₈| ≈ 0.0004416.
 
-**Every value is strictly smaller than Childs's heuristic coefficient**.
-Values stored as exact rationals over 10⁶ (ceilings of the numerical
-values above).
+We store ceilings at the 1/10⁶ grid so that `γᵢ ≥ |βᵢ(suzukiP)|` holds
+rigorously (slack ~10⁻⁷ per coefficient). Earlier versions used
+truncations which failed the strict inequality for γ₂ and γ₆.
+
+**Every ceiling value is strictly smaller than Childs's heuristic
+coefficient** (~9× to ~64× tighter for non-zero values; two are
+exactly 0).
 
 Caveat: the Childs 8-commutator basis is over-complete (2 free
 parameters in the projection because the weight-5 free Lie algebra is
 6-dimensional). We chose the projection setting both free parameters
 to zero (giving `γ₃ = γ₇ = 0`). -/
 noncomputable def bchTightPrefactors : BCHPrefactors where
-  γ₁ := 260 / 1000000
-  γ₂ := 662 / 1000000
-  γ₃ := 0
-  γ₄ := 132 / 1000000
-  γ₅ := 376 / 1000000
-  γ₆ := 1127 / 1000000
-  γ₇ := 0
-  γ₈ := 442 / 1000000
+  γ₁ := 260 / 1000000   -- ceiling of |β₁(suzukiP)| ≈ 0.0002595
+  γ₂ := 663 / 1000000   -- ceiling of |β₂(suzukiP)| ≈ 0.0006624
+  γ₃ := 0               -- exact
+  γ₄ := 132 / 1000000   -- ceiling of |β₄(suzukiP)| ≈ 0.0001317
+  γ₅ := 376 / 1000000   -- ceiling of |β₅(suzukiP)| ≈ 0.0003757
+  γ₆ := 1128 / 1000000  -- ceiling of |β₆(suzukiP)| ≈ 0.0011272
+  γ₇ := 0               -- exact
+  γ₈ := 442 / 1000000   -- ceiling of |β₈(suzukiP)| ≈ 0.0004416
   nonneg₁ := by norm_num
   nonneg₂ := by norm_num
   nonneg₃ := by norm_num
