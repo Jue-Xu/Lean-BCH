@@ -1,6 +1,11 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: **All BCH files sorry-free (2026-04-24).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure) and Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis definition + unit-coefficient norm bound + headline τ⁵-identification theorem + bridge corollary) added. The headline theorem `norm_suzuki5_bch_sub_smul_sub_R5_le` and its bridge corollary `suzuki5_log_product_quintic_of_IsSuzukiCubic` are now present with the signatures consumed by Lean-Trotter's `bch_w4Deriv_quintic_level2`. They currently depend on one scoped private axiom (`suzuki5_R5_identification_axiom`) that encodes the Tier-2 symbolic 5-factor BCH identification — see "Remaining axioms" section below. Repository remains 0-sorry.
+## Status: **All BCH files sorry-free (2026-04-24, updated session 7).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure + BCHPrefactors struct), Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis def + unit-coefficient norm bound + headline τ⁵-identification theorem + bridge corollary + tight bridge at Suzuki p). Infrastructure is ready for Lean-Trotter's axioms 1 AND 2:
+
+- Axiom 1 (`bch_w4Deriv_quintic_level2`): wired up via `suzuki5_log_product_quintic_of_IsSuzukiCubic`; derived from `suzuki5_R5_identification_axiom`.
+- Axiom 2 (`bch_w4Deriv_level3_tight`): NEW this session. Bridge theorem `suzuki5_log_product_quintic_tight_at_suzukiP` derived from the headline theorem + a second scoped axiom `suzuki5_R5_at_suzukiP_tight_bound_axiom`.
+
+Repository remains 0-sorry. Axiom count: 2 scoped `private axiom`s + Lean's 3 standard. See "Remaining axioms" section below. A `suzukiP_mem_rational_interval` lemma (`414/1000 < suzukiP < 415/1000`) is proved rigorously; it's the foundation for future numerical discharge of the Tier-3 axiom.
 
 Earlier state: Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic — and **M4b RHS quintic corollary** `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (∃ δ, K, ∀ τ < δ, RHS ≤ K·‖τ‖⁵), which is the payoff lemma for downstream Lean-Trotter.
 
@@ -76,39 +81,94 @@ sorry-free.
 ## Remaining axioms
 
 Beyond Lean's standard three (`propext`, `Classical.choice`, `Quot.sound`),
-the following `private axiom` is introduced on branch
+the following `private axiom`s are introduced on branch
 `trotter-5factor-palindromic`:
 
-- `BCH.suzuki5_R5_identification_axiom`
-  (in `BCH/Suzuki5Quintic.lean`, scope-`private`) — the symbolic 5-factor
-  BCH τ⁵-identification statement. Asserts that under `IsSuzukiCubic p`,
-  `∃ δ > 0, ∃ K ≥ 0, ∀ τ ∈ [−δ, δ],
-   ‖suzuki5_bch ℝ A B p τ − τ•(A+B) − τ⁵ • suzuki5_R5 A B p‖ ≤ K·‖τ‖⁶`.
+### Axiom 1: `BCH.suzuki5_R5_identification_axiom`
 
-  The two public theorems `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le` and
-  `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` depend on this axiom
-  (verified by `#print axioms`). Their public signatures match what
-  Lean-Trotter's `bch_w4Deriv_quintic_level2` axiom consumes, so downstream
-  code can be wired up without waiting for the axiom to be discharged.
+(in `BCH/Suzuki5Quintic.lean`, scope-`private`) — the symbolic 5-factor
+BCH τ⁵-identification statement. Asserts that under `IsSuzukiCubic p`,
+`∃ δ > 0, ∃ K ≥ 0, ∀ τ ∈ [−δ, δ],
+ ‖suzuki5_bch ℝ A B p τ − τ•(A+B) − τ⁵ • suzuki5_R5 A B p‖ ≤ K·‖τ‖⁶`.
 
-  Removing the axiom requires three tiers of symbolic Lean work (see
-  header docstring of `BCH/Suzuki5Quintic.lean`):
+The public theorems `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le` and
+`BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` depend on this axiom.
+Their signatures match Lean-Trotter's `bch_w4Deriv_quintic_level2`.
+Lean-Trotter at rev `5a2c03e` has already converted axiom 1 to a theorem
+using these.
 
-  - **Tier 1** (~1–2 days): quintic Taylor expansion of each
-    `strangBlock_log A B c τ`, extending `Basic.lean`'s 2-factor
-    `norm_symmetric_bch_cubic_sub_smul_le` to the 3-factor symmetric
-    strangBlock case.
-  - **Tier 2** (~weeks, the hardest): symbolic triple-BCH composition,
-    substituting Tier 1 into `suzuki5_bch = bch(bch(2X, Y), 2X)`, expanding
-    via `norm_bch_sub_add_sub_bracket_le` (H1), and Gauss-Jordan
-    projecting onto the Childs 4-fold commutator basis. LCM of
-    denominators ≈ 144000; use scalar-clearing `noncomm_ring`.
-  - **Tier 3** (~1 day): triangle-inequality residual bounding using the
-    existing `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` and the Tier 1/2
-    residuals.
+Removing the axiom requires three tiers of symbolic Lean work (see
+header docstring of `BCH/Suzuki5Quintic.lean`):
 
-  The user's phase-1 task prompt explicitly sanctioned the Tier-2 axiom
-  fallback; removing the axiom is earmarked for follow-up sessions.
+- **Tier 1** (~1–2 days): quintic Taylor expansion of each
+  `strangBlock_log A B c τ`, extending `Basic.lean`'s 2-factor
+  `norm_symmetric_bch_cubic_sub_smul_le` to the 3-factor symmetric
+  strangBlock case.
+- **Tier 2** (~weeks, the hardest): symbolic triple-BCH composition,
+  substituting Tier 1 into `suzuki5_bch = bch(bch(2X, Y), 2X)`, expanding
+  via `norm_bch_sub_add_sub_bracket_le` (H1), and Gauss-Jordan
+  projecting onto the Childs 4-fold commutator basis. LCM of
+  denominators ≈ 144000; use scalar-clearing `noncomm_ring`.
+- **Tier 3** (~1 day): triangle-inequality residual bounding using the
+  existing `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` and the Tier 1/2
+  residuals.
+
+The user's phase-1 task prompt explicitly sanctioned the Tier-2 axiom
+fallback; removing the axiom is earmarked for follow-up sessions.
+
+### Axiom 2: `BCH.suzuki5_R5_at_suzukiP_tight_bound_axiom` (NEW session 7)
+
+(in `BCH/Suzuki5Quintic.lean`, scope-`private`) — the tight R₅ norm
+bound at the canonical Suzuki `p = 1/(4 − 4^(1/3))`:
+`‖suzuki5_R5 A B suzukiP‖ ≤ bchTightPrefactors.boundSum A B`.
+
+Asserted over `bchTightPrefactors` with the 8 rational γᵢ values
+ported from Lean-Trotter's `LieTrotter/Suzuki4ViaBCH.lean`.
+
+**⚠️ KNOWN ISSUE**: Lean-Trotter's `bchTightPrefactors` γ₂ and γ₆
+values are *truncations* of `|βᵢ(suzukiP)|` to 6 decimals rather than
+*ceilings*. Explicit computation shows:
+- `β₂(suzukiP) ≈ 0.000662_37 > γ₂ = 662/10⁶`
+- `β₆(suzukiP) ≈ 0.001127_22 > γ₆ = 1127/10⁶`
+
+each by ~0.3×10⁻⁶. The axiom as stated is *false in general* (e.g., on
+free non-commutative polynomial algebras where `‖βᵢ·Cᵢ‖ = |βᵢ|·‖Cᵢ‖`
+and cancellation doesn't save you). Discharging requires a coordinated
+γ-value correction in both repos:
+- `γ₂ := 663 / 10⁶` (was 662/10⁶)
+- `γ₆ := 1128 / 10⁶` (was 1127/10⁶)
+
+All other γᵢ values are strict upper bounds (i ∈ {1, 4, 5, 8}) — or
+exactly zero (i ∈ {3, 7}).
+
+Discharge roadmap once values are corrected:
+1. Use the rigorously-proved helper lemma
+   `BCH.suzukiP_mem_rational_interval` (proves `414/1000 < suzukiP <
+   415/1000` via nlinarith on the Suzuki cubic).
+2. For each `i`, prove `|βᵢ(suzukiP)| ≤ γᵢ` via `nlinarith` using
+   polynomial hints at the interval endpoints. (Each `βᵢ` is quadratic
+   in `p`; the interval is tight enough to bound `|βᵢ|` by the ceiling.)
+3. Assemble the R₅ norm bound via `norm_add_le` + `norm_smul_le`.
+
+Estimated effort: ~1 day after γ-values fixed.
+
+The bridge theorem `BCH.suzuki5_log_product_quintic_tight_at_suzukiP`
+depends on both axioms (verified by `#print axioms`). It matches
+Lean-Trotter's `bch_w4Deriv_level3_tight` axiom signature.
+
+### Rigorously proved this session (no new axioms introduced)
+
+- `BCH.suzukiP` — the canonical real Suzuki root `1/(4 − 4^(1/3))`.
+- `BCH.IsSuzukiCubic_suzukiP` — `IsSuzukiCubic suzukiP`, from the
+  algebraic identity `4p³ + (1 − 4p)³ = (4 − r³)/(4 − r)³` at `r =
+  4^(1/3)` where `r³ = 4`.
+- `BCH.rpow_one_third_cube` — `((4 : ℝ) ^ (1/3))³ = 4` via
+  `Real.rpow_mul`.
+- `BCH.suzukiP_mem_rational_interval` — `414/1000 < suzukiP < 415/1000`
+  via nlinarith on the expanded cubic + polynomial hints.
+- `BCH.BCHPrefactors` struct + `bchTightPrefactors` instance +
+  `BCHPrefactors.boundSum` + positivity +
+  `bchTightPrefactors_boundSum_le_bchFourFoldSum` (tight sum ≤ unit-coefficient sum).
 
 ### Prior closures
 
@@ -202,8 +262,24 @@ This branch closes axiom 1 prerequisites (but not axiom 1 itself yet).
   Lean-Trotter a clean interface to pin against while the symbolic work
   happens in follow-up sessions.
 
-### Axioms 2 and 3
+### Axiom 2 infrastructure (session 7, this branch)
 
-Out of scope on this branch. Each requires further Lean-BCH work
-(axiom 2 = specialization of R₅ to Suzuki p; axiom 3 = order-7 + R₇
-bound + FTC-2 integration).
+Lean-BCH-side infrastructure for Lean-Trotter's `bch_w4Deriv_level3_tight`
+is now in place:
+
+- `BCH.BCHPrefactors`, `BCH.childsPrefactors`, `BCH.bchTightPrefactors`,
+  `BCH.BCHPrefactors.boundSum` — ported from Lean-Trotter's
+  `LieTrotter/Suzuki4ViaBCH.lean` to `BCH/ChildsBasis.lean`.
+- `BCH.suzukiP`, `BCH.IsSuzukiCubic_suzukiP`,
+  `BCH.suzukiP_mem_rational_interval` — canonical Suzuki root machinery.
+- `BCH.norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum` —
+  tight R₅ norm bound (axiom-chained; see "Remaining axioms" above).
+- **`BCH.suzuki5_log_product_quintic_tight_at_suzukiP`** — bridge
+  theorem matching Lean-Trotter's `bch_w4Deriv_level3_tight`. Ready
+  for Lean-Trotter-side axiom → theorem conversion once the γ₂/γ₆
+  values in Lean-Trotter are corrected (see "Known issue" above).
+
+### Axiom 3
+
+Out of scope on this branch. Requires order-7 BCH + R₇ bound + FTC-2
+integration.
