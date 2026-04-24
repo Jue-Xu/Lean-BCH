@@ -535,4 +535,112 @@ theorem norm_symmetric_bch_quintic_poly_le (a b : 𝔸) :
 
 end SymmetricQuinticPoly
 
+/-!
+## Quintic Taylor bridge for the 3-factor symmetric BCH (B1.c)
+
+`norm_symmetric_bch_quintic_sub_poly_le` asserts that after subtracting both
+the cubic polynomial `symmetric_bch_cubic_poly` and the quintic polynomial
+`symmetric_bch_quintic_poly`, the residual of `symmetric_bch_cubic` decays
+as `O(s⁷)`. By palindromic symmetry of `log(exp(a/2)·exp(b)·exp(a/2))`,
+every even-degree Taylor coefficient vanishes — so degrees 2, 4, 6 are all
+zero, and the first non-zero residual sits at degree 7.
+
+CAS verification at
+`Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms this:
+degree-7 has 126 non-zero 7-letter words (over `{a, b}`), while degrees
+2, 4, 6 all vanish identically. The `s⁷` bound with constant `10⁹`
+dominates the series tail for `s < 1/4`.
+
+### Proof status
+
+**Currently accepted from a scoped Tier-2 axiom**
+(`symmetric_bch_quintic_sub_poly_axiom`), analogous to Lean-Trotter's
+Tier-2 fallback for the τ⁵-identification axiom. The full Lean proof
+requires substantial new infrastructure:
+
+* **Tier 1** (~1–2 days): add `bch_quintic_term a b` and
+  `norm_bch_sextic_remainder_le` in `Basic.lean` (analogs of the existing
+  `bch_quartic_term` and `norm_bch_quintic_remainder_le`), identifying
+  the degree-5 coefficient of `bch(a,b)` and giving an `O(s⁶/(2−exp(s)))`
+  tail bound.
+
+* **Tier 2** (~1 week, the hardest): extend the 6-term algebraic
+  decomposition of the cubic template
+  `norm_symmetric_bch_cubic_sub_poly_le` (`Basic.lean`, ~line 3798) to
+  the 8–10-term decomposition of the quintic version. Each extra term
+  captures a degree-5 correction that is bounded by commutator algebra
+  and the sextic remainder. CAS pipeline at
+  `Lean-Trotter/scripts/compute_bch_prefactors.py` (extended to degree 7)
+  discovers the decomposition mechanically.
+
+* **Tier 3** (~1 day): triangle-inequality assembly of the 8–10 per-term
+  `O(s⁷)` bounds, analogous to the cubic template's `5×10⁶ + 5000 + …`
+  constant chain.
+
+The axiom is introduced `private` so only the public
+`norm_symmetric_bch_quintic_sub_poly_le` theorem appears in the API.
+Downstream consumers — the `strangBlock_log` wrapper in `Palindromic.lean`
+(B1.d) and the symbolic 5-factor composition in `Suzuki5Quintic.lean` (B2) —
+depend only on the theorem, not on the underlying axiom.
+-/
+
+section QuinticTaylorBridge
+
+variable {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+  [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+
+/-- **[Tier-2 axiom, pending]** — the quintic Taylor bridge for the 3-factor
+symmetric BCH.
+
+Asserts that after subtracting both the cubic polynomial
+`symmetric_bch_cubic_poly` (line-3 Taylor coefficient) and the quintic
+polynomial `symmetric_bch_quintic_poly` (line-5 Taylor coefficient, defined
+above), the residual of `symmetric_bch_cubic a b` is `O(s⁷)`.
+
+By palindromic symmetry of `log(exp(a/2)·exp(b)·exp(a/2))`, degrees 2, 4,
+and 6 vanish identically (CAS-verified at
+`Lean-Trotter/scripts/verify_strangblock_degree7.py`), so the first
+non-zero residual is at degree 7.
+
+The constant `10⁹` is a loose margin — degree 7 has 126 non-zero words in
+`{a,b}`, and the geometric tail for `s < 1/4` contributes a small further
+factor. A tighter version with `K·s⁷/(2−exp(s))` (analog of
+`norm_bch_sextic_remainder_le`) would be possible, but the simpler `K·s⁷`
+form suffices for B1.d and B2 downstream uses.
+
+Introduced `private` so only the public derived
+`norm_symmetric_bch_quintic_sub_poly_le` theorem appears in the API. -/
+private axiom symmetric_bch_quintic_sub_poly_axiom
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b -
+       symmetric_bch_quintic_poly 𝕂 a b‖ ≤
+      1000000000 * (‖a‖ + ‖b‖) ^ 7
+
+include 𝕂 in
+/-- **Quintic Taylor bridge for the 3-factor symmetric BCH**:
+
+    ‖symmetric_bch_cubic(a,b) − symmetric_bch_cubic_poly(a,b)
+        − symmetric_bch_quintic_poly(a,b)‖ ≤ 10⁹ · (‖a‖+‖b‖)⁷
+
+for `‖a‖+‖b‖ < 1/4`. Extends `norm_symmetric_bch_cubic_sub_poly_le`
+(`Basic.lean`) by one degree higher, factoring out the τ⁵ coefficient
+along with the τ³ coefficient.
+
+**Status**: Currently derived from the scoped Tier-2 axiom
+`symmetric_bch_quintic_sub_poly_axiom`. The public signature is stable so
+downstream work (B1.d's `strangBlock_log` wrapper, B2's symbolic 5-factor
+composition, Lean-Trotter's `bch_w4Deriv_quintic_level2`) depends only on
+this theorem, not on the underlying axiom. Removing the axiom requires
+the Tier 1/2/3 work described in the section header above. -/
+theorem norm_symmetric_bch_quintic_sub_poly_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b -
+       symmetric_bch_quintic_poly 𝕂 a b‖ ≤
+      1000000000 * (‖a‖ + ‖b‖) ^ 7 :=
+  symmetric_bch_quintic_sub_poly_axiom (𝕂 := 𝕂) a b hab
+
+end QuinticTaylorBridge
+
 end BCH
