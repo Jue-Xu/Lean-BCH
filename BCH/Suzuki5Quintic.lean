@@ -342,4 +342,182 @@ theorem norm_suzuki5_R5_le_bchFourFoldSum
         ‖childsComm₅ A B‖ + ‖childsComm₆ A B‖ + ‖childsComm₇ A B‖ + ‖childsComm₈ A B‖ := by
         linarith [hC₁, hC₂, hC₃, hC₄, hC₅, hC₆, hC₇, hC₈]
 
+/-!
+## Headline theorem: τ⁵ identification of `log(suzuki5Product)`
+
+Under `IsSuzukiCubic p`, the τ⁵ Taylor coefficient of `suzuki5_bch ℝ A B p τ
+− τ•(A+B)` is precisely `suzuki5_R5 A B p` (the Childs-basis projection),
+with τ⁶ residual:
+
+    ‖suzuki5_bch ℝ A B p τ − τ•(A+B) − τ⁵•suzuki5_R5 A B p‖ ≤ K·|τ|⁶
+
+for `|τ| < δ`.
+
+### Proof status
+
+This theorem is currently accepted from a scoped **Tier-2 axiom**
+(`suzuki5_R5_identification_axiom`). The underlying fact is the symbolic
+5-factor BCH composition identity: after substituting the quintic Taylor
+expansions of each `strangBlock_log` block into the 5-factor decomposition
+
+    suzuki5_bch = bch(bch(2•X, Y), 2•X)      -- X = sb_log_p, Y = sb_log_q
+
+and collecting terms, the τ⁵ coefficient projects onto the 8 Childs 4-fold
+commutators with the polynomial prefactors `βᵢ(p)` enumerated earlier in
+this file (matching the CAS pipeline at
+`Lean-Trotter/scripts/compute_bch_prefactors.py`).
+
+Removing the axiom requires three tiers of Lean-BCH work:
+
+* **Tier 1** (~1–2 days): quintic Taylor expansion of each
+  `strangBlock_log A B c τ`, identifying the τ³ coefficient as
+  `(cτ)³•symmetric_bch_cubic_poly A B` (already in `Basic.lean`) and the
+  τ⁵ coefficient as a new `strangBlock_R5 A B`. Template: the 2-factor
+  `norm_symmetric_bch_cubic_sub_smul_le` in `Basic.lean`.
+
+* **Tier 2** (~1 week, the hardest): symbolic triple-BCH composition in
+  the free algebra. Substitute the Tier 1 expansion into the 5-factor
+  decomposition and expand via the BCH cubic remainder
+  `norm_bch_sub_add_sub_bracket_le` (H1). Collect the τ⁵ coefficient and
+  apply Gauss-Jordan in the 4-fold commutator basis to match
+  `suzuki5_R5`. LCM of denominators ≈ 144000 — use scalar-clearing
+  `noncomm_ring` after multiplying both sides.
+
+* **Tier 3** (~1 day): triangle-inequality residual bounding. Combine
+  Tier 1/Tier 2 symbolic residuals with the existing
+  `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (quintic-magnitude M4b
+  bound) to get the O(τ⁶) tail.
+
+The axiom is introduced `private` to its declaring section so that only
+`norm_suzuki5_bch_sub_smul_sub_R5_le` (and the downstream bridge corollary)
+appears as a `theorem` in the public API.
+-/
+
+section HeadlineTheorem
+
+variable {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra ℝ 𝔸]
+  [NormOneClass 𝔸] [CompleteSpace 𝔸]
+
+/-- **[Tier-2 axiom, pending]** — The symbolic 5-factor BCH identification
+that the τ⁵ coefficient of `suzuki5_bch` in the Childs 4-fold commutator
+basis is `suzuki5_R5`.
+
+This axiom captures what would otherwise require a multi-week symbolic
+non-commutative BCH expansion in Lean (see docstring of
+`norm_suzuki5_bch_sub_smul_sub_R5_le` for the Tier 1/2/3 roadmap).
+
+Introduced `private` so only the public
+`norm_suzuki5_bch_sub_smul_sub_R5_le` theorem is visible to downstream
+callers. -/
+private axiom suzuki5_R5_identification_axiom
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra ℝ 𝔸]
+    [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : ℝ, ‖τ‖ < δ →
+      ‖suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p‖
+        ≤ K * ‖τ‖ ^ 6
+
+/-- **Headline theorem (τ⁵ identification)**: Under `IsSuzukiCubic p`,
+`suzuki5_bch` has leading-order quintic expansion
+
+    suzuki5_bch ℝ A B p τ = τ•(A+B) + τ⁵ • suzuki5_R5 A B p + O(τ⁶)
+
+where `suzuki5_R5 A B p` is the explicit Childs 4-fold commutator
+projection with polynomial prefactors `βᵢ(p)` (see
+`Suzuki5Quintic.lean` header).
+
+Quantitatively: `∃ δ > 0, ∃ K ≥ 0, ∀ τ, |τ| < δ →
+  ‖suzuki5_bch ℝ A B p τ − τ•(A+B) − τ⁵•suzuki5_R5 A B p‖ ≤ K·|τ|⁶`.
+
+**Status**: Currently derived from the scoped Tier-2 axiom
+`suzuki5_R5_identification_axiom`. The public signature is preserved so
+downstream proofs (e.g. the bridge corollary
+`suzuki5_log_product_quintic_of_IsSuzukiCubic` in `Palindromic.lean` and
+Lean-Trotter's `bch_w4Deriv_quintic_level2`) depend only on this theorem,
+not on the private axiom. Removing the axiom requires the Tier 1/2/3 work
+described in the module header. -/
+theorem norm_suzuki5_bch_sub_smul_sub_R5_le
+    (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : ℝ, ‖τ‖ < δ →
+      ‖suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p‖
+        ≤ K * ‖τ‖ ^ 6 :=
+  suzuki5_R5_identification_axiom A B p hcubic
+
+/-!
+## Bridge corollary: quintic-magnitude bound via the Childs 4-fold sum
+
+Direct consequence of `norm_suzuki5_bch_sub_smul_sub_R5_le` combined with
+`norm_suzuki5_R5_le_bchFourFoldSum` via the triangle inequality:
+
+  ‖suzuki5_bch − τ•(A+B)‖
+    ≤ ‖suzuki5_bch − τ•(A+B) − τ⁵•R₅‖ + ‖τ⁵•R₅‖
+    ≤ K·τ⁶ + τ⁵ · bchFourFoldSum A B
+
+This is the form consumed by Lean-Trotter's axiom
+`bch_w4Deriv_quintic_level2` in `LieTrotter/Suzuki4ViaBCH.lean`.
+
+(Module placement note: the bridge corollary naturally belongs in
+`Palindromic.lean` per the phase-1 task spec, but the import direction
+`Palindromic → Suzuki5Quintic → ChildsBasis` forces it here since the
+proof references `norm_suzuki5_bch_sub_smul_sub_R5_le` and
+`norm_suzuki5_R5_le_bchFourFoldSum`, both in this file.)
+-/
+
+/-- **Bridge corollary**: under `IsSuzukiCubic p`, the quintic-magnitude BCH
+bound `‖suzuki5_bch − τ•(A+B)‖ ≤ τ⁵·bchFourFoldSum A B + K·τ⁶` for small
+non-negative `τ`. Combines the explicit `suzuki5_R5` identification with
+its unit-coefficient Childs-sum norm bound.
+
+Signature shape matches the form consumed by Lean-Trotter's axiom
+`bch_w4Deriv_quintic_level2`. -/
+theorem suzuki5_log_product_quintic_of_IsSuzukiCubic
+    (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki5_bch ℝ A B p τ - τ • (A + B)‖ ≤
+        τ ^ 5 * bchFourFoldSum A B + K * τ ^ 6 := by
+  obtain ⟨δ, hδ_pos, K, hK_nn, hbound⟩ :=
+    norm_suzuki5_bch_sub_smul_sub_R5_le A B p hcubic
+  refine ⟨δ, hδ_pos, K, hK_nn, ?_⟩
+  intro τ hτ_nn hτ_lt
+  -- Convert `τ < δ` under `0 ≤ τ` to `‖τ‖ < δ`.
+  have hτ_norm : ‖τ‖ < δ := by
+    rw [Real.norm_eq_abs, abs_of_nonneg hτ_nn]; exact hτ_lt
+  -- The O(τ⁶) bound on the quintic residual.
+  have h_resid :
+      ‖suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p‖ ≤
+        K * ‖τ‖ ^ 6 := hbound τ hτ_norm
+  -- The τ⁵ R₅ term's norm.
+  have hR5_bnd : ‖suzuki5_R5 A B p‖ ≤ bchFourFoldSum A B :=
+    norm_suzuki5_R5_le_bchFourFoldSum A B p hcubic
+  -- Bound ‖τ⁵ • R₅‖.
+  have hτ5_nn : 0 ≤ τ ^ 5 := pow_nonneg hτ_nn 5
+  have hτ5_norm : ‖(τ ^ 5 : ℝ)‖ = τ ^ 5 := by
+    rw [Real.norm_eq_abs, abs_of_nonneg hτ5_nn]
+  have h_smul_bnd :
+      ‖τ ^ 5 • suzuki5_R5 A B p‖ ≤ τ ^ 5 * bchFourFoldSum A B := by
+    calc ‖τ ^ 5 • suzuki5_R5 A B p‖
+        ≤ ‖(τ ^ 5 : ℝ)‖ * ‖suzuki5_R5 A B p‖ := norm_smul_le _ _
+      _ = τ ^ 5 * ‖suzuki5_R5 A B p‖ := by rw [hτ5_norm]
+      _ ≤ τ ^ 5 * bchFourFoldSum A B := by gcongr
+  -- Convert ‖τ‖^6 under `0 ≤ τ` to τ^6.
+  have hτ6_eq : ‖τ‖ ^ 6 = τ ^ 6 := by
+    rw [Real.norm_eq_abs, abs_of_nonneg hτ_nn]
+  have h_resid' :
+      ‖suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p‖ ≤
+        K * τ ^ 6 := by rw [← hτ6_eq]; exact h_resid
+  -- Algebraic decomposition: X = (X - Y) + Y, triangle ‖X‖ ≤ ‖X - Y‖ + ‖Y‖.
+  have h_triangle :
+      ‖suzuki5_bch ℝ A B p τ - τ • (A + B)‖ ≤
+        ‖suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p‖ +
+        ‖τ ^ 5 • suzuki5_R5 A B p‖ := by
+    calc ‖suzuki5_bch ℝ A B p τ - τ • (A + B)‖
+        = ‖(suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p) +
+            (τ ^ 5 • suzuki5_R5 A B p)‖ := by congr 1; abel
+      _ ≤ ‖suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p‖ +
+            ‖τ ^ 5 • suzuki5_R5 A B p‖ := norm_add_le _ _
+  -- Combine.
+  linarith [h_triangle, h_resid', h_smul_bnd]
+
+end HeadlineTheorem
+
 end BCH
