@@ -1,6 +1,8 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: **All three BCH files (Basic, Palindromic, LogSeries) are sorry-free (2026-04-24).** Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic — and **M4b RHS quintic corollary** `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (∃ δ, K, ∀ τ < δ, RHS ≤ K·‖τ‖⁵), which is the payoff lemma for downstream Lean-Trotter.
+## Status: **All BCH files sorry-free (2026-04-24).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure) and Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis definition + unit-coefficient norm bound) added. The headline theorem `norm_suzuki5_bch_sub_smul_sub_R5_le` (explicit τ⁵ identification of `log(suzuki5Product)` in the Childs basis) is the open piece blocking full closure of Lean-Trotter's `bch_w4Deriv_quintic_level2` axiom.
+
+Earlier state: Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic — and **M4b RHS quintic corollary** `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (∃ δ, K, ∀ τ < δ, RHS ≤ K·‖τ‖⁵), which is the payoff lemma for downstream Lean-Trotter.
 
 ## Goal
 
@@ -107,7 +109,52 @@ The final two Basic.lean triangle-inequality terms were closed on 2026-04-23:
 
 ```
 BCH/
-├── LogSeries.lean    ← log(1+x) series definition, summability, exp∘log = id
-├── Basic.lean        ← exp bounds, BCH definition, H1, H2, Lie bracket bridge
-└── Palindromic.lean  ← Suzuki-5 palindromic product, M1–M4b, M6 Trotter h4
+├── LogSeries.lean       ← log(1+x) series definition, summability, exp∘log = id
+├── Basic.lean           ← exp bounds, BCH definition, H1, H2, Lie bracket bridge
+├── Palindromic.lean     ← Suzuki-5 palindromic product, M1–M4b, M6 Trotter h4
+├── ChildsBasis.lean     ← 8 Childs 4-fold commutators + bchFourFoldSum
+                           (axiom 1 infrastructure, branch trotter-5factor-palindromic)
+└── Suzuki5Quintic.lean  ← βᵢ(p) polynomials + R₅ Childs-basis def + norm bound
+                           (axiom 1 infrastructure, branch trotter-5factor-palindromic)
 ```
+
+## Lean-Trotter interface (branch `trotter-5factor-palindromic`)
+
+Targeting Lean-Trotter's three BCH-interface axioms in
+`LieTrotter/Suzuki4ViaBCH.lean`:
+1. `bch_w4Deriv_quintic_level2` — unit-coefficient pointwise bound.
+2. `bch_w4Deriv_level3_tight` — tight γᵢ at Suzuki p.
+3. `bch_uniform_integrated` — order-7 + R₇ + FTC-2 integrated bound.
+
+This branch closes axiom 1 prerequisites (but not axiom 1 itself yet).
+
+### Done on this branch
+
+- `BCH.commBr`, `BCH.childsComm₁..₈`, `BCH.bchFourFoldSum` —
+  rfl-compatible mirror of Lean-Trotter defs.
+- `BCH.IsSuzukiCubic_real_strict_bound` — for p : ℝ with IsSuzukiCubic p,
+  we have 0 < p < 1.
+- `BCH.suzuki5_β₁..β₈` — the 8 signed polynomial prefactors (from
+  `Lean-Trotter/scripts/compute_bch_prefactors.py` CAS output).
+- `BCH.abs_suzuki5_βᵢ_le_one` (i = 1..8) — each |βᵢ(p)| ≤ 1.
+- `BCH.suzuki5_R5 A B p` — the τ⁵ Childs-basis combination, opaque.
+- `BCH.norm_suzuki5_R5_le_bchFourFoldSum` — unit-coefficient norm bound.
+
+### Open (blocks full axiom 1 closure)
+
+- `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le` — the headline theorem:
+  `‖suzuki5_bch ℝ A B p τ − τ•(A+B) − τ⁵ • suzuki5_R5 A B p‖ ≤ K·‖τ‖⁶`
+  for ‖τ‖ < δ under IsSuzukiCubic p. Proof requires symbolic 5-factor
+  BCH composition in Lean (multi-week work). The existing M4b quintic-
+  magnitude bound gets the residual bounded, but identifying the τ⁵
+  coefficient with `suzuki5_R5` requires new expansion machinery.
+
+- `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` — bridge corollary
+  for Lean-Trotter's `bch_w4Deriv_quintic_level2`. Depends on the
+  above.
+
+### Axioms 2 and 3
+
+Out of scope on this branch. Each requires further Lean-BCH work
+(axiom 2 = specialization of R₅ to Suzuki p; axiom 3 = order-7 + R₇
+bound + FTC-2 integration).
