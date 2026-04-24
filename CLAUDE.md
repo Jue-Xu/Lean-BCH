@@ -196,13 +196,18 @@ The final two Basic.lean triangle-inequality terms were closed on 2026-04-23:
 
 ```
 BCH/
-├── LogSeries.lean       ← log(1+x) series definition, summability, exp∘log = id
-├── Basic.lean           ← exp bounds, BCH definition, H1, H2, Lie bracket bridge
-├── Palindromic.lean     ← Suzuki-5 palindromic product, M1–M4b, M6 Trotter h4
-├── ChildsBasis.lean     ← 8 Childs 4-fold commutators + bchFourFoldSum
-                           (axiom 1 infrastructure, branch trotter-5factor-palindromic)
-└── Suzuki5Quintic.lean  ← βᵢ(p) polynomials + R₅ Childs-basis def + norm bound
-                           (axiom 1 infrastructure, branch trotter-5factor-palindromic)
+├── LogSeries.lean         ← log(1+x) series definition, summability, exp∘log = id
+├── Basic.lean             ← exp bounds, BCH definition, H1, H2, Lie bracket bridge
+├── Palindromic.lean       ← Suzuki-5 palindromic product, M1–M4b, M6 Trotter h4
+├── ChildsBasis.lean       ← 8 Childs 4-fold commutators + bchFourFoldSum
+                             + BCHPrefactors struct + bchTightPrefactors
+                             (axiom 1/2 infrastructure)
+├── SymmetricQuintic.lean  ← τ⁵ coefficient of 3-factor symmetric BCH:
+                             30-term symmetric_bch_quintic_poly + c⁵ homogeneity
+                             (B1 Tier-1 infrastructure for discharging P1 axiom)
+└── Suzuki5Quintic.lean    ← βᵢ(p) polynomials + R₅ Childs-basis def + norm bound
+                             + headline τ⁵-identification theorem + tight bridge
+                             at Suzuki p (axiom 1/2 infrastructure)
 ```
 
 ## Lean-Trotter interface (branch `trotter-5factor-palindromic`)
