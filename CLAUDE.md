@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: **BCH/Basic.lean and BCH/Palindromic.lean are sorry-free (2026-04-23).** Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, and **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic.
+## Status: **All three BCH files (Basic, Palindromic, LogSeries) are sorry-free (2026-04-24).** Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic — and **M4b RHS quintic corollary** `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (∃ δ, K, ∀ τ < δ, RHS ≤ K·‖τ‖⁵), which is the payoff lemma for downstream Lean-Trotter.
 
 ## Goal
 
@@ -68,7 +68,20 @@ exp/log expansion.
 
 ## Remaining Sorry's
 
-None. The final two triangle-inequality terms were closed on 2026-04-23:
+None across all three files (verified 2026-04-24). The repository is fully
+sorry-free. The most recent closure was the M4b RHS quintic corollary
+`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (commit `9ffaab4`), proving
+the existence of `δ > 0` and `K ≥ 0` such that `suzuki5_bch_M4b_RHS A B p τ
+≤ K·‖τ‖⁵` whenever `‖τ‖ < δ`. Strategy: choose `δ = 1/(5·pn·qn·s)` with
+`pn = ‖p‖+1`, `qn = ‖1-4p‖+1`, `s = ‖A‖+‖B‖+1`; bound each of the four
+unfolded terms separately via `pow_le_pow_left₀`, the new helper
+`norm_strangBlock_log_linear` (η + η³ + 10⁷·η⁵ ≤ 40002·η for η ≤ 1/4),
+and `gcongr`. Body extracted to private `suzuki5_bch_M4b_RHS_le_t5_aux`
+to keep kernel `whnf` within heartbeat budget (16M).
+
+### Earlier closures (2026-04-23):
+
+The final two Basic.lean triangle-inequality terms were closed on 2026-04-23:
 
 - **Term 6** (`C₄(z,a') - C₄(a'+b,a')` ≤ 2·s⁵): proved via the ring identity
   `DC_z - DC_p = S6` (noncomm_ring after z = (a'+b)+W) where S6 is an explicit
