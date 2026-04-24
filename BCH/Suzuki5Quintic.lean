@@ -595,15 +595,16 @@ theorem IsSuzukiCubic_suzukiP : IsSuzukiCubic suzukiP := by
     ring
   rw [key, hr3, sub_self, zero_div]
 
-/-- **Rational interval bound** `414/1000 < suzukiP < 415/1000`. Proved
-from the expanded Suzuki cubic `−60p³ + 48p² − 12p + 1 = 0` via nlinarith
-with polynomial hints at the interval endpoints.
+/-- **Tight rational interval bound** `41449/100000 < suzukiP <
+41450/100000`. Proved from the expanded Suzuki cubic
+`−60p³ + 48p² − 12p + 1 = 0` via `nlinarith` with polynomial hints at
+the interval endpoints.
 
-Useful step toward discharging the numerical γᵢ bounds: evaluates
-`|βᵢ(p)|` uniformly on `[414/1000, 415/1000]`, combined with the
-precise `suzukiP ∈ (414/1000, 415/1000)`. -/
+Exactly `suzukiP ≈ 0.4144908`; the gap to the endpoints (~8·10⁻⁶ and
+~0.9·10⁻⁶) is enough slack for the subsequent per-i `|βᵢ(suzukiP)|
+≤ γᵢ` bounds via `nlinarith`. -/
 theorem suzukiP_mem_rational_interval :
-    414 / 1000 < suzukiP ∧ suzukiP < 415 / 1000 := by
+    41449 / 100000 < suzukiP ∧ suzukiP < 41450 / 100000 := by
   have hcubic : IsSuzukiCubic suzukiP := IsSuzukiCubic_suzukiP
   have hbounds : 0 < suzukiP ∧ suzukiP < 1 :=
     IsSuzukiCubic_real_strict_bound suzukiP hcubic
@@ -614,78 +615,200 @@ theorem suzukiP_mem_rational_interval :
                -60 * suzukiP ^ 3 + 48 * suzukiP ^ 2 - 12 * suzukiP + 1 := by ring
     linarith [heq]
   refine ⟨?_, ?_⟩
-  · -- Lower bound
+  · -- Lower bound: 41449/100000 < suzukiP.
     by_contra hc
     push_neg at hc
     nlinarith [hg, hp_pos, hc,
-               sq_nonneg (suzukiP - 414/1000), sq_nonneg (suzukiP - 1/5),
+               sq_nonneg (suzukiP - 41449/100000), sq_nonneg (suzukiP - 1/5),
                sq_nonneg suzukiP,
                mul_pos hp_pos hp_pos,
                mul_pos hp_pos (mul_pos hp_pos hp_pos)]
-  · -- Upper bound
+  · -- Upper bound: suzukiP < 41450/100000.
     by_contra hc
     push_neg at hc
     nlinarith [hg, hp_pos, hp_lt, hc,
-               sq_nonneg (suzukiP - 415/1000), sq_nonneg (suzukiP - 1/3),
+               sq_nonneg (suzukiP - 41450/100000), sq_nonneg (suzukiP - 1/3),
                sq_nonneg (1 - suzukiP),
                mul_pos hp_pos hp_pos,
                mul_pos hp_pos (mul_pos hp_pos hp_pos)]
 
-/-- **[Tier-3 axiom — KNOWN ISSUE, see below]** — The tight norm bound
-on `suzuki5_R5 A B suzukiP`:
+/-!
+### Per-i numerical bounds `|βᵢ(suzukiP)| ≤ γᵢ`
 
-    ‖suzuki5_R5 A B suzukiP‖ ≤ bchTightPrefactors.boundSum A B.
+For each `i ∈ {1, 2, 4, 5, 6, 8}` (the six non-zero γᵢ), proved via
+`nlinarith` on `suzukiP_mem_rational_interval` + polynomial hints at
+the tight interval endpoints.
+-/
 
-**⚠️ Known numerical issue**: Lean-Trotter's `bchTightPrefactors` values
-(which we match exactly in `BCH/ChildsBasis.lean`) were obtained by
-truncating the CAS-computed `|βᵢ(suzukiP)|` values to 6 decimals
-rather than taking ceilings. Explicit computation shows
+/-- `|β₁(suzukiP)| ≤ γ₁ = 260/10⁶`. -/
+lemma abs_suzuki5_β₁_at_suzukiP_le_γ₁ :
+    |suzuki5_β₁ suzukiP| ≤ 260 / 1000000 := by
+  obtain ⟨hlo, hhi⟩ := suzukiP_mem_rational_interval
+  unfold suzuki5_β₁
+  rw [abs_le]
+  refine ⟨?_, ?_⟩ <;>
+    nlinarith [hlo, hhi, sq_nonneg suzukiP,
+               sq_nonneg (suzukiP - 41449/100000),
+               sq_nonneg (suzukiP - 41450/100000)]
 
-    β₂(suzukiP) ≈ 0.000662_37  >  γ₂ = 662/10⁶ = 0.000662_00,
-    β₆(suzukiP) ≈ 0.001127_22  >  γ₆ = 1127/10⁶ = 0.001127_00,
+/-- `|β₂(suzukiP)| ≤ γ₂ = 663/10⁶` (ceiling). -/
+lemma abs_suzuki5_β₂_at_suzukiP_le_γ₂ :
+    |suzuki5_β₂ suzukiP| ≤ 663 / 1000000 := by
+  obtain ⟨hlo, hhi⟩ := suzukiP_mem_rational_interval
+  unfold suzuki5_β₂
+  rw [abs_le]
+  refine ⟨?_, ?_⟩ <;>
+    nlinarith [hlo, hhi, sq_nonneg suzukiP,
+               sq_nonneg (suzukiP - 41449/100000),
+               sq_nonneg (suzukiP - 41450/100000)]
 
-each by ~0.3×10⁻⁶. For any `𝔸` where `childsComm₂(A,B)` and
-`childsComm₆(A,B)` have generic (non-cancelling) non-zero norms —
-e.g., free non-commutative polynomial algebras — the stated bound
-fails by a vanishingly small margin. This is a FALSE statement in
-general, so discharging this axiom in its current form is not
-possible; the intended fix is an upstream γ-value adjustment.
+/-- `|β₃(suzukiP)| ≤ γ₃ = 0` (both exactly 0). -/
+lemma abs_suzuki5_β₃_at_suzukiP_le_γ₃ :
+    |suzuki5_β₃ suzukiP| ≤ 0 := by
+  unfold suzuki5_β₃; simp
 
-The other four non-zero γᵢ (i ∈ {1, 4, 5, 8}) are strict upper bounds.
+/-- `|β₄(suzukiP)| ≤ γ₄ = 132/10⁶`. -/
+lemma abs_suzuki5_β₄_at_suzukiP_le_γ₄ :
+    |suzuki5_β₄ suzukiP| ≤ 132 / 1000000 := by
+  obtain ⟨hlo, hhi⟩ := suzukiP_mem_rational_interval
+  unfold suzuki5_β₄
+  rw [abs_le]
+  refine ⟨?_, ?_⟩ <;>
+    nlinarith [hlo, hhi, sq_nonneg suzukiP,
+               sq_nonneg (suzukiP - 41449/100000),
+               sq_nonneg (suzukiP - 41450/100000)]
 
-**Discharge roadmap** (requires coordinated change):
+/-- `|β₅(suzukiP)| ≤ γ₅ = 376/10⁶`. -/
+lemma abs_suzuki5_β₅_at_suzukiP_le_γ₅ :
+    |suzuki5_β₅ suzukiP| ≤ 376 / 1000000 := by
+  obtain ⟨hlo, hhi⟩ := suzukiP_mem_rational_interval
+  unfold suzuki5_β₅
+  rw [abs_le]
+  refine ⟨?_, ?_⟩ <;>
+    nlinarith [hlo, hhi, sq_nonneg suzukiP,
+               sq_nonneg (suzukiP - 41449/100000),
+               sq_nonneg (suzukiP - 41450/100000)]
 
-1. Adjust `bchTightPrefactors` in both Lean-Trotter and Lean-BCH
-   to use CEILING values rather than truncated values, e.g.:
-   - `γ₂ := 663 / 10⁶` (was 662/10⁶)
-   - `γ₆ := 1128 / 10⁶` (was 1127/10⁶)
-   All other γᵢ stay identical.
-2. With the corrected γᵢ, prove `|βᵢ(suzukiP)| ≤ γᵢ` per-i via
-   `nlinarith` using `suzukiP_mem_rational_interval`
-   (`414/1000 < suzukiP < 415/1000`, already proved below) +
-   polynomial hints. The interval is tight enough that even the
-   new ceiling γᵢ give ~3×10⁻⁶ slack per coefficient.
-3. Assemble via `norm_add_le` + `norm_smul_le`.
+/-- `|β₆(suzukiP)| ≤ γ₆ = 1128/10⁶` (ceiling). -/
+lemma abs_suzuki5_β₆_at_suzukiP_le_γ₆ :
+    |suzuki5_β₆ suzukiP| ≤ 1128 / 1000000 := by
+  obtain ⟨hlo, hhi⟩ := suzukiP_mem_rational_interval
+  unfold suzuki5_β₆
+  rw [abs_le]
+  refine ⟨?_, ?_⟩ <;>
+    nlinarith [hlo, hhi, sq_nonneg suzukiP,
+               sq_nonneg (suzukiP - 41449/100000),
+               sq_nonneg (suzukiP - 41450/100000)]
 
-Estimated effort once γ-values are corrected: ~1 day. The Lean-BCH
-helper `suzukiP_mem_rational_interval` already does the cubic-interval
-work.
+/-- `|β₇(suzukiP)| ≤ γ₇ = 0` (both exactly 0). -/
+lemma abs_suzuki5_β₇_at_suzukiP_le_γ₇ :
+    |suzuki5_β₇ suzukiP| ≤ 0 := by
+  unfold suzuki5_β₇; simp
 
-Introduced `private` to localize scope. -/
-private axiom suzuki5_R5_at_suzukiP_tight_bound_axiom
-    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra ℝ 𝔸]
-    [NormOneClass 𝔸] [CompleteSpace 𝔸] (A B : 𝔸) :
-    ‖suzuki5_R5 A B suzukiP‖ ≤ bchTightPrefactors.boundSum A B
+/-- `|β₈(suzukiP)| ≤ γ₈ = 442/10⁶`. -/
+lemma abs_suzuki5_β₈_at_suzukiP_le_γ₈ :
+    |suzuki5_β₈ suzukiP| ≤ 442 / 1000000 := by
+  obtain ⟨hlo, hhi⟩ := suzukiP_mem_rational_interval
+  unfold suzuki5_β₈
+  rw [abs_le]
+  refine ⟨?_, ?_⟩ <;>
+    nlinarith [hlo, hhi, sq_nonneg suzukiP,
+               sq_nonneg (suzukiP - 41449/100000),
+               sq_nonneg (suzukiP - 41450/100000)]
 
-/-- **Tight R₅ norm bound**: at the canonical real Suzuki `p`, the τ⁵
-coefficient's norm is bounded by the weighted Childs sum with
-rational-over-approximation prefactors `γᵢ`. Currently derived from
-`suzuki5_R5_at_suzukiP_tight_bound_axiom` pending interval-arithmetic
-closure. -/
+/-- **Tight R₅ norm bound**: at the canonical real Suzuki `p`, the
+τ⁵ coefficient's norm is bounded by the weighted Childs sum with
+rational ceiling prefactors `γᵢ`.
+
+Proof: triangle inequality on the Childs-basis expansion of
+`suzuki5_R5`, combined with the six numerical bounds
+`abs_suzuki5_βᵢ_at_suzukiP_le_γᵢ` for `i ∈ {1, 2, 4, 5, 6, 8}` (the
+cases `i ∈ {3, 7}` trivialize since both `βᵢ(suzukiP) = γᵢ = 0`). -/
 theorem norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum
     (A B : 𝔸) :
-    ‖suzuki5_R5 A B suzukiP‖ ≤ bchTightPrefactors.boundSum A B :=
-  suzuki5_R5_at_suzukiP_tight_bound_axiom A B
+    ‖suzuki5_R5 A B suzukiP‖ ≤ bchTightPrefactors.boundSum A B := by
+  unfold suzuki5_R5 BCHPrefactors.boundSum bchTightPrefactors
+  have h₁ := abs_suzuki5_β₁_at_suzukiP_le_γ₁
+  have h₂ := abs_suzuki5_β₂_at_suzukiP_le_γ₂
+  have h₃ := abs_suzuki5_β₃_at_suzukiP_le_γ₃
+  have h₄ := abs_suzuki5_β₄_at_suzukiP_le_γ₄
+  have h₅ := abs_suzuki5_β₅_at_suzukiP_le_γ₅
+  have h₆ := abs_suzuki5_β₆_at_suzukiP_le_γ₆
+  have h₇ := abs_suzuki5_β₇_at_suzukiP_le_γ₇
+  have h₈ := abs_suzuki5_β₈_at_suzukiP_le_γ₈
+  -- Per-term norm bounds via norm_smul_le + Real.norm_eq_abs.
+  have hC₁ : ‖suzuki5_β₁ suzukiP • childsComm₁ A B‖ ≤
+      260 / 1000000 * ‖childsComm₁ A B‖ := by
+    rw [norm_smul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_right h₁ (norm_nonneg _)
+  have hC₂ : ‖suzuki5_β₂ suzukiP • childsComm₂ A B‖ ≤
+      663 / 1000000 * ‖childsComm₂ A B‖ := by
+    rw [norm_smul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_right h₂ (norm_nonneg _)
+  have hC₃ : ‖suzuki5_β₃ suzukiP • childsComm₃ A B‖ ≤
+      0 * ‖childsComm₃ A B‖ := by
+    rw [norm_smul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_right h₃ (norm_nonneg _)
+  have hC₄ : ‖suzuki5_β₄ suzukiP • childsComm₄ A B‖ ≤
+      132 / 1000000 * ‖childsComm₄ A B‖ := by
+    rw [norm_smul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_right h₄ (norm_nonneg _)
+  have hC₅ : ‖suzuki5_β₅ suzukiP • childsComm₅ A B‖ ≤
+      376 / 1000000 * ‖childsComm₅ A B‖ := by
+    rw [norm_smul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_right h₅ (norm_nonneg _)
+  have hC₆ : ‖suzuki5_β₆ suzukiP • childsComm₆ A B‖ ≤
+      1128 / 1000000 * ‖childsComm₆ A B‖ := by
+    rw [norm_smul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_right h₆ (norm_nonneg _)
+  have hC₇ : ‖suzuki5_β₇ suzukiP • childsComm₇ A B‖ ≤
+      0 * ‖childsComm₇ A B‖ := by
+    rw [norm_smul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_right h₇ (norm_nonneg _)
+  have hC₈ : ‖suzuki5_β₈ suzukiP • childsComm₈ A B‖ ≤
+      442 / 1000000 * ‖childsComm₈ A B‖ := by
+    rw [norm_smul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_right h₈ (norm_nonneg _)
+  -- Triangle inequality: chain of seven norm_add_le applications.
+  have htri : ‖suzuki5_β₁ suzukiP • childsComm₁ A B + suzuki5_β₂ suzukiP • childsComm₂ A B +
+        suzuki5_β₃ suzukiP • childsComm₃ A B + suzuki5_β₄ suzukiP • childsComm₄ A B +
+        suzuki5_β₅ suzukiP • childsComm₅ A B + suzuki5_β₆ suzukiP • childsComm₆ A B +
+        suzuki5_β₇ suzukiP • childsComm₇ A B + suzuki5_β₈ suzukiP • childsComm₈ A B‖
+      ≤ ‖suzuki5_β₁ suzukiP • childsComm₁ A B‖ + ‖suzuki5_β₂ suzukiP • childsComm₂ A B‖ +
+        ‖suzuki5_β₃ suzukiP • childsComm₃ A B‖ + ‖suzuki5_β₄ suzukiP • childsComm₄ A B‖ +
+        ‖suzuki5_β₅ suzukiP • childsComm₅ A B‖ + ‖suzuki5_β₆ suzukiP • childsComm₆ A B‖ +
+        ‖suzuki5_β₇ suzukiP • childsComm₇ A B‖ + ‖suzuki5_β₈ suzukiP • childsComm₈ A B‖ := by
+    have := norm_add_le
+          (suzuki5_β₁ suzukiP • childsComm₁ A B + suzuki5_β₂ suzukiP • childsComm₂ A B +
+           suzuki5_β₃ suzukiP • childsComm₃ A B + suzuki5_β₄ suzukiP • childsComm₄ A B +
+           suzuki5_β₅ suzukiP • childsComm₅ A B + suzuki5_β₆ suzukiP • childsComm₆ A B +
+           suzuki5_β₇ suzukiP • childsComm₇ A B)
+          (suzuki5_β₈ suzukiP • childsComm₈ A B)
+    have := norm_add_le
+          (suzuki5_β₁ suzukiP • childsComm₁ A B + suzuki5_β₂ suzukiP • childsComm₂ A B +
+           suzuki5_β₃ suzukiP • childsComm₃ A B + suzuki5_β₄ suzukiP • childsComm₄ A B +
+           suzuki5_β₅ suzukiP • childsComm₅ A B + suzuki5_β₆ suzukiP • childsComm₆ A B)
+          (suzuki5_β₇ suzukiP • childsComm₇ A B)
+    have := norm_add_le
+          (suzuki5_β₁ suzukiP • childsComm₁ A B + suzuki5_β₂ suzukiP • childsComm₂ A B +
+           suzuki5_β₃ suzukiP • childsComm₃ A B + suzuki5_β₄ suzukiP • childsComm₄ A B +
+           suzuki5_β₅ suzukiP • childsComm₅ A B)
+          (suzuki5_β₆ suzukiP • childsComm₆ A B)
+    have := norm_add_le
+          (suzuki5_β₁ suzukiP • childsComm₁ A B + suzuki5_β₂ suzukiP • childsComm₂ A B +
+           suzuki5_β₃ suzukiP • childsComm₃ A B + suzuki5_β₄ suzukiP • childsComm₄ A B)
+          (suzuki5_β₅ suzukiP • childsComm₅ A B)
+    have := norm_add_le
+          (suzuki5_β₁ suzukiP • childsComm₁ A B + suzuki5_β₂ suzukiP • childsComm₂ A B +
+           suzuki5_β₃ suzukiP • childsComm₃ A B)
+          (suzuki5_β₄ suzukiP • childsComm₄ A B)
+    have := norm_add_le
+          (suzuki5_β₁ suzukiP • childsComm₁ A B + suzuki5_β₂ suzukiP • childsComm₂ A B)
+          (suzuki5_β₃ suzukiP • childsComm₃ A B)
+    have := norm_add_le
+          (suzuki5_β₁ suzukiP • childsComm₁ A B) (suzuki5_β₂ suzukiP • childsComm₂ A B)
+    linarith
+  linarith [hC₁, hC₂, hC₃, hC₄, hC₅, hC₆, hC₇, hC₈, htri]
 
 /-- **Tight bridge theorem at Suzuki p** — matches Lean-Trotter's
 `bch_w4Deriv_level3_tight` axiom shape. Combines the headline τ⁵

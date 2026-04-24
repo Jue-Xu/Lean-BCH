@@ -1,11 +1,11 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: **All BCH files sorry-free (2026-04-24, updated session 7).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure + BCHPrefactors struct), Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis def + unit-coefficient norm bound + headline τ⁵-identification theorem + bridge corollary + tight bridge at Suzuki p). Infrastructure is ready for Lean-Trotter's axioms 1 AND 2:
+## Status: **All BCH files sorry-free (2026-04-24, updated session 8).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure + BCHPrefactors struct), Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis def + unit-coefficient norm bound + headline τ⁵-identification theorem + bridge corollary + **tight bridge at Suzuki p, fully proved**). Infrastructure is ready for Lean-Trotter's axioms 1 AND 2:
 
-- Axiom 1 (`bch_w4Deriv_quintic_level2`): wired up via `suzuki5_log_product_quintic_of_IsSuzukiCubic`; derived from `suzuki5_R5_identification_axiom`.
-- Axiom 2 (`bch_w4Deriv_level3_tight`): NEW this session. Bridge theorem `suzuki5_log_product_quintic_tight_at_suzukiP` derived from the headline theorem + a second scoped axiom `suzuki5_R5_at_suzukiP_tight_bound_axiom`.
+- Axiom 1 (`bch_w4Deriv_quintic_level2`): wired up via `suzuki5_log_product_quintic_of_IsSuzukiCubic`; derived from the single remaining private axiom `suzuki5_R5_identification_axiom`.
+- Axiom 2 (`bch_w4Deriv_level3_tight`): **P2 axiom now discharged this session.** Bridge theorem `suzuki5_log_product_quintic_tight_at_suzukiP` derived solely from the headline theorem + `norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum` (which is now a fully-proved theorem, not an axiom).
 
-Repository remains 0-sorry. Axiom count: 2 scoped `private axiom`s + Lean's 3 standard. See "Remaining axioms" section below. A `suzukiP_mem_rational_interval` lemma (`414/1000 < suzukiP < 415/1000`) is proved rigorously; it's the foundation for future numerical discharge of the Tier-3 axiom.
+Repository remains 0-sorry. **Axiom count: 1 scoped `private axiom` + Lean's 3 standard** (down from 2). See "Remaining axioms" section below.
 
 Earlier state: Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic — and **M4b RHS quintic corollary** `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (∃ δ, K, ∀ τ < δ, RHS ≤ K·‖τ‖⁵), which is the payoff lemma for downstream Lean-Trotter.
 
@@ -116,59 +116,45 @@ header docstring of `BCH/Suzuki5Quintic.lean`):
 The user's phase-1 task prompt explicitly sanctioned the Tier-2 axiom
 fallback; removing the axiom is earmarked for follow-up sessions.
 
-### Axiom 2: `BCH.suzuki5_R5_at_suzukiP_tight_bound_axiom` (NEW session 7)
+### Rigorously proved (no axioms) — Axiom 2 infrastructure (sessions 7–8)
 
-(in `BCH/Suzuki5Quintic.lean`, scope-`private`) — the tight R₅ norm
-bound at the canonical Suzuki `p = 1/(4 − 4^(1/3))`:
-`‖suzuki5_R5 A B suzukiP‖ ≤ bchTightPrefactors.boundSum A B`.
-
-Asserted over `bchTightPrefactors` with the 8 rational γᵢ values
-ported from Lean-Trotter's `LieTrotter/Suzuki4ViaBCH.lean`.
-
-**⚠️ KNOWN ISSUE**: Lean-Trotter's `bchTightPrefactors` γ₂ and γ₆
-values are *truncations* of `|βᵢ(suzukiP)|` to 6 decimals rather than
-*ceilings*. Explicit computation shows:
-- `β₂(suzukiP) ≈ 0.000662_37 > γ₂ = 662/10⁶`
-- `β₆(suzukiP) ≈ 0.001127_22 > γ₆ = 1127/10⁶`
-
-each by ~0.3×10⁻⁶. The axiom as stated is *false in general* (e.g., on
-free non-commutative polynomial algebras where `‖βᵢ·Cᵢ‖ = |βᵢ|·‖Cᵢ‖`
-and cancellation doesn't save you). Discharging requires a coordinated
-γ-value correction in both repos:
-- `γ₂ := 663 / 10⁶` (was 662/10⁶)
-- `γ₆ := 1128 / 10⁶` (was 1127/10⁶)
-
-All other γᵢ values are strict upper bounds (i ∈ {1, 4, 5, 8}) — or
-exactly zero (i ∈ {3, 7}).
-
-Discharge roadmap once values are corrected:
-1. Use the rigorously-proved helper lemma
-   `BCH.suzukiP_mem_rational_interval` (proves `414/1000 < suzukiP <
-   415/1000` via nlinarith on the Suzuki cubic).
-2. For each `i`, prove `|βᵢ(suzukiP)| ≤ γᵢ` via `nlinarith` using
-   polynomial hints at the interval endpoints. (Each `βᵢ` is quadratic
-   in `p`; the interval is tight enough to bound `|βᵢ|` by the ceiling.)
-3. Assemble the R₅ norm bound via `norm_add_le` + `norm_smul_le`.
-
-Estimated effort: ~1 day after γ-values fixed.
-
-The bridge theorem `BCH.suzuki5_log_product_quintic_tight_at_suzukiP`
-depends on both axioms (verified by `#print axioms`). It matches
-Lean-Trotter's `bch_w4Deriv_level3_tight` axiom signature.
-
-### Rigorously proved this session (no new axioms introduced)
+All of the following depend only on Lean's 3 standard axioms:
 
 - `BCH.suzukiP` — the canonical real Suzuki root `1/(4 − 4^(1/3))`.
 - `BCH.IsSuzukiCubic_suzukiP` — `IsSuzukiCubic suzukiP`, from the
-  algebraic identity `4p³ + (1 − 4p)³ = (4 − r³)/(4 − r)³` at `r =
-  4^(1/3)` where `r³ = 4`.
-- `BCH.rpow_one_third_cube` — `((4 : ℝ) ^ (1/3))³ = 4` via
-  `Real.rpow_mul`.
-- `BCH.suzukiP_mem_rational_interval` — `414/1000 < suzukiP < 415/1000`
-  via nlinarith on the expanded cubic + polynomial hints.
-- `BCH.BCHPrefactors` struct + `bchTightPrefactors` instance +
-  `BCHPrefactors.boundSum` + positivity +
-  `bchTightPrefactors_boundSum_le_bchFourFoldSum` (tight sum ≤ unit-coefficient sum).
+  algebraic identity `4p³ + (1 − 4p)³ = (4 − r³)/(4 − r)³` at
+  `r = 4^(1/3)` where `r³ = 4`.
+- `BCH.rpow_one_third_cube`, `BCH.one_lt_rpow_one_third`,
+  `BCH.rpow_one_third_lt_four`, `BCH.four_sub_rpow_pos` — basic
+  inequalities for `4^(1/3)`.
+- `BCH.suzukiP_mem_rational_interval` — **tight bound**
+  `41449/100000 < suzukiP < 41450/100000` (slack ~8·10⁻⁶ lower and
+  ~0.9·10⁻⁶ upper), proved via `nlinarith` on the expanded Suzuki cubic
+  `−60p³ + 48p² − 12p + 1 = 0` with polynomial hints at the interval
+  endpoints. Tighter than the earlier `414/1000 < … < 415/1000`;
+  necessary for the γᵢ bounds below to close.
+- `BCH.abs_suzuki5_βᵢ_at_suzukiP_le_γᵢ` (i = 1, 2, 4, 5, 6, 8) —
+  six per-i numerical bounds `|βᵢ(suzukiP)| ≤ γᵢ`, each via `nlinarith`
+  on the interval + `sq_nonneg` hints. `i = 3, 7` are trivially 0.
+- `BCH.norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum` —
+  **P2 bound is now a theorem** (was axiom in session 7). Follows from
+  the six per-i lemmas + triangle inequality via a 7-step `norm_add_le`
+  chain + eight per-term `norm_smul_le` applications.
+- `BCH.BCHPrefactors` struct + `bchTightPrefactors` instance (with γ₂
+  = 663/10⁶ and γ₆ = 1128/10⁶ as proper ceilings) + `BCHPrefactors.boundSum`
+  + positivity + `bchTightPrefactors_boundSum_le_bchFourFoldSum`.
+- `BCH.suzuki5_log_product_quintic_tight_at_suzukiP` — bridge theorem
+  matching Lean-Trotter's `bch_w4Deriv_level3_tight`. `#print axioms`
+  shows only `{propext, Classical.choice, Quot.sound,
+  BCH.suzuki5_R5_identification_axiom}` (the P1 axiom only — the P2
+  axiom is gone).
+
+### Coordinated γ fix (landed Lean-Trotter rev `63af0e9`)
+
+Lean-Trotter's `bchTightPrefactors` used truncations of
+`|βᵢ(suzukiP)|` to 6 decimals, making γ₂, γ₆ slightly *below* the true
+values (~0.3×10⁻⁶). Fixed in Lean-Trotter at rev `63af0e9` to use
+ceilings (`γ₂ := 663/10⁶`, `γ₆ := 1128/10⁶`). Lean-BCH matches exactly.
 
 ### Prior closures
 
@@ -262,22 +248,13 @@ This branch closes axiom 1 prerequisites (but not axiom 1 itself yet).
   Lean-Trotter a clean interface to pin against while the symbolic work
   happens in follow-up sessions.
 
-### Axiom 2 infrastructure (session 7, this branch)
+### Axiom 2 infrastructure (sessions 7–8, this branch)
 
 Lean-BCH-side infrastructure for Lean-Trotter's `bch_w4Deriv_level3_tight`
-is now in place:
-
-- `BCH.BCHPrefactors`, `BCH.childsPrefactors`, `BCH.bchTightPrefactors`,
-  `BCH.BCHPrefactors.boundSum` — ported from Lean-Trotter's
-  `LieTrotter/Suzuki4ViaBCH.lean` to `BCH/ChildsBasis.lean`.
-- `BCH.suzukiP`, `BCH.IsSuzukiCubic_suzukiP`,
-  `BCH.suzukiP_mem_rational_interval` — canonical Suzuki root machinery.
-- `BCH.norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum` —
-  tight R₅ norm bound (axiom-chained; see "Remaining axioms" above).
-- **`BCH.suzuki5_log_product_quintic_tight_at_suzukiP`** — bridge
-  theorem matching Lean-Trotter's `bch_w4Deriv_level3_tight`. Ready
-  for Lean-Trotter-side axiom → theorem conversion once the γ₂/γ₆
-  values in Lean-Trotter are corrected (see "Known issue" above).
+is now FULLY PROVED (no P2 axiom). See "Rigorously proved" section
+above for the full list. The bridge theorem
+`BCH.suzuki5_log_product_quintic_tight_at_suzukiP` is ready for
+Lean-Trotter-side axiom → theorem conversion.
 
 ### Axiom 3
 
