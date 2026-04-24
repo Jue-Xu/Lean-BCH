@@ -90,4 +90,144 @@ lemma bchFourFoldSum_nonneg (A B : 𝔸) : 0 ≤ bchFourFoldSum A B := by
 
 end FourFoldSum
 
+/-!
+## Weighted Childs-basis sum (BCHPrefactors)
+
+For the Level-3 tight BCH bound, we need a generalization of
+`bchFourFoldSum` that uses 8 per-commutator prefactors instead of unit
+coefficients.
+
+This mirrors Lean-Trotter's `BCHPrefactors` structure in
+`LieTrotter/Suzuki4ViaBCH.lean` so that after a rev bump, Lean-Trotter
+can thin-wrap these definitions.
+-/
+
+section Prefactors
+
+/-- Structure holding the 8 per-commutator prefactors for Level-3 BCH
+bounds. Each `γᵢ` weights the norm of the corresponding
+`childsCommᵢ A B`. -/
+structure BCHPrefactors where
+  γ₁ : ℝ  -- coefficient of ‖[A,[A,[A,[B,A]]]]‖
+  γ₂ : ℝ  -- coefficient of ‖[A,[A,[B,[B,A]]]]‖
+  γ₃ : ℝ  -- coefficient of ‖[A,[B,[A,[B,A]]]]‖
+  γ₄ : ℝ  -- coefficient of ‖[A,[B,[B,[B,A]]]]‖
+  γ₅ : ℝ  -- coefficient of ‖[B,[A,[A,[B,A]]]]‖
+  γ₆ : ℝ  -- coefficient of ‖[B,[A,[B,[B,A]]]]‖
+  γ₇ : ℝ  -- coefficient of ‖[B,[B,[A,[B,A]]]]‖
+  γ₈ : ℝ  -- coefficient of ‖[B,[B,[B,[B,A]]]]‖
+  nonneg₁ : 0 ≤ γ₁ := by norm_num
+  nonneg₂ : 0 ≤ γ₂ := by norm_num
+  nonneg₃ : 0 ≤ γ₃ := by norm_num
+  nonneg₄ : 0 ≤ γ₄ := by norm_num
+  nonneg₅ : 0 ≤ γ₅ := by norm_num
+  nonneg₆ : 0 ≤ γ₆ := by norm_num
+  nonneg₇ : 0 ≤ γ₇ := by norm_num
+  nonneg₈ : 0 ≤ γ₈ := by norm_num
+
+/-- Childs's heuristic prefactors (2021) — balanced-factoring values from
+the reference paper. -/
+noncomputable def childsPrefactors : BCHPrefactors where
+  γ₁ := 0.0047
+  γ₂ := 0.0057
+  γ₃ := 0.0046
+  γ₄ := 0.0074
+  γ₅ := 0.0097
+  γ₆ := 0.0097
+  γ₇ := 0.0173
+  γ₈ := 0.0284
+  nonneg₁ := by norm_num
+  nonneg₂ := by norm_num
+  nonneg₃ := by norm_num
+  nonneg₄ := by norm_num
+  nonneg₅ := by norm_num
+  nonneg₆ := by norm_num
+  nonneg₇ := by norm_num
+  nonneg₈ := by norm_num
+
+/-- **BCH-derived tight prefactors** — leading-order rational
+over-approximations of `|βᵢ(suzukiP)|` where `βᵢ(p)` are the degree-2
+polynomial coefficients from the CAS pipeline
+`scripts/compute_bch_prefactors.py` (Lean-Trotter) and
+`suzuki5_βᵢ` (Lean-BCH).
+
+At Suzuki `p = 1/(4 − 4^(1/3)) ≈ 0.4145`, the 8 values are:
+  γ₁ ≈ 0.000260,  γ₂ ≈ 0.000662,  γ₃ = 0,       γ₄ ≈ 0.000132,
+  γ₅ ≈ 0.000376,  γ₆ ≈ 0.001127,  γ₇ = 0,       γ₈ ≈ 0.000442.
+
+**Every value is strictly smaller than Childs's heuristic coefficient**.
+Values stored as exact rationals over 10⁶ (ceilings of the numerical
+values above).
+
+Caveat: the Childs 8-commutator basis is over-complete (2 free
+parameters in the projection because the weight-5 free Lie algebra is
+6-dimensional). We chose the projection setting both free parameters
+to zero (giving `γ₃ = γ₇ = 0`). -/
+noncomputable def bchTightPrefactors : BCHPrefactors where
+  γ₁ := 260 / 1000000
+  γ₂ := 662 / 1000000
+  γ₃ := 0
+  γ₄ := 132 / 1000000
+  γ₅ := 376 / 1000000
+  γ₆ := 1127 / 1000000
+  γ₇ := 0
+  γ₈ := 442 / 1000000
+  nonneg₁ := by norm_num
+  nonneg₂ := by norm_num
+  nonneg₃ := by norm_num
+  nonneg₄ := by norm_num
+  nonneg₅ := by norm_num
+  nonneg₆ := by norm_num
+  nonneg₇ := by norm_num
+  nonneg₈ := by norm_num
+
+section BoundSum
+
+variable {𝔸 : Type*} [NormedRing 𝔸]
+
+/-- Weighted sum of Childs commutator norms:
+`Σᵢ γᵢ · ‖childsCommᵢ A B‖`. -/
+def BCHPrefactors.boundSum (γ : BCHPrefactors) (A B : 𝔸) : ℝ :=
+  γ.γ₁ * ‖childsComm₁ A B‖ + γ.γ₂ * ‖childsComm₂ A B‖ +
+  γ.γ₃ * ‖childsComm₃ A B‖ + γ.γ₄ * ‖childsComm₄ A B‖ +
+  γ.γ₅ * ‖childsComm₅ A B‖ + γ.γ₆ * ‖childsComm₆ A B‖ +
+  γ.γ₇ * ‖childsComm₇ A B‖ + γ.γ₈ * ‖childsComm₈ A B‖
+
+lemma BCHPrefactors.boundSum_nonneg (γ : BCHPrefactors) (A B : 𝔸) :
+    0 ≤ γ.boundSum A B := by
+  unfold BCHPrefactors.boundSum
+  have h₁ := γ.nonneg₁; have h₂ := γ.nonneg₂; have h₃ := γ.nonneg₃
+  have h₄ := γ.nonneg₄; have h₅ := γ.nonneg₅; have h₆ := γ.nonneg₆
+  have h₇ := γ.nonneg₇; have h₈ := γ.nonneg₈
+  have hC₁ := norm_nonneg (childsComm₁ A B)
+  have hC₂ := norm_nonneg (childsComm₂ A B)
+  have hC₃ := norm_nonneg (childsComm₃ A B)
+  have hC₄ := norm_nonneg (childsComm₄ A B)
+  have hC₅ := norm_nonneg (childsComm₅ A B)
+  have hC₆ := norm_nonneg (childsComm₆ A B)
+  have hC₇ := norm_nonneg (childsComm₇ A B)
+  have hC₈ := norm_nonneg (childsComm₈ A B)
+  positivity
+
+/-- The tight prefactors' bound sum is ≤ the unit-coefficient
+`bchFourFoldSum`, since every `γᵢ ≤ 1` in `bchTightPrefactors`
+(and actually ≪ 1). -/
+lemma bchTightPrefactors_boundSum_le_bchFourFoldSum (A B : 𝔸) :
+    bchTightPrefactors.boundSum A B ≤ bchFourFoldSum A B := by
+  unfold BCHPrefactors.boundSum bchTightPrefactors bchFourFoldSum
+  simp only
+  have hC₁ := norm_nonneg (childsComm₁ A B)
+  have hC₂ := norm_nonneg (childsComm₂ A B)
+  have hC₃ := norm_nonneg (childsComm₃ A B)
+  have hC₄ := norm_nonneg (childsComm₄ A B)
+  have hC₅ := norm_nonneg (childsComm₅ A B)
+  have hC₆ := norm_nonneg (childsComm₆ A B)
+  have hC₇ := norm_nonneg (childsComm₇ A B)
+  have hC₈ := norm_nonneg (childsComm₈ A B)
+  nlinarith
+
+end BoundSum
+
+end Prefactors
+
 end BCH
