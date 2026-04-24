@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: **All BCH files sorry-free (2026-04-24).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure) and Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis definition + unit-coefficient norm bound) added. The headline theorem `norm_suzuki5_bch_sub_smul_sub_R5_le` (explicit τ⁵ identification of `log(suzuki5Product)` in the Childs basis) is the open piece blocking full closure of Lean-Trotter's `bch_w4Deriv_quintic_level2` axiom.
+## Status: **All BCH files sorry-free (2026-04-24).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure) and Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis definition + unit-coefficient norm bound + headline τ⁵-identification theorem + bridge corollary) added. The headline theorem `norm_suzuki5_bch_sub_smul_sub_R5_le` and its bridge corollary `suzuki5_log_product_quintic_of_IsSuzukiCubic` are now present with the signatures consumed by Lean-Trotter's `bch_w4Deriv_quintic_level2`. They currently depend on one scoped private axiom (`suzuki5_R5_identification_axiom`) that encodes the Tier-2 symbolic 5-factor BCH identification — see "Remaining axioms" section below. Repository remains 0-sorry.
 
 Earlier state: Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic — and **M4b RHS quintic corollary** `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (∃ δ, K, ∀ τ < δ, RHS ≤ K·‖τ‖⁵), which is the payoff lemma for downstream Lean-Trotter.
 
@@ -70,16 +70,57 @@ exp/log expansion.
 
 ## Remaining Sorry's
 
-None across all three files (verified 2026-04-24). The repository is fully
-sorry-free. The most recent closure was the M4b RHS quintic corollary
-`suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (commit `9ffaab4`), proving
-the existence of `δ > 0` and `K ≥ 0` such that `suzuki5_bch_M4b_RHS A B p τ
-≤ K·‖τ‖⁵` whenever `‖τ‖ < δ`. Strategy: choose `δ = 1/(5·pn·qn·s)` with
-`pn = ‖p‖+1`, `qn = ‖1-4p‖+1`, `s = ‖A‖+‖B‖+1`; bound each of the four
-unfolded terms separately via `pow_le_pow_left₀`, the new helper
-`norm_strangBlock_log_linear` (η + η³ + 10⁷·η⁵ ≤ 40002·η for η ≤ 1/4),
-and `gcongr`. Body extracted to private `suzuki5_bch_M4b_RHS_le_t5_aux`
-to keep kernel `whnf` within heartbeat budget (16M).
+None across all five BCH files (verified 2026-04-24). The repository is fully
+sorry-free.
+
+## Remaining axioms
+
+Beyond Lean's standard three (`propext`, `Classical.choice`, `Quot.sound`),
+the following `private axiom` is introduced on branch
+`trotter-5factor-palindromic`:
+
+- `BCH.suzuki5_R5_identification_axiom`
+  (in `BCH/Suzuki5Quintic.lean`, scope-`private`) — the symbolic 5-factor
+  BCH τ⁵-identification statement. Asserts that under `IsSuzukiCubic p`,
+  `∃ δ > 0, ∃ K ≥ 0, ∀ τ ∈ [−δ, δ],
+   ‖suzuki5_bch ℝ A B p τ − τ•(A+B) − τ⁵ • suzuki5_R5 A B p‖ ≤ K·‖τ‖⁶`.
+
+  The two public theorems `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le` and
+  `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` depend on this axiom
+  (verified by `#print axioms`). Their public signatures match what
+  Lean-Trotter's `bch_w4Deriv_quintic_level2` axiom consumes, so downstream
+  code can be wired up without waiting for the axiom to be discharged.
+
+  Removing the axiom requires three tiers of symbolic Lean work (see
+  header docstring of `BCH/Suzuki5Quintic.lean`):
+
+  - **Tier 1** (~1–2 days): quintic Taylor expansion of each
+    `strangBlock_log A B c τ`, extending `Basic.lean`'s 2-factor
+    `norm_symmetric_bch_cubic_sub_smul_le` to the 3-factor symmetric
+    strangBlock case.
+  - **Tier 2** (~weeks, the hardest): symbolic triple-BCH composition,
+    substituting Tier 1 into `suzuki5_bch = bch(bch(2X, Y), 2X)`, expanding
+    via `norm_bch_sub_add_sub_bracket_le` (H1), and Gauss-Jordan
+    projecting onto the Childs 4-fold commutator basis. LCM of
+    denominators ≈ 144000; use scalar-clearing `noncomm_ring`.
+  - **Tier 3** (~1 day): triangle-inequality residual bounding using the
+    existing `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` and the Tier 1/2
+    residuals.
+
+  The user's phase-1 task prompt explicitly sanctioned the Tier-2 axiom
+  fallback; removing the axiom is earmarked for follow-up sessions.
+
+### Prior closures
+
+The M4b RHS quintic corollary `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`
+(commit `9ffaab4`) proves that `∃ δ > 0, ∃ K ≥ 0, ∀ τ < δ,
+suzuki5_bch_M4b_RHS A B p τ ≤ K·‖τ‖⁵`. Strategy: choose
+`δ = 1/(5·pn·qn·s)` with `pn = ‖p‖+1`, `qn = ‖1-4p‖+1`, `s = ‖A‖+‖B‖+1`;
+bound each of the four unfolded terms separately via `pow_le_pow_left₀`,
+the helper `norm_strangBlock_log_linear` (η + η³ + 10⁷·η⁵ ≤ 40002·η for
+η ≤ 1/4), and `gcongr`. Body extracted to private
+`suzuki5_bch_M4b_RHS_le_t5_aux` to keep kernel `whnf` within heartbeat
+budget (16M).
 
 ### Earlier closures (2026-04-23):
 
@@ -139,19 +180,27 @@ This branch closes axiom 1 prerequisites (but not axiom 1 itself yet).
 - `BCH.abs_suzuki5_βᵢ_le_one` (i = 1..8) — each |βᵢ(p)| ≤ 1.
 - `BCH.suzuki5_R5 A B p` — the τ⁵ Childs-basis combination, opaque.
 - `BCH.norm_suzuki5_R5_le_bchFourFoldSum` — unit-coefficient norm bound.
+- `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le` — **headline theorem**:
+  `∃ δ > 0, ∃ K ≥ 0, ∀ τ, ‖τ‖ < δ →
+   ‖suzuki5_bch ℝ A B p τ − τ•(A+B) − τ⁵ • suzuki5_R5 A B p‖ ≤ K·‖τ‖⁶`
+  under IsSuzukiCubic p. **Currently derived from the private
+  `suzuki5_R5_identification_axiom`** (Tier-2 fallback per user's phase-1
+  sanction). Signature ready for Lean-Trotter consumption.
+- `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` — **bridge corollary**:
+  `∃ δ > 0, ∃ K ≥ 0, ∀ τ, 0 ≤ τ → τ < δ →
+   ‖suzuki5_bch ℝ A B p τ − τ•(A+B)‖ ≤ τ⁵·bchFourFoldSum A B + K·τ⁶`.
+  Triangle-inequality combination of the headline theorem with
+  `norm_suzuki5_R5_le_bchFourFoldSum`. Lives in `Suzuki5Quintic.lean`
+  (not `Palindromic.lean` — the import direction
+  `Palindromic → Suzuki5Quintic → ChildsBasis` forces it here since the
+  proof references both R₅ identification and the R₅ norm bound).
 
 ### Open (blocks full axiom 1 closure)
 
-- `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le` — the headline theorem:
-  `‖suzuki5_bch ℝ A B p τ − τ•(A+B) − τ⁵ • suzuki5_R5 A B p‖ ≤ K·‖τ‖⁶`
-  for ‖τ‖ < δ under IsSuzukiCubic p. Proof requires symbolic 5-factor
-  BCH composition in Lean (multi-week work). The existing M4b quintic-
-  magnitude bound gets the residual bounded, but identifying the τ⁵
-  coefficient with `suzuki5_R5` requires new expansion machinery.
-
-- `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` — bridge corollary
-  for Lean-Trotter's `bch_w4Deriv_quintic_level2`. Depends on the
-  above.
+- **Discharging** `suzuki5_R5_identification_axiom` — see "Remaining axioms"
+  above for the Tier 1/2/3 roadmap. The axiom existing as `private` gives
+  Lean-Trotter a clean interface to pin against while the symbolic work
+  happens in follow-up sessions.
 
 ### Axioms 2 and 3
 
