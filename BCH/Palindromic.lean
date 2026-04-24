@@ -2094,12 +2094,612 @@ which only the opacity of `suzuki5_bch_M4b_RHS` makes feasible in Lean):
 
 For `‖τ‖ ≤ 1`, `‖τ‖^k ≤ ‖τ‖^5` for `k ≥ 5` by monotonicity, which handles
 the higher-order tails uniformly. -/
+
+include 𝕂 in
+/-- Helper: linearizes `norm_strangBlock_log_le` to a single-term bound
+`‖strangBlock_log‖ ≤ 40002·η` for η ≤ 1/4. The constant `40002` covers
+`1 + 1/16 + 10⁷/256` (since η² ≤ 1/16, η⁴ ≤ 1/256). -/
+private lemma norm_strangBlock_log_linear
+    (A B : 𝔸) (c τ : 𝕂)
+    (h : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ < 1/4) :
+    ‖strangBlock_log 𝕂 A B c τ‖ ≤
+      40002 * (‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) := by
+  have hbase := norm_strangBlock_log_le (𝕂 := 𝕂) A B c τ h
+  have heqA : ‖(c * τ) • A‖ = ‖(c * τ : 𝕂)‖ * ‖A‖ := norm_smul _ _
+  have heqB : ‖(c * τ) • B‖ = ‖(c * τ : 𝕂)‖ * ‖B‖ := norm_smul _ _
+  have hsum : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ = ‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖) := by
+    rw [heqA, heqB]; ring
+  set η : ℝ := ‖(c * τ : 𝕂)‖ * (‖A‖ + ‖B‖) with hη_def
+  have hη_le : η ≤ 1/4 := by linarith
+  have hη_nn : 0 ≤ η := by rw [hη_def]; positivity
+  have hη2 : η ^ 2 ≤ 1/16 := by nlinarith
+  have hη4 : η ^ 4 ≤ 1/256 := by
+    have hsq : η ^ 4 = (η ^ 2) ^ 2 := by ring
+    rw [hsq]
+    calc (η ^ 2) ^ 2 ≤ (1/16) ^ 2 := by
+          exact pow_le_pow_left₀ (sq_nonneg η) hη2 2
+      _ = 1/256 := by norm_num
+  have hη3_le : η ^ 3 ≤ (1/16) * η := by
+    have heq3 : η ^ 3 = η ^ 2 * η := by ring
+    rw [heq3]
+    exact mul_le_mul_of_nonneg_right hη2 hη_nn
+  have hη5_le : 10000000 * η ^ 5 ≤ 40000 * η := by
+    have heq5 : 10000000 * η ^ 5 = (10000000 * η ^ 4) * η := by ring
+    rw [heq5]
+    have hq : 10000000 * η ^ 4 ≤ 40000 := by nlinarith
+    exact mul_le_mul_of_nonneg_right hq hη_nn
+  linarith
+
+set_option maxHeartbeats 16000000 in
+include 𝕂 in
+/-- Auxiliary quintic bound for the M4b RHS with explicit polynomial constants.
+Takes `pn ≥ ‖p‖+1`, `qn ≥ ‖1-4p‖+1`, `s ≥ ‖A‖+‖B‖+1` and `‖τ‖ < 1/(5·pn·qn·s)`
+as inputs. Extracted from the main theorem to avoid kernel whnf blowup. -/
+private lemma suzuki5_bch_M4b_RHS_le_t5_aux
+    (A B : 𝔸) (p τ : 𝕂) (pn qn s : ℝ)
+    (hpn_ge : (1:ℝ) ≤ pn) (hqn_ge : (1:ℝ) ≤ qn) (hs_ge : (1:ℝ) ≤ s)
+    (hp_le : ‖p‖ ≤ pn) (hq_le : ‖((1 : 𝕂) - 4 * p)‖ ≤ qn)
+    (hAB_le : ‖A‖ + ‖B‖ ≤ s)
+    (hτ_lt : ‖τ‖ < 1 / (5 * pn * qn * s)) :
+    suzuki5_bch_M4b_RHS 𝕂 A B p τ ≤
+      (4 * 10000000 * pn^5 * s^5
+       + 10000000 * qn^5 * s^5
+       + 10000000 * 40002^5 * (4*pn + qn)^5 * s^5
+       + (1/6) * 40002 * (4*pn + qn) * s *
+           (16 * 10000000 * pn * qn^5 * s^6)
+       + (1/6) * 40002 * (4*pn + qn) * s *
+           (16 * 10000000 * pn^5 * qn * s^6)
+       + (1/6) * 40002 * (4*pn + qn) * s *
+           (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10)) * ‖τ‖^5 := by
+  have hpn_pos : (0:ℝ) < pn := by linarith
+  have hqn_pos : (0:ℝ) < qn := by linarith
+  have hs_pos  : (0:ℝ) < s  := by linarith
+  -- Derive ‖τ‖ < 1/5 ≤ 1.
+  have hτ_nn : (0:ℝ) ≤ ‖τ‖ := norm_nonneg _
+  have h5pqs_pos : (0:ℝ) < 5 * pn * qn * s := by positivity
+  have h_pqs_ge : (1:ℝ) ≤ pn * qn * s := by
+    have h1 : (1:ℝ) ≤ pn * qn := by nlinarith [hpn_ge, hqn_ge, hpn_pos.le]
+    nlinarith [h1, hs_ge, mul_pos hpn_pos hqn_pos]
+  have h5pqs_ge : (5:ℝ) ≤ 5 * pn * qn * s := by nlinarith [h_pqs_ge]
+  have hδ_le_one_fifth : 1 / (5 * pn * qn * s) ≤ 1/5 :=
+    one_div_le_one_div_of_le (by norm_num : (0:ℝ) < 5) h5pqs_ge
+  have hτ_lt_fifth : ‖τ‖ < 1/5 := lt_of_lt_of_le hτ_lt hδ_le_one_fifth
+  have hτ_le_one : ‖τ‖ ≤ 1 := by linarith
+  have hτ_le_fifth : ‖τ‖ ≤ 1/5 := le_of_lt hτ_lt_fifth
+  -- Power monotonicity helpers.
+  have hτ7_le_5 : ‖τ‖ ^ 7 ≤ ‖τ‖ ^ 5 :=
+    pow_le_pow_of_le_one hτ_nn hτ_le_one (by norm_num : 5 ≤ 7)
+  have hτ5_le_3 : ‖τ‖ ^ 5 ≤ ‖τ‖ ^ 3 :=
+    pow_le_pow_of_le_one hτ_nn hτ_le_one (by norm_num : 3 ≤ 5)
+  have hτ5_nn : (0:ℝ) ≤ ‖τ‖ ^ 5 := by positivity
+  have hτ3_nn : (0:ℝ) ≤ ‖τ‖ ^ 3 := by positivity
+  -- Norm equalities for products and smul.
+  have hpτ_norm : ‖(p * τ : 𝕂)‖ = ‖p‖ * ‖τ‖ := norm_mul _ _
+  have hqτ_norm : ‖((1 - 4 * p) * τ : 𝕂)‖ = ‖((1:𝕂) - 4 * p)‖ * ‖τ‖ :=
+    norm_mul _ _
+  have hsmul_pτA : ‖(p * τ) • A‖ = ‖(p * τ : 𝕂)‖ * ‖A‖ := norm_smul _ _
+  have hsmul_pτB : ‖(p * τ) • B‖ = ‖(p * τ : 𝕂)‖ * ‖B‖ := norm_smul _ _
+  have hsmul_qτA : ‖((1 - 4 * p) * τ) • A‖ = ‖((1 - 4 * p) * τ : 𝕂)‖ * ‖A‖ :=
+    norm_smul _ _
+  have hsmul_qτB : ‖((1 - 4 * p) * τ) • B‖ = ‖((1 - 4 * p) * τ : 𝕂)‖ * ‖B‖ :=
+    norm_smul _ _
+  have hηp_eq : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ = ‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by
+    rw [hsmul_pτA, hsmul_pτB, hpτ_norm]; ring
+  have hηq_eq : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ =
+                ‖((1:𝕂) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by
+    rw [hsmul_qτA, hsmul_qτB, hqτ_norm]; ring
+  -- Bound η_p ≤ pn·s·‖τ‖, η_q ≤ qn·s·‖τ‖.
+  have hAB_nn : 0 ≤ ‖A‖ + ‖B‖ := by positivity
+  have h_p_nn : 0 ≤ ‖p‖ := norm_nonneg _
+  have h_q_nn : 0 ≤ ‖((1:𝕂) - 4 * p)‖ := norm_nonneg _
+  have hηp_le : ‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖) ≤ pn * s * ‖τ‖ := by
+    have h_τAB_nn : 0 ≤ ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+    have h_pn_τ_nn : 0 ≤ pn * ‖τ‖ := by positivity
+    calc ‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖)
+        = ‖p‖ * (‖τ‖ * (‖A‖ + ‖B‖)) := by ring
+      _ ≤ pn * (‖τ‖ * (‖A‖ + ‖B‖)) := mul_le_mul_of_nonneg_right hp_le h_τAB_nn
+      _ = pn * ‖τ‖ * (‖A‖ + ‖B‖) := by ring
+      _ ≤ pn * ‖τ‖ * s := mul_le_mul_of_nonneg_left hAB_le h_pn_τ_nn
+      _ = pn * s * ‖τ‖ := by ring
+  have hηq_le : ‖((1:𝕂) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖) ≤ qn * s * ‖τ‖ := by
+    have h_τAB_nn : 0 ≤ ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+    have h_qn_τ_nn : 0 ≤ qn * ‖τ‖ := by positivity
+    calc ‖((1:𝕂) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖)
+        = ‖((1:𝕂) - 4 * p)‖ * (‖τ‖ * (‖A‖ + ‖B‖)) := by ring
+      _ ≤ qn * (‖τ‖ * (‖A‖ + ‖B‖)) := mul_le_mul_of_nonneg_right hq_le h_τAB_nn
+      _ = qn * ‖τ‖ * (‖A‖ + ‖B‖) := by ring
+      _ ≤ qn * ‖τ‖ * s := mul_le_mul_of_nonneg_left hAB_le h_qn_τ_nn
+      _ = qn * s * ‖τ‖ := by ring
+  have hηp_nn : 0 ≤ ‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+  have hηq_nn : 0 ≤ ‖((1:𝕂) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+  have hpnst_nn : 0 ≤ pn * s * ‖τ‖ := by positivity
+  have hqnst_nn : 0 ≤ qn * s * ‖τ‖ := by positivity
+  -- Regime hypotheses for `norm_strangBlock_log_linear`.
+  have hpns_pos : (0:ℝ) < pn * s := by positivity
+  have hqns_pos : (0:ℝ) < qn * s := by positivity
+  have h1_5qn : 1 / (5 * qn) ≤ 1/5 :=
+    one_div_le_one_div_of_le (by norm_num : (0:ℝ) < 5) (by nlinarith [hqn_ge])
+  have h1_5pn : 1 / (5 * pn) ≤ 1/5 :=
+    one_div_le_one_div_of_le (by norm_num : (0:ℝ) < 5) (by nlinarith [hpn_ge])
+  have h_fifth_lt_quarter : (1:ℝ)/5 < 1/4 := by norm_num
+  have hηp_lt_quarter : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1/4 := by
+    rw [hηp_eq]
+    have h1 : pn * s * ‖τ‖ < pn * s * (1 / (5 * pn * qn * s)) :=
+      mul_lt_mul_of_pos_left hτ_lt hpns_pos
+    have h2 : pn * s * (1 / (5 * pn * qn * s)) = 1 / (5 * qn) := by
+      field_simp
+    linarith
+  have hηq_lt_quarter : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1/4 := by
+    rw [hηq_eq]
+    have h1 : qn * s * ‖τ‖ < qn * s * (1 / (5 * pn * qn * s)) :=
+      mul_lt_mul_of_pos_left hτ_lt hqns_pos
+    have h2 : qn * s * (1 / (5 * pn * qn * s)) = 1 / (5 * pn) := by
+      field_simp
+    linarith
+  -- Linear ‖strangBlock_log‖ bounds.
+  have hsbp_le := norm_strangBlock_log_linear (𝕂 := 𝕂) A B p τ hηp_lt_quarter
+  have hsbq_le := norm_strangBlock_log_linear (𝕂 := 𝕂) A B (1 - 4 * p) τ hηq_lt_quarter
+  have hsbp_bnd : ‖strangBlock_log 𝕂 A B p τ‖ ≤ 40002 * (pn * s * ‖τ‖) := by
+    have h1 : 40002 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) =
+              40002 * (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖)) := by rw [hpτ_norm]
+    have h2 : 40002 * (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖)) ≤ 40002 * (pn * s * ‖τ‖) := by
+      nlinarith [hηp_le]
+    linarith
+  have hsbq_bnd : ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ ≤ 40002 * (qn * s * ‖τ‖) := by
+    have h1 : 40002 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) =
+              40002 * (‖((1:𝕂) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖)) := by rw [hqτ_norm]
+    have h2 : 40002 * (‖((1:𝕂) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖)) ≤ 40002 * (qn * s * ‖τ‖) := by
+      nlinarith [hηq_le]
+    linarith
+  -- ‖4·sb_log‖ = 4·‖sb_log‖.
+  have h4norm : ‖(4 : 𝕂)‖ = 4 := by simp
+  have h4smul : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ =
+                4 * ‖strangBlock_log 𝕂 A B p τ‖ := by
+    rw [norm_smul, h4norm]
+  have h4sbp_bnd : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ ≤
+                    4 * 40002 * (pn * s * ‖τ‖) := by
+    rw [h4smul]; nlinarith [hsbp_bnd, norm_nonneg (strangBlock_log 𝕂 A B p τ)]
+  have hL_bnd : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ ≤
+                40002 * (4*pn + qn) * s * ‖τ‖ := by
+    have h := hsbq_bnd
+    nlinarith [h4sbp_bnd, hsbq_bnd]
+  have hL_nn : 0 ≤ ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                    ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ := by positivity
+  -- Now bound each of the four terms in the unfolded RHS.
+  unfold suzuki5_bch_M4b_RHS
+  -- Term 1: 4·10⁷·(η_p)^5 ≤ K1·‖τ‖^5 with K1 = 4·10⁷·pn⁵·s⁵
+  have hT1 : 4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) ≤
+              (4 * 10000000 * pn^5 * s^5) * ‖τ‖^5 := by
+    rw [hηp_eq]
+    have h_pow : (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖))^5 ≤ (pn * s * ‖τ‖)^5 :=
+      pow_le_pow_left₀ hηp_nn hηp_le 5
+    have hexpand : (pn * s * ‖τ‖)^5 = pn^5 * s^5 * ‖τ‖^5 := by ring
+    calc 4 * (10000000 * (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖))^5)
+        ≤ 4 * (10000000 * (pn * s * ‖τ‖)^5) := by
+          have h10nn : (0:ℝ) ≤ 10000000 := by norm_num
+          nlinarith [h_pow, pow_nonneg hpnst_nn 5]
+      _ = (4 * 10000000 * pn^5 * s^5) * ‖τ‖^5 := by rw [hexpand]; ring
+  -- Term 2: 10⁷·(η_q)^5 ≤ K2·‖τ‖^5 with K2 = 10⁷·qn⁵·s⁵
+  have hT2 : 10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5
+              ≤ (10000000 * qn^5 * s^5) * ‖τ‖^5 := by
+    rw [hηq_eq]
+    have h_pow : (‖((1:𝕂) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖))^5 ≤ (qn * s * ‖τ‖)^5 :=
+      pow_le_pow_left₀ hηq_nn hηq_le 5
+    have hexpand : (qn * s * ‖τ‖)^5 = qn^5 * s^5 * ‖τ‖^5 := by ring
+    calc 10000000 * (‖((1:𝕂) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖))^5
+        ≤ 10000000 * (qn * s * ‖τ‖)^5 := by
+          nlinarith [h_pow, pow_nonneg hqnst_nn 5]
+      _ = (10000000 * qn^5 * s^5) * ‖τ‖^5 := by rw [hexpand]; ring
+  -- Term 3: 10⁷·(L)^5 ≤ K3·‖τ‖^5 with K3 = 10⁷·40002⁵·(4pn+qn)⁵·s⁵
+  have hT3 : 10000000 *
+              (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+               ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 5 ≤
+              (10000000 * 40002^5 * (4*pn + qn)^5 * s^5) * ‖τ‖^5 := by
+    have h_pow : (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                  ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖)^5 ≤
+                 (40002 * (4*pn + qn) * s * ‖τ‖)^5 :=
+      pow_le_pow_left₀ hL_nn hL_bnd 5
+    have hexpand : (40002 * (4*pn + qn) * s * ‖τ‖)^5 =
+                   40002^5 * (4*pn + qn)^5 * s^5 * ‖τ‖^5 := by ring
+    have hbnd_nn : 0 ≤ (40002 * (4*pn + qn) * s * ‖τ‖)^5 := by positivity
+    calc 10000000 *
+         (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+          ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖)^5
+        ≤ 10000000 * (40002 * (4*pn + qn) * s * ‖τ‖)^5 := by nlinarith [h_pow]
+      _ = (10000000 * 40002^5 * (4*pn + qn)^5 * s^5) * ‖τ‖^5 := by rw [hexpand]; ring
+  -- Term 4 sub-pieces.
+  -- ‖(4*p*τ)•(A+B)‖ ≤ 4·pn·s·‖τ‖
+  have h4pτ_eq : (4*p*τ : 𝕂) = (4 : 𝕂) * (p * τ) := by ring
+  have h4pτ_norm : ‖(4*p*τ : 𝕂)‖ = 4 * ‖p‖ * ‖τ‖ := by
+    rw [h4pτ_eq, norm_mul, h4norm, hpτ_norm]; ring
+  have h4pτ_AB_le : ‖((4 * p * τ : 𝕂)) • (A + B)‖ ≤ 4 * (pn * s * ‖τ‖) := by
+    rw [show ‖((4*p*τ : 𝕂)) • (A + B)‖ = ‖(4*p*τ : 𝕂)‖ * ‖A+B‖ from norm_smul _ _,
+        h4pτ_norm]
+    have hAB_norm : ‖A + B‖ ≤ ‖A‖ + ‖B‖ := norm_add_le _ _
+    have hAB_le_s : ‖A + B‖ ≤ s := le_trans hAB_norm hAB_le
+    have h4pn_τ_nn : 0 ≤ 4 * pn * ‖τ‖ := by positivity
+    have h4_step : 4 * ‖p‖ ≤ 4 * pn := by linarith
+    have h4_τ_nn : 0 ≤ 4 * ‖τ‖ := by positivity
+    have h_AB_nonneg : 0 ≤ ‖A + B‖ := norm_nonneg _
+    calc 4 * ‖p‖ * ‖τ‖ * ‖A + B‖
+        = (4 * ‖p‖) * (‖τ‖ * ‖A + B‖) := by ring
+      _ ≤ (4 * pn) * (‖τ‖ * ‖A + B‖) :=
+          mul_le_mul_of_nonneg_right h4_step (by positivity)
+      _ = 4 * pn * ‖τ‖ * ‖A + B‖ := by ring
+      _ ≤ 4 * pn * ‖τ‖ * s := mul_le_mul_of_nonneg_left hAB_le_s h4pn_τ_nn
+      _ = 4 * (pn * s * ‖τ‖) := by ring
+  -- ‖((1-4p)*τ)•(A+B)‖ ≤ qn·s·‖τ‖
+  have hqτ_AB_le : ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ ≤ qn * s * ‖τ‖ := by
+    rw [show ‖(((1-4*p)*τ : 𝕂)) • (A + B)‖ = ‖((1-4*p)*τ : 𝕂)‖ * ‖A+B‖ from norm_smul _ _,
+        hqτ_norm]
+    have hAB_norm : ‖A + B‖ ≤ ‖A‖ + ‖B‖ := norm_add_le _ _
+    have hAB_le_s : ‖A + B‖ ≤ s := le_trans hAB_norm hAB_le
+    have hqn_τ_nn : 0 ≤ qn * ‖τ‖ := by positivity
+    have h_AB_nonneg : 0 ≤ ‖A + B‖ := norm_nonneg _
+    calc ‖((1:𝕂) - 4*p)‖ * ‖τ‖ * ‖A + B‖
+        = ‖((1:𝕂) - 4*p)‖ * (‖τ‖ * ‖A + B‖) := by ring
+      _ ≤ qn * (‖τ‖ * ‖A + B‖) :=
+          mul_le_mul_of_nonneg_right hq_le (by positivity)
+      _ = qn * ‖τ‖ * ‖A + B‖ := by ring
+      _ ≤ qn * ‖τ‖ * s := mul_le_mul_of_nonneg_left hAB_le_s hqn_τ_nn
+      _ = qn * s * ‖τ‖ := by ring
+  -- BR1 := ‖(1-4p)τ‖^3·s^3 + 10⁷·(‖(1-4p)τ‖·s)^5  ≤ 2·10⁷·qn^5·s^5·‖τ‖^3
+  have hBR1_bnd : ‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                  10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5 ≤
+                  2 * 10000000 * (qn^5 * s^5 * ‖τ‖^3) := by
+    have h_qτ_s : ‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖) ≤ qn * s * ‖τ‖ := by
+      rw [hqτ_norm]; exact hηq_le
+    have h_qτ_s_nn : 0 ≤ ‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖) := by positivity
+    have h_pow5 : (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^5 ≤ (qn * s * ‖τ‖)^5 :=
+      pow_le_pow_left₀ h_qτ_s_nn h_qτ_s 5
+    have h_pow3 : (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^3 ≤ (qn * s * ‖τ‖)^3 :=
+      pow_le_pow_left₀ h_qτ_s_nn h_qτ_s 3
+    have heq3_mix : ‖((1 - 4 * p) * τ : 𝕂)‖^3 * (‖A‖ + ‖B‖)^3 =
+                    (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^3 := by ring
+    have hexp3 : (qn * s * ‖τ‖)^3 = qn^3 * s^3 * ‖τ‖^3 := by ring
+    have hexp5 : (qn * s * ‖τ‖)^5 = qn^5 * s^5 * ‖τ‖^5 := by ring
+    have hqn3_le : qn^3 ≤ qn^5 := pow_le_pow_right₀ hqn_ge (by norm_num : 3 ≤ 5)
+    have hs3_le : s^3 ≤ s^5 := pow_le_pow_right₀ hs_ge (by norm_num : 3 ≤ 5)
+    have hqn5_nn : 0 ≤ qn^5 := by positivity
+    have hs5_nn : 0 ≤ s^5 := by positivity
+    have h_qns5_nn : 0 ≤ qn^5 * s^5 := by positivity
+    -- Combine
+    calc ‖((1 - 4 * p) * τ : 𝕂)‖^3 * (‖A‖ + ‖B‖)^3 +
+         10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^5
+        = (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^3 +
+          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^5 := by rw [heq3_mix]
+      _ ≤ (qn * s * ‖τ‖)^3 + 10000000 * (qn * s * ‖τ‖)^5 := by
+          have h10nn : (0:ℝ) ≤ 10000000 := by norm_num
+          have h_5_step : 10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^5 ≤
+                          10000000 * (qn * s * ‖τ‖)^5 := by
+            exact mul_le_mul_of_nonneg_left h_pow5 h10nn
+          linarith [h_pow3, h_5_step]
+      _ = qn^3 * s^3 * ‖τ‖^3 + 10000000 * (qn^5 * s^5 * ‖τ‖^5) := by
+          rw [hexp3, hexp5]
+      _ ≤ qn^5 * s^5 * ‖τ‖^3 + 10000000 * (qn^5 * s^5 * ‖τ‖^3) := by
+          have h1 : qn^3 * s^3 * ‖τ‖^3 ≤ qn^5 * s^5 * ‖τ‖^3 := by
+            have ha : qn^3 * s^3 ≤ qn^5 * s^5 := by
+              have hh1 : qn^3 * s^3 ≤ qn^5 * s^3 :=
+                mul_le_mul_of_nonneg_right hqn3_le (by positivity)
+              have hh2 : qn^5 * s^3 ≤ qn^5 * s^5 :=
+                mul_le_mul_of_nonneg_left hs3_le hqn5_nn
+              linarith
+            exact mul_le_mul_of_nonneg_right ha hτ3_nn
+          have h2 : 10000000 * (qn^5 * s^5 * ‖τ‖^5) ≤ 10000000 * (qn^5 * s^5 * ‖τ‖^3) := by
+            have hh : qn^5 * s^5 * ‖τ‖^5 ≤ qn^5 * s^5 * ‖τ‖^3 :=
+              mul_le_mul_of_nonneg_left hτ5_le_3 h_qns5_nn
+            exact mul_le_mul_of_nonneg_left hh (by norm_num : (0:ℝ) ≤ 10000000)
+          linarith
+      _ = (1 + 10000000) * (qn^5 * s^5 * ‖τ‖^3) := by ring
+      _ ≤ 2 * 10000000 * (qn^5 * s^5 * ‖τ‖^3) := by
+          have hpos : 0 ≤ qn^5 * s^5 * ‖τ‖^3 := by positivity
+          have hcoeff : (1 + 10000000 : ℝ) ≤ 2 * 10000000 := by norm_num
+          exact mul_le_mul_of_nonneg_right hcoeff hpos
+  -- BR2 := same with p in place of (1-4p)
+  have hBR2_bnd : ‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                  10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5 ≤
+                  2 * 10000000 * (pn^5 * s^5 * ‖τ‖^3) := by
+    have h_pτ_s : ‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖) ≤ pn * s * ‖τ‖ := by
+      rw [hpτ_norm]; exact hηp_le
+    have h_pτ_s_nn : 0 ≤ ‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖) := by positivity
+    have h_pow5 : (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^5 ≤ (pn * s * ‖τ‖)^5 :=
+      pow_le_pow_left₀ h_pτ_s_nn h_pτ_s 5
+    have h_pow3 : (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^3 ≤ (pn * s * ‖τ‖)^3 :=
+      pow_le_pow_left₀ h_pτ_s_nn h_pτ_s 3
+    have heq3_mix : ‖(p * τ : 𝕂)‖^3 * (‖A‖ + ‖B‖)^3 =
+                    (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^3 := by ring
+    have hexp3 : (pn * s * ‖τ‖)^3 = pn^3 * s^3 * ‖τ‖^3 := by ring
+    have hexp5 : (pn * s * ‖τ‖)^5 = pn^5 * s^5 * ‖τ‖^5 := by ring
+    have hpn3_le : pn^3 ≤ pn^5 := pow_le_pow_right₀ hpn_ge (by norm_num : 3 ≤ 5)
+    have hs3_le : s^3 ≤ s^5 := pow_le_pow_right₀ hs_ge (by norm_num : 3 ≤ 5)
+    have h_pns5_nn : 0 ≤ pn^5 * s^5 := by positivity
+    calc ‖(p * τ : 𝕂)‖^3 * (‖A‖ + ‖B‖)^3 +
+         10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^5
+        = (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^3 +
+          10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^5 := by rw [heq3_mix]
+      _ ≤ (pn * s * ‖τ‖)^3 + 10000000 * (pn * s * ‖τ‖)^5 := by
+          have h10nn : (0:ℝ) ≤ 10000000 := by norm_num
+          have h_5_step : 10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖))^5 ≤
+                          10000000 * (pn * s * ‖τ‖)^5 :=
+            mul_le_mul_of_nonneg_left h_pow5 h10nn
+          linarith [h_pow3, h_5_step]
+      _ = pn^3 * s^3 * ‖τ‖^3 + 10000000 * (pn^5 * s^5 * ‖τ‖^5) := by
+          rw [hexp3, hexp5]
+      _ ≤ pn^5 * s^5 * ‖τ‖^3 + 10000000 * (pn^5 * s^5 * ‖τ‖^3) := by
+          have h1 : pn^3 * s^3 * ‖τ‖^3 ≤ pn^5 * s^5 * ‖τ‖^3 := by
+            have ha : pn^3 * s^3 ≤ pn^5 * s^5 := by
+              have hh1 : pn^3 * s^3 ≤ pn^5 * s^3 :=
+                mul_le_mul_of_nonneg_right hpn3_le (by positivity)
+              have hh2 : pn^5 * s^3 ≤ pn^5 * s^5 :=
+                mul_le_mul_of_nonneg_left hs3_le (by positivity)
+              linarith
+            exact mul_le_mul_of_nonneg_right ha hτ3_nn
+          have h2 : 10000000 * (pn^5 * s^5 * ‖τ‖^5) ≤ 10000000 * (pn^5 * s^5 * ‖τ‖^3) := by
+            have hh : pn^5 * s^5 * ‖τ‖^5 ≤ pn^5 * s^5 * ‖τ‖^3 :=
+              mul_le_mul_of_nonneg_left hτ5_le_3 h_pns5_nn
+            exact mul_le_mul_of_nonneg_left hh (by norm_num : (0:ℝ) ≤ 10000000)
+          linarith
+      _ = (1 + 10000000) * (pn^5 * s^5 * ‖τ‖^3) := by ring
+      _ ≤ 2 * 10000000 * (pn^5 * s^5 * ‖τ‖^3) := by
+          have hpos : 0 ≤ pn^5 * s^5 * ‖τ‖^3 := by positivity
+          have hcoeff : (1 + 10000000 : ℝ) ≤ 2 * 10000000 := by norm_num
+          exact mul_le_mul_of_nonneg_right hcoeff hpos
+  -- BR1, BR2 nonneg
+  have hBR1_nn : 0 ≤ ‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                     10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5 := by positivity
+  have hBR2_nn : 0 ≤ ‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                     10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5 := by positivity
+  have h4BR2_nn : 0 ≤ 4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                            10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by positivity
+  -- S1, S2, S3 bounds.
+  have hS1_bnd : 2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+                 (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                  10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) ≤
+                 16 * 10000000 * pn * qn^5 * s^6 * ‖τ‖^4 := by
+    have h_4pτAB_nn : 0 ≤ ‖((4 * p * τ : 𝕂)) • (A + B)‖ := norm_nonneg _
+    calc 2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+         (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)
+        ≤ 2 * (4 * (pn * s * ‖τ‖)) *
+          (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+           10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by
+          gcongr
+      _ ≤ 2 * (4 * (pn * s * ‖τ‖)) * (2 * 10000000 * (qn^5 * s^5 * ‖τ‖^3)) := by
+          gcongr
+      _ = 16 * 10000000 * pn * qn^5 * s^6 * ‖τ‖^4 := by ring
+  have hS2_bnd : 2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+                 (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                       10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) ≤
+                 16 * 10000000 * pn^5 * qn * s^6 * ‖τ‖^4 := by
+    have h_qτAB_nn : 0 ≤ ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ := norm_nonneg _
+    calc 2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+         (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+               10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5))
+        ≤ 2 * (qn * s * ‖τ‖) *
+          (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) := by
+          gcongr
+      _ ≤ 2 * (qn * s * ‖τ‖) * (4 * (2 * 10000000 * (pn^5 * s^5 * ‖τ‖^3))) := by
+          gcongr
+      _ = 16 * 10000000 * pn^5 * qn * s^6 * ‖τ‖^4 := by ring
+  have hS3_bnd : 2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                          10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+                 (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                  10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) ≤
+                 32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10 * ‖τ‖^6 := by
+    calc 2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                   10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+         (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)
+        ≤ 2 * (4 * (2 * 10000000 * (pn^5 * s^5 * ‖τ‖^3))) *
+          (2 * 10000000 * (qn^5 * s^5 * ‖τ‖^3)) := by
+          gcongr
+      _ = 32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10 * ‖τ‖^6 := by ring
+  -- (1/6)·L·S_i bounds.
+  have hL_eq_inv : ((6 : ℝ)⁻¹) = 1/6 := by norm_num
+  -- Bound (1/6) · L · S1 ≤ K4_1 · ‖τ‖^5
+  have hT4_1 : (6 : ℝ)⁻¹ *
+               (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+               (2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+                (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                 10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) ≤
+               ((1/6) * 40002 * (4*pn + qn) * s *
+                 (16 * 10000000 * pn * qn^5 * s^6)) * ‖τ‖^5 := by
+    have hLS1_le : (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                    ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+                   (2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+                    (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                     10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) ≤
+                   (40002 * (4*pn + qn) * s * ‖τ‖) *
+                    (16 * 10000000 * pn * qn^5 * s^6 * ‖τ‖^4) := by
+      have hS1_nn : 0 ≤ 2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+                        (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                         10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by
+        positivity
+      gcongr
+    have hexpand : (40002 * (4*pn + qn) * s * ‖τ‖) *
+                   (16 * 10000000 * pn * qn^5 * s^6 * ‖τ‖^4) =
+                   (40002 * (4*pn + qn) * s * (16 * 10000000 * pn * qn^5 * s^6)) * ‖τ‖^5 := by
+      ring
+    rw [hL_eq_inv]
+    have h_assoc : (1/6 : ℝ) *
+         (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+          ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+         (2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+          (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+           10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) =
+         (1/6 : ℝ) *
+         ((‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+           ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+          (2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+           (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+            10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5))) := by ring
+    rw [h_assoc]
+    have hsix_nn : (0:ℝ) ≤ 1/6 := by norm_num
+    calc (1/6 : ℝ) *
+         ((‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+           ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+          (2 * ‖((4 * p * τ : 𝕂)) • (A + B)‖ *
+           (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+            10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)))
+        ≤ (1/6 : ℝ) * ((40002 * (4*pn + qn) * s * ‖τ‖) *
+                       (16 * 10000000 * pn * qn^5 * s^6 * ‖τ‖^4)) :=
+          mul_le_mul_of_nonneg_left hLS1_le hsix_nn
+      _ = ((1/6) * 40002 * (4*pn + qn) * s *
+            (16 * 10000000 * pn * qn^5 * s^6)) * ‖τ‖^5 := by rw [hexpand]; ring
+  have hT4_2 : (6 : ℝ)⁻¹ *
+               (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+               (2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+                (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                      10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5))) ≤
+               ((1/6) * 40002 * (4*pn + qn) * s *
+                 (16 * 10000000 * pn^5 * qn * s^6)) * ‖τ‖^5 := by
+    have hLS2_le : (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                    ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+                   (2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+                    (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                          10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5))) ≤
+                   (40002 * (4*pn + qn) * s * ‖τ‖) *
+                    (16 * 10000000 * pn^5 * qn * s^6 * ‖τ‖^4) := by
+      have hS2_nn : 0 ≤ 2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+                        (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                              10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) := by
+        positivity
+      gcongr
+    have hexpand : (40002 * (4*pn + qn) * s * ‖τ‖) *
+                   (16 * 10000000 * pn^5 * qn * s^6 * ‖τ‖^4) =
+                   (40002 * (4*pn + qn) * s * (16 * 10000000 * pn^5 * qn * s^6)) * ‖τ‖^5 := by
+      ring
+    rw [hL_eq_inv]
+    have h_assoc : (1/6 : ℝ) *
+         (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+          ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+         (2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+          (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5))) =
+         (1/6 : ℝ) *
+         ((‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+           ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+          (2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+           (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                 10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)))) := by ring
+    rw [h_assoc]
+    have hsix_nn : (0:ℝ) ≤ 1/6 := by norm_num
+    calc (1/6 : ℝ) *
+         ((‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+           ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+          (2 * ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ *
+           (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                 10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5))))
+        ≤ (1/6 : ℝ) * ((40002 * (4*pn + qn) * s * ‖τ‖) *
+                       (16 * 10000000 * pn^5 * qn * s^6 * ‖τ‖^4)) :=
+          mul_le_mul_of_nonneg_left hLS2_le hsix_nn
+      _ = ((1/6) * 40002 * (4*pn + qn) * s *
+            (16 * 10000000 * pn^5 * qn * s^6)) * ‖τ‖^5 := by rw [hexpand]; ring
+  have hT4_3 : (6 : ℝ)⁻¹ *
+               (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+               (2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                          10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+                (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                 10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) ≤
+               ((1/6) * 40002 * (4*pn + qn) * s *
+                 (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10)) * ‖τ‖^5 := by
+    have hLS3_le : (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                    ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+                   (2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                              10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+                    (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                     10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) ≤
+                   (40002 * (4*pn + qn) * s * ‖τ‖) *
+                    (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10 * ‖τ‖^6) := by
+      have hS3_nn : 0 ≤ 2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                                  10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+                        (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                         10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5) := by
+        positivity
+      gcongr
+    have hbig_pos : 0 ≤ 40002 * (4*pn + qn) * s *
+                       (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10) := by positivity
+    have hLS3_bnd' : (40002 * (4*pn + qn) * s * ‖τ‖) *
+                     (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10 * ‖τ‖^6) ≤
+                     40002 * (4*pn + qn) * s *
+                     (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10) * ‖τ‖^5 := by
+      have heq : (40002 * (4*pn + qn) * s * ‖τ‖) *
+                 (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10 * ‖τ‖^6) =
+                 40002 * (4*pn + qn) * s *
+                 (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10) * ‖τ‖^7 := by ring
+      rw [heq]
+      exact mul_le_mul_of_nonneg_left hτ7_le_5 hbig_pos
+    rw [hL_eq_inv]
+    have h_combined :
+        (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+         ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+        (2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                   10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+         (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) ≤
+        40002 * (4*pn + qn) * s *
+        (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10) * ‖τ‖^5 :=
+      le_trans hLS3_le hLS3_bnd'
+    have h_assoc : (1/6 : ℝ) *
+        (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+         ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+        (2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                   10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+         (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+          10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) =
+        (1/6 : ℝ) *
+        ((‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+          ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) *
+         (2 * (4 * (‖(p * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+                    10000000 * (‖(p * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5)) *
+          (‖((1 - 4 * p) * τ : 𝕂)‖ ^ 3 * (‖A‖ + ‖B‖) ^ 3 +
+           10000000 * (‖((1 - 4 * p) * τ : 𝕂)‖ * (‖A‖ + ‖B‖)) ^ 5))) := by ring
+    have heq_target :
+        ((1/6) * 40002 * (4*pn + qn) * s *
+          (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10)) * ‖τ‖^5 =
+        (1/6 : ℝ) * (40002 * (4*pn + qn) * s *
+          (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10) * ‖τ‖^5) := by ring
+    rw [h_assoc, heq_target]
+    exact mul_le_mul_of_nonneg_left h_combined (by norm_num : (0:ℝ) ≤ 1/6)
+  -- Combine T1, T2, T3, T4_1, T4_2, T4_3 into the final bound.
+  linarith [hT1, hT2, hT3, hT4_1, hT4_2, hT4_3]
+
 include 𝕂 in
 theorem suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic
     (A B : 𝔸) (p : 𝕂) (_hSuzuki : IsSuzukiCubic p) :
     ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : 𝕂, ‖τ‖ < δ →
       suzuki5_bch_M4b_RHS 𝕂 A B p τ ≤ K * ‖τ‖ ^ 5 := by
-  sorry
+  -- Background constants ≥ 1.
+  set pn : ℝ := ‖p‖ + 1 with hpn_def
+  set qn : ℝ := ‖((1 : 𝕂) - 4 * p)‖ + 1 with hqn_def
+  set s  : ℝ := ‖A‖ + ‖B‖ + 1 with hs_def
+  have hpn_ge : (1:ℝ) ≤ pn := by rw [hpn_def]; linarith [norm_nonneg p]
+  have hqn_ge : (1:ℝ) ≤ qn := by
+    rw [hqn_def]; linarith [norm_nonneg ((1 : 𝕂) - 4 * p)]
+  have hs_ge  : (1:ℝ) ≤ s  := by
+    rw [hs_def]; linarith [norm_nonneg A, norm_nonneg B]
+  have hp_le : ‖p‖ ≤ pn := by rw [hpn_def]; linarith
+  have hq_le : ‖((1 : 𝕂) - 4 * p)‖ ≤ qn := by rw [hqn_def]; linarith
+  have hAB_le : ‖A‖ + ‖B‖ ≤ s := by rw [hs_def]; linarith
+  refine ⟨1 / (5 * pn * qn * s), by positivity,
+          4 * 10000000 * pn^5 * s^5
+          + 10000000 * qn^5 * s^5
+          + 10000000 * 40002^5 * (4*pn + qn)^5 * s^5
+          + (1/6) * 40002 * (4*pn + qn) * s *
+              (16 * 10000000 * pn * qn^5 * s^6)
+          + (1/6) * 40002 * (4*pn + qn) * s *
+              (16 * 10000000 * pn^5 * qn * s^6)
+          + (1/6) * 40002 * (4*pn + qn) * s *
+              (32 * 10000000 * 10000000 * pn^5 * qn^5 * s^10),
+          by positivity, ?_⟩
+  intro τ hτ_lt
+  exact suzuki5_bch_M4b_RHS_le_t5_aux A B p τ pn qn s
+        hpn_ge hqn_ge hs_ge hp_le hq_le hAB_le hτ_lt
 
 /-! ### M6 main theorem: Trotter h4 bound for iterated Suzuki-5
 
