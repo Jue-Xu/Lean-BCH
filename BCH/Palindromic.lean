@@ -2070,6 +2070,37 @@ the existing M4b bound is sufficient for downstream Trotter h4 applications
 by bounding each term individually.
 -/
 
+/-! ### M4b RHS is `O(‖τ‖⁵)` near zero
+
+Payoff lemma for downstream Lean-Trotter. Asserts the existence of a radius
+`δ > 0` and constant `K ≥ 0` such that `suzuki5_bch_M4b_RHS 𝕂 A B p τ ≤ K·‖τ‖⁵`
+for all τ with `‖τ‖ < δ`. Closing `bch_iteratedDeriv_s4Func_order4` in
+Lean-Trotter reduces to combining this with `norm_exp_add_sub_exp_le` and
+`exp_suzuki5_bch` to obtain a single-step `O(‖τ‖⁵)` product bound, then
+applying a Taylor-match-from-norm-bound lemma.
+
+Proof outline (deferred; each term of the unfolded RHS is analyzed separately,
+which only the opacity of `suzuki5_bch_M4b_RHS` makes feasible in Lean):
+- Term 1 (`4·10⁷·(‖(p·τ)•A‖+‖(p·τ)•B‖)⁵`): exact ‖τ‖⁵ using
+  `‖(c·τ)•X‖ = ‖c‖·‖τ‖·‖X‖`.
+- Term 2 (`10⁷·(‖((1-4p)·τ)•A‖+‖((1-4p)·τ)•B‖)⁵`): same, with `c = 1-4p`.
+- Term 3 (`10⁷·(‖4•strangBlock_log p τ‖+‖strangBlock_log (1-4p) τ‖)⁵`):
+  use `norm_strangBlock_log_le` (η + η³ + 10⁷·η⁵ ≤ 40002·η for η ≤ 1/4)
+  to linearize, then quintic. Needs `‖τ‖ ≤ δ_reg` small enough for the
+  `1/4` regime hypotheses.
+- Term 4 (the `(6)⁻¹·(‖4X‖+‖Y‖)·(sub-products)` term): each sub-product
+  is O(τ⁴), and the outer factor contributes ‖τ‖, giving O(τ⁵). Bounds
+  via the slice-9 commutator structure already established.
+
+For `‖τ‖ ≤ 1`, `‖τ‖^k ≤ ‖τ‖^5` for `k ≥ 5` by monotonicity, which handles
+the higher-order tails uniformly. -/
+include 𝕂 in
+theorem suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic
+    (A B : 𝔸) (p : 𝕂) (_hSuzuki : IsSuzukiCubic p) :
+    ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : 𝕂, ‖τ‖ < δ →
+      suzuki5_bch_M4b_RHS 𝕂 A B p τ ≤ K * ‖τ‖ ^ 5 := by
+  sorry
+
 /-! ### M6 main theorem: Trotter h4 bound for iterated Suzuki-5
 
 Combining `s4Func_eq_exp_nsmul` (rewriting the iterated product as a single
