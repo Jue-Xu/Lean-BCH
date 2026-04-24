@@ -26,6 +26,7 @@ where e(c,X) := exp(c • X). The coefficient list (p/2, p, p, p, (1-3p)/2, (1-4
 -/
 
 import BCH.Basic
+import BCH.SymmetricQuintic
 
 namespace BCH
 
@@ -904,6 +905,52 @@ theorem norm_strangBlock_log_sub_target_le (A B : 𝔸) (c τ : 𝕂)
   -- Now key matches goal modulo grouping of subtraction.
   convert key using 2
   abel
+
+/-! ### Quintic-order refinement of the per-block bound (B1.d)
+
+Extends `norm_strangBlock_log_sub_target_le` (cubic polynomial subtraction with
+`O(σ⁵)` residual) by one higher degree: after subtracting both the cubic
+polynomial `(cτ)³•symmetric_bch_cubic_poly` and the quintic polynomial
+`(cτ)⁵•symmetric_bch_quintic_poly`, the residual is `O(σ⁷)`.
+
+Reduction: apply `norm_symmetric_bch_quintic_sub_poly_le` to `(a, b) = (cτ•A, cτ•B)`,
+then use the `c⁵` / `c³` homogeneity lemmas for the two polynomials to pull the
+`(cτ)³` / `(cτ)⁵` scalars outside.
+
+This is the building block for the symbolic 5-factor composition in
+`Suzuki5Quintic.lean` (B2): summing over the 5 Strang blocks gives the τ⁵
+residual in Childs 4-fold basis.
+-/
+
+include 𝕂 in
+/-- **Per-block quintic bound (B1.d)**: each Strang block's log differs from the
+extended target `cτ•V + (cτ)³•E_sym + (cτ)⁵•E₅_sym` by at most `K·σ⁷` where
+`σ = ‖cτ•A‖+‖cτ•B‖`. Direct application of
+`norm_symmetric_bch_quintic_sub_poly_le` to the Strang composition `cτ•A, cτ•B`,
+then pulling `(cτ)³` and `(cτ)⁵` through via `symmetric_bch_cubic_poly_smul` and
+`symmetric_bch_quintic_poly_smul`. -/
+theorem norm_strangBlock_log_sub_quintic_target_le (A B : 𝔸) (c τ : 𝕂)
+    (h : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ < 1 / 4) :
+    ‖strangBlock_log 𝕂 A B c τ - (c * τ) • (A + B)
+        - (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B
+        - (c * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B‖ ≤
+      1000000000 * (‖(c * τ) • A‖ + ‖(c * τ) • B‖) ^ 7 := by
+  unfold strangBlock_log
+  -- Apply `norm_symmetric_bch_quintic_sub_poly_le` with a = cτ•A, b = cτ•B.
+  have key := norm_symmetric_bch_quintic_sub_poly_le
+    (𝕂 := 𝕂) ((c * τ) • A) ((c * τ) • B) h
+  unfold symmetric_bch_cubic at key
+  -- Regroup (cτA+cτB) as cτ•(A+B), factor (cτ)³ / (cτ)⁵ scalars outside.
+  have hsmul_dist : (c * τ) • A + (c * τ) • B = (c * τ) • (A + B) := by rw [smul_add]
+  have hcub_hom : symmetric_bch_cubic_poly 𝕂 ((c * τ) • A) ((c * τ) • B) =
+      (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B :=
+    symmetric_bch_cubic_poly_smul A B (c * τ)
+  have hquint_hom : symmetric_bch_quintic_poly 𝕂 ((c * τ) • A) ((c * τ) • B) =
+      (c * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B :=
+    symmetric_bch_quintic_poly_smul A B (c * τ)
+  rw [hsmul_dist, hcub_hom, hquint_hom] at key
+  -- Match the goal: `key` already matches after the rewrites above.
+  exact key
 
 /-! ### Sum of 5-block targets
 

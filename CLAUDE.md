@@ -1,11 +1,13 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: **All BCH files sorry-free (2026-04-24, updated session 8).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure + BCHPrefactors struct), Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis def + unit-coefficient norm bound + headline τ⁵-identification theorem + bridge corollary + **tight bridge at Suzuki p, fully proved**). Infrastructure is ready for Lean-Trotter's axioms 1 AND 2:
+## Status: **All BCH files sorry-free (2026-04-24, updated session 9).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure + BCHPrefactors struct), Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis def + unit-coefficient norm bound + headline τ⁵-identification theorem + bridge corollary + **tight bridge at Suzuki p, fully proved**), **SymmetricQuintic (τ⁵ coefficient infrastructure + B1.c quintic Taylor bridge via Tier-2 axiom)**, **Palindromic B1.d (per-block quintic bound derived from B1.c)**. Infrastructure is ready for Lean-Trotter's axioms 1 AND 2:
 
 - Axiom 1 (`bch_w4Deriv_quintic_level2`): wired up via `suzuki5_log_product_quintic_of_IsSuzukiCubic`; derived from the single remaining private axiom `suzuki5_R5_identification_axiom`.
-- Axiom 2 (`bch_w4Deriv_level3_tight`): **P2 axiom now discharged this session.** Bridge theorem `suzuki5_log_product_quintic_tight_at_suzukiP` derived solely from the headline theorem + `norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum` (which is now a fully-proved theorem, not an axiom).
+- Axiom 2 (`bch_w4Deriv_level3_tight`): **P2 axiom discharged session 8.** Bridge theorem `suzuki5_log_product_quintic_tight_at_suzukiP` derived solely from the headline theorem + `norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum` (now a fully-proved theorem, not an axiom).
 
-Repository remains 0-sorry. **Axiom count: 1 scoped `private axiom` + Lean's 3 standard** (down from 2). See "Remaining axioms" section below.
+Session 9 closed **B1.c** (quintic Taylor bridge for 3-factor symmetric BCH, `norm_symmetric_bch_quintic_sub_poly_le`) and **B1.d** (per-block `strangBlock_log` quintic wrapper, `norm_strangBlock_log_sub_quintic_target_le`) via a scoped Tier-2 axiom `symmetric_bch_quintic_sub_poly_axiom` (see "Remaining axioms"). These unblock **B2** (symbolic 5-factor BCH composition onto Childs basis — the primary bottleneck for discharging the P1 axiom).
+
+Repository remains 0-sorry. **Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (up from 1 by the new B1.c Tier-2 fallback). See "Remaining axioms" section below.
 
 Earlier state: Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic — and **M4b RHS quintic corollary** `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (∃ δ, K, ∀ τ < δ, RHS ≤ K·‖τ‖⁵), which is the payoff lemma for downstream Lean-Trotter.
 
@@ -116,6 +118,55 @@ header docstring of `BCH/Suzuki5Quintic.lean`):
 The user's phase-1 task prompt explicitly sanctioned the Tier-2 axiom
 fallback; removing the axiom is earmarked for follow-up sessions.
 
+### Axiom 2 (NEW session 9): `BCH.symmetric_bch_quintic_sub_poly_axiom`
+
+(in `BCH/SymmetricQuintic.lean`, scope-`private`) — the quintic Taylor
+bridge for the 3-factor symmetric BCH. Asserts that for `‖a‖+‖b‖ < 1/4`,
+
+```
+‖symmetric_bch_cubic 𝕂 a b − symmetric_bch_cubic_poly 𝕂 a b
+    − symmetric_bch_quintic_poly 𝕂 a b‖ ≤ 10⁹ · (‖a‖+‖b‖)⁷
+```
+
+extending `Basic.lean`'s cubic-version `norm_symmetric_bch_cubic_sub_poly_le`
+by one degree. CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py`
+confirms degrees 2, 4, 6 vanish identically (palindromic symmetry) and
+the degree-7 residual has 126 non-zero `{a,b}`-words, so the statement is
+structurally sound — only the explicit `hdecomp` proof is deferred.
+
+The public theorems
+`BCH.norm_symmetric_bch_quintic_sub_poly_le` (the B1.c bridge) and
+`BCH.norm_strangBlock_log_sub_quintic_target_le` (the B1.d per-block wrapper
+in `Palindromic.lean`) depend on this axiom. Downstream: B2 (symbolic
+5-factor BCH composition on the Childs basis) and Lean-Trotter's discharge
+of the P1 axiom chain pin against B1.d.
+
+Removing the axiom requires three tiers of Lean work (per the session
+prompt at `claude/lean-bch-B1c-session-prompt.md`):
+
+- **Tier 1** (~1–2 days): add `bch_quintic_term a b` and
+  `norm_bch_sextic_remainder_le` in `Basic.lean` (analogs of the existing
+  `bch_quartic_term` and `norm_bch_quintic_remainder_le`), identifying the
+  degree-5 coefficient of `bch(a,b)` and giving an `O(s⁶/(2−exp(s)))`
+  tail bound. The sextic-remainder proof alone is ~500 lines, paralleling
+  the existing ~800-line quintic-remainder proof at line 2326 of
+  `Basic.lean`.
+
+- **Tier 2** (~1 week, the hardest): extend the 6-term algebraic
+  decomposition in the cubic template `norm_symmetric_bch_cubic_sub_poly_le`
+  (line ~3798 of `Basic.lean`) to the 8–10-term decomposition of the
+  quintic version. Each additional term captures a degree-5 correction
+  bounded by commutator algebra + the new sextic remainder. The CAS
+  pipeline at `Lean-Trotter/scripts/compute_bch_prefactors.py` (extended
+  to degree 7) discovers the decomposition mechanically. Expect ~400
+  lines of `noncomm_ring` after scalar clearing for `hdecomp`.
+
+- **Tier 3** (~1 day): triangle-inequality assembly of the 8–10 per-term
+  `O(s⁷)` bounds — analogous to the cubic template's `5×10⁶ + 5000 +
+  1000 + 1 + 500 + 2 = 5,006,503` constant chain.
+
+Introduced `private` so only the public theorems appear in the API.
+
 ### Rigorously proved (no axioms) — Axiom 2 infrastructure (sessions 7–8)
 
 All of the following depend only on Lean's 3 standard axioms:
@@ -203,12 +254,20 @@ BCH/
                              + BCHPrefactors struct + bchTightPrefactors
                              (axiom 1/2 infrastructure)
 ├── SymmetricQuintic.lean  ← τ⁵ coefficient of 3-factor symmetric BCH:
-                             30-term symmetric_bch_quintic_poly + c⁵ homogeneity
-                             (B1 Tier-1 infrastructure for discharging P1 axiom)
+                             30-term symmetric_bch_quintic_poly + c⁵ homogeneity +
+                             norm bound + **B1.c quintic Taylor bridge theorem**
+                             (derives from Tier-2 axiom
+                             `symmetric_bch_quintic_sub_poly_axiom`)
 └── Suzuki5Quintic.lean    ← βᵢ(p) polynomials + R₅ Childs-basis def + norm bound
                              + headline τ⁵-identification theorem + tight bridge
                              at Suzuki p (axiom 1/2 infrastructure)
 ```
+
+Note: `Palindromic.lean` now imports `SymmetricQuintic.lean` (as of session 9)
+so the B1.d per-block quintic wrapper
+`norm_strangBlock_log_sub_quintic_target_le` can reference
+`symmetric_bch_quintic_poly` and consume `norm_symmetric_bch_quintic_sub_poly_le`.
+New import chain: `Basic → SymmetricQuintic → Palindromic → Suzuki5Quintic`.
 
 ## Lean-Trotter interface (branch `trotter-5factor-palindromic`)
 
@@ -252,6 +311,44 @@ This branch closes axiom 1 prerequisites (but not axiom 1 itself yet).
   above for the Tier 1/2/3 roadmap. The axiom existing as `private` gives
   Lean-Trotter a clean interface to pin against while the symbolic work
   happens in follow-up sessions.
+
+### B1.c / B1.d closure (session 9, this branch)
+
+**B1.c** — `BCH.norm_symmetric_bch_quintic_sub_poly_le` in
+`BCH/SymmetricQuintic.lean`: the quintic Taylor bridge
+
+```
+‖symmetric_bch_cubic(a,b) − symmetric_bch_cubic_poly(a,b)
+    − symmetric_bch_quintic_poly(a,b)‖ ≤ 10⁹ · (‖a‖+‖b‖)⁷
+```
+
+Currently derived from the scoped Tier-2 axiom
+`BCH.symmetric_bch_quintic_sub_poly_axiom` (see "Remaining axioms"). CAS
+at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms the
+statement structurally (degrees 2, 4, 6 vanish; degree 7 has 126 non-zero
+words).
+
+**B1.d** — `BCH.norm_strangBlock_log_sub_quintic_target_le` in
+`BCH/Palindromic.lean`: per-block quintic bound
+
+```
+‖strangBlock_log A B c τ − (cτ)•(A+B) − (cτ)³•symmetric_bch_cubic_poly A B
+    − (cτ)⁵•symmetric_bch_quintic_poly A B‖ ≤ 10⁹·(‖cτ•A‖+‖cτ•B‖)⁷
+```
+
+Trivial reduction via `norm_symmetric_bch_quintic_sub_poly_le` +
+`symmetric_bch_cubic_poly_smul` + `symmetric_bch_quintic_poly_smul`.
+Directly analogous to the existing cubic wrapper
+`norm_strangBlock_log_sub_target_le`, one degree higher.
+
+Both B1.c and B1.d depend only on the new Tier-2 axiom plus Lean's 3
+standard (verified via `#print axioms`).
+
+**Not yet done**: **B2** (symbolic 5-factor BCH composition onto the Childs
+4-fold commutator basis — substitute B1.d into `suzuki5_bch = bch(bch(2X, Y), 2X)`,
+expand via H1, project onto the Childs basis). B2 is the primary remaining
+symbolic bottleneck for discharging the P1 axiom; expected ~1 week of
+focused work.
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 
