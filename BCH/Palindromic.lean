@@ -2078,6 +2078,29 @@ theorem smul_5760_symmetric_bch_quintic_poly_eq_childs_basis (A B : 𝔸) :
   noncomm_ring
 
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Jacobi relation**: `childsComm₂ A B = childsComm₃ A B`.
+
+By Jacobi: `[A, [B, [B, A]]] - [B, [A, [B, A]]] = [[A, B], [B, A]] = 0`,
+so `[A, [B, [B, A]]] = [B, [A, [B, A]]]`. Applying `[A, _]` to both sides
+gives `[A, [A, [B, [B, A]]]] = [A, [B, [A, [B, A]]]]`, which is `C₂ = C₃`.
+
+Verified directly by ring expansion. -/
+theorem childsComm₂_eq_childsComm₃ (A B : 𝔸) :
+    childsComm₂ A B = childsComm₃ A B := by
+  unfold childsComm₂ childsComm₃ commBr
+  noncomm_ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Jacobi relation**: `childsComm₆ A B = childsComm₇ A B`.
+
+By the same argument as `childsComm₂_eq_childsComm₃` but with the outer
+bracket `[B, _]` instead of `[A, _]`. -/
+theorem childsComm₆_eq_childsComm₇ (A B : 𝔸) :
+    childsComm₆ A B = childsComm₇ A B := by
+  unfold childsComm₆ childsComm₇ commBr
+  noncomm_ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **B2.2.e residual bound**: combining the algebraic decomposition with the
 quadratic and cubic norm bounds, the residual `sym_cubic_poly(α•V+δa, β•V+δb)
 − linear_part(V, α, β, δa, δb)` is bounded by `(3/2)·N·D² + (1/2)·D³`.
