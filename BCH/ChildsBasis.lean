@@ -4,9 +4,34 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 # BCH/ChildsBasis — Childs 4-fold commutator basis
 
-Defines the 8 nested 4-fold commutators that form an over-complete basis
-for weight-5 elements of the free Lie algebra on `{A, B}`, used for
-Suzuki S₄ BCH bounds.
+Defines the 8 nested 4-fold commutators that form an **over-complete**
+spanning set for weight-5 elements of the free Lie algebra on `{A, B}`,
+used for Suzuki S₄ BCH bounds.
+
+## Note on overcompleteness
+
+By Witt's formula, the degree-5 component of the free Lie algebra on
+`{A, B}` has dimension `(1/5)·(2⁵ - 2) = 6`. Childs's enumeration uses 8
+left-rooted commutators of the form `[X₁, [X₂, [X₃, [B, A]]]]` with
+`Xᵢ ∈ {A, B}` — i.e., `2³ = 8` elements. So `8 > 6` ⇒ the spanning set
+admits **2 non-trivial linear relations** (consequences of Jacobi).
+
+We retain the 8-element form rather than a 6-element basis (e.g. Lyndon)
+for several reasons:
+* Uniform combinatorial enumeration (3 binary choices); no arbitrary
+  Lyndon-order tie-breaking.
+* Symmetric under `A ↔ B` swap (which sends `(β₁, …, β₈) ↦ (β₈, …, β₁)`).
+* Childs's projection has `β₃(p) ≡ 0` and `β₇(p) ≡ 0` (sparse
+  representation), so the bound `Σⱼ |βⱼ(p)| · ‖childsCommⱼ‖` is
+  *effectively* a 6-term sum — the overcompleteness has no cost in
+  bound tightness.
+* Mirrors Lean-Trotter's `Suzuki4ChildsForm.lean` for rfl-compatible
+  axiom interfacing.
+
+The cost: B2.2.e (the τ⁵ identification) must reproduce the **specific**
+Childs projection (not just any lift modulo Jacobi). The CAS pipeline at
+`Lean-Trotter/scripts/compute_bch_prefactors.py` implements this
+specific projection, and B2.2.e ports it to Lean.
 
 These definitions mirror `LieTrotter/Suzuki4ChildsForm.lean` in the
 Lean-Trotter project so that after a rev bump, Lean-Trotter can use
