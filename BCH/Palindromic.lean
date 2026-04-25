@@ -2032,6 +2032,51 @@ theorem smul_24_sym_cubic_poly_linear_part_at_strangBlock_E3_eq_childs_basis
   rw [smul_comm (24 : 𝕂) _ _]
   rw [comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis (𝕂 := 𝕂) A B]
 
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e: E_5 → Childs basis projection**.
+
+The 30-term polynomial `symmetric_bch_quintic_poly` decomposes onto the
+Childs 4-fold commutator basis (with free Jacobi parameters set to 0 —
+verified by Gauss-Jordan symbolic solving in
+`Lean-Trotter/scripts/compute_bch_prefactors.py`):
+
+  `5760 • E_5 = -7·C₁ - 12·C₂ + 16·C₄ - 16·C₅ - 48·C₆ - 8·C₈`
+
+(`C₃, C₇` coefficients are 0 — same sparsity pattern as `β₃, β₇` in
+`suzuki5_R5`.) Note: 5760 = lcm of denominators (5760, 480, 360, 120, 720)
+so the integer-coefficient form clears all rational scalars.
+
+Combined with `comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis` (the
+[V,[V,E_3]] projection), this is the second piece needed to express the
+τ⁵ content of `suzuki5_bch` on the Childs basis as `R₅(A,B,p)`.
+
+**Strategy**: clear the `5760` factor on LHS via `field_simp`-like
+cancellation, then convert all 𝕂-smul to multiplications via
+`Algebra.smul_def + map_intCast/map_ofNat`, finally `noncomm_ring` on
+the ~126-monomial identity. -/
+theorem smul_5760_symmetric_bch_quintic_poly_eq_childs_basis (A B : 𝔸) :
+    (5760 : 𝕂) • symmetric_bch_quintic_poly 𝕂 A B =
+      (-7 : 𝕂) • childsComm₁ A B +
+      (-12 : 𝕂) • childsComm₂ A B +
+      (16 : 𝕂) • childsComm₄ A B +
+      (-16 : 𝕂) • childsComm₅ A B +
+      (-48 : 𝕂) • childsComm₆ A B +
+      (-8 : 𝕂) • childsComm₈ A B := by
+  unfold symmetric_bch_quintic_poly childsComm₁ childsComm₂ childsComm₄ childsComm₅
+    childsComm₆ childsComm₈ commBr
+  have h5760ne : (5760 : 𝕂) ≠ 0 := by exact_mod_cast (show (5760 : ℕ) ≠ 0 by norm_num)
+  -- Push 5760 • inside the 30-term sum, then collapse 5760·(k/5760) = k.
+  simp only [smul_add, smul_smul]
+  have hcancel : ∀ (k : 𝕂), (5760 : 𝕂) * (k / 5760) = k := by
+    intro k; field_simp
+  simp only [hcancel]
+  -- Convert all 𝕂-smul to multiplication via algebraMap; collapse the algebraMap on
+  -- integer/natural constants so noncomm_ring sees a pure ring expression.
+  simp only [Algebra.smul_def, map_intCast, map_ofNat, Int.cast_neg, Int.cast_ofNat,
+             Int.cast_natCast, Nat.cast_ofNat, map_neg, map_natCast]
+  noncomm_ring
+
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **B2.2.e residual bound**: combining the algebraic decomposition with the
 quadratic and cubic norm bounds, the residual `sym_cubic_poly(α•V+δa, β•V+δb)
