@@ -570,6 +570,115 @@ private lemma five_fold_smul_mul_eq (V : 𝔸) (s₁ s₂ s₃ s₄ s₅ : 𝕂)
   simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
   congr 1; ring
 
+/-- **5-letter product Lipschitz**: `‖x₁x₂x₃x₄x₅ − y₁y₂y₃y₄y₅‖ ≤ N⁴·Σᵢ ‖xᵢ−yᵢ‖`
+when `‖xᵢ‖, ‖yᵢ‖ ≤ N`. Telescoping identity + triangle inequality. -/
+private lemma word_5_diff_le (x₁ x₂ x₃ x₄ x₅ y₁ y₂ y₃ y₄ y₅ : 𝔸) (N : ℝ)
+    (hx₁ : ‖x₁‖ ≤ N) (hx₂ : ‖x₂‖ ≤ N) (hx₃ : ‖x₃‖ ≤ N) (hx₄ : ‖x₄‖ ≤ N) (hx₅ : ‖x₅‖ ≤ N)
+    (hy₁ : ‖y₁‖ ≤ N) (hy₂ : ‖y₂‖ ≤ N) (hy₃ : ‖y₃‖ ≤ N) (hy₄ : ‖y₄‖ ≤ N) (hy₅ : ‖y₅‖ ≤ N)
+    (hN_nn : 0 ≤ N) :
+    ‖x₁ * x₂ * x₃ * x₄ * x₅ - y₁ * y₂ * y₃ * y₄ * y₅‖ ≤
+      N ^ 4 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖) := by
+  -- Telescoping identity: x₁..x₅ − y₁..y₅ = Σᵢ y₁..yᵢ₋₁·(xᵢ−yᵢ)·xᵢ₊₁..x₅
+  have hid : x₁ * x₂ * x₃ * x₄ * x₅ - y₁ * y₂ * y₃ * y₄ * y₅ =
+      (x₁ - y₁) * x₂ * x₃ * x₄ * x₅ +
+      y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ +
+      y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ +
+      y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ +
+      y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) := by noncomm_ring
+  rw [hid]
+  -- Bound each of the 5 telescoping terms by N⁴·‖xᵢ-yᵢ‖.
+  have hN4_nn : (0 : ℝ) ≤ N ^ 4 := pow_nonneg hN_nn 4
+  have hd₁_nn : 0 ≤ ‖x₁ - y₁‖ := norm_nonneg _
+  have hd₂_nn : 0 ≤ ‖x₂ - y₂‖ := norm_nonneg _
+  have hd₃_nn : 0 ≤ ‖x₃ - y₃‖ := norm_nonneg _
+  have hd₄_nn : 0 ≤ ‖x₄ - y₄‖ := norm_nonneg _
+  have hd₅_nn : 0 ≤ ‖x₅ - y₅‖ := norm_nonneg _
+  -- Term i: bound ‖y₁·...·yᵢ₋₁·(xᵢ-yᵢ)·xᵢ₊₁·...·x₅‖ ≤ N^(i-1) · ‖xᵢ-yᵢ‖ · N^(5-i) = N⁴·‖xᵢ-yᵢ‖.
+  have ht₁ : ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅‖ ≤ N ^ 4 * ‖x₁ - y₁‖ := by
+    calc ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅‖
+        ≤ ‖x₁ - y₁‖ * ‖x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ := by
+          calc _ ≤ ‖(x₁ - y₁) * x₂ * x₃ * x₄‖ * ‖x₅‖ := norm_mul_le _ _
+            _ ≤ ‖(x₁ - y₁) * x₂ * x₃‖ * ‖x₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖(x₁ - y₁) * x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖x₁ - y₁‖ * ‖x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ ‖x₁ - y₁‖ * N * N * N * N := by gcongr
+      _ = N ^ 4 * ‖x₁ - y₁‖ := by ring
+  have ht₂ : ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅‖ ≤ N ^ 4 * ‖x₂ - y₂‖ := by
+    calc ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅‖
+        ≤ ‖y₁‖ * ‖x₂ - y₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ := by
+          calc _ ≤ ‖y₁ * (x₂ - y₂) * x₃ * x₄‖ * ‖x₅‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * (x₂ - y₂) * x₃‖ * ‖x₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * (x₂ - y₂)‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖x₂ - y₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * ‖x₂ - y₂‖ * N * N * N := by gcongr
+      _ = N ^ 4 * ‖x₂ - y₂‖ := by ring
+  have ht₃ : ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅‖ ≤ N ^ 4 * ‖x₃ - y₃‖ := by
+    calc ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖x₃ - y₃‖ * ‖x₄‖ * ‖x₅‖ := by
+          calc _ ≤ ‖y₁ * y₂ * (x₃ - y₃) * x₄‖ * ‖x₅‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * (x₃ - y₃)‖ * ‖x₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂‖ * ‖x₃ - y₃‖ * ‖x₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖y₂‖ * ‖x₃ - y₃‖ * ‖x₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * N * ‖x₃ - y₃‖ * N * N := by gcongr
+      _ = N ^ 4 * ‖x₃ - y₃‖ := by ring
+  have ht₄ : ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅‖ ≤ N ^ 4 * ‖x₄ - y₄‖ := by
+    calc ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖x₄ - y₄‖ * ‖x₅‖ := by
+          calc _ ≤ ‖y₁ * y₂ * y₃ * (x₄ - y₄)‖ * ‖x₅‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃‖ * ‖x₄ - y₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂‖ * ‖y₃‖ * ‖x₄ - y₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖x₄ - y₄‖ * ‖x₅‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * N * N * ‖x₄ - y₄‖ * N := by gcongr
+      _ = N ^ 4 * ‖x₄ - y₄‖ := by ring
+  have ht₅ : ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅)‖ ≤ N ^ 4 * ‖x₅ - y₅‖ := by
+    calc ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅)‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖x₅ - y₅‖ := by
+          calc _ ≤ ‖y₁ * y₂ * y₃ * y₄‖ * ‖x₅ - y₅‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃‖ * ‖y₄‖ * ‖x₅ - y₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖x₅ - y₅‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖x₅ - y₅‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * N * N * N * ‖x₅ - y₅‖ := by gcongr
+      _ = N ^ 4 * ‖x₅ - y₅‖ := by ring
+  -- Sum the 5 bounds.
+  calc ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ +
+        y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ +
+        y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ +
+        y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ +
+        y₁ * y₂ * y₃ * y₄ * (x₅ - y₅)‖
+      ≤ ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅‖ +
+        ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅‖ +
+        ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅‖ +
+        ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅‖ +
+        ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅)‖ := by
+        have a4 := norm_add_le
+          ((x₁-y₁)*x₂*x₃*x₄*x₅ + y₁*(x₂-y₂)*x₃*x₄*x₅ + y₁*y₂*(x₃-y₃)*x₄*x₅ +
+            y₁*y₂*y₃*(x₄-y₄)*x₅) (y₁*y₂*y₃*y₄*(x₅-y₅))
+        have a3 := norm_add_le
+          ((x₁-y₁)*x₂*x₃*x₄*x₅ + y₁*(x₂-y₂)*x₃*x₄*x₅ + y₁*y₂*(x₃-y₃)*x₄*x₅)
+          (y₁*y₂*y₃*(x₄-y₄)*x₅)
+        have a2 := norm_add_le
+          ((x₁-y₁)*x₂*x₃*x₄*x₅ + y₁*(x₂-y₂)*x₃*x₄*x₅) (y₁*y₂*(x₃-y₃)*x₄*x₅)
+        have a1 := norm_add_le ((x₁-y₁)*x₂*x₃*x₄*x₅) (y₁*(x₂-y₂)*x₃*x₄*x₅)
+        linarith
+    _ ≤ N ^ 4 * ‖x₁ - y₁‖ + N ^ 4 * ‖x₂ - y₂‖ + N ^ 4 * ‖x₃ - y₃‖ +
+        N ^ 4 * ‖x₄ - y₄‖ + N ^ 4 * ‖x₅ - y₅‖ := by linarith
+    _ = N ^ 4 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖) := by ring
+
 /-- **Vanishing of `sym_cubic_poly` on scalar•V inputs (B2.2.b)**:
 `symmetric_bch_cubic_poly 𝕂 (α • V) (β • V) = 0` for any `α, β : 𝕂` and
 `V : 𝔸`. Proof is immediate from `(α•V)·(β•V) - (β•V)·(α•V) = 0` (both
@@ -609,6 +718,366 @@ theorem symmetric_bch_quintic_poly_apply_smul_smul (V : 𝔸) (α β : 𝕂) :
   congr 1
   -- Polynomial-in-(α, β) identity: each (k, 5−k) coefficient group sums to 0.
   ring
+
+/-! ### B2.2.c outline (next session)
+
+The 5-letter Lipschitz `word_5_diff_le` enables the following bound:
+
+```
+‖sym_quintic_poly(α•V + δa, β•V + δb)‖ ≤ 2·N⁴·(‖δa‖+‖δb‖)
+```
+
+when `‖α•V‖, ‖β•V‖, ‖α•V+δa‖, ‖β•V+δb‖ ≤ N`. The argument:
+
+1. Use B2.2.a vanishing: `sym_quintic_poly(α•V, β•V) = 0`, so
+   `‖sym_quintic_poly(α•V+δa, β•V+δb)‖
+      = ‖sym_quintic_poly(α•V+δa, β•V+δb) − sym_quintic_poly(α•V, β•V)‖`.
+
+2. Unfold both sym_quintic_poly's; regroup as a sum of 30 smul-difference
+   terms `(c_w/5760) • (word_w(α•V+δa, β•V+δb) − word_w(α•V, β•V))`.
+
+3. Apply `word_5_diff_le` to each word-diff: `≤ N⁴ · 5·(‖δa‖+‖δb‖)`
+   (loose: each `‖xᵢ−yᵢ‖` is `‖δa‖` or `‖δb‖` ≤ `‖δa‖+‖δb‖`, summed over
+   5 slots).
+
+4. Sum over 30 words with coefficient bound `Σ |c_w|/5760 = 1216/5760 ≈
+   0.211`; total `≤ 1.06·N⁴·D ≤ 2·N⁴·D`.
+
+Implementation outline: 29 nested `norm_add_le` calls + 30 per-term
+`norm_smul_le` + `linarith` (mirrors `norm_symmetric_bch_quintic_poly_le`'s
+30-term S02..S30 chain). Estimated ~250 lines of Lean. Deferred to next
+session.
+
+**Key takeaway**: the 5-letter Lipschitz `word_5_diff_le` (proved above)
+is the core technical infrastructure; the per-word application is
+mechanical from there. With the bound in place, `‖sym_quintic_poly(4X, Y)‖
+= O(τ⁷)` follows when `4X, Y` have linear parts O(τ) and residuals O(τ³).
+-/
+
+-- The actual theorem `norm_symmetric_bch_quintic_poly_apply_smul_add_le`
+-- is left as future work; the foundation lemmas (B2.2.a, B2.2.b,
+-- word_5_diff_le) are in place above.
+
+/- Orphaned scaffolding from a partial B2.2.c attempt below — kept commented
+   for reference. The infrastructure (b01..b30 + h_smul_bound + per-coefficient
+   norm equalities) shows ~250 lines of mechanical work for the per-word triangle
+   inequality. Next session should either (a) complete this with 29 nested
+   norm_add_le's + linarith, or (b) refactor to use a `Finset.sum` formulation.
+
+  have h0 := symmetric_bch_quintic_poly_apply_smul_smul (𝕂 := 𝕂) V α β
+  rw [show symmetric_bch_quintic_poly 𝕂 (α • V + δa) (β • V + δb) =
+       symmetric_bch_quintic_poly 𝕂 (α • V + δa) (β • V + δb) -
+       symmetric_bch_quintic_poly 𝕂 (α • V) (β • V) from by rw [h0]; abel]
+  -- Step 2: unfold both sym_quintic_poly's and combine into 30 word-differences.
+  unfold symmetric_bch_quintic_poly
+  -- Step 3: prove the equality `RHS - RHS' = Σ smul (word_i_full - word_i_lin)` via abel
+  -- (the 30 paired smul-differences).
+  -- Then bound each via norm_smul_le + word_5_diff_le.
+  -- Use the helper `word_5_diff_le` to bound `‖w(α•V+δa, β•V+δb) - w(α•V, β•V)‖
+  -- ≤ N⁴·(sum of 5 ‖xᵢ-yᵢ‖)`. Each xᵢ-yᵢ ∈ {δa, δb} (depending on slot in word w).
+  set sum_a_a_a_a_b := ‖α • V + δa - α • V‖ + ‖α • V + δa - α • V‖ +
+    ‖α • V + δa - α • V‖ + ‖α • V + δa - α • V‖ + ‖β • V + δb - β • V‖ with hsum_aaaab
+  set sum_a_a_a_b_a := ‖α • V + δa - α • V‖ + ‖α • V + δa - α • V‖ +
+    ‖α • V + δa - α • V‖ + ‖β • V + δb - β • V‖ + ‖α • V + δa - α • V‖ with hsum_aaaba
+  -- Common identity: ‖α•V+δa - α•V‖ = ‖δa‖ and ‖β•V+δb - β•V‖ = ‖δb‖.
+  have hδa_eq : ‖α • V + δa - α • V‖ = ‖δa‖ := by congr 1; abel
+  have hδb_eq : ‖β • V + δb - β • V‖ = ‖δb‖ := by congr 1; abel
+  -- Word-norm bounds for each of the 30 words.
+  -- word `aaaab` has 4 a-slots, 1 b-slot → 4·δa + 1·δb in the diff sum.
+  have hN5760_pos : (0 : ℝ) < 5760 := by norm_num
+  -- Helper: bound for a 4-a-1-b word: word_5_diff_le gives N⁴·(4·‖δa‖+‖δb‖).
+  -- Apply word_5_diff_le with x's = α•V+δa or β•V+δb (full inputs) and y's = α•V or β•V (linear).
+  -- For aaaab word: x₁=x₂=x₃=x₄=α•V+δa, x₅=β•V+δb; y's similar with no δ.
+  have h_aaaab : ‖(α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) -
+                  (α • V) * (α • V) * (α • V) * (α • V) * (β • V)‖ ≤
+                  N ^ 4 * (4 * ‖δa‖ + ‖δb‖) := by
+    have := word_5_diff_le (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb)
+                          (α • V) (α • V) (α • V) (α • V) (β • V) N
+                          hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le
+                          hα_le hα_le hα_le hα_le hβ_le hN_nn
+    rw [hδa_eq, hδb_eq] at this
+    convert this using 2; ring
+  -- For each remaining word, the structure is similar — one of 5 a/b patterns; total
+  -- contribution to the sum-of-‖diffs‖ bound is `(#a)·‖δa‖+(#b)·‖δb‖`, where #a+#b=5.
+  -- Crude bound: each sum-of-‖diffs‖ ≤ 5·(‖δa‖+‖δb‖). Use this for ALL 30 words.
+  set D := ‖δa‖ + ‖δb‖ with hD_def
+  have hδa_le_D : ‖δa‖ ≤ D := by rw [hD_def]; linarith [norm_nonneg δb]
+  have hδb_le_D : ‖δb‖ ≤ D := by rw [hD_def]; linarith [norm_nonneg δa]
+  have hD_nn : 0 ≤ D := by rw [hD_def]; positivity
+  -- All-word bound: ‖word(α•V+δa, β•V+δb) - word(α•V, β•V)‖ ≤ N⁴·5·D for any pattern.
+  -- (Crude — uses that each xᵢ-yᵢ is δa or δb, so sum of 5 norms ≤ 5·max ≤ 5·D.)
+  have hN4_nn : (0 : ℝ) ≤ N ^ 4 := pow_nonneg hN_nn 4
+  -- Generic per-word bound (5 a's and b's distributed in any pattern).
+  have hword_bound : ∀ (x₁ x₂ x₃ x₄ x₅ y₁ y₂ y₃ y₄ y₅ : 𝔸)
+      (hxᵢ : ‖x₁‖ ≤ N) (hxᵢ' : ‖x₂‖ ≤ N) (hxᵢ'' : ‖x₃‖ ≤ N)
+      (hxᵢ''' : ‖x₄‖ ≤ N) (hxᵢ'''' : ‖x₅‖ ≤ N)
+      (hyᵢ : ‖y₁‖ ≤ N) (hyᵢ' : ‖y₂‖ ≤ N) (hyᵢ'' : ‖y₃‖ ≤ N)
+      (hyᵢ''' : ‖y₄‖ ≤ N) (hyᵢ'''' : ‖y₅‖ ≤ N)
+      (hd₁ : ‖x₁ - y₁‖ ≤ D) (hd₂ : ‖x₂ - y₂‖ ≤ D) (hd₃ : ‖x₃ - y₃‖ ≤ D)
+      (hd₄ : ‖x₄ - y₄‖ ≤ D) (hd₅ : ‖x₅ - y₅‖ ≤ D),
+      ‖x₁ * x₂ * x₃ * x₄ * x₅ - y₁ * y₂ * y₃ * y₄ * y₅‖ ≤ N ^ 4 * (5 * D) := by
+    intros
+    have h := word_5_diff_le x₁ x₂ x₃ x₄ x₅ y₁ y₂ y₃ y₄ y₅ N
+                hxᵢ hxᵢ' hxᵢ'' hxᵢ''' hxᵢ''''
+                hyᵢ hyᵢ' hyᵢ'' hyᵢ''' hyᵢ'''' hN_nn
+    calc _ ≤ _ := h
+      _ ≤ N ^ 4 * (D + D + D + D + D) := by gcongr
+      _ = N ^ 4 * (5 * D) := by ring
+  -- Per-letter bounds: ‖α•V+δa - α•V‖ = ‖δa‖ ≤ D, ‖β•V+δb - β•V‖ = ‖δb‖ ≤ D.
+  have hδa_le : ‖(α • V + δa) - α • V‖ ≤ D := by rw [hδa_eq]; exact hδa_le_D
+  have hδb_le : ‖(β • V + δb) - β • V‖ ≤ D := by rw [hδb_eq]; exact hδb_le_D
+  -- Apply hword_bound to each of the 30 words.
+  -- Each word is a permutation of (α•V+δa or β•V+δb) factors mapped to (α•V or β•V).
+  -- We just need to invoke hword_bound with the right inputs for each of the 30 words.
+  set fA := α • V + δa
+  set fB := β • V + δb
+  set lA := α • V
+  set lB := β • V
+  have b01 := hword_bound fA fA fA fA fB lA lA lA lA lB
+    hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_le hα_le hα_le hα_le hβ_le
+    hδa_le hδa_le hδa_le hδa_le hδb_le
+  have b02 := hword_bound fA fA fA fB fA lA lA lA lB lA
+    hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_le hα_le hα_le hβ_le hα_le
+    hδa_le hδa_le hδa_le hδb_le hδa_le
+  have b03 := hword_bound fA fA fA fB fB lA lA lA lB lB
+    hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_le hα_le hα_le hβ_le hβ_le
+    hδa_le hδa_le hδa_le hδb_le hδb_le
+  have b04 := hword_bound fA fA fB fA fA lA lA lB lA lA
+    hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_le hα_le hβ_le hα_le hα_le
+    hδa_le hδa_le hδb_le hδa_le hδa_le
+  have b05 := hword_bound fA fA fB fA fB lA lA lB lA lB
+    hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_le hα_le hβ_le hα_le hβ_le
+    hδa_le hδa_le hδb_le hδa_le hδb_le
+  have b06 := hword_bound fA fA fB fB fA lA lA lB lB lA
+    hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_le hα_le hβ_le hβ_le hα_le
+    hδa_le hδa_le hδb_le hδb_le hδa_le
+  have b07 := hword_bound fA fA fB fB fB lA lA lB lB lB
+    hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_le hα_le hβ_le hβ_le hβ_le
+    hδa_le hδa_le hδb_le hδb_le hδb_le
+  have b08 := hword_bound fA fB fA fA fA lA lB lA lA lA
+    hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_le hβ_le hα_le hα_le hα_le
+    hδa_le hδb_le hδa_le hδa_le hδa_le
+  have b09 := hword_bound fA fB fA fA fB lA lB lA lA lB
+    hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_le hβ_le hα_le hα_le hβ_le
+    hδa_le hδb_le hδa_le hδa_le hδb_le
+  have b10 := hword_bound fA fB fA fB fA lA lB lA lB lA
+    hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_le hβ_le hα_le hβ_le hα_le
+    hδa_le hδb_le hδa_le hδb_le hδa_le
+  have b11 := hword_bound fA fB fA fB fB lA lB lA lB lB
+    hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_le hβ_le hα_le hβ_le hβ_le
+    hδa_le hδb_le hδa_le hδb_le hδb_le
+  have b12 := hword_bound fA fB fB fA fA lA lB lB lA lA
+    hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_le hβ_le hβ_le hα_le hα_le
+    hδa_le hδb_le hδb_le hδa_le hδa_le
+  have b13 := hword_bound fA fB fB fA fB lA lB lB lA lB
+    hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_le hβ_le hβ_le hα_le hβ_le
+    hδa_le hδb_le hδb_le hδa_le hδb_le
+  have b14 := hword_bound fA fB fB fB fA lA lB lB lB lA
+    hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_le hβ_le hβ_le hβ_le hα_le
+    hδa_le hδb_le hδb_le hδb_le hδa_le
+  have b15 := hword_bound fA fB fB fB fB lA lB lB lB lB
+    hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_le hβ_le hβ_le hβ_le hβ_le
+    hδa_le hδb_le hδb_le hδb_le hδb_le
+  have b16 := hword_bound fB fA fA fA fA lB lA lA lA lA
+    hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_le hα_le hα_le hα_le hα_le
+    hδb_le hδa_le hδa_le hδa_le hδa_le
+  have b17 := hword_bound fB fA fA fA fB lB lA lA lA lB
+    hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_le hα_le hα_le hα_le hβ_le
+    hδb_le hδa_le hδa_le hδa_le hδb_le
+  have b18 := hword_bound fB fA fA fB fA lB lA lA lB lA
+    hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_le hα_le hα_le hβ_le hα_le
+    hδb_le hδa_le hδa_le hδb_le hδa_le
+  have b19 := hword_bound fB fA fA fB fB lB lA lA lB lB
+    hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_le hα_le hα_le hβ_le hβ_le
+    hδb_le hδa_le hδa_le hδb_le hδb_le
+  have b20 := hword_bound fB fA fB fA fA lB lA lB lA lA
+    hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_le hα_le hβ_le hα_le hα_le
+    hδb_le hδa_le hδb_le hδa_le hδa_le
+  have b21 := hword_bound fB fA fB fA fB lB lA lB lA lB
+    hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_le hα_le hβ_le hα_le hβ_le
+    hδb_le hδa_le hδb_le hδa_le hδb_le
+  have b22 := hword_bound fB fA fB fB fA lB lA lB lB lA
+    hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_le hα_le hβ_le hβ_le hα_le
+    hδb_le hδa_le hδb_le hδb_le hδa_le
+  have b23 := hword_bound fB fA fB fB fB lB lA lB lB lB
+    hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_le hα_le hβ_le hβ_le hβ_le
+    hδb_le hδa_le hδb_le hδb_le hδb_le
+  have b24 := hword_bound fB fB fA fA fA lB lB lA lA lA
+    hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_le hβ_le hα_le hα_le hα_le
+    hδb_le hδb_le hδa_le hδa_le hδa_le
+  have b25 := hword_bound fB fB fA fA fB lB lB lA lA lB
+    hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_le hβ_le hα_le hα_le hβ_le
+    hδb_le hδb_le hδa_le hδa_le hδb_le
+  have b26 := hword_bound fB fB fA fB fA lB lB lA lB lA
+    hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_le hβ_le hα_le hβ_le hα_le
+    hδb_le hδb_le hδa_le hδb_le hδa_le
+  have b27 := hword_bound fB fB fA fB fB lB lB lA lB lB
+    hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_le hβ_le hα_le hβ_le hβ_le
+    hδb_le hδb_le hδa_le hδb_le hδb_le
+  have b28 := hword_bound fB fB fB fA fA lB lB lB lA lA
+    hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_le hβ_le hβ_le hα_le hα_le
+    hδb_le hδb_le hδb_le hδa_le hδa_le
+  have b29 := hword_bound fB fB fB fA fB lB lB lB lA lB
+    hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_le hβ_le hβ_le hα_le hβ_le
+    hδb_le hδb_le hδb_le hδa_le hδb_le
+  have b30 := hword_bound fB fB fB fB fA lB lB lB lB lA
+    hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_le hβ_le hβ_le hβ_le hα_le
+    hδb_le hδb_le hδb_le hδb_le hδa_le
+  -- Each diff bound: ‖fA·...·fB - lA·...·lB‖ ≤ N⁴·5·D.
+  -- For each of the 30 word terms, ‖(c/5760)•(diff)‖ ≤ |c|/5760·N⁴·5·D.
+  -- The c-coefficients (absolute values): 7, 28, 28, 42, 72, 12, 32, 28, 48, 48,
+  --                                       48, 12, 48, 32, 8, 7, 32, 48, 48, 72,
+  --                                       192, 48, 32, 28, 48, 48, 48, 32, 32, 8.
+  -- Sum: 1216. Total bound: (1216/5760)·5·N⁴·D = 6080/5760·N⁴·D ≈ 1.056·N⁴·D ≤ 2·N⁴·D.
+  -- Per-term smul bound: ‖(c/5760)•x‖ ≤ |c/5760|·‖x‖.
+  -- For each c, ‖(c/5760 : 𝕂)‖ = |c|/5760 (over RCLike).
+  have hcoef_norm : ∀ (c : ℤ), ‖((c : 𝕂) / 5760)‖ = |(c : ℝ)| / 5760 := by
+    intro c
+    rw [norm_div]
+    have h5760 : ‖(5760 : 𝕂)‖ = 5760 := by
+      rw [show (5760 : 𝕂) = ((5760 : ℕ) : 𝕂) from by norm_cast, RCLike.norm_natCast]; norm_num
+    have hc : ‖((c : ℤ) : 𝕂)‖ = |(c : ℝ)| := by
+      rw [show ((c : ℤ) : 𝕂) = ((c : ℝ) : 𝕂) from by push_cast; rfl, RCLike.norm_ofReal]
+    rw [hc, h5760]
+  -- Per-term diff bound, e.g.:
+  -- ‖(7/5760 : 𝕂) • (fA·fA·fA·fA·fB) - (7/5760 : 𝕂) • (lA·lA·lA·lA·lB)‖ ≤ 7/5760·N⁴·5·D.
+  have h_term_bound : ∀ (c : ℤ) (xs ys : 𝔸),
+      ‖xs - ys‖ ≤ N ^ 4 * (5 * D) →
+      ‖((c : 𝕂) / 5760) • xs - ((c : 𝕂) / 5760) • ys‖ ≤
+      |(c : ℝ)| / 5760 * (N ^ 4 * (5 * D)) := by
+    intros c xs ys hb
+    rw [← smul_sub]
+    calc _ ≤ ‖((c : 𝕂) / 5760)‖ * ‖xs - ys‖ := norm_smul_le _ _
+      _ = |(c : ℝ)| / 5760 * ‖xs - ys‖ := by rw [hcoef_norm]
+      _ ≤ |(c : ℝ)| / 5760 * (N ^ 4 * (5 * D)) := by
+          apply mul_le_mul_of_nonneg_left hb
+          positivity
+  -- Expand c casts so they match the explicit (k / 5760 : 𝕂) form in the def.
+  -- For positive k: ((k : ℤ) : 𝕂) / 5760 = (k / 5760 : 𝕂). For negative: matches via -.
+  -- For each of the 30 c values, apply h_term_bound and use rfl/push_cast for rewriting.
+  -- To avoid the cast tedium, we re-prove the per-term bound for each integer literal:
+  -- helper takes an ℝ-bound and a 𝕂-coefficient.
+  have h_smul_bound : ∀ (c_𝕂 : 𝕂) (c_ℝ : ℝ) (xs ys : 𝔸),
+      ‖c_𝕂‖ = c_ℝ → 0 ≤ c_ℝ →
+      ‖xs - ys‖ ≤ N ^ 4 * (5 * D) →
+      ‖c_𝕂 • xs - c_𝕂 • ys‖ ≤ c_ℝ * (N ^ 4 * (5 * D)) := by
+    intros c_𝕂 c_ℝ xs ys hc_norm hc_nn hb
+    rw [← smul_sub]
+    calc _ ≤ ‖c_𝕂‖ * ‖xs - ys‖ := norm_smul_le _ _
+      _ = c_ℝ * ‖xs - ys‖ := by rw [hc_norm]
+      _ ≤ c_ℝ * (N ^ 4 * (5 * D)) := by exact mul_le_mul_of_nonneg_left hb hc_nn
+  -- For each integer literal k, ‖(k/5760 : 𝕂)‖ = |k|/5760.
+  have h_c_norm : ∀ (k : ℤ), ‖((k : 𝕂) / 5760 : 𝕂)‖ = |(k : ℝ)| / 5760 := hcoef_norm
+  -- Per-term bounds for the 30 word terms. Each ‖(c/5760)•word_full - (c/5760)•word_lin‖
+  -- ≤ |c|/5760 · N⁴·5·D.
+  -- Skip the per-term verbose bounds; use one combined bound on the regrouped diff.
+  -- Goal regrouping: sym_quintic_poly diff = Σ (c_w/5760) • (word_full - word_lin).
+  -- Apply triangle inequality + per-term bound + Σ |c_w|/5760 = 1216/5760.
+  -- The total is: Σ |c_w|/5760 · N⁴·5·D = 1216/5760·5·N⁴·D = 6080/5760·N⁴·D ≤ 2·N⁴·D.
+  -- Use the regrouping identity (combine smul-diff terms) and bound by linarith.
+  have habs7 : |((7 : ℤ) : ℝ)| = 7 := by push_cast; norm_num
+  have habs28 : |((-28 : ℤ) : ℝ)| = 28 := by push_cast; norm_num
+  have habs42 : |((42 : ℤ) : ℝ)| = 42 := by push_cast; norm_num
+  have habs72 : |((72 : ℤ) : ℝ)| = 72 := by push_cast; norm_num
+  have habs12 : |((12 : ℤ) : ℝ)| = 12 := by push_cast; norm_num
+  have habs32 : |((32 : ℤ) : ℝ)| = 32 := by push_cast; norm_num
+  have habs48 : |((-48 : ℤ) : ℝ)| = 48 := by push_cast; norm_num
+  have habs8 : |((-8 : ℤ) : ℝ)| = 8 := by push_cast; norm_num
+  have habs192 : |((192 : ℤ) : ℝ)| = 192 := by push_cast; norm_num
+  -- Each ((c : ℤ) : 𝕂) / 5760 cast equals (c/5760 : 𝕂) for concrete c (push_cast).
+  -- Per-term smul-diff bound, e.g., for word AAAAB with coefficient 7/5760:
+  -- The bound h_smul_bound gives the diff norm in terms of the 𝕂-coefficient norm.
+  -- We can apply h_smul_bound with c_𝕂 = (7/5760 : 𝕂), c_ℝ = 7/5760.
+  have hc_norm_7 : ‖((7 : 𝕂) / 5760 : 𝕂)‖ = 7 / 5760 := by
+    have := hcoef_norm 7
+    rw [habs7] at this
+    convert this using 2; push_cast; ring
+  have hc_norm_neg28 : ‖((-28 : 𝕂) / 5760 : 𝕂)‖ = 28 / 5760 := by
+    have := hcoef_norm (-28)
+    rw [habs28] at this
+    convert this using 2; push_cast; ring
+  have hc_norm_42 : ‖((42 : 𝕂) / 5760 : 𝕂)‖ = 42 / 5760 := by
+    have := hcoef_norm 42; rw [habs42] at this; convert this using 2; push_cast; ring
+  have hc_norm_72 : ‖((72 : 𝕂) / 5760 : 𝕂)‖ = 72 / 5760 := by
+    have := hcoef_norm 72; rw [habs72] at this; convert this using 2; push_cast; ring
+  have hc_norm_12 : ‖((12 : 𝕂) / 5760 : 𝕂)‖ = 12 / 5760 := by
+    have := hcoef_norm 12; rw [habs12] at this; convert this using 2; push_cast; ring
+  have hc_norm_32 : ‖((32 : 𝕂) / 5760 : 𝕂)‖ = 32 / 5760 := by
+    have := hcoef_norm 32; rw [habs32] at this; convert this using 2; push_cast; ring
+  have hc_norm_neg48 : ‖((-48 : 𝕂) / 5760 : 𝕂)‖ = 48 / 5760 := by
+    have := hcoef_norm (-48); rw [habs48] at this; convert this using 2; push_cast; ring
+  have hc_norm_neg8 : ‖((-8 : 𝕂) / 5760 : 𝕂)‖ = 8 / 5760 := by
+    have := hcoef_norm (-8); rw [habs8] at this; convert this using 2; push_cast; ring
+  have hc_norm_192 : ‖((192 : 𝕂) / 5760 : 𝕂)‖ = 192 / 5760 := by
+    have := hcoef_norm 192; rw [habs192] at this; convert this using 2; push_cast; ring
+  -- 30 per-term bounds via h_smul_bound with appropriate (c_𝕂, c_ℝ).
+  -- All have ‖xs - ys‖ ≤ N⁴·5·D from the b01..b30 lemmas above.
+  set base := N ^ 4 * (5 * D) with hbase_def
+  have base_nn : 0 ≤ base := by rw [hbase_def]; positivity
+  have t01 := h_smul_bound ((7 : 𝕂) / 5760) (7 / 5760) _ _ hc_norm_7 (by norm_num) b01
+  have t02 := h_smul_bound ((-28 : 𝕂) / 5760) (28 / 5760) _ _ hc_norm_neg28 (by norm_num) b02
+  have t03 := h_smul_bound ((-28 : 𝕂) / 5760) (28 / 5760) _ _ hc_norm_neg28 (by norm_num) b03
+  have t04 := h_smul_bound ((42 : 𝕂) / 5760) (42 / 5760) _ _ hc_norm_42 (by norm_num) b04
+  have t05 := h_smul_bound ((72 : 𝕂) / 5760) (72 / 5760) _ _ hc_norm_72 (by norm_num) b05
+  have t06 := h_smul_bound ((12 : 𝕂) / 5760) (12 / 5760) _ _ hc_norm_12 (by norm_num) b06
+  have t07 := h_smul_bound ((32 : 𝕂) / 5760) (32 / 5760) _ _ hc_norm_32 (by norm_num) b07
+  have t08 := h_smul_bound ((-28 : 𝕂) / 5760) (28 / 5760) _ _ hc_norm_neg28 (by norm_num) b08
+  have t09 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b09
+  have t10 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b10
+  have t11 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b11
+  have t12 := h_smul_bound ((12 : 𝕂) / 5760) (12 / 5760) _ _ hc_norm_12 (by norm_num) b12
+  have t13 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b13
+  have t14 := h_smul_bound ((32 : 𝕂) / 5760) (32 / 5760) _ _ hc_norm_32 (by norm_num) b14
+  have t15 := h_smul_bound ((-8 : 𝕂) / 5760) (8 / 5760) _ _ hc_norm_neg8 (by norm_num) b15
+  have t16 := h_smul_bound ((7 : 𝕂) / 5760) (7 / 5760) _ _ hc_norm_7 (by norm_num) b16
+  have t17 := h_smul_bound ((32 : 𝕂) / 5760) (32 / 5760) _ _ hc_norm_32 (by norm_num) b17
+  have t18 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b18
+  have t19 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b19
+  have t20 := h_smul_bound ((72 : 𝕂) / 5760) (72 / 5760) _ _ hc_norm_72 (by norm_num) b20
+  have t21 := h_smul_bound ((192 : 𝕂) / 5760) (192 / 5760) _ _ hc_norm_192 (by norm_num) b21
+  have t22 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b22
+  have t23 := h_smul_bound ((32 : 𝕂) / 5760) (32 / 5760) _ _ hc_norm_32 (by norm_num) b23
+  have t24 := h_smul_bound ((-28 : 𝕂) / 5760) (28 / 5760) _ _ hc_norm_neg28 (by norm_num) b24
+  have t25 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b25
+  have t26 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b26
+  have t27 := h_smul_bound ((-48 : 𝕂) / 5760) (48 / 5760) _ _ hc_norm_neg48 (by norm_num) b27
+  have t28 := h_smul_bound ((32 : 𝕂) / 5760) (32 / 5760) _ _ hc_norm_32 (by norm_num) b28
+  have t29 := h_smul_bound ((32 : 𝕂) / 5760) (32 / 5760) _ _ hc_norm_32 (by norm_num) b29
+  have t30 := h_smul_bound ((-8 : 𝕂) / 5760) (8 / 5760) _ _ hc_norm_neg8 (by norm_num) b30
+  -- Triangle inequality on the 30 smul-diffs.
+  -- The unfolded LHS difference equals (in 𝔸) the sum of 30 smul-diffs after regrouping.
+  -- Use simp + linarith to combine.
+  -- Show: ‖LHS‖ ≤ Σ ‖term_i_diff‖ ≤ Σ (|c_i|/5760·N⁴·5·D).
+  -- The total is (1216·5)/5760·N⁴·D = 6080/5760·N⁴·D ≤ 2·N⁴·D.
+  -- The grand triangle inequality: 30 nested norm_add_le applications.
+  -- Use the existing simp+linarith pattern from norm_symmetric_bch_quintic_poly_le.
+  -- After unfolding, LHS is `Σ (c/5760)•word(fA,fB) - Σ (c/5760)•word(lA,lB)`, which equals
+  -- `Σ (c/5760)•(word(fA,fB) - word(lA,lB))`. Use show + abel + ← smul_sub.
+  -- Then the bound follows from triangle + linarith on t01..t30.
+  -- Subtraction-distributing identity:
+  have h_diff_split : ∀ (c : 𝕂) (xs ys : 𝔸), c • xs - c • ys = c • (xs - ys) := fun c xs ys =>
+    (smul_sub c xs ys).symm
+  -- The 30 paired terms can be rewritten in 𝔸 by abel + ← smul_sub.
+  -- The LHS regrouping is: (Σ c_i • full_i) - (Σ c_i • lin_i) = Σ c_i • (full_i - lin_i)
+  --                     = Σ (c_i • full_i - c_i • lin_i).
+  -- Triangle inequality on 30 pieces: ‖Σ pieces‖ ≤ Σ ‖pieces‖.
+  -- Compute the 30-term grand total: 7+28+28+42+72+12+32+28+48+48+48+12+48+32+8+
+  --                                  7+32+48+48+72+192+48+32+28+48+48+48+32+32+8 = 1216.
+  -- 1216/5760 ≈ 0.2111; times 5 = 1.0556 ≈ 1.06. So total = 1.06·N⁴·D ≤ 2·N⁴·D.
+  -- Algebraic reorganization: the LHS unfolded difference equals the 30-term smul-diff sum.
+  -- We compute via abel; then triangle + per-term ts.
+  have hLHS_eq : ∀ (lhs : 𝔸), lhs - lhs = (0 : 𝔸) := fun lhs => sub_self lhs
+  -- Final: bound the goal using the 30 t-bounds via linarith.
+  -- Each t_i : ‖(c_i / 5760) • full_i_5fold - (c_i / 5760) • lin_i_5fold‖ ≤ |c_i|/5760 · base.
+  -- These are 30 unrelated bounds. The actual goal is a sum of 30 differences.
+  -- Use ring/abel identity to rewrite the goal as Σ smul-diffs; then apply norm_add_le 29
+  -- times; sum the ts via linarith.
+  -- This requires the same kind of long unfolding as in `norm_symmetric_bch_quintic_poly_le`.
+  -- For brevity, we use an explicit computation via `set` + abel + `linarith` on the 30 ts
+  -- + 29 norm_add_le's.
+  -- (Implementation TBD — uses the same set/Sij/linarith pattern from
+  -- norm_symmetric_bch_quintic_poly_le_aux.)
+-/
 
 end SymmetricQuinticPoly
 
