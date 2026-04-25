@@ -533,6 +533,83 @@ theorem norm_symmetric_bch_quintic_poly_le (a b : 𝔸) :
     ‖symmetric_bch_quintic_poly 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 5 :=
   norm_symmetric_bch_quintic_poly_le_aux a b (‖a‖ + ‖b‖) rfl
 
+/-!
+## Vanishing on `(α•V, β•V)` (B2.2.a)
+
+`symmetric_bch_quintic_poly` evaluated at scalar multiples of a single element
+`V : 𝔸` is identically zero:
+
+  `E₅(α•V, β•V) = 0`  for any  `α, β : 𝕂, V : 𝔸`.
+
+This is a structural property: each 5-letter word `x₁x₂x₃x₄x₅` (with each
+`xᵢ ∈ {α•V, β•V}`) evaluates to `(α^k · β^(5−k)) • V⁵` where `k` is the number
+of `α`-slots. Summing the 30 word coefficients per `k`-group gives identically
+zero polynomials in `(α, β)`:
+
+* `k = 4` (5 words `xxxxy` with one `b`):  `7 − 28 + 42 − 28 + 7 = 0`
+* `k = 3` (10 words):  `−28 + 72 + 12 − 48 − 48 + 12 + 32 − 48 + 72 − 28 = 0`
+* `k = 2` (10 words):  `32 − 48 − 48 + 32 − 48 + 192 − 48 − 48 − 48 + 32 = 0`
+* `k = 1` (5 words `xyyyy` with one `a`):  `−8 + 32 − 48 + 32 − 8 = 0`
+* `k = 0, 5`:  no terms in the polynomial (no `aaaaa` or `bbbbb` words).
+
+This is the **foundation lemma for B2.2**: when expanding
+`sym_quintic_poly(4X, Y)` with `X = (pτ)•V + R_X` and `Y = ((1−4p)τ)•V + R_Y`,
+the leading "all-V-linear" τ⁵ contribution vanishes, leaving only "≥1
+residual" cross-terms which sit at `O(τ⁷)` (since each residual is `O(τ³)`).
+
+**Why this matters**: in the τ⁵ identification of `suzuki5_R5`, the
+`sym_quintic_poly(4X, Y)` contribution turns out to be `O(τ⁷)` — i.e., it
+doesn't contribute at τ⁵ — so the entire τ⁵ residue comes from
+`sym_cubic_poly(4X, Y)` plus the per-block quintic `(4p⁵+(1−4p)⁵)·E₅_sym`. -/
+
+/-- **5-fold smul-mul absorption (single element)**: 5 factors each of the
+form `sᵢ • V` collapse to `(s₁·s₂·s₃·s₄·s₅) • (V·V·V·V·V)`. -/
+private lemma five_fold_smul_mul_eq (V : 𝔸) (s₁ s₂ s₃ s₄ s₅ : 𝕂) :
+    (s₁ • V) * (s₂ • V) * (s₃ • V) * (s₄ • V) * (s₅ • V) =
+      (s₁ * s₂ * s₃ * s₄ * s₅) • (V * V * V * V * V) := by
+  simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
+  congr 1; ring
+
+/-- **Vanishing of `sym_cubic_poly` on scalar•V inputs (B2.2.b)**:
+`symmetric_bch_cubic_poly 𝕂 (α • V) (β • V) = 0` for any `α, β : 𝕂` and
+`V : 𝔸`. Proof is immediate from `(α•V)·(β•V) - (β•V)·(α•V) = 0` (both
+sides equal `αβ · V²`), which kills the inner commutator in the
+sym_cubic_poly definition. -/
+theorem symmetric_bch_cubic_poly_apply_smul_smul (V : 𝔸) (α β : 𝕂) :
+    symmetric_bch_cubic_poly 𝕂 (α • V) (β • V) = 0 := by
+  unfold symmetric_bch_cubic_poly
+  -- Inner commutator (α•V)·(β•V) − (β•V)·(α•V) = αβ·V² − αβ·V² = 0.
+  have hcomm : (α • V) * (β • V) - (β • V) * (α • V) = 0 := by
+    simp only [smul_mul_assoc, mul_smul_comm, smul_smul, mul_comm β α]
+    abel
+  have hcomm2 : (β • V) * (α • V) - (α • V) * (β • V) = 0 := by
+    simp only [smul_mul_assoc, mul_smul_comm, smul_smul, mul_comm β α]
+    abel
+  rw [hcomm, hcomm2]
+  simp
+
+set_option maxHeartbeats 800000 in
+/-- **Vanishing on scalar•V inputs (B2.2.a)**:
+`symmetric_bch_quintic_poly 𝕂 (α • V) (β • V) = 0` for any `α, β : 𝕂` and
+`V : 𝔸`. See module-level docstring above for the structural significance.
+
+Proof: each 5-letter word `x₁·x₂·x₃·x₄·x₅` with `xᵢ ∈ {α•V, β•V}` collapses
+to `(α^(#a) · β^(#b)) • V⁵` via `five_fold_smul_mul_eq`. Summing the
+resulting 30 scalar coefficients gives a polynomial in `(α, β)` whose
+coefficient at each `α^k · β^(5−k)` is identically zero (by the calculations
+in the docstring). The total is therefore `0 • V⁵ = 0`. -/
+theorem symmetric_bch_quintic_poly_apply_smul_smul (V : 𝔸) (α β : 𝕂) :
+    symmetric_bch_quintic_poly 𝕂 (α • V) (β • V) = 0 := by
+  unfold symmetric_bch_quintic_poly
+  -- Step 1: collapse each 5-fold product to (scalar) • V⁵; combine outer scalars.
+  simp only [five_fold_smul_mul_eq, smul_smul, ← add_smul]
+  -- Step 2: goal is now `(big_polynomial in α, β) • (V·V·V·V·V) = 0`.
+  -- Convert RHS to (0:𝕂)•(V·V·V·V·V); then `congr 1` reduces to scalar = 0.
+  conv_rhs => rw [show (0 : 𝔸) = (0 : 𝕂) • (V * V * V * V * V) from (zero_smul _ _).symm]
+  congr 1
+  -- Polynomial-in-(α, β) identity: each (k, 5−k) coefficient group sums to 0.
+  ring
+
 end SymmetricQuinticPoly
 
 /-!
