@@ -516,6 +516,53 @@ private axiom suzuki5_R5_identification_axiom
       ‖suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p‖
         ≤ K * ‖τ‖ ^ 6
 
+/-- **B2.5 algebraic decomposition**: under IsSuzukiCubic p, the τ⁵-shifted
+suzuki5_bch difference decomposes as a sum of three explicit terms, each of
+which is bounded by `O(τ⁷)` from upstream theorems:
+
+  `suzuki5_bch - τ•V - τ⁵•R₅ = R_b1c + (sym_cubic_poly(4X,Y) - L_leading_τ⁵)
+                                + sym_quintic_poly(4X,Y)`
+
+where:
+- `R_b1c` is the residual from `norm_suzuki5_bch_sub_smul_sub_quintic_le` (B1.c
+  + B2.1, after IsSuzukiCubic τ³ vanishing).
+- `L_leading_τ⁵ = sym_cubic_poly_linear_part_smul_V V (4pτ) ((1-4p)τ)
+  (4(pτ)³•E_3) (((1-4p)τ)³•E_3)` is the τ⁵ leading content of
+  `sym_cubic_poly(4X,Y)` from B2.2.e.
+
+This is the algebraic backbone of the τ⁶ assembly for P1 axiom discharge.
+Combines the matching identity (which handles `τ⁵·γ5·E_5 + L_leading_τ⁵ = τ⁵·R₅`
+under IsSuzukiCubic) with the M4a + B1.c structure. -/
+theorem suzuki5_bch_sub_R5_decomp_of_IsSuzukiCubic (A B : 𝔸) (p τ : ℝ)
+    (hcubic : IsSuzukiCubic p) :
+    suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p =
+      (suzuki5_bch ℝ A B p τ - τ • (A + B) -
+          (τ ^ 3 * suzuki5_bch_cubic_coeff ℝ p) • symmetric_bch_cubic_poly ℝ A B -
+          (τ ^ 5 * suzuki5_bch_quintic_coeff ℝ p) • symmetric_bch_quintic_poly ℝ A B -
+          symmetric_bch_cubic_poly ℝ
+            ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+            (strangBlock_log ℝ A B (1 - 4 * p) τ) -
+          symmetric_bch_quintic_poly ℝ
+            ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+            (strangBlock_log ℝ A B (1 - 4 * p) τ)) +
+        (symmetric_bch_cubic_poly ℝ
+            ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+            (strangBlock_log ℝ A B (1 - 4 * p) τ) -
+          sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+            ((4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly ℝ A B)
+            (((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly ℝ A B)) +
+        symmetric_bch_quintic_poly ℝ
+          ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+          (strangBlock_log ℝ A B (1 - 4 * p) τ) := by
+  have hcubic_zero : suzuki5_bch_cubic_coeff ℝ p = 0 := hcubic
+  have hmatch := sym_cubic_linear_part_τ5_plus_E5_τ5_eq_R5_τ5 A B p τ hcubic
+  -- The matching identity τ⁵·R₅ = L_leading_τ⁵ + (τ⁵·γ5)·E_5.
+  -- Substitute (τ⁵·R₅).symm and the τ³·cubic_coeff zero, then `abel`.
+  rw [show (τ ^ 3 * suzuki5_bch_cubic_coeff ℝ p) • symmetric_bch_cubic_poly ℝ A B = 0 from by
+    rw [hcubic_zero, mul_zero, zero_smul]]
+  rw [← hmatch]
+  abel
+
 /-- **Headline theorem (τ⁵ identification)**: Under `IsSuzukiCubic p`,
 `suzuki5_bch` has leading-order quintic expansion
 
@@ -534,7 +581,13 @@ downstream proofs (e.g. the bridge corollary
 `suzuki5_log_product_quintic_of_IsSuzukiCubic` in `Palindromic.lean` and
 Lean-Trotter's `bch_w4Deriv_quintic_level2`) depend only on this theorem,
 not on the private axiom. Removing the axiom requires the Tier 1/2/3 work
-described in the module header. -/
+described in the module header.
+
+The algebraic decomposition `suzuki5_bch_sub_R5_decomp_of_IsSuzukiCubic`
+above provides the structural backbone: combined with explicit O(τ⁷)
+bounds on each summand (from `norm_suzuki5_bch_sub_smul_sub_quintic_le`,
+B2.2.e residual + L_extra, and B2.2.c), the discharge becomes a direct
+triangle inequality assembly. -/
 theorem norm_suzuki5_bch_sub_smul_sub_R5_le
     (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
     ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : ℝ, ‖τ‖ < δ →
