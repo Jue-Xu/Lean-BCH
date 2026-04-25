@@ -1629,6 +1629,174 @@ theorem norm_sym_cubic_poly_cubic_part_smul_V_le (δa δb : 𝔸) :
         linarith
     _ = (1 / 2 : ℝ) * D ^ 3 := by ring
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **3-fold-product norm bound**: `‖X·Y·Z‖ ≤ ‖X‖·‖Y‖·‖Z‖`. -/
+private lemma norm_three_word_le (X Y Z : 𝔸) :
+    ‖X * Y * Z‖ ≤ ‖X‖ * ‖Y‖ * ‖Z‖ := by
+  calc ‖X * Y * Z‖ ≤ ‖X * Y‖ * ‖Z‖ := norm_mul_le _ _
+    _ ≤ ‖X‖ * ‖Y‖ * ‖Z‖ := by gcongr; exact norm_mul_le _ _
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **3-fold commutator bound**: `‖[X, [Y, Z]]‖ ≤ 4·‖X‖·‖Y‖·‖Z‖`. -/
+private lemma norm_three_commBr_le (X Y Z : 𝔸) :
+    ‖commBr X (commBr Y Z)‖ ≤ 4 * ‖X‖ * ‖Y‖ * ‖Z‖ := by
+  unfold commBr
+  -- [X, [Y,Z]] = X(YZ - ZY) - (YZ - ZY)X = XYZ - XZY - YZX + ZYX
+  have hid : X * (Y * Z - Z * Y) - (Y * Z - Z * Y) * X =
+      X * Y * Z - X * Z * Y - Y * Z * X + Z * Y * X := by noncomm_ring
+  rw [hid]
+  calc _ ≤ ‖X * Y * Z - X * Z * Y - Y * Z * X‖ + ‖Z * Y * X‖ := norm_add_le _ _
+    _ ≤ (‖X * Y * Z - X * Z * Y‖ + ‖Y * Z * X‖) + ‖Z * Y * X‖ := by
+        gcongr
+        calc _ ≤ ‖X * Y * Z - X * Z * Y‖ + ‖-(Y * Z * X)‖ := by
+              rw [show X * Y * Z - X * Z * Y - Y * Z * X =
+                  X * Y * Z - X * Z * Y + -(Y * Z * X) from by abel]
+              exact norm_add_le _ _
+          _ = ‖X * Y * Z - X * Z * Y‖ + ‖Y * Z * X‖ := by rw [norm_neg]
+    _ ≤ ((‖X * Y * Z‖ + ‖X * Z * Y‖) + ‖Y * Z * X‖) + ‖Z * Y * X‖ := by
+        gcongr
+        exact norm_sub_le _ _
+    _ ≤ ((‖X‖ * ‖Y‖ * ‖Z‖ + ‖X‖ * ‖Z‖ * ‖Y‖) + ‖Y‖ * ‖Z‖ * ‖X‖) + ‖Z‖ * ‖Y‖ * ‖X‖ := by
+        gcongr <;> exact norm_three_word_le _ _ _
+    _ = 4 * ‖X‖ * ‖Y‖ * ‖Z‖ := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **commBr is 𝕂-linear in the right slot**: `[X, c•Y] = c•[X, Y]`. -/
+private lemma commBr_smul_right_eq (c : 𝕂) (X Y : 𝔸) :
+    commBr X (c • Y) = c • commBr X Y := by
+  unfold commBr
+  rw [mul_smul_comm, smul_mul_assoc, smul_sub]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **commBr is 𝕂-linear in the left slot**: `[c•X, Y] = c•[X, Y]`. -/
+private lemma commBr_smul_left_eq (c : 𝕂) (X Y : 𝔸) :
+    commBr (c • X) Y = c • commBr X Y := by
+  unfold commBr
+  rw [smul_mul_assoc, mul_smul_comm, smul_sub]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Smul through 3-fold commutator (rearrange to inner-left slot)**:
+  `c • [X, [Y, Z]] = [X, [c•Y, Z]]`. -/
+private lemma smul_commBr_inner_left (c : 𝕂) (X Y Z : 𝔸) :
+    c • commBr X (commBr Y Z) = commBr X (commBr (c • Y) Z) := by
+  rw [commBr_smul_left_eq, commBr_smul_right_eq]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Smul through 3-fold commutator (rearrange to inner-right slot)**:
+  `c • [X, [Y, Z]] = [X, [Y, c•Z]]`. -/
+private lemma smul_commBr_inner_right (c : 𝕂) (X Y Z : 𝔸) :
+    c • commBr X (commBr Y Z) = commBr X (commBr Y (c • Z)) := by
+  rw [commBr_smul_right_eq, commBr_smul_right_eq]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Norm bound for the quadratic-in-residual part**:
+  `‖sym_cubic_poly_quadratic_part_smul_V V α β δa δb‖ ≤ (3/2)·N·(‖δa‖+‖δb‖)²`
+
+when `‖α•V‖, ‖β•V‖ ≤ N`. Each summand is a 3-fold commutator with one
+`scalar•V` factor and two δ-factors. Rearranging via `smul_commBr_inner_*`,
+each is bounded by `4·N·D²`; the 6 terms together with scalars 1/24, 1/12
+give `(3/2)·N·D²`. -/
+theorem norm_sym_cubic_poly_quadratic_part_smul_V_le
+    (V : 𝔸) (α β : 𝕂) (δa δb : 𝔸) (N : ℝ)
+    (hα_le : ‖α • V‖ ≤ N) (hβ_le : ‖β • V‖ ≤ N) (hN_nn : 0 ≤ N) :
+    ‖sym_cubic_poly_quadratic_part_smul_V V α β δa δb‖ ≤
+      (3 / 2 : ℝ) * (N * (‖δa‖ + ‖δb‖) ^ 2) := by
+  unfold sym_cubic_poly_quadratic_part_smul_V
+  set D := ‖δa‖ + ‖δb‖ with hD_def
+  have hda_nn : 0 ≤ ‖δa‖ := norm_nonneg _
+  have hdb_nn : 0 ≤ ‖δb‖ := norm_nonneg _
+  have hda_le_D : ‖δa‖ ≤ D := by rw [hD_def]; linarith
+  have hdb_le_D : ‖δb‖ ≤ D := by rw [hD_def]; linarith
+  have hD_nn : 0 ≤ D := by rw [hD_def]; positivity
+  have hND_nn : 0 ≤ N * D ^ 2 := by positivity
+  have h24_norm : ‖((24 : 𝕂)⁻¹ : 𝕂)‖ = (1 / 24 : ℝ) := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  have h12_norm : ‖((12 : 𝕂)⁻¹ : 𝕂)‖ = (1 / 12 : ℝ) := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  -- Rearrange the α• and β• into the inner V-slot.
+  have hT2 : α • commBr δa (commBr V δb) = commBr δa (commBr (α • V) δb) :=
+    smul_commBr_inner_left α δa V δb
+  have hT3 : β • commBr δa (commBr δa V) = commBr δa (commBr δa (β • V)) :=
+    smul_commBr_inner_right β δa δa V
+  have hT5 : β • commBr δb (commBr V δa) = commBr δb (commBr (β • V) δa) :=
+    smul_commBr_inner_left β δb V δa
+  have hT6 : α • commBr δb (commBr δb V) = commBr δb (commBr δb (α • V)) :=
+    smul_commBr_inner_right α δb δb V
+  rw [hT2, hT3, hT5, hT6]
+  -- Each of the 6 inner expressions is a 3-fold commutator [X, [Y, Z]].
+  -- Bound each by 4·(scalar•V's norm)·(δ's norms) ≤ 4·N·D².
+  have b1 : ‖commBr (α • V) (commBr δa δb)‖ ≤ 4 * N * D ^ 2 := by
+    have := norm_three_commBr_le (α • V) δa δb
+    calc _ ≤ 4 * ‖α • V‖ * ‖δa‖ * ‖δb‖ := this
+      _ ≤ 4 * N * D * D := by gcongr
+      _ = 4 * N * D ^ 2 := by ring
+  have b2 : ‖commBr δa (commBr (α • V) δb)‖ ≤ 4 * N * D ^ 2 := by
+    have := norm_three_commBr_le δa (α • V) δb
+    calc _ ≤ 4 * ‖δa‖ * ‖α • V‖ * ‖δb‖ := this
+      _ ≤ 4 * D * N * D := by gcongr
+      _ = 4 * N * D ^ 2 := by ring
+  have b3 : ‖commBr δa (commBr δa (β • V))‖ ≤ 4 * N * D ^ 2 := by
+    have := norm_three_commBr_le δa δa (β • V)
+    calc _ ≤ 4 * ‖δa‖ * ‖δa‖ * ‖β • V‖ := this
+      _ ≤ 4 * D * D * N := by gcongr
+      _ = 4 * N * D ^ 2 := by ring
+  have b4 : ‖commBr (β • V) (commBr δb δa)‖ ≤ 4 * N * D ^ 2 := by
+    have := norm_three_commBr_le (β • V) δb δa
+    calc _ ≤ 4 * ‖β • V‖ * ‖δb‖ * ‖δa‖ := this
+      _ ≤ 4 * N * D * D := by gcongr
+      _ = 4 * N * D ^ 2 := by ring
+  have b5 : ‖commBr δb (commBr (β • V) δa)‖ ≤ 4 * N * D ^ 2 := by
+    have := norm_three_commBr_le δb (β • V) δa
+    calc _ ≤ 4 * ‖δb‖ * ‖β • V‖ * ‖δa‖ := this
+      _ ≤ 4 * D * N * D := by gcongr
+      _ = 4 * N * D ^ 2 := by ring
+  have b6 : ‖commBr δb (commBr δb (α • V))‖ ≤ 4 * N * D ^ 2 := by
+    have := norm_three_commBr_le δb δb (α • V)
+    calc _ ≤ 4 * ‖δb‖ * ‖δb‖ * ‖α • V‖ := this
+      _ ≤ 4 * D * D * N := by gcongr
+      _ = 4 * N * D ^ 2 := by ring
+  -- Triangle inequality + scalar bounds.
+  set T1 := commBr (α • V) (commBr δa δb)
+  set T2 := commBr δa (commBr (α • V) δb)
+  set T3 := commBr δa (commBr δa (β • V))
+  set T4 := commBr (β • V) (commBr δb δa)
+  set T5 := commBr δb (commBr (β • V) δa)
+  set T6 := commBr δb (commBr δb (α • V))
+  -- ‖-(c⁻¹ • (T1 + T2 + T3)) + c'⁻¹ • (T4 + T5 + T6)‖
+  -- ≤ |c⁻¹|·(‖T1‖ + ‖T2‖ + ‖T3‖) + |c'⁻¹|·(‖T4‖ + ‖T5‖ + ‖T6‖)
+  have hsmul1 : ‖(24 : 𝕂)⁻¹ • (T1 + T2 + T3)‖ ≤
+      (1/24 : ℝ) * (4 * N * D ^ 2 + 4 * N * D ^ 2 + 4 * N * D ^ 2) := by
+    calc _ ≤ ‖((24 : 𝕂)⁻¹ : 𝕂)‖ * ‖T1 + T2 + T3‖ := norm_smul_le _ _
+      _ = (1/24 : ℝ) * ‖T1 + T2 + T3‖ := by rw [h24_norm]
+      _ ≤ (1/24 : ℝ) * (‖T1‖ + ‖T2‖ + ‖T3‖) := by
+          have h12 : ‖T1 + T2‖ ≤ ‖T1‖ + ‖T2‖ := norm_add_le _ _
+          have h123 : ‖T1 + T2 + T3‖ ≤ ‖T1 + T2‖ + ‖T3‖ := norm_add_le _ _
+          have : ‖T1 + T2 + T3‖ ≤ ‖T1‖ + ‖T2‖ + ‖T3‖ := by linarith
+          linarith
+      _ ≤ (1/24 : ℝ) * (4 * N * D ^ 2 + 4 * N * D ^ 2 + 4 * N * D ^ 2) := by
+          apply mul_le_mul_of_nonneg_left _ (by norm_num)
+          linarith
+  have hsmul2 : ‖(12 : 𝕂)⁻¹ • (T4 + T5 + T6)‖ ≤
+      (1/12 : ℝ) * (4 * N * D ^ 2 + 4 * N * D ^ 2 + 4 * N * D ^ 2) := by
+    calc _ ≤ ‖((12 : 𝕂)⁻¹ : 𝕂)‖ * ‖T4 + T5 + T6‖ := norm_smul_le _ _
+      _ = (1/12 : ℝ) * ‖T4 + T5 + T6‖ := by rw [h12_norm]
+      _ ≤ (1/12 : ℝ) * (‖T4‖ + ‖T5‖ + ‖T6‖) := by
+          have h45 : ‖T4 + T5‖ ≤ ‖T4‖ + ‖T5‖ := norm_add_le _ _
+          have h456 : ‖T4 + T5 + T6‖ ≤ ‖T4 + T5‖ + ‖T6‖ := norm_add_le _ _
+          have : ‖T4 + T5 + T6‖ ≤ ‖T4‖ + ‖T5‖ + ‖T6‖ := by linarith
+          linarith
+      _ ≤ (1/12 : ℝ) * (4 * N * D ^ 2 + 4 * N * D ^ 2 + 4 * N * D ^ 2) := by
+          apply mul_le_mul_of_nonneg_left _ (by norm_num)
+          linarith
+  -- Final triangle inequality.
+  calc ‖-((24 : 𝕂)⁻¹ • (T1 + T2 + T3)) + (12 : 𝕂)⁻¹ • (T4 + T5 + T6)‖
+      ≤ ‖-((24 : 𝕂)⁻¹ • (T1 + T2 + T3))‖ + ‖(12 : 𝕂)⁻¹ • (T4 + T5 + T6)‖ :=
+            norm_add_le _ _
+    _ = ‖(24 : 𝕂)⁻¹ • (T1 + T2 + T3)‖ + ‖(12 : 𝕂)⁻¹ • (T4 + T5 + T6)‖ := by rw [norm_neg]
+    _ ≤ (1/24 : ℝ) * (4 * N * D ^ 2 + 4 * N * D ^ 2 + 4 * N * D ^ 2) +
+        (1/12 : ℝ) * (4 * N * D ^ 2 + 4 * N * D ^ 2 + 4 * N * D ^ 2) := by linarith
+    _ = (3 / 2 : ℝ) * (N * D ^ 2) := by ring
+
 /-! ### Specialization: commutator bound for `[4·X, Y]` in the Suzuki setting
 
 Combining `norm_commutator_near_V_le` (slice 8) and
