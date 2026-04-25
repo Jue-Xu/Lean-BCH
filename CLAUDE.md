@@ -588,26 +588,34 @@ sym_cubic_poly_linear_part_smul_V (A+B) (4pτ) ((1-4p)τ)
   (τ⁵ * (4p⁵+(1-4p)⁵)) • E_5 = τ⁵ • R₅(A,B,p)
 ```
 
-**Remaining for P1 closure**: **Triangle-inequality assembly only**. With
-the matching identity (and τ⁵-scaled corollary) proven, P1
-(`suzuki5_R5_identification_axiom`) discharges via:
+**B2.5 algebraic decomposition (session 10, NEW — STRUCTURAL BACKBONE PROVEN)**:
+`suzuki5_bch_sub_R5_decomp_of_IsSuzukiCubic`:
 
-1. M4a: `suzuki5_bch = sym_bch(4X, Y)` (DONE).
-2. B1.c: `‖sym_bch(a,b) - cubic_poly(a,b) - quintic_poly(a,b)‖ = O(σ⁷)` (DONE via P3).
-3. B2.2.e decomposition: `sym_cubic_poly(α•V+δa, β•V+δb) = L + Q + C` (DONE).
-4. B2.2.c bound: `‖sym_quintic_poly(4X, Y)‖ = O(τ⁷)` (DONE).
-5. `norm_4X_plus_Y_sub_quintic_target_of_IsSuzukiCubic_le`: identifies
-   `(4p⁵+(1-4p)⁵)·τ⁵•E_5` as the second τ⁵ contributor (DONE).
-6. Matching identity (DONE this session).
-7. τ⁵-scaled matching corollary (DONE this session).
-8. **Triangle inequality assembly**: combine all the above. The algebraic
-   structure is:
-   ```
-   suzuki5_bch - τ•V - τ⁵•R₅ =
-     (sym_cubic_poly(4X,Y) - L_leading_τ⁵) + sym_quintic_poly(4X,Y) + R_b1c
-   ```
-   where each summand is O(τ⁷) bounded. Final step: ~100 lines of
-   `norm_add_le` chains using the proven decomposition + matching.
+```
+suzuki5_bch - τ•V - τ⁵•R₅ =
+  R_b1c + (sym_cubic_poly(4X,Y) - L_leading_τ⁵) + sym_quintic_poly(4X,Y)
+```
+
+(under `IsSuzukiCubic p`). Zero new axioms. Proof: substitute the τ³
+vanishing + the τ⁵-scaled matching identity, then `abel`.
+
+This is the algebraic identity that reduces P1 discharge to bounding each
+of the three summands.
+
+**Remaining for P1 closure**: **Triangle-inequality bound assembly**.
+
+The three summands' bounds:
+1. **R_b1c**: `‖suzuki5_bch - τ•V - τ³·c·E_3 - τ⁵·γ5·E_5 - sym_cubic_poly(4X,Y)
+   - sym_quintic_poly(4X,Y)‖ ≤ K·σ⁷` from `norm_suzuki5_bch_sub_smul_sub_quintic_le`.
+2. **sym_cubic_poly(4X,Y) − L_leading_τ⁵ = (Q + C) + L_extra**:
+   - `‖Q + C‖ ≤ (3/2)·N·D² + (1/2)·D³` from `norm_sym_cubic_poly_sub_linear_part_le`.
+   - `‖L_extra‖`: bounded via 3-fold commutator + B1.d's `norm_strangBlock_log_sub_target_le`.
+3. **sym_quintic_poly(4X,Y)**: bounded by `norm_symmetric_bch_quintic_poly_le`
+   (`‖E_5(a,b)‖ ≤ (‖a‖+‖b‖)⁵`).
+
+Final assembly (~100 lines): `norm_add_le` chain + per-term `norm_smul_le`
++ existential δ choice (similar to `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic`
+template).
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 
