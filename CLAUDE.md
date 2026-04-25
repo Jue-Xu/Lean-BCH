@@ -560,22 +560,37 @@ These reduce the over-completeness of the 8-Childs basis to dim-6
 weight-5 free Lie algebra, and bridge between the Lean-side and CAS-side
 choice of Jacobi free parameters.
 
-**Remaining for P1 closure**: **τ⁵ matching identity** —
+**B2.2.e τ⁵ matching identity (session 10, NEW — CORNERSTONE PROVEN)**:
 
 ```
-(1/3)·poly_p·τ⁵ • [V,[V,E_3]] + (4p⁵+(1-4p)⁵)·τ⁵ • E_5 = τ⁵ • R₅(A,B,p)
+BCH.L_leading_plus_E5_eq_R5 : ∀ (A B : 𝔸) (p : ℝ), IsSuzukiCubic p →
+  ((1/3) * poly_p) • [V,[V,E_3]] + (4p⁵+(1-4p)⁵) • E_5 = suzuki5_R5 A B p
 ```
 
-(under `IsSuzukiCubic p`). With both Childs decompositions and the Jacobi
-relations C₂=C₃, C₆=C₇ in hand, this reduces to a polynomial-in-p identity
-matching coefficients of each Childs commutator. CAS verification:
-`/tmp/verify_R5_match.py` shows differences are exactly `f(p)·(C₂-C₃) +
-g(p)·(C₆-C₇) = 0` (under Jacobi). Implementation: rewrite both sides
-on Childs basis, apply Jacobi to equate C₃→C₂ and C₇→C₆, match
-βᵢ(p) coefficients via `ring` modulo `4p³+(1-4p)³ = 0`.
+(`poly_p := p(1-4p)(1-2p)(p²-(1-4p)²)`). Zero new axioms.
 
-After τ⁵ matching, **Step 4: Triangle-inequality assembly** combines all
-τ⁵ contributors with the τ⁷ residual bounds.
+**Strategy**:
+1. Apply Childs projections: rewrite `[V,[V,E_3]]` and `E_5` on the basis.
+2. Apply Jacobi C₂=C₃, C₆=C₇ to merge over-complete basis elements.
+3. Unfold `suzuki5_R5` and `βᵢ(p)`.
+4. Establish 6 per-Cᵢ polynomial identities via `linear_combination * hcubic`
+   with CAS-derived multipliers (e.g., for C₁: `41p²/5760 - 29p/7200 - 169/144000`).
+5. Substitute `βᵢ(p) → L_poly` form (`rw [eq1, ..., eq8]`).
+6. Close via `module` (pure ring identity in p, no hcubic dependence).
+
+**Remaining for P1 closure**: **Triangle-inequality assembly**. With the
+matching identity proven, P1 (`suzuki5_R5_identification_axiom`)
+discharges via:
+
+1. M4a: `suzuki5_bch = sym_bch(4X, Y)` (DONE).
+2. B1.c: `‖sym_bch(a,b) - cubic_poly(a,b) - quintic_poly(a,b)‖ = O(σ⁷)` (DONE via P3).
+3. B2.2.e decomposition: `sym_cubic_poly(α•V+δa, β•V+δb) = L + Q + C` (DONE).
+4. B2.2.c bound: `‖sym_quintic_poly(4X, Y)‖ = O(τ⁷)` (DONE).
+5. norm_4X_plus_Y_sub_quintic_target_of_IsSuzukiCubic_le: identifies
+   `(4p⁵+(1-4p)⁵)·τ⁵•E_5` as the second τ⁵ contributor (DONE).
+6. Matching identity (DONE this session).
+7. **Triangle inequality combining all of the above**: this is the final
+   assembly step, ~100 lines of `norm_add_le` + bound chains.
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 
