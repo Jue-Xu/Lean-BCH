@@ -433,12 +433,39 @@ Zero new axioms.
 (gaining nothing in asymptotic order, but identifying the structure for
 the Childs-basis projection in B2.2.e).
 
-**Open**: **B2.2.e** (symbolic τ⁵-to-Childs-basis projection — the
-~weeks-long symbolic work). Project the linear-in-residual part of
-`sym_cubic_poly(4X, Y)` onto the Childs 4-fold commutator basis,
-matching the βᵢ(p) prefactors in `BCH.suzuki5_R5`. CAS pipeline at
+**B2.2.e foundation (session 10, IN PROGRESS)**: linear-in-residual extraction
+for `sym_cubic_poly(α•V + δa, β•V + δb)` in `BCH/Palindromic.lean`.
+All zero new axioms. Closed:
+
+- **Definitions**: `sym_cubic_poly_linear_part_smul_V`,
+  `sym_cubic_poly_quadratic_part_smul_V`, `sym_cubic_poly_cubic_part_smul_V`.
+  Linear part closed form (verified by CAS):
+  `L = ((α + 2β)/24) • (β • [V,[V,δa]] - α • [V,[V,δb]])`.
+- **Algebraic decomposition** `symmetric_bch_cubic_poly_smul_V_decomp`:
+  `sym_cubic_poly(α•V+δa, β•V+δb) = L + Q + C`. Proved via 24-injectivity
+  scalar clearing (`mul_inv_cancel_left₀` + helper for `24·12⁻¹=2`)
+  + `module` tactic for the final 𝕂-bilinear/𝔸-noncomm verification.
+- **Cubic part bound** `norm_sym_cubic_poly_cubic_part_smul_V_le`:
+  `‖C‖ ≤ (1/2)·D³` where `D = ‖δa‖+‖δb‖`.
+- **Quadratic part bound** `norm_sym_cubic_poly_quadratic_part_smul_V_le`:
+  `‖Q‖ ≤ (3/2)·N·D²` when `‖α•V‖, ‖β•V‖ ≤ N`. Built on commBr-bilinearity
+  helpers (`commBr_smul_left_eq`, `commBr_smul_right_eq`) and a 3-fold
+  commutator bound `‖[X, [Y, Z]]‖ ≤ 4·‖X‖·‖Y‖·‖Z‖`.
+- **Combined residual bound** `norm_sym_cubic_poly_sub_linear_part_le`:
+  `‖sym_cubic_poly - linear_part‖ ≤ (3/2)·N·D² + (1/2)·D³`.
+
+**Significance**: identifies the linear part L as the *exact* τ⁵ content
+of `sym_cubic_poly(4X, Y)` modulo τ⁶+ residual. With N = O(τ), D = O(τ³):
+combined residual = O(τ·τ⁶ + τ⁹) = O(τ⁷), well below the τ⁶ threshold.
+
+**Open** (the remaining B2.2.e work): **B2.2.e completion** — substitute
+the per-block residuals `δa = 4·(pτ)³·E_3 + ...`,
+`δb = ((1-4p)τ)³·E_3 + ...` (from B1.d) into the linear part L, and
+project the resulting Lie polynomial in (V = A+B, E_3 = sym_cubic(A,B))
+onto the 8 Childs commutators, matching the `βᵢ(p)` prefactors in
+`BCH.suzuki5_R5`. CAS pipeline at
 `Lean-Trotter/scripts/compute_bch_prefactors.py` already does this at
-the symbolic level.
+the symbolic level. The Lean port is the remaining symbolic work.
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 
