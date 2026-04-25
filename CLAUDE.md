@@ -394,11 +394,47 @@ letters — exactly the Childs basis structure. The `sym_quintic_poly(4X, Y)`
 contribution at τ⁵ is `0` (since linear-in-residual would be τ⁷, beyond
 the τ⁵ window).
 
-**Open**: **B2.2.c/B2.2.d** (multilinear Lipschitz bounds, ~few days) and
-**B2.2.e** (symbolic τ⁵-to-Childs-basis projection, the ~weeks-long
-symbolic work). Project the linear-in-residual part of
-`sym_cubic_poly(4X, Y)` onto the Childs 4-fold commutator basis, matching
-the βᵢ(p) prefactors in `BCH.suzuki5_R5`. CAS pipeline at
+**B2.2.c core (session 9)**: 5-letter telescoping Lipschitz lemma
+`word_5_diff_le` in `BCH/SymmetricQuintic.lean` (private):
+
+```
+‖x₁·x₂·x₃·x₄·x₅ − y₁·y₂·y₃·y₄·y₅‖ ≤ N⁴ · (‖x₁−y₁‖+‖x₂−y₂‖+‖x₃−y₃‖+‖x₄−y₄‖+‖x₅−y₅‖)
+```
+
+when all factors have norm `≤ N`. Proved by telescoping identity
+(`noncomm_ring` after splitting into 5 single-slot variation terms) + 5
+applications of triangle inequality with iterated `norm_mul_le`. Zero
+new axioms.
+
+This is the **technical core for B2.2.c**. Combined with B2.2.a's
+vanishing on scalar•V inputs, applying `word_5_diff_le` to each of the
+30 words in `symmetric_bch_quintic_poly` gives the full bound
+
+```
+‖sym_quintic_poly(α•V+δa, β•V+δb)‖ ≤ K · N⁴ · (‖δa‖+‖δb‖)
+```
+
+(where `K ≈ 2`, since `Σ |c_w|/5760 = 1216/5760` and each word picks up
+`5·D` per slot variation, totaling `1216·5/5760 ≈ 1.06`).
+
+**For B2 closure**: when `α, β = O(τ)` (linear) and `δa, δb = O(τ³)`
+(per-block residual), this gives `‖sym_quintic_poly(4X, Y)‖ = O(τ⁷)`,
+gaining 2 powers of τ over the trivial `(‖a‖+‖b‖)⁵ = O(τ⁵)` bound. The
+extra factor of τ² comes from the structural vanishing on V-only inputs.
+
+A scaffolding for the full per-word application
+(`norm_symmetric_bch_quintic_poly_apply_smul_add_smul_add_le`) is left
+in a block comment in `BCH/SymmetricQuintic.lean` for the next session;
+remaining work is the 29 nested `norm_add_le`'s + `linarith` assembly
+(~150 lines, mechanical, mirrors `norm_symmetric_bch_quintic_poly_le_aux`'s
+S02..S30 chain pattern).
+
+**Open**: **B2.2.c full** (~1 day, mechanical assembly), **B2.2.d**
+(analog for sym_cubic_poly via existing `norm_symmetric_bch_cubic_poly_le_commutator`,
+~hours), and **B2.2.e** (symbolic τ⁵-to-Childs-basis projection — the
+~weeks-long symbolic work). The Childs basis projection matches the
+linear-in-residual part of `sym_cubic_poly(4X, Y)` to the βᵢ(p) prefactors
+in `BCH.suzuki5_R5`. CAS pipeline at
 `Lean-Trotter/scripts/compute_bch_prefactors.py` already does this at
 the symbolic level.
 
