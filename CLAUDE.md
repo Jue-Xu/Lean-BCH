@@ -394,47 +394,49 @@ letters — exactly the Childs basis structure. The `sym_quintic_poly(4X, Y)`
 contribution at τ⁵ is `0` (since linear-in-residual would be τ⁷, beyond
 the τ⁵ window).
 
-**B2.2.c core (session 9)**: 5-letter telescoping Lipschitz lemma
-`word_5_diff_le` in `BCH/SymmetricQuintic.lean` (private):
+**B2.2.c (session 9, FULL)**:
+`norm_symmetric_bch_quintic_poly_apply_smul_add_smul_add_le` in
+`BCH/SymmetricQuintic.lean` — fully proved:
 
 ```
-‖x₁·x₂·x₃·x₄·x₅ − y₁·y₂·y₃·y₄·y₅‖ ≤ N⁴ · (‖x₁−y₁‖+‖x₂−y₂‖+‖x₃−y₃‖+‖x₄−y₄‖+‖x₅−y₅‖)
+‖sym_quintic_poly(α•V+δa, β•V+δb)‖ ≤ 2·N⁴·(‖δa‖+‖δb‖)
 ```
 
-when all factors have norm `≤ N`. Proved by telescoping identity
-(`noncomm_ring` after splitting into 5 single-slot variation terms) + 5
-applications of triangle inequality with iterated `norm_mul_le`. Zero
-new axioms.
+when `‖α•V‖, ‖β•V‖, ‖α•V+δa‖, ‖β•V+δb‖ ≤ N`. Built on:
+- 5-letter telescoping Lipschitz `word_5_diff_le` (private):
+  `‖x₁·x₂·x₃·x₄·x₅ − y₁·y₂·y₃·y₄·y₅‖ ≤ N⁴ · (‖x₁−y₁‖+...+‖x₅−y₅‖)`.
+- B2.2.a vanishing: `sym_quintic_poly(α•V, β•V) = 0`.
+- Regrouping `Σ cᵢ•full_i − Σ cᵢ•lin_i = Σ cᵢ•(full_i − lin_i)` via
+  `unfold + simp [smul_sub] + abel` after `rw [h0, sub_zero]`.
+- 30 b_i per-word diff bounds + 30 t_i smul-diff bounds + 29 norm_add_le
+  + linarith with `N⁴·D ≥ 0` hint. The constant: `Σ |c_w|/5760 · 5 =
+  1216·5/5760 ≈ 1.056 ≤ 2` (factor 2 buffer). Zero new axioms.
 
-This is the **technical core for B2.2.c**. Combined with B2.2.a's
-vanishing on scalar•V inputs, applying `word_5_diff_le` to each of the
-30 words in `symmetric_bch_quintic_poly` gives the full bound
+**B2.2.d (session 9)**:
+`norm_symmetric_bch_cubic_poly_apply_smul_add_smul_add_le` in
+`BCH/Palindromic.lean` — fully proved:
 
 ```
-‖sym_quintic_poly(α•V+δa, β•V+δb)‖ ≤ K · N⁴ · (‖δa‖+‖δb‖)
+‖sym_cubic_poly(α•V+δa, β•V+δb)‖ ≤ (2/3)·(N²·D + N·D²)
 ```
 
-(where `K ≈ 2`, since `Σ |c_w|/5760 = 1216/5760` and each word picks up
-`5·D` per slot variation, totaling `1216·5/5760 ≈ 1.06`).
+Composes existing `norm_commutator_near_V_le` (slice 8) — bound
+`‖[fA, fB]‖ ≤ 2·N·D + 2·D²` from `[α•V, β•V] = 0` cancellation —
+with `norm_symmetric_bch_cubic_poly_le_commutator`. Lives in
+Palindromic.lean (not SymmetricQuintic.lean) due to import direction.
+Zero new axioms.
 
 **For B2 closure**: when `α, β = O(τ)` (linear) and `δa, δb = O(τ³)`
-(per-block residual), this gives `‖sym_quintic_poly(4X, Y)‖ = O(τ⁷)`,
-gaining 2 powers of τ over the trivial `(‖a‖+‖b‖)⁵ = O(τ⁵)` bound. The
-extra factor of τ² comes from the structural vanishing on V-only inputs.
+(per-block residual), B2.2.c gives `‖sym_quintic_poly(4X, Y)‖ = O(τ⁷)`
+(gaining 2 powers over trivial `(‖a‖+‖b‖)⁵ = O(τ⁵)`); B2.2.d gives
+`‖sym_cubic_poly(4X, Y)‖ = O(τ⁵)` matching the τ⁵ leading order
+(gaining nothing in asymptotic order, but identifying the structure for
+the Childs-basis projection in B2.2.e).
 
-A scaffolding for the full per-word application
-(`norm_symmetric_bch_quintic_poly_apply_smul_add_smul_add_le`) is left
-in a block comment in `BCH/SymmetricQuintic.lean` for the next session;
-remaining work is the 29 nested `norm_add_le`'s + `linarith` assembly
-(~150 lines, mechanical, mirrors `norm_symmetric_bch_quintic_poly_le_aux`'s
-S02..S30 chain pattern).
-
-**Open**: **B2.2.c full** (~1 day, mechanical assembly), **B2.2.d**
-(analog for sym_cubic_poly via existing `norm_symmetric_bch_cubic_poly_le_commutator`,
-~hours), and **B2.2.e** (symbolic τ⁵-to-Childs-basis projection — the
-~weeks-long symbolic work). The Childs basis projection matches the
-linear-in-residual part of `sym_cubic_poly(4X, Y)` to the βᵢ(p) prefactors
-in `BCH.suzuki5_R5`. CAS pipeline at
+**Open**: **B2.2.e** (symbolic τ⁵-to-Childs-basis projection — the
+~weeks-long symbolic work). Project the linear-in-residual part of
+`sym_cubic_poly(4X, Y)` onto the Childs 4-fold commutator basis,
+matching the βᵢ(p) prefactors in `BCH.suzuki5_R5`. CAS pipeline at
 `Lean-Trotter/scripts/compute_bch_prefactors.py` already does this at
 the symbolic level.
 
