@@ -1537,6 +1537,98 @@ theorem symmetric_bch_cubic_poly_smul_V_decomp
     one_smul, mul_one, one_mul]
   module
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Norm bound for the cubic-in-residual part**:
+  `‖sym_cubic_poly_cubic_part_smul_V δa δb‖ ≤ (1/2) · (‖δa‖+‖δb‖)³`.
+
+Each summand is a 3-fold commutator (depth 3) bounded by triangle inequality:
+  `‖[δa,[δa,δb]]‖ ≤ 4·‖δa‖²·‖δb‖`, `‖[δb,[δb,δa]]‖ ≤ 4·‖δb‖²·‖δa‖`.
+Combined with the scalars 1/24 and 1/12: `(1/24)·4 + (1/12)·4 = 1/2`. -/
+theorem norm_sym_cubic_poly_cubic_part_smul_V_le (δa δb : 𝔸) :
+    ‖sym_cubic_poly_cubic_part_smul_V (𝕂 := 𝕂) δa δb‖ ≤
+      (1 / 2 : ℝ) * (‖δa‖ + ‖δb‖) ^ 3 := by
+  unfold sym_cubic_poly_cubic_part_smul_V commBr
+  set D := ‖δa‖ + ‖δb‖ with hD_def
+  have hda_nn : 0 ≤ ‖δa‖ := norm_nonneg _
+  have hdb_nn : 0 ≤ ‖δb‖ := norm_nonneg _
+  have hda_le_D : ‖δa‖ ≤ D := by rw [hD_def]; linarith
+  have hdb_le_D : ‖δb‖ ≤ D := by rw [hD_def]; linarith
+  have hD_nn : 0 ≤ D := by rw [hD_def]; positivity
+  -- ‖(24:𝕂)⁻¹‖ = 1/24, ‖(12:𝕂)⁻¹‖ = 1/12 in any RCLike 𝕂.
+  have h24_norm : ‖((24 : 𝕂)⁻¹ : 𝕂)‖ = (1 / 24 : ℝ) := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  have h12_norm : ‖((12 : 𝕂)⁻¹ : 𝕂)‖ = (1 / 12 : ℝ) := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  -- Bound each scalar•commutator term via triangle inequality on 3-fold commutators.
+  have hCa : ‖δa * (δa * δb - δb * δa) - (δa * δb - δb * δa) * δa‖ ≤ 4 * ‖δa‖ ^ 2 * ‖δb‖ := by
+    calc _ ≤ ‖δa * (δa * δb - δb * δa)‖ + ‖(δa * δb - δb * δa) * δa‖ := norm_sub_le _ _
+      _ ≤ ‖δa‖ * ‖δa * δb - δb * δa‖ + ‖δa * δb - δb * δa‖ * ‖δa‖ := by
+          gcongr <;> exact norm_mul_le _ _
+      _ ≤ ‖δa‖ * (2 * ‖δa‖ * ‖δb‖) + (2 * ‖δa‖ * ‖δb‖) * ‖δa‖ := by
+          have h_ab : ‖δa * δb - δb * δa‖ ≤ 2 * ‖δa‖ * ‖δb‖ := by
+            calc _ ≤ ‖δa * δb‖ + ‖δb * δa‖ := norm_sub_le _ _
+              _ ≤ ‖δa‖ * ‖δb‖ + ‖δb‖ * ‖δa‖ := by gcongr <;> exact norm_mul_le _ _
+              _ = 2 * ‖δa‖ * ‖δb‖ := by ring
+          gcongr
+      _ = 4 * ‖δa‖ ^ 2 * ‖δb‖ := by ring
+  have hCb : ‖δb * (δb * δa - δa * δb) - (δb * δa - δa * δb) * δb‖ ≤ 4 * ‖δb‖ ^ 2 * ‖δa‖ := by
+    calc _ ≤ ‖δb * (δb * δa - δa * δb)‖ + ‖(δb * δa - δa * δb) * δb‖ := norm_sub_le _ _
+      _ ≤ ‖δb‖ * ‖δb * δa - δa * δb‖ + ‖δb * δa - δa * δb‖ * ‖δb‖ := by
+          gcongr <;> exact norm_mul_le _ _
+      _ ≤ ‖δb‖ * (2 * ‖δb‖ * ‖δa‖) + (2 * ‖δb‖ * ‖δa‖) * ‖δb‖ := by
+          have h_ba : ‖δb * δa - δa * δb‖ ≤ 2 * ‖δb‖ * ‖δa‖ := by
+            calc _ ≤ ‖δb * δa‖ + ‖δa * δb‖ := norm_sub_le _ _
+              _ ≤ ‖δb‖ * ‖δa‖ + ‖δa‖ * ‖δb‖ := by gcongr <;> exact norm_mul_le _ _
+              _ = 2 * ‖δb‖ * ‖δa‖ := by ring
+          gcongr
+      _ = 4 * ‖δb‖ ^ 2 * ‖δa‖ := by ring
+  -- Combine via norm bound on each smul'd commutator.
+  have h1 : ‖(24 : 𝕂)⁻¹ • (δa * (δa * δb - δb * δa) - (δa * δb - δb * δa) * δa)‖ ≤
+      (1/24 : ℝ) * (4 * ‖δa‖ ^ 2 * ‖δb‖) := by
+    calc _ ≤ ‖((24 : 𝕂)⁻¹ : 𝕂)‖ * _ := norm_smul_le _ _
+      _ = (1/24 : ℝ) * _ := by rw [h24_norm]
+      _ ≤ (1/24 : ℝ) * (4 * ‖δa‖ ^ 2 * ‖δb‖) := by
+          apply mul_le_mul_of_nonneg_left hCa (by norm_num)
+  have h2 : ‖(12 : 𝕂)⁻¹ • (δb * (δb * δa - δa * δb) - (δb * δa - δa * δb) * δb)‖ ≤
+      (1/12 : ℝ) * (4 * ‖δb‖ ^ 2 * ‖δa‖) := by
+    calc _ ≤ ‖((12 : 𝕂)⁻¹ : 𝕂)‖ * _ := norm_smul_le _ _
+      _ = (1/12 : ℝ) * _ := by rw [h12_norm]
+      _ ≤ (1/12 : ℝ) * (4 * ‖δb‖ ^ 2 * ‖δa‖) := by
+          apply mul_le_mul_of_nonneg_left hCb (by norm_num)
+  -- Bound ‖da²·db‖ and ‖db²·da‖ by D³.
+  have ha2b_le : ‖δa‖ ^ 2 * ‖δb‖ ≤ D ^ 3 := by
+    calc ‖δa‖ ^ 2 * ‖δb‖ ≤ D ^ 2 * D := by
+          apply mul_le_mul _ hdb_le_D hdb_nn (by positivity)
+          exact pow_le_pow_left₀ hda_nn hda_le_D 2
+      _ = D ^ 3 := by ring
+  have hb2a_le : ‖δb‖ ^ 2 * ‖δa‖ ≤ D ^ 3 := by
+    calc ‖δb‖ ^ 2 * ‖δa‖ ≤ D ^ 2 * D := by
+          apply mul_le_mul _ hda_le_D hda_nn (by positivity)
+          exact pow_le_pow_left₀ hdb_nn hdb_le_D 2
+      _ = D ^ 3 := by ring
+  -- Final: triangle inequality.
+  calc ‖-((24 : 𝕂)⁻¹ • (δa * (δa * δb - δb * δa) - (δa * δb - δb * δa) * δa)) +
+          (12 : 𝕂)⁻¹ • (δb * (δb * δa - δa * δb) - (δb * δa - δa * δb) * δb)‖
+      ≤ ‖-((24 : 𝕂)⁻¹ • (δa * (δa * δb - δb * δa) - (δa * δb - δb * δa) * δa))‖ +
+        ‖(12 : 𝕂)⁻¹ • (δb * (δb * δa - δa * δb) - (δb * δa - δa * δb) * δb)‖ :=
+            norm_add_le _ _
+    _ = ‖(24 : 𝕂)⁻¹ • (δa * (δa * δb - δb * δa) - (δa * δb - δb * δa) * δa)‖ +
+        ‖(12 : 𝕂)⁻¹ • (δb * (δb * δa - δa * δb) - (δb * δa - δa * δb) * δb)‖ := by
+            rw [norm_neg]
+    _ ≤ (1/24 : ℝ) * (4 * ‖δa‖ ^ 2 * ‖δb‖) +
+        (1/12 : ℝ) * (4 * ‖δb‖ ^ 2 * ‖δa‖) := by linarith
+    _ ≤ (1/24 : ℝ) * (4 * D ^ 3) + (1/12 : ℝ) * (4 * D ^ 3) := by
+        have h1 : (1/24 : ℝ) * (4 * ‖δa‖ ^ 2 * ‖δb‖) ≤ (1/24 : ℝ) * (4 * D ^ 3) := by
+          have h_ab_le : 4 * ‖δa‖ ^ 2 * ‖δb‖ ≤ 4 * D ^ 3 := by
+            have := ha2b_le; linarith
+          linarith
+        have h2 : (1/12 : ℝ) * (4 * ‖δb‖ ^ 2 * ‖δa‖) ≤ (1/12 : ℝ) * (4 * D ^ 3) := by
+          have h_ba_le : 4 * ‖δb‖ ^ 2 * ‖δa‖ ≤ 4 * D ^ 3 := by
+            have := hb2a_le; linarith
+          linarith
+        linarith
+    _ = (1 / 2 : ℝ) * D ^ 3 := by ring
+
 /-! ### Specialization: commutator bound for `[4·X, Y]` in the Suzuki setting
 
 Combining `norm_commutator_near_V_le` (slice 8) and
