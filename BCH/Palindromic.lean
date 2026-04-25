@@ -1979,6 +1979,28 @@ theorem smul_24_sym_cubic_poly_linear_part_at_smul_E3_eq_childs_basis
   -- Apply the projection identity.
   rw [comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis (𝕂 := 𝕂) A B]
 
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e scalar instantiation**: substituting α = 4pτ, β = (1-4p)τ,
+γ = 4(pτ)³, δ = ((1-4p)τ)³ (the τ³-leading parts of B1.d's per-block
+residuals 4·strangBlock_log_p − (4pτ)•V and strangBlock_log_(1-4p) − ((1-4p)τ)•V),
+the linear part L collapses to a closed form with τ⁵ factored out:
+
+  `L = ((1/3) * p * (1-4p) * (1-2p) * (p² - (1-4p)²) * τ⁵) • [V,[V,E_3]]`.
+
+The coefficient `(1/3)·p(1-4p)(1-2p)(p²-(1-4p)²)` is the polynomial-in-p
+prefactor of the τ⁵ contribution of the linear part. -/
+theorem sym_cubic_poly_linear_part_at_strangBlock_E3 (A B : 𝔸) (p τ : 𝕂) :
+    sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+        ((4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B)
+        (((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B) =
+      ((1 / 3 : 𝕂) * p * (1 - 4 * p) * (1 - 2 * p) * (p ^ 2 - (1 - 4 * p) ^ 2) * τ ^ 5) •
+        commBr (A + B) (commBr (A + B) (symmetric_bch_cubic_poly 𝕂 A B)) := by
+  rw [sym_cubic_poly_linear_part_at_smul_E3 (𝕂 := 𝕂) A B (A + B)
+        (4 * p * τ) ((1 - 4 * p) * τ) (4 * (p * τ) ^ 3) (((1 - 4 * p) * τ) ^ 3)]
+  congr 1
+  ring
+
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **B2.2.e residual bound**: combining the algebraic decomposition with the
 quadratic and cubic norm bounds, the residual `sym_cubic_poly(α•V+δa, β•V+δb)
