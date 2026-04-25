@@ -2001,6 +2001,37 @@ theorem sym_cubic_poly_linear_part_at_strangBlock_E3 (A B : 𝔸) (p τ : 𝕂) 
   congr 1
   ring
 
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e closed-form L_leading on Childs basis**: combines the scalar
+instantiation with the Childs-basis projection identity. The leading τ⁵
+content of the linear-in-residual part (when both `δa, δb` take their
+B1.d τ³-leading values) is, with the inverse-scalar `1/24` cleared:
+
+  `24 • L_leading = ((1/3)·p(1-4p)(1-2p)(p²-(1-4p)²)·τ⁵) •
+                       [(C₁+C₃+C₅+C₇) + 2 • (C₂+C₄+C₆+C₈)]`
+
+Equivalently
+`L_leading = (1/72)·poly_p·τ⁵ • (C₁+C₃+C₅+C₇)
+              + (1/36)·poly_p·τ⁵ • (C₂+C₄+C₆+C₈)`
+where `poly_p := p(1-4p)(1-2p)(p²-(1-4p)²)`.
+
+The polynomial `poly_p` matches (up to additional contributions from
+`E_5 = sym_quintic_poly` and the higher-order BCH sym_quintic_poly term)
+the βᵢ(p) prefactors of `BCH.suzuki5_R5`. -/
+theorem smul_24_sym_cubic_poly_linear_part_at_strangBlock_E3_eq_childs_basis
+    (A B : 𝔸) (p τ : 𝕂) :
+    (24 : 𝕂) • sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+        ((4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B)
+        (((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B) =
+      ((1 / 3 : 𝕂) * p * (1 - 4 * p) * (1 - 2 * p) * (p ^ 2 - (1 - 4 * p) ^ 2) * τ ^ 5) •
+        ((childsComm₁ A B + childsComm₃ A B + childsComm₅ A B + childsComm₇ A B) +
+         (2 : 𝕂) • (childsComm₂ A B + childsComm₄ A B + childsComm₆ A B + childsComm₈ A B)) := by
+  rw [sym_cubic_poly_linear_part_at_strangBlock_E3 (𝕂 := 𝕂) A B p τ]
+  -- Now: 24 • (poly_p·τ⁵) • [V,[V,E₃]] = (poly_p·τ⁵) • (24 • [V,[V,E₃]])
+  rw [smul_comm (24 : 𝕂) _ _]
+  rw [comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis (𝕂 := 𝕂) A B]
+
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **B2.2.e residual bound**: combining the algebraic decomposition with the
 quadratic and cubic norm bounds, the residual `sym_cubic_poly(α•V+δa, β•V+δb)
