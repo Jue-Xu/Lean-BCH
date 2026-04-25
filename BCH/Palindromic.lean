@@ -2394,6 +2394,46 @@ theorem norm_4X_plus_Y_sub_quintic_target_le (A B : 𝔸) (p τ : 𝕂)
         1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
         linarith
 
+include 𝕂 in
+/-- **B2.2.e prep — `4X + Y` quintic identification under IsSuzukiCubic**:
+under `IsSuzukiCubic p`, the τ³ term in `4X + Y` vanishes, and the τ⁵
+contribution is exactly `(τ⁵ * (4p⁵ + (1-4p)⁵)) • E_5`:
+
+  `‖4•X + Y - τ•V - (τ⁵ * (4p⁵+(1-4p)⁵)) • E_5‖ ≤ K·σ⁷`.
+
+Direct corollary of `norm_4X_plus_Y_sub_quintic_target_le` after applying
+`IsSuzukiCubic_iff` to set the cubic_coeff to 0. -/
+theorem norm_4X_plus_Y_sub_quintic_target_of_IsSuzukiCubic_le
+    (A B : 𝔸) (p τ : 𝕂) (hp_suzuki : IsSuzukiCubic p)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4) :
+    ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ +
+        strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+        τ • (A + B) -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B‖ ≤
+      4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+      1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
+  have hcubic := hp_suzuki  -- 4p³ + (1-4p)³ = 0
+  unfold IsSuzukiCubic suzuki5_bch_cubic_coeff at hcubic
+  have h_main := norm_4X_plus_Y_sub_quintic_target_le (𝕂 := 𝕂) A B p τ hp h1m4p
+  -- Substitute cubic_coeff = 0 ⇒ τ³•cubic_coeff•E_3 = 0.
+  have h_zero_term :
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B = 0 := by
+    have : suzuki5_bch_cubic_coeff 𝕂 p = 0 := hp_suzuki
+    rw [this, mul_zero, zero_smul]
+  -- Rewrite by removing the zero term.
+  have h_rearrange :
+      (4 : 𝕂) • strangBlock_log 𝕂 A B p τ + strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+        τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B =
+      (4 : 𝕂) • strangBlock_log 𝕂 A B p τ + strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+        τ • (A + B) -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B := by
+    rw [h_zero_term]; abel
+  rw [h_rearrange] at h_main
+  exact h_main
+
 /-! ### M4a main theorem (symmetric-BCH assembly)
 
 Using the symmetric-BCH decomposition from slice 6,
