@@ -1924,6 +1924,61 @@ theorem comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis (A B : 𝔸) :
   -- Apply Step 1 and Step 2.
   rw [comm_AB_AB_ABA_eq_childs_basis_odd, comm_AB_AB_BBA_eq_childs_basis_even]
 
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e substitution lemma**: when `δa = γ • E_3` and `δb = δ • E_3` for
+some shared `E_3 = symmetric_bch_cubic_poly A B`, the linear-in-residual part
+of `sym_cubic_poly(α•V + δa, β•V + δb)` simplifies to a scalar multiple of
+`[V, [V, E_3]]`:
+
+  `sym_cubic_poly_linear_part_smul_V V α β (γ•E_3) (δ•E_3) =
+     ((24)⁻¹ * (α + 2β) * (β·γ - α·δ)) • [V, [V, E_3]]`.
+
+This isolates the "shape coefficient" `(α + 2β)·(β·γ - α·δ)/24` from the
+underlying Lie polynomial `[V, [V, E_3]]`, ready for the Childs-basis
+projection theorem. -/
+theorem sym_cubic_poly_linear_part_at_smul_E3 (A B V : 𝔸) (α β γ δ : 𝕂) :
+    sym_cubic_poly_linear_part_smul_V V α β
+        (γ • symmetric_bch_cubic_poly 𝕂 A B)
+        (δ • symmetric_bch_cubic_poly 𝕂 A B) =
+      ((24 : 𝕂)⁻¹ * (α + 2 * β) * (β * γ - α * δ)) •
+        commBr V (commBr V (symmetric_bch_cubic_poly 𝕂 A B)) := by
+  unfold sym_cubic_poly_linear_part_smul_V
+  -- δa = γ • E_3, δb = δ • E_3. Push γ, δ out, combine scalars.
+  rw [show (β • commBr V (commBr V (γ • symmetric_bch_cubic_poly 𝕂 A B)) -
+            α • commBr V (commBr V (δ • symmetric_bch_cubic_poly 𝕂 A B))) =
+        (β * γ - α * δ) • commBr V (commBr V (symmetric_bch_cubic_poly 𝕂 A B)) from by
+    simp only [commBr_smul_right_eq (𝕂 := 𝕂), smul_smul, ← sub_smul]]
+  rw [smul_smul]
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e linear-part-on-Childs-basis theorem**: combining the substitution
+lemma with the Childs-basis projection identity, when `δa = γ • E_3` and
+`δb = δ • E_3` (with `V = A + B`), the linear part `L` is a specific
+combination of the 8 Childs commutators:
+
+  `24 • sym_cubic_poly_linear_part_smul_V (A+B) α β (γ•E_3) (δ•E_3) =
+     ((24)⁻¹ * (α + 2β) * (β·γ - α·δ)) •
+       [(C₁ + C₃ + C₅ + C₇) + 2 • (C₂ + C₄ + C₆ + C₈)]`
+
+(Multiplying both sides by 24 clears the inverse scalar in the projection
+identity.) This is the key τ⁵ Childs-basis content of `sym_cubic_poly(4X, Y)`
+when `δa, δb` come from the cubic part of the per-block residual. -/
+theorem smul_24_sym_cubic_poly_linear_part_at_smul_E3_eq_childs_basis
+    (A B : 𝔸) (α β γ δ : 𝕂) :
+    (24 : 𝕂) • sym_cubic_poly_linear_part_smul_V (A + B) α β
+        (γ • symmetric_bch_cubic_poly 𝕂 A B)
+        (δ • symmetric_bch_cubic_poly 𝕂 A B) =
+      ((24 : 𝕂)⁻¹ * (α + 2 * β) * (β * γ - α * δ)) •
+        ((childsComm₁ A B + childsComm₃ A B + childsComm₅ A B + childsComm₇ A B) +
+         (2 : 𝕂) • (childsComm₂ A B + childsComm₄ A B + childsComm₆ A B + childsComm₈ A B)) := by
+  rw [sym_cubic_poly_linear_part_at_smul_E3 (𝕂 := 𝕂) A B (A + B) α β γ δ]
+  -- Now: 24 • (s • [V,[V,E₃]]) = s • (24 • [V,[V,E₃]]) via smul_comm.
+  rw [smul_comm (24 : 𝕂) ((24 : 𝕂)⁻¹ * (α + 2 * β) * (β * γ - α * δ)) _]
+  -- Apply the projection identity.
+  rw [comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis (𝕂 := 𝕂) A B]
+
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **B2.2.e residual bound**: combining the algebraic decomposition with the
 quadratic and cubic norm bounds, the residual `sym_cubic_poly(α•V+δa, β•V+δb)
