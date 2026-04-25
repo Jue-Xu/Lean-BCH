@@ -578,19 +578,36 @@ BCH.L_leading_plus_E5_eq_R5 : ∀ (A B : 𝔸) (p : ℝ), IsSuzukiCubic p →
 5. Substitute `βᵢ(p) → L_poly` form (`rw [eq1, ..., eq8]`).
 6. Close via `module` (pure ring identity in p, no hcubic dependence).
 
-**Remaining for P1 closure**: **Triangle-inequality assembly**. With the
-matching identity proven, P1 (`suzuki5_R5_identification_axiom`)
-discharges via:
+**B2.2.e τ⁵-scaled matching (session 10, NEW)**:
+`sym_cubic_linear_part_τ5_plus_E5_τ5_eq_R5_τ5` — the τ⁵-scaled form
+suitable for direct substitution into the `suzuki5_bch` triangle inequality:
+
+```
+sym_cubic_poly_linear_part_smul_V (A+B) (4pτ) ((1-4p)τ)
+    (4(pτ)³ • E_3) (((1-4p)τ)³ • E_3) +
+  (τ⁵ * (4p⁵+(1-4p)⁵)) • E_5 = τ⁵ • R₅(A,B,p)
+```
+
+**Remaining for P1 closure**: **Triangle-inequality assembly only**. With
+the matching identity (and τ⁵-scaled corollary) proven, P1
+(`suzuki5_R5_identification_axiom`) discharges via:
 
 1. M4a: `suzuki5_bch = sym_bch(4X, Y)` (DONE).
 2. B1.c: `‖sym_bch(a,b) - cubic_poly(a,b) - quintic_poly(a,b)‖ = O(σ⁷)` (DONE via P3).
 3. B2.2.e decomposition: `sym_cubic_poly(α•V+δa, β•V+δb) = L + Q + C` (DONE).
 4. B2.2.c bound: `‖sym_quintic_poly(4X, Y)‖ = O(τ⁷)` (DONE).
-5. norm_4X_plus_Y_sub_quintic_target_of_IsSuzukiCubic_le: identifies
+5. `norm_4X_plus_Y_sub_quintic_target_of_IsSuzukiCubic_le`: identifies
    `(4p⁵+(1-4p)⁵)·τ⁵•E_5` as the second τ⁵ contributor (DONE).
 6. Matching identity (DONE this session).
-7. **Triangle inequality combining all of the above**: this is the final
-   assembly step, ~100 lines of `norm_add_le` + bound chains.
+7. τ⁵-scaled matching corollary (DONE this session).
+8. **Triangle inequality assembly**: combine all the above. The algebraic
+   structure is:
+   ```
+   suzuki5_bch - τ•V - τ⁵•R₅ =
+     (sym_cubic_poly(4X,Y) - L_leading_τ⁵) + sym_quintic_poly(4X,Y) + R_b1c
+   ```
+   where each summand is O(τ⁷) bounded. Final step: ~100 lines of
+   `norm_add_le` chains using the proven decomposition + matching.
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 
