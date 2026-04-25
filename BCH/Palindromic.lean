@@ -1797,6 +1797,38 @@ theorem norm_sym_cubic_poly_quadratic_part_smul_V_le
         (1/12 : ℝ) * (4 * N * D ^ 2 + 4 * N * D ^ 2 + 4 * N * D ^ 2) := by linarith
     _ = (3 / 2 : ℝ) * (N * D ^ 2) := by ring
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e residual bound**: combining the algebraic decomposition with the
+quadratic and cubic norm bounds, the residual `sym_cubic_poly(α•V+δa, β•V+δb)
+− linear_part(V, α, β, δa, δb)` is bounded by `(3/2)·N·D² + (1/2)·D³`.
+
+This identifies the linear-in-residual part as the "leading O(τ⁵) content" in
+the Suzuki τ⁵ identification, with everything else being O(τ⁶) or smaller.
+With N = O(τ), D = O(τ³), the residual bound gives O(τ⁷). -/
+theorem norm_sym_cubic_poly_sub_linear_part_le
+    (V : 𝔸) (α β : 𝕂) (δa δb : 𝔸) (N : ℝ)
+    (hα_le : ‖α • V‖ ≤ N) (hβ_le : ‖β • V‖ ≤ N) (hN_nn : 0 ≤ N) :
+    ‖symmetric_bch_cubic_poly 𝕂 (α • V + δa) (β • V + δb) -
+        sym_cubic_poly_linear_part_smul_V V α β δa δb‖ ≤
+      (3 / 2 : ℝ) * (N * (‖δa‖ + ‖δb‖) ^ 2) + (1 / 2 : ℝ) * (‖δa‖ + ‖δb‖) ^ 3 := by
+  -- Use the decomposition: sym_cubic_poly = linear + quad + cubic.
+  -- Then sym_cubic_poly - linear = quad + cubic, bounded by triangle inequality.
+  rw [symmetric_bch_cubic_poly_smul_V_decomp V α β δa δb]
+  rw [show (sym_cubic_poly_linear_part_smul_V V α β δa δb +
+            sym_cubic_poly_quadratic_part_smul_V V α β δa δb +
+            sym_cubic_poly_cubic_part_smul_V (𝕂 := 𝕂) δa δb) -
+            sym_cubic_poly_linear_part_smul_V V α β δa δb =
+        sym_cubic_poly_quadratic_part_smul_V V α β δa δb +
+        sym_cubic_poly_cubic_part_smul_V (𝕂 := 𝕂) δa δb from by abel]
+  calc _ ≤ ‖sym_cubic_poly_quadratic_part_smul_V V α β δa δb‖ +
+          ‖sym_cubic_poly_cubic_part_smul_V (𝕂 := 𝕂) δa δb‖ := norm_add_le _ _
+    _ ≤ (3/2 : ℝ) * (N * (‖δa‖ + ‖δb‖) ^ 2) +
+        (1/2 : ℝ) * (‖δa‖ + ‖δb‖) ^ 3 := by
+        have h1 := norm_sym_cubic_poly_quadratic_part_smul_V_le
+                    (𝕂 := 𝕂) V α β δa δb N hα_le hβ_le hN_nn
+        have h2 := norm_sym_cubic_poly_cubic_part_smul_V_le (𝕂 := 𝕂) δa δb
+        linarith
+
 /-! ### Specialization: commutator bound for `[4·X, Y]` in the Suzuki setting
 
 Combining `norm_commutator_near_V_le` (slice 8) and
