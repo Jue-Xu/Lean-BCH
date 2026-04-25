@@ -1375,6 +1375,72 @@ theorem norm_commutator_near_V_le (V a b : 𝔸) (α β : 𝕂) :
             _ ≤ ‖δa‖ * ‖δb‖ + ‖δb‖ * ‖δa‖ := by gcongr <;> exact norm_mul_le _ _
             _ = 2 * ‖δa‖ * ‖δb‖ := by ring
 
+/-! ### B2.2.d — Lipschitz bound for `symmetric_bch_cubic_poly` on (α•V + δa, β•V + δb)
+
+Analog of `norm_symmetric_bch_quintic_poly_apply_smul_add_smul_add_le` (B2.2.c)
+for the cubic polynomial. The bound is `O(N²·(‖δa‖+‖δb‖) + N·(‖δa‖+‖δb‖)²)` rather
+than the trivial `(‖α•V+δa‖+‖β•V+δb‖)³ = O(N³)`.
+
+Proof: combine `norm_commutator_near_V_le` (slice 8) — which gives
+`‖[fA, fB]‖ ≤ 2·N·D + 2·D²` from the structural cancellation `[α•V, β•V] = 0` —
+with `norm_symmetric_bch_cubic_poly_le_commutator` —
+`‖sym_cubic_poly(a, b)‖ ≤ (1/6)·(‖a‖+‖b‖)·‖a*b - b*a‖`. The product gives:
+
+  `‖sym_cubic_poly(fA, fB)‖ ≤ (1/6)·2N·(2N·D + 2·D²) = (2/3)·(N²·D + N·D²)`.
+
+For Suzuki τ⁵ identification: `N = O(τ)`, `D = O(τ³)`, so the bound is
+`O(τ²·τ³ + τ·τ⁶) = O(τ⁵)` — matching the τ⁵ leading order. -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+theorem norm_symmetric_bch_cubic_poly_apply_smul_add_smul_add_le
+    (V : 𝔸) (α β : 𝕂) (δa δb : 𝔸) (N : ℝ)
+    (hα_le : ‖α • V‖ ≤ N) (hβ_le : ‖β • V‖ ≤ N)
+    (hα_δa_le : ‖α • V + δa‖ ≤ N) (hβ_δb_le : ‖β • V + δb‖ ≤ N)
+    (hN_nn : 0 ≤ N) :
+    ‖symmetric_bch_cubic_poly 𝕂 (α • V + δa) (β • V + δb)‖ ≤
+      (2 / 3) * (N ^ 2 * (‖δa‖ + ‖δb‖) + N * (‖δa‖ + ‖δb‖) ^ 2) := by
+  set fA := α • V + δa with hfA_def
+  set fB := β • V + δb with hfB_def
+  set D := ‖δa‖ + ‖δb‖ with hD_def
+  have hD_nn : 0 ≤ D := by rw [hD_def]; positivity
+  have hda_nn : 0 ≤ ‖δa‖ := norm_nonneg _
+  have hdb_nn : 0 ≤ ‖δb‖ := norm_nonneg _
+  have hda_eq : ‖fA - α • V‖ = ‖δa‖ := by rw [hfA_def]; congr 1; abel
+  have hdb_eq : ‖fB - β • V‖ = ‖δb‖ := by rw [hfB_def]; congr 1; abel
+  have hda_le_D : ‖δa‖ ≤ D := by rw [hD_def]; linarith
+  have hdb_le_D : ‖δb‖ ≤ D := by rw [hD_def]; linarith
+  -- ‖[fA, fB]‖ ≤ 2·N·D + 2·D² via norm_commutator_near_V_le.
+  have hcomm_bnd := norm_commutator_near_V_le (𝕂 := 𝕂) V fA fB α β
+  rw [hda_eq, hdb_eq] at hcomm_bnd
+  have hbracket : ‖fA * fB - fB * fA‖ ≤ 2 * N * D + 2 * D ^ 2 := by
+    have h1 : 2 * ‖α • V‖ * ‖δb‖ ≤ 2 * N * ‖δb‖ := by gcongr
+    have h2 : 2 * ‖β • V‖ * ‖δa‖ ≤ 2 * N * ‖δa‖ := by gcongr
+    have h3 : 2 * ‖δa‖ * ‖δb‖ ≤ 2 * D * D := by
+      have := mul_le_mul hda_le_D hdb_le_D hdb_nn hD_nn
+      linarith
+    calc ‖fA * fB - fB * fA‖
+        ≤ 2 * ‖α • V‖ * ‖δb‖ + 2 * ‖β • V‖ * ‖δa‖ + 2 * ‖δa‖ * ‖δb‖ := hcomm_bnd
+      _ ≤ 2 * N * ‖δb‖ + 2 * N * ‖δa‖ + 2 * D * D := by linarith
+      _ = 2 * N * (‖δa‖ + ‖δb‖) + 2 * D ^ 2 := by ring
+      _ = 2 * N * D + 2 * D ^ 2 := by rw [hD_def]
+  -- Apply norm_symmetric_bch_cubic_poly_le_commutator: ‖sym_cubic_poly(fA, fB)‖
+  --   ≤ (1/6) · (‖fA‖ + ‖fB‖) · ‖fA*fB - fB*fA‖.
+  have hcubic := norm_symmetric_bch_cubic_poly_le_commutator (𝕂 := 𝕂) fA fB
+  have hsum : ‖fA‖ + ‖fB‖ ≤ 2 * N := by linarith
+  have hsum_nn : 0 ≤ ‖fA‖ + ‖fB‖ := by positivity
+  have hbracket_nn : 0 ≤ ‖fA * fB - fB * fA‖ := norm_nonneg _
+  have h6inv_nn : (0 : ℝ) ≤ (6 : ℝ)⁻¹ := by norm_num
+  have hRHS_nn : 0 ≤ 2 * N * D + 2 * D ^ 2 := by positivity
+  calc ‖symmetric_bch_cubic_poly 𝕂 fA fB‖
+      ≤ (6 : ℝ)⁻¹ * (‖fA‖ + ‖fB‖) * ‖fA * fB - fB * fA‖ := hcubic
+    _ ≤ (6 : ℝ)⁻¹ * (2 * N) * (2 * N * D + 2 * D ^ 2) := by
+        have hcoef_nn : 0 ≤ (6 : ℝ)⁻¹ * (‖fA‖ + ‖fB‖) := mul_nonneg h6inv_nn hsum_nn
+        have hcoef_le : (6 : ℝ)⁻¹ * (‖fA‖ + ‖fB‖) ≤ (6 : ℝ)⁻¹ * (2 * N) :=
+          mul_le_mul_of_nonneg_left hsum h6inv_nn
+        exact mul_le_mul hcoef_le hbracket hbracket_nn
+                (mul_nonneg h6inv_nn (by linarith))
+    _ = (2 / 3) * (N ^ 2 * D + N * D ^ 2) := by ring
+
 /-! ### Specialization: commutator bound for `[4·X, Y]` in the Suzuki setting
 
 Combining `norm_commutator_near_V_le` (slice 8) and
