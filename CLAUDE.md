@@ -344,11 +344,37 @@ Directly analogous to the existing cubic wrapper
 Both B1.c and B1.d depend only on the new Tier-2 axiom plus Lean's 3
 standard (verified via `#print axioms`).
 
-**Not yet done**: **B2** (symbolic 5-factor BCH composition onto the Childs
-4-fold commutator basis — substitute B1.d into `suzuki5_bch = bch(bch(2X, Y), 2X)`,
-expand via H1, project onto the Childs basis). B2 is the primary remaining
-symbolic bottleneck for discharging the P1 axiom; expected ~1 week of
-focused work.
+**B2.1 done (session 9)**: per-block quintic decomposition closed in
+`BCH/Palindromic.lean`:
+
+- `BCH.suzuki5_bch_quintic_coeff p := 4*p^5 + (1-4p)^5` — τ⁵ scalar
+  coefficient (analog of the existing `suzuki5_bch_cubic_coeff`).
+- `BCH.strangBlock_log_target_quintic` — per-block linear+cubic+quintic
+  polynomial target (analog of `strangBlock_log_target` extended one
+  degree).
+- `BCH.suzuki5_targets_sum_quintic` and `BCH.target_quintic_sum_4_form`
+  — pure algebraic identities (zero axioms, only standard).
+- `BCH.norm_4X_plus_Y_sub_quintic_target_le` — bound on
+  `‖4X+Y − τ•V − τ³·C₃·E_sym − τ⁵·C₅·E_quintic‖ ≤ K·τ⁷` (depends only
+  on B1.c P3 axiom via B1.d, NOT on P1).
+- `BCH.norm_suzuki5_bch_sub_smul_sub_quintic_le` — **B2 stepping stone**:
+  combines `suzuki5_bch_eq_symmetric_bch` (M4a key step) with B1.c and
+  B2.1 to give
+  ```
+  ‖suzuki5_bch − τ•V − C₃·τ³•E_sym − C₅·τ⁵•E_quintic
+       − sym_cubic_poly(4X, Y) − sym_quintic_poly(4X, Y)‖ ≤ K·τ⁷
+  ```
+  Depends on P3 only (via B1.c). The remaining symbolic work for P1
+  closure is to identify `sym_cubic_poly(4X, Y) + sym_quintic_poly(4X, Y)`
+  (under `IsSuzukiCubic p`) with `τ⁵·suzuki5_R5 A B p`.
+
+**Open**: **B2.2/B2.3/B2.4** — symbolic τ⁵ identification (~3-4 weeks of
+focused work per session prompt at `claude/lean-bch-B2-session-prompt.md`).
+Project the polynomials `sym_cubic_poly(4X, Y) + sym_quintic_poly(4X, Y)`
+onto the Childs 4-fold commutator basis, matching the βᵢ(p) prefactors
+already encoded in `BCH.suzuki5_R5`. The CAS pipeline at
+`Lean-Trotter/scripts/compute_bch_prefactors.py` already computes this
+projection at the symbolic level.
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 

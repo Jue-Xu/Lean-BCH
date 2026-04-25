@@ -1491,6 +1491,220 @@ theorem target_sum_4_form (A B : 𝔸) (p τ : 𝕂) :
     congr 1
     ring
 
+/-! ### Quintic-order target infrastructure (B2.1)
+
+Extends the cubic target machinery to track the τ⁵ contribution. The
+algebraic structure mirrors the cubic case:
+
+* `suzuki5_bch_quintic_coeff p := 4·p⁵ + (1-4p)⁵` — the τ⁵ scalar coefficient
+  (sum of fifth powers of the 5 Strang block coefficients).
+* `strangBlock_log_target_quintic` — per-block linear + cubic + quintic
+  polynomial: `(cτ)•V + (cτ)³•E_sym + (cτ)⁵•E_quintic_sym`.
+* `suzuki5_targets_sum_quintic` — algebraic identity: sum of 5 per-block
+  quintic targets = `τ•V + C₃·τ³•E_sym + C₅·τ⁵•E_quintic_sym`.
+* `target_quintic_sum_4_form` — convenient `4•T_p + T_{1-4p}` restatement.
+
+These pieces together with B1.d (`norm_strangBlock_log_sub_quintic_target_le`)
+unblock the per-block decomposition of `4X+Y` at τ⁵ precision.
+-/
+
+/-- The τ⁵ scalar coefficient of `suzuki5_bch`: `C₅(p) := 4p⁵ + (1-4p)⁵`.
+This is the sum of fifth powers of the 5 Strang coefficients
+`(p, p, 1-4p, p, p)`. Unlike `suzuki5_bch_cubic_coeff`, this does NOT vanish
+under the Suzuki cubic-cancellation condition — its non-vanishing is what
+makes the τ⁵ residual non-trivial. -/
+def suzuki5_bch_quintic_coeff (𝕂 : Type*) [Field 𝕂] (p : 𝕂) : 𝕂 :=
+  4 * p ^ 5 + (1 - 4 * p) ^ 5
+
+/-- The "ideal" τ⁵-precision log of a Strang block: the polynomial
+`cτ•(A+B) + (cτ)³•E_sym(A,B) + (cτ)⁵•E_quintic_sym(A,B)` that approximates
+the actual log up to O(s⁷). Extends `strangBlock_log_target` by one degree. -/
+noncomputable def strangBlock_log_target_quintic (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (A B : 𝔸) (c τ : 𝕂) : 𝔸 :=
+  (c * τ) • (A + B) + (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B
+    + (c * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B
+
+include 𝕂 in
+/-- The sum of per-block quintic targets equals the τ⁵-precision target.
+
+Linear sum: `Σc_i = 1`, giving `τ•V`.
+Cubic sum: `Σc_i³ = 4p³+(1-4p)³ = C₃(p)`, giving `τ³·C₃·E_sym`.
+Quintic sum: `Σc_i⁵ = 4p⁵+(1-4p)⁵ = C₅(p)`, giving `τ⁵·C₅·E_quintic`. -/
+theorem suzuki5_targets_sum_quintic (A B : 𝔸) (p τ : 𝕂) :
+    strangBlock_log_target_quintic 𝕂 A B p τ +
+    strangBlock_log_target_quintic 𝕂 A B p τ +
+    strangBlock_log_target_quintic 𝕂 A B (1 - 4 * p) τ +
+    strangBlock_log_target_quintic 𝕂 A B p τ +
+    strangBlock_log_target_quintic 𝕂 A B p τ =
+    τ • (A + B) +
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B +
+      (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B := by
+  unfold strangBlock_log_target_quintic suzuki5_bch_cubic_coeff suzuki5_bch_quintic_coeff
+  set V := A + B with hV_def
+  set E := symmetric_bch_cubic_poly 𝕂 A B with hE_def
+  set E5 := symmetric_bch_quintic_poly 𝕂 A B with hE5_def
+  -- Linear/cubic/quintic coefficient sums.
+  have h_lin_sum : (p * τ) + (p * τ) + ((1 - 4 * p) * τ) + (p * τ) + (p * τ) = τ := by ring
+  have h_cub_sum : (p * τ) ^ 3 + (p * τ) ^ 3 + ((1 - 4 * p) * τ) ^ 3 + (p * τ) ^ 3 +
+      (p * τ) ^ 3 = τ ^ 3 * (4 * p ^ 3 + (1 - 4 * p) ^ 3) := by ring
+  have h_quint_sum : (p * τ) ^ 5 + (p * τ) ^ 5 + ((1 - 4 * p) * τ) ^ 5 + (p * τ) ^ 5 +
+      (p * τ) ^ 5 = τ ^ 5 * (4 * p ^ 5 + (1 - 4 * p) ^ 5) := by ring
+  -- Group LHS into linear + cubic + quintic.
+  have hsplit :
+      ((p * τ) • V + (p * τ) ^ 3 • E + (p * τ) ^ 5 • E5) +
+      ((p * τ) • V + (p * τ) ^ 3 • E + (p * τ) ^ 5 • E5) +
+      (((1 - 4 * p) * τ) • V + ((1 - 4 * p) * τ) ^ 3 • E +
+         ((1 - 4 * p) * τ) ^ 5 • E5) +
+      ((p * τ) • V + (p * τ) ^ 3 • E + (p * τ) ^ 5 • E5) +
+      ((p * τ) • V + (p * τ) ^ 3 • E + (p * τ) ^ 5 • E5) =
+      ((p * τ) • V + (p * τ) • V + ((1 - 4 * p) * τ) • V + (p * τ) • V + (p * τ) • V) +
+      ((p * τ) ^ 3 • E + (p * τ) ^ 3 • E + ((1 - 4 * p) * τ) ^ 3 • E + (p * τ) ^ 3 • E +
+        (p * τ) ^ 3 • E) +
+      ((p * τ) ^ 5 • E5 + (p * τ) ^ 5 • E5 + ((1 - 4 * p) * τ) ^ 5 • E5 +
+        (p * τ) ^ 5 • E5 + (p * τ) ^ 5 • E5) := by abel
+  rw [hsplit]
+  rw [show (p * τ) • V + (p * τ) • V + ((1 - 4 * p) * τ) • V + (p * τ) • V +
+          (p * τ) • V =
+          ((p * τ) + (p * τ) + ((1 - 4 * p) * τ) + (p * τ) + (p * τ)) • V from by
+        simp only [add_smul],
+      h_lin_sum]
+  rw [show (p * τ) ^ 3 • E + (p * τ) ^ 3 • E + ((1 - 4 * p) * τ) ^ 3 • E + (p * τ) ^ 3 • E +
+          (p * τ) ^ 3 • E =
+          ((p * τ) ^ 3 + (p * τ) ^ 3 + ((1 - 4 * p) * τ) ^ 3 + (p * τ) ^ 3 +
+            (p * τ) ^ 3) • E from by simp only [add_smul],
+      h_cub_sum]
+  rw [show (p * τ) ^ 5 • E5 + (p * τ) ^ 5 • E5 + ((1 - 4 * p) * τ) ^ 5 • E5 +
+          (p * τ) ^ 5 • E5 + (p * τ) ^ 5 • E5 =
+          ((p * τ) ^ 5 + (p * τ) ^ 5 + ((1 - 4 * p) * τ) ^ 5 + (p * τ) ^ 5 +
+            (p * τ) ^ 5) • E5 from by simp only [add_smul],
+      h_quint_sum]
+
+include 𝕂 in
+/-- Quintic target decomposition: `4•T_p^q + T_{1-4p}^q = τ•V + C₃·τ³•E + C₅·τ⁵•E5`.
+Restatement of `suzuki5_targets_sum_quintic` using `(4:𝕂) • T_p` instead of
+the repeated-addition form. -/
+theorem target_quintic_sum_4_form (A B : 𝔸) (p τ : 𝕂) :
+    (4 : 𝕂) • strangBlock_log_target_quintic 𝕂 A B p τ +
+      strangBlock_log_target_quintic 𝕂 A B (1 - 4 * p) τ =
+    τ • (A + B) +
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B +
+      (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+        symmetric_bch_quintic_poly 𝕂 A B := by
+  unfold strangBlock_log_target_quintic suzuki5_bch_cubic_coeff suzuki5_bch_quintic_coeff
+  set V := A + B with hV_def
+  set E := symmetric_bch_cubic_poly 𝕂 A B with hE_def
+  set E5 := symmetric_bch_quintic_poly 𝕂 A B with hE5_def
+  -- 4•((p·τ)•V + (p·τ)³•E + (p·τ)⁵•E5) = (4·(p·τ))•V + (4·(p·τ)³)•E + (4·(p·τ)⁵)•E5
+  rw [smul_add, smul_add, smul_smul, smul_smul, smul_smul]
+  -- Goal: (4·(p·τ))•V + (4·(p·τ)³)•E + (4·(p·τ)⁵)•E5 +
+  --       (((1-4p)·τ)•V + ((1-4p)·τ)³•E + ((1-4p)·τ)⁵•E5) = ...
+  have h1 : ((4 : 𝕂) * (p * τ)) • V + ((4 : 𝕂) * (p * τ) ^ 3) • E +
+            ((4 : 𝕂) * (p * τ) ^ 5) • E5 +
+            (((1 - 4 * p) * τ) • V + ((1 - 4 * p) * τ) ^ 3 • E +
+             ((1 - 4 * p) * τ) ^ 5 • E5) =
+            (((4 : 𝕂) * (p * τ)) + ((1 - 4 * p) * τ)) • V +
+            (((4 : 𝕂) * (p * τ) ^ 3) + ((1 - 4 * p) * τ) ^ 3) • E +
+            (((4 : 𝕂) * (p * τ) ^ 5) + ((1 - 4 * p) * τ) ^ 5) • E5 := by
+    rw [add_smul, add_smul, add_smul]; abel
+  rw [h1]
+  -- Simplify scalar coefficients.
+  congr 1
+  · congr 1
+    · congr 1; ring   -- (4·(p·τ)) + ((1-4p)·τ) = τ
+    · congr 1; ring   -- (4·(p·τ)³) + ((1-4p)·τ)³ = τ³ · (4p³ + (1-4p)³)
+  · congr 1; ring     -- (4·(p·τ)⁵) + ((1-4p)·τ)⁵ = τ⁵ · (4p⁵ + (1-4p)⁵)
+
+include 𝕂 in
+/-- **Per-block decomposition at quintic precision (B2.1)**: bound on
+`‖4•X + Y − τ•V − C₃·τ³•E_sym − C₅·τ⁵•E_quintic_sym‖`.
+
+Combines the per-block quintic bound (B1.d, `norm_strangBlock_log_sub_quintic_target_le`)
+with the algebraic identity `target_quintic_sum_4_form` to give the
+"linear+cubic+quintic" precision approximation of the per-block sum
+`4X+Y` (where X, Y are the two distinct strangBlock_log instances). -/
+theorem norm_4X_plus_Y_sub_quintic_target_le (A B : 𝔸) (p τ : 𝕂)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4) :
+    ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ +
+        strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+        τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B‖ ≤
+      4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+      1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
+  set X := strangBlock_log 𝕂 A B p τ with hX_def
+  set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
+  set T_p := strangBlock_log_target_quintic 𝕂 A B p τ with hTp_def
+  set T_q := strangBlock_log_target_quintic 𝕂 A B (1 - 4 * p) τ with hTq_def
+  -- B1.d per-block bounds.
+  have hX_le : ‖X - T_p‖ ≤ 1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7 := by
+    have := norm_strangBlock_log_sub_quintic_target_le (𝕂 := 𝕂) A B p τ hp
+    -- The target unfolds as `T_p = (cτ)•V + (cτ)³•E + (cτ)⁵•E5`; B1.d's signature
+    -- has the three subtracted parts written separately; collapse into T_p.
+    have hT_eq : T_p =
+        (p * τ) • (A + B) + (p * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B +
+        (p * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B := by
+      rw [hTp_def]; rfl
+    have h_sub_eq :
+        X - T_p =
+        X - (p * τ) • (A + B) - (p * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B
+          - (p * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B := by
+      rw [hT_eq]; abel
+    rw [h_sub_eq]; exact this
+  have hY_le : ‖Y - T_q‖ ≤
+      1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
+    have := norm_strangBlock_log_sub_quintic_target_le (𝕂 := 𝕂) A B (1 - 4 * p) τ h1m4p
+    have hT_eq : T_q =
+        ((1 - 4 * p) * τ) • (A + B) +
+          ((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B +
+          ((1 - 4 * p) * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B := by
+      rw [hTq_def]; rfl
+    have h_sub_eq :
+        Y - T_q =
+        Y - ((1 - 4 * p) * τ) • (A + B) -
+          ((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B -
+          ((1 - 4 * p) * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B := by
+      rw [hT_eq]; abel
+    rw [h_sub_eq]; exact this
+  -- Bound for 4•(X - T_p)
+  have h4_norm_eq : ‖(4 : 𝕂)‖ = 4 := by rw [RCLike.norm_ofNat]
+  have h4X_le : ‖(4 : 𝕂) • (X - T_p)‖ ≤
+      4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) := by
+    calc ‖(4 : 𝕂) • (X - T_p)‖ ≤ ‖(4 : 𝕂)‖ * ‖X - T_p‖ := norm_smul_le _ _
+      _ = 4 * ‖X - T_p‖ := by rw [h4_norm_eq]
+      _ ≤ 4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) := by gcongr
+  -- Algebraic decomposition: rewrite (4•X + Y - target) = 4•(X - T_p) + (Y - T_q).
+  have h_target_eq :
+      τ • (A + B) +
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B +
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+          symmetric_bch_quintic_poly 𝕂 A B =
+      (4 : 𝕂) • T_p + T_q := by
+    rw [hTp_def, hTq_def]
+    exact (target_quintic_sum_4_form (𝕂 := 𝕂) A B p τ).symm
+  have h_rearrange :
+      (4 : 𝕂) • X + Y - τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+          symmetric_bch_quintic_poly 𝕂 A B =
+      (4 : 𝕂) • (X - T_p) + (Y - T_q) := by
+    have h_to_sum : (4 : 𝕂) • X + Y - τ • (A + B) -
+          (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+          (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+            symmetric_bch_quintic_poly 𝕂 A B =
+        (4 : 𝕂) • X + Y - (τ • (A + B) +
+          (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B +
+          (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+            symmetric_bch_quintic_poly 𝕂 A B) := by abel
+    rw [h_to_sum, h_target_eq, smul_sub]; abel
+  rw [h_rearrange]
+  -- Triangle inequality.
+  calc ‖(4 : 𝕂) • (X - T_p) + (Y - T_q)‖
+      ≤ ‖(4 : 𝕂) • (X - T_p)‖ + ‖Y - T_q‖ := norm_add_le _ _
+    _ ≤ 4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+        1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
+        linarith
+
 /-! ### M4a main theorem (symmetric-BCH assembly)
 
 Using the symmetric-BCH decomposition from slice 6,
@@ -1659,6 +1873,113 @@ theorem norm_suzuki5_bch_sub_smul_sub_cubic_le (A B : 𝔸) (p τ : 𝕂)
         have hpos : 0 ≤ (6 : ℝ)⁻¹ * (‖(4 : 𝕂) • X‖ + ‖Y‖) := by positivity
         nlinarith [h_comm_bound, norm_nonneg (((4 : 𝕂) • X) * Y - Y * ((4 : 𝕂) • X)),
                    norm_nonneg ((4 : 𝕂) • X), norm_nonneg Y]
+
+include 𝕂 in
+/-- **Suzuki-5 BCH at quintic precision (B2 stepping stone)**: combines the
+symmetric-BCH decomposition `suzuki5_bch = (4•X + Y) + symmetric_bch_cubic(4•X, Y)`
+with B1.c (`norm_symmetric_bch_quintic_sub_poly_le`) and B2.1
+(`norm_4X_plus_Y_sub_quintic_target_le`) to bound
+
+```
+‖suzuki5_bch − τ•V − C₃(p)·τ³•E_sym − C₅(p)·τ⁵•E5_sym
+   − symmetric_bch_cubic_poly(4•X, Y) − symmetric_bch_quintic_poly(4•X, Y)‖
+  ≤ explicit_τ⁷_bound
+```
+
+The remaining symbolic work for B2 (closing the P1 axiom) is to identify the
+two unsubtracted polynomial-in-(4X, Y) terms with `τ⁵·suzuki5_R5 A B p`,
+which requires expanding each of `4X` and `Y` to linear precision and
+projecting the result onto the Childs 4-fold commutator basis (B2.2-B2.4
+of the session prompt).
+
+Hypotheses are inherited from `norm_suzuki5_bch_sub_smul_sub_cubic_le` plus
+the quintic-precision B1.c regimes. -/
+theorem norm_suzuki5_bch_sub_smul_sub_quintic_le (A B : 𝔸) (p τ : 𝕂)
+    (hR : suzuki5ArgNormBound A B p τ < Real.log 2)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (hreg : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+            ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ < 1 / 4)
+    (hZ1 : ‖suzuki5_bch 𝕂 A B p τ‖ < Real.log 2)
+    (hZ2 : ‖bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))‖ < Real.log 2) :
+    ‖suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+          symmetric_bch_quintic_poly 𝕂 A B -
+        symmetric_bch_cubic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+        symmetric_bch_quintic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ)‖ ≤
+      4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+      1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
+      1000000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                    ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 7 := by
+  set X := strangBlock_log 𝕂 A B p τ with hX_def
+  set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
+  -- Step 1: suzuki5_bch = bch(bch(2•X, Y), 2•X) (M4a key step).
+  have h_sym_bch :=
+    suzuki5_bch_eq_symmetric_bch (𝕂 := 𝕂) A B p τ hR hp h1m4p hreg hZ1 hZ2
+  -- Step 2: bch(bch(2•X, Y), 2•X) = (4•X + Y) + symmetric_bch_cubic(4•X, Y).
+  have h_sbc_def : bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂)
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • X)) Y) ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • X)) =
+      ((4 : 𝕂) • X + Y) + symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y := by
+    unfold symmetric_bch_cubic
+    abel
+  have h_decomp : suzuki5_bch 𝕂 A B p τ =
+      ((4 : 𝕂) • X + Y) + symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y := by
+    rw [h_sym_bch]; exact h_sbc_def
+  -- Step 3: rearrange the LHS into per-block residual + sym_bch_cubic residual.
+  have h_diff_eq :
+      suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+          (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+          (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+            symmetric_bch_quintic_poly 𝕂 A B -
+          symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
+          symmetric_bch_quintic_poly 𝕂 ((4 : 𝕂) • X) Y =
+        ((4 : 𝕂) • X + Y - τ • (A + B) -
+          (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+          (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+            symmetric_bch_quintic_poly 𝕂 A B) +
+        (symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y -
+          symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
+          symmetric_bch_quintic_poly 𝕂 ((4 : 𝕂) • X) Y) := by
+    rw [h_decomp]; abel
+  rw [h_diff_eq]
+  -- B2.1: per-block residual bound.
+  have h_perblock := norm_4X_plus_Y_sub_quintic_target_le (𝕂 := 𝕂) A B p τ hp h1m4p
+  -- B1.c: symmetric_bch_cubic - poly residual bound.
+  have h_b1c := norm_symmetric_bch_quintic_sub_poly_le (𝕂 := 𝕂)
+    ((4 : 𝕂) • X) Y hreg
+  -- Triangle inequality.
+  calc ‖((4 : 𝕂) • X + Y - τ • (A + B) -
+            (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+            (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+              symmetric_bch_quintic_poly 𝕂 A B) +
+        (symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_quintic_poly 𝕂 ((4 : 𝕂) • X) Y)‖
+      ≤ ‖(4 : 𝕂) • X + Y - τ • (A + B) -
+            (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+            (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+              symmetric_bch_quintic_poly 𝕂 A B‖ +
+        ‖symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_quintic_poly 𝕂 ((4 : 𝕂) • X) Y‖ := norm_add_le _ _
+    _ ≤ (4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+         1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7) +
+        1000000000 * (‖(4 : 𝕂) • X‖ + ‖Y‖) ^ 7 := by
+        linarith
+    _ = 4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+        1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
+        1000000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                      ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 7 := by
+        rw [hX_def, hY_def]
 
 /-! ### M4b: cubic vanishing under IsSuzukiCubic
 
