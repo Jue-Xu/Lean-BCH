@@ -540,22 +540,42 @@ of the linear-in-residual part for the strangBlock-residue case
 
 1. **`L_leading`** (from sym_cubic_poly(4X, Y)): closed form
    `(1/3)·poly_p·τ⁵ • [V,[V,E_3]]`, projects to Childs basis via the
-   identity. Residual `O(τ⁷)` from B2.2.e quad+cubic + per-block B1.d
-   (linearity of [V,[V,δa]] in δa, where δa includes τ⁵ E_5 and τ⁷ tail).
+   `comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis` identity (DONE).
 2. **`(4p⁵+(1-4p)⁵)·τ⁵ • E_5`** (from `4X+Y - τ•V` under IsSuzukiCubic):
-   needs Childs-basis projection of `E_5 = symmetric_bch_quintic_poly A B`
-   (a 30-term polynomial). Likely a similar two-step `noncomm_ring`
-   decomposition: split E_5 by the symmetry classes, project each onto
-   the 8 Childs commutators.
+   E_5's Childs-basis decomposition is now PROVEN
+   (`smul_5760_symmetric_bch_quintic_poly_eq_childs_basis`):
+   ```
+   5760 • E_5 = -7·C₁ - 12·C₂ + 16·C₄ - 16·C₅ - 48·C₆ - 8·C₈
+   ```
+   Coefficients verified by Gauss-Jordan symbolic solving (with Jacobi
+   free parameters set to 0). Provable in Lean via `Algebra.smul_def +
+   map_intCast/map_ofNat + noncomm_ring` on ~126 monomials (~10s).
 3. **`sym_quintic_poly(4X, Y)`** (from sym_bch's degree-5 BCH part):
    B2.2.c bound shows this is `O(τ⁷)`, so contributes nothing at τ⁵.
 
-**Remaining symbolic work**: items 1+2 above. **Step 2 is the bottleneck**
-(E_5 → Childs projection). Once done, **Step 4: Triangle-inequality assembly**
-combines all τ⁵ contributors with the polynomial-in-p formula
-`L_leading + (4p⁵+(1-4p)⁵) • E_5_on_childs_basis = τ⁵ • R₅(A,B,p)` where
-R₅ is the explicit Childs-basis combination from `BCH.suzuki5_R5`
-(verified by CAS at `Lean-Trotter/scripts/compute_bch_prefactors.py`).
+**B2.2.e Jacobi relations (session 10, NEW)**: `childsComm₂_eq_childsComm₃`
+and `childsComm₆_eq_childsComm₇` — exact ring identities (not just
+modulo Jacobi in the abstract Lie algebra) verified by `noncomm_ring`.
+These reduce the over-completeness of the 8-Childs basis to dim-6
+weight-5 free Lie algebra, and bridge between the Lean-side and CAS-side
+choice of Jacobi free parameters.
+
+**Remaining for P1 closure**: **τ⁵ matching identity** —
+
+```
+(1/3)·poly_p·τ⁵ • [V,[V,E_3]] + (4p⁵+(1-4p)⁵)·τ⁵ • E_5 = τ⁵ • R₅(A,B,p)
+```
+
+(under `IsSuzukiCubic p`). With both Childs decompositions and the Jacobi
+relations C₂=C₃, C₆=C₇ in hand, this reduces to a polynomial-in-p identity
+matching coefficients of each Childs commutator. CAS verification:
+`/tmp/verify_R5_match.py` shows differences are exactly `f(p)·(C₂-C₃) +
+g(p)·(C₆-C₇) = 0` (under Jacobi). Implementation: rewrite both sides
+on Childs basis, apply Jacobi to equate C₃→C₂ and C₇→C₆, match
+βᵢ(p) coefficients via `ring` modulo `4p³+(1-4p)³ = 0`.
+
+After τ⁵ matching, **Step 4: Triangle-inequality assembly** combines all
+τ⁵ contributors with the τ⁷ residual bounds.
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 
