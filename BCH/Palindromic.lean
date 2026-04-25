@@ -1797,6 +1797,133 @@ theorem norm_sym_cubic_poly_quadratic_part_smul_V_le
         (1/12 : ℝ) * (4 * N * D ^ 2 + 4 * N * D ^ 2 + 4 * N * D ^ 2) := by linarith
     _ = (3 / 2 : ℝ) * (N * D ^ 2) := by ring
 
+/-! ### B2.2.e key identity: `[V, [V, sym_cubic_poly]]` projection on Childs basis
+
+This is the **central symbolic content of B2.2.e**: the 5-fold commutator
+`[A+B, [A+B, sym_cubic_poly(A, B)]]` decomposes onto the Childs 4-fold
+commutator basis as
+
+  `24 • [A+B, [A+B, sym_cubic_poly(A, B)]] =
+     (C₁ + C₃ + C₅ + C₇) + 2 • (C₂ + C₄ + C₆ + C₈)`
+
+where `Cᵢ = childsCommᵢ A B`. Equivalently (multiplying both sides by `1/24`),
+
+  `[A+B, [A+B, sym_cubic_poly(A, B)]] =
+     (1/24)·(C₁ + C₃ + C₅ + C₇) + (1/12)·(C₂ + C₄ + C₆ + C₈)`.
+
+**Strategy** (closed in session 9): The proof factors into three small
+ring-identity lemmas, each tractable by `noncomm_ring`:
+
+1. `comm_AB_AB_ABA`: `[A+B, [A+B, [A, [B, A]]]] = C₁ + C₃ + C₅ + C₇`
+   (direct expansion of both sides; ~64 monomials each).
+2. `comm_AB_AB_BBA`: `[A+B, [A+B, [B, [B, A]]]] = C₂ + C₄ + C₆ + C₈`
+   (similar).
+3. `smul_24_symmetric_bch_cubic_poly`:
+   `24 • sym_cubic_poly(A, B) = -[A,[A,B]] + 2 • [B,[B,A]]`
+   (clear inverse scalars 1/24, 1/12 in the def).
+
+Combined with bilinearity of `commBr` and `[A,[A,B]] = -[A,[B,A]]`. -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e step 1**: `[A+B, [A+B, [A, [B, A]]]] = C₁ + C₃ + C₅ + C₇`.
+
+By full ring expansion: both sides reduce to the same length-5 polynomial in
+`(A, B)` after expanding `commBr X Y = X*Y - Y*X`. -/
+private lemma comm_AB_AB_ABA_eq_childs_basis_odd (A B : 𝔸) :
+    commBr (A + B) (commBr (A + B) (commBr A (commBr B A))) =
+      childsComm₁ A B + childsComm₃ A B + childsComm₅ A B + childsComm₇ A B := by
+  unfold childsComm₁ childsComm₃ childsComm₅ childsComm₇ commBr
+  noncomm_ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e step 2**: `[A+B, [A+B, [B, [B, A]]]] = C₂ + C₄ + C₆ + C₈`. -/
+private lemma comm_AB_AB_BBA_eq_childs_basis_even (A B : 𝔸) :
+    commBr (A + B) (commBr (A + B) (commBr B (commBr B A))) =
+      childsComm₂ A B + childsComm₄ A B + childsComm₆ A B + childsComm₈ A B := by
+  unfold childsComm₂ childsComm₄ childsComm₆ childsComm₈ commBr
+  noncomm_ring
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e step 3**: `24 • sym_cubic_poly = -[A,[A,B]] + 2 • [B,[B,A]]`.
+
+Clears the inverse scalars `1/24` and `1/12` in `symmetric_bch_cubic_poly`. -/
+private lemma smul_24_symmetric_bch_cubic_poly (A B : 𝔸) :
+    (24 : 𝕂) • symmetric_bch_cubic_poly 𝕂 A B =
+      -commBr A (commBr A B) + (2 : 𝕂) • commBr B (commBr B A) := by
+  have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
+  have h12ne : (12 : 𝕂) ≠ 0 := by exact_mod_cast (show (12 : ℕ) ≠ 0 by norm_num)
+  unfold symmetric_bch_cubic_poly commBr
+  rw [smul_add, smul_neg, smul_smul, smul_smul, mul_inv_cancel₀ h24ne]
+  congr 1
+  · simp [smul_sub]
+  · have h24mul12inv : (24 : 𝕂) * (12 : 𝕂)⁻¹ = 2 := by
+      have h12_2 : (12 : 𝕂) * 2 = 24 := by norm_num
+      have : (24 : 𝕂) * (12 : 𝕂)⁻¹ = (12 * 2) * (12 : 𝕂)⁻¹ := by rw [h12_2]
+      rw [this, mul_comm (12 : 𝕂) 2, mul_assoc, mul_inv_cancel₀ h12ne, mul_one]
+    rw [h24mul12inv]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e step 4 (helper)**: `[A, [A, B]] = -[A, [B, A]]`. -/
+private lemma comm_A_A_B_eq_neg_comm_A_B_A (A B : 𝔸) :
+    commBr A (commBr A B) = -commBr A (commBr B A) := by
+  unfold commBr; noncomm_ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e step 5 (helper)**: `commBr X (Y₁ + Y₂) = commBr X Y₁ + commBr X Y₂`. -/
+private lemma commBr_add_right_eq (X Y₁ Y₂ : 𝔸) :
+    commBr X (Y₁ + Y₂) = commBr X Y₁ + commBr X Y₂ := by
+  unfold commBr; noncomm_ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e step 6 (helper)**: `commBr X (-Y) = -commBr X Y`. -/
+private lemma commBr_neg_right_eq (X Y : 𝔸) :
+    commBr X (-Y) = -commBr X Y := by
+  unfold commBr; noncomm_ring
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.2.e key identity**: `[V, [V, sym_cubic_poly]]` projection on Childs basis,
+with the inverse scalars cleared (multiplied by 24).
+
+  `24 • [A+B, [A+B, sym_cubic_poly(A, B)]] =
+     (C₁ + C₃ + C₅ + C₇) + 2 • (C₂ + C₄ + C₆ + C₈)`
+
+This is the projection identity that, after substituting `δa, δb` from B1.d
+into `sym_cubic_poly_linear_part_smul_V`, gives the τ⁵ leading content of
+the Suzuki-5 BCH formula on the Childs basis. The `βᵢ(p)` polynomial
+prefactors emerge from this substitution combined with the `α + 2β` factor
+in `sym_cubic_poly_linear_part_smul_V`. -/
+theorem comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis (A B : 𝔸) :
+    (24 : 𝕂) • commBr (A + B) (commBr (A + B) (symmetric_bch_cubic_poly 𝕂 A B)) =
+      (childsComm₁ A B + childsComm₃ A B + childsComm₅ A B + childsComm₇ A B) +
+      (2 : 𝕂) • (childsComm₂ A B + childsComm₄ A B + childsComm₆ A B + childsComm₈ A B) := by
+  -- Build chain of intermediate equalities.
+  have h1 : commBr (A + B) (commBr (A + B) ((24 : 𝕂) • symmetric_bch_cubic_poly 𝕂 A B)) =
+            commBr (A + B) (commBr (A + B)
+              (-commBr A (commBr A B) + (2 : 𝕂) • commBr B (commBr B A))) := by
+    rw [smul_24_symmetric_bch_cubic_poly (𝕂 := 𝕂)]
+  have h2 : commBr (A + B) (commBr (A + B)
+              (-commBr A (commBr A B) + (2 : 𝕂) • commBr B (commBr B A))) =
+            commBr (A + B) (commBr (A + B) (-commBr A (commBr A B))) +
+            commBr (A + B) (commBr (A + B) ((2 : 𝕂) • commBr B (commBr B A))) := by
+    rw [commBr_add_right_eq, commBr_add_right_eq]
+  have h3 : commBr (A + B) (commBr (A + B) (-commBr A (commBr A B))) =
+            -commBr (A + B) (commBr (A + B) (commBr A (commBr A B))) := by
+    rw [commBr_neg_right_eq, commBr_neg_right_eq]
+  have h4 : commBr (A + B) (commBr (A + B) ((2 : 𝕂) • commBr B (commBr B A))) =
+            (2 : 𝕂) • commBr (A + B) (commBr (A + B) (commBr B (commBr B A))) := by
+    rw [commBr_smul_right_eq (𝕂 := 𝕂), commBr_smul_right_eq (𝕂 := 𝕂)]
+  have h5 : commBr A (commBr A B) = -commBr A (commBr B A) := comm_A_A_B_eq_neg_comm_A_B_A A B
+  -- Push `24 •` inside via right-linearity (twice).
+  rw [← commBr_smul_right_eq (𝕂 := 𝕂), ← commBr_smul_right_eq (𝕂 := 𝕂)]
+  -- Apply the chain.
+  rw [h1, h2, h3, h4, h5]
+  -- Push the inner negation out through both outer commBrs.
+  rw [commBr_neg_right_eq, commBr_neg_right_eq, neg_neg]
+  -- Apply Step 1 and Step 2.
+  rw [comm_AB_AB_ABA_eq_childs_basis_odd, comm_AB_AB_BBA_eq_childs_basis_even]
+
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **B2.2.e residual bound**: combining the algebraic decomposition with the
 quadratic and cubic norm bounds, the residual `sym_cubic_poly(α•V+δa, β•V+δb)

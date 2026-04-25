@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status: **All BCH files sorry-free (2026-04-24, updated session 9).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure + BCHPrefactors struct), Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis def + unit-coefficient norm bound + headline τ⁵-identification theorem + bridge corollary + **tight bridge at Suzuki p, fully proved**), **SymmetricQuintic (τ⁵ coefficient infrastructure + B1.c quintic Taylor bridge via Tier-2 axiom)**, **Palindromic B1.d (per-block quintic bound derived from B1.c)**. Infrastructure is ready for Lean-Trotter's axioms 1 AND 2:
+## Status: **All BCH files sorry-free (2026-04-25, updated session 10).** Basic, Palindromic, LogSeries: see prior status. Branch `trotter-5factor-palindromic`: ChildsBasis (axiom-1 infrastructure + BCHPrefactors struct), Suzuki5Quintic (βᵢ(p) polynomials + R₅ Childs-basis def + unit-coefficient norm bound + headline τ⁵-identification theorem + bridge corollary + **tight bridge at Suzuki p, fully proved**), **SymmetricQuintic (τ⁵ coefficient infrastructure + B1.c quintic Taylor bridge via Tier-2 axiom)**, **Palindromic B1.d (per-block quintic bound derived from B1.c) + B2.2.a/b/c/d/e algebraic decomposition + B2.2.e Childs-basis projection identity (zero new axioms)**. Infrastructure is ready for Lean-Trotter's axioms 1 AND 2:
 
 - Axiom 1 (`bch_w4Deriv_quintic_level2`): wired up via `suzuki5_log_product_quintic_of_IsSuzukiCubic`; derived from the single remaining private axiom `suzuki5_R5_identification_axiom`.
 - Axiom 2 (`bch_w4Deriv_level3_tight`): **P2 axiom discharged session 8.** Bridge theorem `suzuki5_log_product_quintic_tight_at_suzukiP` derived solely from the headline theorem + `norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum` (now a fully-proved theorem, not an axiom).
@@ -433,7 +433,7 @@ Zero new axioms.
 (gaining nothing in asymptotic order, but identifying the structure for
 the Childs-basis projection in B2.2.e).
 
-**B2.2.e foundation (session 10, IN PROGRESS)**: linear-in-residual extraction
+**B2.2.e foundation (session 10)**: linear-in-residual extraction
 for `sym_cubic_poly(α•V + δa, β•V + δb)` in `BCH/Palindromic.lean`.
 All zero new axioms. Closed:
 
@@ -458,14 +458,48 @@ All zero new axioms. Closed:
 of `sym_cubic_poly(4X, Y)` modulo τ⁶+ residual. With N = O(τ), D = O(τ³):
 combined residual = O(τ·τ⁶ + τ⁹) = O(τ⁷), well below the τ⁶ threshold.
 
-**Open** (the remaining B2.2.e work): **B2.2.e completion** — substitute
-the per-block residuals `δa = 4·(pτ)³·E_3 + ...`,
-`δb = ((1-4p)τ)³·E_3 + ...` (from B1.d) into the linear part L, and
-project the resulting Lie polynomial in (V = A+B, E_3 = sym_cubic(A,B))
-onto the 8 Childs commutators, matching the `βᵢ(p)` prefactors in
-`BCH.suzuki5_R5`. CAS pipeline at
+**B2.2.e key identity (session 10, NEW — Childs-basis projection closed)**:
+the central symbolic content of B2.2.e is now fully proved in
+`BCH/Palindromic.lean`:
+
+```
+BCH.comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis :
+  (24 : 𝕂) • commBr (A + B) (commBr (A + B) (symmetric_bch_cubic_poly 𝕂 A B)) =
+    (childsComm₁ A B + childsComm₃ A B + childsComm₅ A B + childsComm₇ A B) +
+    (2 : 𝕂) • (childsComm₂ A B + childsComm₄ A B + childsComm₆ A B + childsComm₈ A B)
+```
+
+Equivalently `[V, [V, sym_E₃]] = (1/24)·(C₁+C₃+C₅+C₇) + (1/12)·(C₂+C₄+C₆+C₈)`.
+Zero new axioms (verified `#print axioms` returns only Lean's 3 standard).
+
+**Strategy** (split into three small `noncomm_ring` lemmas):
+
+1. `comm_AB_AB_ABA_eq_childs_basis_odd`:
+   `[A+B, [A+B, [A, [B, A]]]] = C₁ + C₃ + C₅ + C₇` (~64 monomials, ~13s).
+2. `comm_AB_AB_BBA_eq_childs_basis_even`:
+   `[A+B, [A+B, [B, [B, A]]]] = C₂ + C₄ + C₆ + C₈` (similar).
+3. `smul_24_symmetric_bch_cubic_poly`:
+   `24 • sym_E₃(A, B) = -[A,[A,B]] + 2 • [B,[B,A]]` (clears 1/24, 1/12 inverses).
+
+Plus helpers `comm_A_A_B_eq_neg_comm_A_B_A` ([A,[A,B]] = -[A,[B,A]]),
+`commBr_add_right_eq`, `commBr_neg_right_eq`. Combined via explicit
+`rw` chain (avoiding `simp only` which mis-rewrites due to bilinearity-vs-neg
+interactions).
+
+**Lesson**: the original "monolithic" `noncomm_ring` proof timed out at
+1.6M heartbeats on the ~128-monomial expansion. Splitting into the two
+half-identities (each ~64 monomials, ~10s) plus an explicit ring-identity
+for `24 • sym_E₃` made the proof tractable. Similar splitting may help
+with B2.5 and beyond.
+
+**Open** (the remaining B2.2.e work): **substitution + matching step** —
+substitute the per-block residuals `δa = 4·(pτ)³·E_3 + ...`,
+`δb = ((1-4p)τ)³·E_3 + ...` (from B1.d) into the linear part L, apply
+the Childs-basis projection identity, and match the resulting polynomial
+in `p` with `βᵢ(p)` from `BCH.suzuki5_R5`. CAS pipeline at
 `Lean-Trotter/scripts/compute_bch_prefactors.py` already does this at
-the symbolic level. The Lean port is the remaining symbolic work.
+the symbolic level — the Lean port is now a "polynomial-in-p coefficient
+matching" task rather than a multi-week noncomm_ring effort.
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 
