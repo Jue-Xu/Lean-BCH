@@ -412,6 +412,35 @@ theorem L_leading_plus_E5_eq_R5 (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p
   rw [eq1, eq2, eq4, eq5, eq6, eq8]
   module
 
+/-- **B2.2.e τ⁵-scaled matching identity**: τ⁵·L_leading_coeff + τ⁵·γ5·E_5 = τ⁵·R₅,
+applying the L_leading-on-Childs-basis closed form (post substitution of
+δa = 4(pτ)³•E_3, δb = ((1-4p)τ)³•E_3 in `sym_cubic_poly_linear_part_smul_V`).
+
+Direct corollary of `L_leading_plus_E5_eq_R5` by τ⁵ smul, plus the closed
+form `sym_cubic_poly_linear_part_at_strangBlock_E3`. -/
+theorem sym_cubic_linear_part_τ5_plus_E5_τ5_eq_R5_τ5
+    (A B : 𝔸) (p τ : ℝ) (hcubic : IsSuzukiCubic p) :
+    sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+        ((4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly ℝ A B)
+        (((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly ℝ A B) +
+      (τ ^ 5 * (4 * p ^ 5 + (1 - 4 * p) ^ 5)) • symmetric_bch_quintic_poly ℝ A B =
+    τ ^ 5 • suzuki5_R5 A B p := by
+  -- Substitute the closed-form of the linear part.
+  rw [sym_cubic_poly_linear_part_at_strangBlock_E3 (𝕂 := ℝ) A B p τ]
+  -- The matching identity scaled by τ⁵.
+  have h_match := L_leading_plus_E5_eq_R5 A B p hcubic
+  have h_match_τ5 : (τ ^ 5 : ℝ) • (((1 / 3 : ℝ) *
+        (p * (1 - 4 * p) * (1 - 2 * p) * (p ^ 2 - (1 - 4 * p) ^ 2))) •
+          commBr (A + B) (commBr (A + B) (symmetric_bch_cubic_poly ℝ A B)) +
+        (4 * p ^ 5 + (1 - 4 * p) ^ 5) • symmetric_bch_quintic_poly ℝ A B) =
+      (τ ^ 5 : ℝ) • suzuki5_R5 A B p := by
+    rw [h_match]
+  -- Distribute τ⁵ and combine scalars; the resulting form matches the goal.
+  rw [smul_add, smul_smul, smul_smul] at h_match_τ5
+  -- Rewrite the goal scalars to match h_match_τ5.
+  convert h_match_τ5 using 2
+  ring
+
 /-!
 ## Headline theorem: τ⁵ identification of `log(suzuki5Product)`
 
