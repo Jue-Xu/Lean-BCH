@@ -492,14 +492,46 @@ half-identities (each ~64 monomials, ~10s) plus an explicit ring-identity
 for `24 • sym_E₃` made the proof tractable. Similar splitting may help
 with B2.5 and beyond.
 
-**Open** (the remaining B2.2.e work): **substitution + matching step** —
-substitute the per-block residuals `δa = 4·(pτ)³·E_3 + ...`,
-`δb = ((1-4p)τ)³·E_3 + ...` (from B1.d) into the linear part L, apply
-the Childs-basis projection identity, and match the resulting polynomial
-in `p` with `βᵢ(p)` from `BCH.suzuki5_R5`. CAS pipeline at
-`Lean-Trotter/scripts/compute_bch_prefactors.py` already does this at
-the symbolic level — the Lean port is now a "polynomial-in-p coefficient
-matching" task rather than a multi-week noncomm_ring effort.
+**B2.2.e substitution lemmas (session 10, NEW)**: Two corollaries of the
+Childs-basis projection identity, in `BCH/Palindromic.lean`. Zero new axioms.
+
+- `BCH.sym_cubic_poly_linear_part_at_smul_E3`: when `δa = γ•E_3` and
+  `δb = δ•E_3` for `E_3 = symmetric_bch_cubic_poly A B`, the linear part
+  collapses to a single scalar multiple of `[V,[V,E_3]]`:
+  ```
+  L = ((24)⁻¹ * (α + 2β) * (β·γ - α·δ)) • [V,[V,E_3]]
+  ```
+- `BCH.smul_24_sym_cubic_poly_linear_part_at_smul_E3_eq_childs_basis`:
+  combining the substitution with the Childs-basis projection,
+  ```
+  24 • L = ((24)⁻¹ * (α + 2β) * (β·γ - α·δ)) •
+           [(C₁+C₃+C₇+C₅) + 2 • (C₂+C₄+C₆+C₈)]
+  ```
+
+**Open** (the remaining B2.2.e work): **scalar instantiation + polynomial
+matching step** —
+
+1. **Instantiate** the substitution lemma with `α = 4pτ, β = (1-4p)τ,
+   γ = 4(pτ)³, δ = ((1-4p)τ)³` (the τ³-leading parts of `δa, δb` from B1.d).
+   This produces:
+   ```
+   ((24)⁻¹ * (2 - 4p)τ * 4p(1-4p)τ⁴(p² - (1-4p)²)) •
+     [V,[V,E_3]] = (1/6)·p(1-4p)(1-2p)(p²-(1-4p)²) τ⁵ • [V,[V,E_3]]
+   ```
+2. **Add τ⁵•E_5 contribution**: under `IsSuzukiCubic p`, the linear sum
+   `4(pτ)³ + ((1-4p)τ)³ = 0`, but `4(pτ)⁵ + ((1-4p)τ)⁵ = (4p⁵+(1-4p)⁵)·τ⁵`
+   contributes a separate `(4p⁵+(1-4p)⁵)·τ⁵ • E_5` term. The Childs-basis
+   projection of `E_5 = symmetric_bch_quintic_poly A B` (a 30-term polynomial)
+   needs its own decomposition.
+3. **Match coefficients** with `βᵢ(p)` from `BCH.suzuki5_R5` (CAS verified).
+4. **Triangle inequality** assembly: combine all τ⁵ contributors with the
+   τ⁷ residual bounds from B2.2.c (sym_quintic at (4X, Y) is O(τ⁷)) and the
+   B2.2.e linear-part residual `(3/2)·N·D² + (1/2)·D³ = O(τ⁷)`.
+
+CAS pipeline at `Lean-Trotter/scripts/compute_bch_prefactors.py` already
+does the matching at the symbolic level. The Lean port is now a
+"polynomial-in-p" computation, modular over the proven Childs-basis
+projection.
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 
