@@ -27,6 +27,7 @@ where e(c,X) := exp(c • X). The coefficient list (p/2, p, p, p, (1-3p)/2, (1-4
 
 import BCH.Basic
 import BCH.SymmetricQuintic
+import BCH.ChildsBasis
 
 namespace BCH
 
@@ -1440,6 +1441,101 @@ theorem norm_symmetric_bch_cubic_poly_apply_smul_add_smul_add_le
         exact mul_le_mul hcoef_le hbracket hbracket_nn
                 (mul_nonneg h6inv_nn (by linarith))
     _ = (2 / 3) * (N ^ 2 * D + N * D ^ 2) := by ring
+
+/-! ### B2.2.e foundation — linear-in-residual part of `sym_cubic_poly` on (α•V+δa, β•V+δb)
+
+By multilinear expansion of `sym_cubic_poly = -(1/24)·[a,[a,b]] + (1/12)·[b,[b,a]]`
+at `a = α•V + δa, b = β•V + δb`, the polynomial decomposes by δ-degree as
+
+  `sym_cubic_poly = 0 (δ⁰, vanishing per B2.2.b) + L (δ¹) + Q (δ²) + C (δ³)`
+
+The **linear part L** has the closed form (verified by CAS at
+`/tmp/verify_linear_part.py`):
+
+  `L = ((α+2β)/24) • (β • [V,[V,δa]] - α • [V,[V,δb]])`
+
+This is the τ⁵ leading content of `sym_cubic_poly(4X, Y)` once we substitute
+`δa = 4·(pτ)³ • E_3 + O(τ⁵)` and `δb = ((1-4p)τ)³ • E_3 + O(τ⁵)`. The
+expansion of `[V,[V,E_3]]` (with `V = A+B`, `E_3 = sym_cubic_poly(A,B)`)
+projects onto the 8 Childs commutators with `βᵢ(p)`-polynomial coefficients —
+this is the symbolic content of B2.2.e.
+
+The **quadratic part Q** has 6 4-fold-commutator terms with mixed `(α,β,V,δ)`
+content; the **cubic part C** is `-(1/24)·[δa,[δa,δb]] + (1/12)·[δb,[δb,δa]]`.
+Both are bounded by combinations of `N·D²` and `D³`.
+-/
+
+/-- **Linear-in-residual part of `sym_cubic_poly(α•V + δa, β•V + δb)`**.
+
+Closed form: `((24⁻¹) * (α + 2β)) • (β • [V,[V,δa]] - α • [V,[V,δb]])`. The
+substitution `α = 4pτ, β = (1-4p)τ, δa = 4·(pτ)³·E_3, δb = ((1-4p)τ)³·E_3`
+turns this into the τ⁵ Childs-basis contribution of `sym_cubic_poly(4X, Y)`. -/
+noncomputable def sym_cubic_poly_linear_part_smul_V
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (V : 𝔸) (α β : 𝕂) (δa δb : 𝔸) : 𝔸 :=
+  ((24 : 𝕂)⁻¹ * (α + 2 * β)) •
+    (β • commBr V (commBr V δa) - α • commBr V (commBr V δb))
+
+/-- **Quadratic-in-residual part of `sym_cubic_poly(α•V + δa, β•V + δb)`**. -/
+noncomputable def sym_cubic_poly_quadratic_part_smul_V
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (V : 𝔸) (α β : 𝕂) (δa δb : 𝔸) : 𝔸 :=
+  -((24 : 𝕂)⁻¹ • (commBr (α • V) (commBr δa δb) +
+                    α • commBr δa (commBr V δb) +
+                    β • commBr δa (commBr δa V))) +
+  (12 : 𝕂)⁻¹ • (commBr (β • V) (commBr δb δa) +
+                  β • commBr δb (commBr V δa) +
+                  α • commBr δb (commBr δb V))
+
+/-- **Cubic-in-residual part of `sym_cubic_poly(α•V + δa, β•V + δb)`**.
+
+Closed form: `-(1/24)·[δa,[δa,δb]] + (1/12)·[δb,[δb,δa]]`. -/
+noncomputable def sym_cubic_poly_cubic_part_smul_V
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (δa δb : 𝔸) : 𝔸 :=
+  -((24 : 𝕂)⁻¹ • commBr δa (commBr δa δb)) +
+  (12 : 𝕂)⁻¹ • commBr δb (commBr δb δa)
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Algebraic decomposition of `sym_cubic_poly(α•V + δa, β•V + δb)`**:
+
+  `sym_cubic_poly(α•V + δa, β•V + δb) = L + Q + C`
+
+where `L` is the linear-in-δ part (B2.2.e foundation), `Q` is quadratic, and
+`C` is cubic. Verified by CAS expansion (see header docstring) and proved
+here via `noncomm_ring` after scalar clearing. -/
+theorem symmetric_bch_cubic_poly_smul_V_decomp
+    (V : 𝔸) (α β : 𝕂) (δa δb : 𝔸) :
+    symmetric_bch_cubic_poly 𝕂 (α • V + δa) (β • V + δb) =
+      sym_cubic_poly_linear_part_smul_V V α β δa δb +
+      sym_cubic_poly_quadratic_part_smul_V V α β δa δb +
+      sym_cubic_poly_cubic_part_smul_V (𝕂 := 𝕂) δa δb := by
+  -- Multiply both sides by 24 to clear the inverse scalars.
+  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+  have h12ne : (12 : 𝕂) ≠ 0 := by exact_mod_cast (show (12 : ℕ) ≠ 0 by norm_num)
+  have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
+  have hinj : Function.Injective ((24 : 𝕂) • · : 𝔸 → 𝔸) := by
+    intro x y hxy
+    have := congrArg ((24 : 𝕂)⁻¹ • ·) hxy
+    simp only [smul_smul, inv_mul_cancel₀ h24ne, one_smul] at this; exact this
+  -- Helper scalar identities (needed during simp).
+  have h24mul24inv : (24 : 𝕂) * (24 : 𝕂)⁻¹ = 1 := mul_inv_cancel₀ h24ne
+  have h24mul12inv : (24 : 𝕂) * (12 : 𝕂)⁻¹ = 2 := by
+    have h12_2 : (12 : 𝕂) * 2 = 24 := by norm_num
+    have : (24 : 𝕂) * (12 : 𝕂)⁻¹ = (12 * 2) * (12 : 𝕂)⁻¹ := by rw [h12_2]
+    rw [this, mul_comm (12 : 𝕂) 2, mul_assoc, mul_inv_cancel₀ h12ne, mul_one]
+  have h24mul12inv_assoc : ∀ (X : 𝕂), (24 : 𝕂) * ((12 : 𝕂)⁻¹ * X) = 2 * X :=
+    fun X => by rw [← mul_assoc, h24mul12inv]
+  apply hinj
+  -- Unfold all definitions.
+  unfold symmetric_bch_cubic_poly sym_cubic_poly_linear_part_smul_V
+    sym_cubic_poly_quadratic_part_smul_V sym_cubic_poly_cubic_part_smul_V commBr
+  -- Distribute scalar smul; collapse 24·24⁻¹ = 1 and 24·12⁻¹·X = 2·X patterns.
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul, mul_sub, sub_mul, mul_assoc,
+    mul_inv_cancel_left₀ h24ne, h24mul24inv, h24mul12inv_assoc, h24mul12inv,
+    one_smul, mul_one, one_mul]
+  module
 
 /-! ### Specialization: commutator bound for `[4·X, Y]` in the Suzuki setting
 
