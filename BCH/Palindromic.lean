@@ -2132,6 +2132,271 @@ theorem norm_sym_cubic_poly_sub_linear_part_le
         have h2 := norm_sym_cubic_poly_cubic_part_smul_V_le (𝕂 := 𝕂) δa δb
         linarith
 
+/-! ### B2.5 helpers: bilinearity and norm bound for the linear-in-residual part
+
+These are the building blocks of the `T₂` bound for the τ⁶ assembly:
+
+- Bilinearity (subtraction form) lets us express
+    `L(δa_actual, δb_actual) − L(δa_lead, δb_lead) = L(δa_actual − δa_lead,
+    δb_actual − δb_lead)`, isolating the per-block sub-residuals
+    `R_p = X − strangBlock_log_target_p`.
+- Norm bound `‖L(V, α, β, δa, δb)‖ ≤ (1/6)·‖α + 2β‖·‖V‖²·(‖β‖·‖δa‖ + ‖α‖·‖δb‖)`
+  combines `norm_smul_le` with the existing 3-fold commutator bound
+  `norm_three_commBr_le`.
+
+Combined, these give an O(τ⁷) bound on `‖L_extra‖ = ‖L(V, α, β, 4·R_p, R_q)‖`
+when α = O(τ), β = O(τ), R_p = O(τ⁵), R_q = O(τ⁵). -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **commBr is additive in the right slot (subtraction form)**:
+  `[X, Y₁ - Y₂] = [X, Y₁] - [X, Y₂]`. -/
+private lemma commBr_sub_right_eq (X Y₁ Y₂ : 𝔸) :
+    commBr X (Y₁ - Y₂) = commBr X Y₁ - commBr X Y₂ := by
+  unfold commBr; noncomm_ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **L is bilinear in (δa, δb) — subtraction form**:
+  `L(V, α, β, δa1, δb1) - L(V, α, β, δa2, δb2) = L(V, α, β, δa1 - δa2, δb1 - δb2)`.
+
+Packages bilinearity for the residual decomposition `L_actual − L_leading =
+L(δa_actual − δa_lead, δb_actual − δb_lead)` used in B2.5. -/
+theorem sym_cubic_poly_linear_part_smul_V_sub_eq
+    (V : 𝔸) (α β : 𝕂) (δa1 δb1 δa2 δb2 : 𝔸) :
+    sym_cubic_poly_linear_part_smul_V V α β δa1 δb1 -
+        sym_cubic_poly_linear_part_smul_V V α β δa2 δb2 =
+      sym_cubic_poly_linear_part_smul_V V α β (δa1 - δa2) (δb1 - δb2) := by
+  unfold sym_cubic_poly_linear_part_smul_V
+  -- Push `commBr V (commBr V _)` through the subtractions on the RHS.
+  have h_a : commBr V (commBr V (δa1 - δa2)) =
+             commBr V (commBr V δa1) - commBr V (commBr V δa2) := by
+    rw [commBr_sub_right_eq, commBr_sub_right_eq]
+  have h_b : commBr V (commBr V (δb1 - δb2)) =
+             commBr V (commBr V δb1) - commBr V (commBr V δb2) := by
+    rw [commBr_sub_right_eq, commBr_sub_right_eq]
+  rw [h_a, h_b]
+  -- Now the identity is module-theoretic in the four commutators.
+  module
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Norm bound on the linear-in-residual part**:
+  `‖L(V, α, β, δa, δb)‖ ≤ (1/6)·‖α + 2β‖·‖V‖²·(‖β‖·‖δa‖ + ‖α‖·‖δb‖)`.
+
+Direct application of `norm_smul_le` for the leading scalar `(24)⁻¹·(α+2β)`,
+then `norm_sub_le` + `norm_smul_le` on the inner combination, then
+`norm_three_commBr_le` on each 3-fold commutator. The `4` from the 3-fold
+commutator bound combines with `1/24` to give the leading `1/6`. -/
+theorem norm_sym_cubic_poly_linear_part_smul_V_le (V : 𝔸) (α β : 𝕂) (δa δb : 𝔸) :
+    ‖sym_cubic_poly_linear_part_smul_V V α β δa δb‖ ≤
+      (1 / 6 : ℝ) * ‖α + 2 * β‖ * ‖V‖ ^ 2 * (‖β‖ * ‖δa‖ + ‖α‖ * ‖δb‖) := by
+  unfold sym_cubic_poly_linear_part_smul_V
+  have h_K_norm : ‖((24 : 𝕂)⁻¹ * (α + 2 * β) : 𝕂)‖ = (1 / 24 : ℝ) * ‖α + 2 * β‖ := by
+    rw [norm_mul, norm_inv, RCLike.norm_ofNat]; norm_num
+  have h_AB_nn : (0 : ℝ) ≤ ‖α + 2 * β‖ := norm_nonneg _
+  have h_α_nn : (0 : ℝ) ≤ ‖α‖ := norm_nonneg _
+  have h_β_nn : (0 : ℝ) ≤ ‖β‖ := norm_nonneg _
+  have h_δa_nn : (0 : ℝ) ≤ ‖δa‖ := norm_nonneg _
+  have h_δb_nn : (0 : ℝ) ≤ ‖δb‖ := norm_nonneg _
+  have h_V_nn : (0 : ℝ) ≤ ‖V‖ := norm_nonneg _
+  calc ‖((24 : 𝕂)⁻¹ * (α + 2 * β)) •
+          (β • commBr V (commBr V δa) - α • commBr V (commBr V δb))‖
+      ≤ ‖((24 : 𝕂)⁻¹ * (α + 2 * β) : 𝕂)‖ *
+          ‖β • commBr V (commBr V δa) - α • commBr V (commBr V δb)‖ := norm_smul_le _ _
+    _ = (1 / 24 : ℝ) * ‖α + 2 * β‖ *
+          ‖β • commBr V (commBr V δa) - α • commBr V (commBr V δb)‖ := by rw [h_K_norm]
+    _ ≤ (1 / 24 : ℝ) * ‖α + 2 * β‖ *
+          (‖β • commBr V (commBr V δa)‖ + ‖α • commBr V (commBr V δb)‖) := by
+        gcongr
+        exact norm_sub_le _ _
+    _ ≤ (1 / 24 : ℝ) * ‖α + 2 * β‖ *
+          (‖β‖ * ‖commBr V (commBr V δa)‖ + ‖α‖ * ‖commBr V (commBr V δb)‖) := by
+        gcongr <;> exact norm_smul_le _ _
+    _ ≤ (1 / 24 : ℝ) * ‖α + 2 * β‖ *
+          (‖β‖ * (4 * ‖V‖ * ‖V‖ * ‖δa‖) + ‖α‖ * (4 * ‖V‖ * ‖V‖ * ‖δb‖)) := by
+        gcongr <;> exact norm_three_commBr_le _ _ _
+    _ = (1 / 6 : ℝ) * ‖α + 2 * β‖ * ‖V‖ ^ 2 * (‖β‖ * ‖δa‖ + ‖α‖ * ‖δb‖) := by ring
+
+/-! ### B2.5 T₂ residue equality: per-block residual identification
+
+For the strangBlock case with α = 4pτ, β = (1-4p)τ, the per-block residual
+differences are:
+- `δa − δa_lead = (4 : 𝕂) • (X − strangBlock_log_target_p)`
+- `δb − δb_lead = Y − strangBlock_log_target_q`
+
+These identities support the τ⁶ assembly: combined with B1.a's `O(σ⁵)` per-block
+cubic bound, the L_extra term is `O(τ⁷)`. -/
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **B2.5 helper**: identify the strangBlock residue
+`(4 : 𝕂) • X - (4 * p * τ) • V - (4 * (p * τ) ^ 3) • E` with
+`(4 : 𝕂) • (X - strangBlock_log_target_p)`. Pure algebraic identity. -/
+theorem strangBlock_residue_eq_smul_X_sub_target (A B : 𝔸) (X : 𝔸) (p τ : 𝕂) :
+    (4 : 𝕂) • X - (4 * p * τ) • (A + B) -
+        (4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B =
+      (4 : 𝕂) • (X - strangBlock_log_target 𝕂 A B p τ) := by
+  unfold strangBlock_log_target
+  have h1 : (4 * p * τ : 𝕂) • (A + B) = (4 : 𝕂) • ((p * τ) • (A + B)) := by
+    rw [show (4 * p * τ : 𝕂) = (4 : 𝕂) * (p * τ) from by ring, ← smul_smul]
+  have h2 : (4 * (p * τ) ^ 3 : 𝕂) • symmetric_bch_cubic_poly 𝕂 A B =
+            (4 : 𝕂) • ((p * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B) := by
+    rw [← smul_smul]
+  rw [h1, h2, smul_sub, smul_add]
+  module
+
+include 𝕂 in
+/-- **B2.5 T₂ bound (assembly form)**: residual `sym_cubic_poly(4X, Y) − L_leading_τ⁵`
+bounded by QC + L_extra terms. Derived from `norm_sym_cubic_poly_sub_linear_part_le`
++ bilinearity (`sym_cubic_poly_linear_part_smul_V_sub_eq`) +
+`norm_sym_cubic_poly_linear_part_smul_V_le` + per-block cubic bound
+(`norm_strangBlock_log_sub_target_le`).
+
+The bound has two pieces:
+- **QC part**: `(3/2)·N·D² + (1/2)·D³` with N = ‖α•V‖+‖β•V‖, D = ‖4X−α•V‖+‖Y−β•V‖.
+- **L_extra part**: `(1/6)·‖α+2β‖·‖V‖²·(‖β‖·4·R_p_bound + ‖α‖·R_q_bound)` with
+  R_p_bound = `10⁷·σ_p⁵`, R_q_bound = `10⁷·σ_q⁵`.
+
+For the τ⁶ assembly: with α = 4pτ, β = (1-4p)τ, the QC part is O(τ⁷) (since
+N = O(τ), D = O(τ³)) and the L_extra part is O(τ⁷) (since ‖α+2β‖ = O(τ),
+‖α‖, ‖β‖ = O(τ), R_p, R_q = O(τ⁵)). -/
+theorem norm_sym_cubic_poly_at_strangBlock_sub_L_leading_τ5_le (A B : 𝔸) (p τ : 𝕂)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4) :
+    ‖symmetric_bch_cubic_poly 𝕂
+        ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+      sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+        ((4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B)
+        (((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B)‖ ≤
+      (3 / 2 : ℝ) *
+        ((‖((4 * p * τ : 𝕂)) • (A + B)‖ + ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖) *
+         (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ - ((4 * p * τ : 𝕂)) • (A + B)‖ +
+          ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+            (((1 - 4 * p) * τ : 𝕂)) • (A + B)‖) ^ 2) +
+      (1 / 2 : ℝ) *
+        (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ - ((4 * p * τ : 𝕂)) • (A + B)‖ +
+         ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+           (((1 - 4 * p) * τ : 𝕂)) • (A + B)‖) ^ 3 +
+      (1 / 6 : ℝ) * ‖((4 * p * τ + 2 * ((1 - 4 * p) * τ)) : 𝕂)‖ * ‖A + B‖ ^ 2 *
+        (‖(((1 - 4 * p) * τ) : 𝕂)‖ *
+            (4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5)) +
+         ‖((4 * p * τ) : 𝕂)‖ *
+            (10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5)) := by
+  -- Setup: just abbreviate the strangBlock_logs (NOT the scalars).
+  set X := strangBlock_log 𝕂 A B p τ with hX_def
+  set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
+  -- The crucial algebraic step: rewrite (4 : 𝕂) • X and Y in α•V + δa, β•V + δb form.
+  -- Show this directly via `abel` after rewriting.
+  have key : symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
+      sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+        ((4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B)
+        (((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B) =
+      (symmetric_bch_cubic_poly 𝕂
+          ((4 * p * τ) • (A + B) + ((4 : 𝕂) • X - (4 * p * τ) • (A + B)))
+          (((1 - 4 * p) * τ) • (A + B) +
+            (Y - ((1 - 4 * p) * τ) • (A + B))) -
+        sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+          ((4 : 𝕂) • X - (4 * p * τ) • (A + B))
+          (Y - ((1 - 4 * p) * τ) • (A + B))) +
+      sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+        ((4 : 𝕂) • X - (4 * p * τ) • (A + B) -
+          (4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B)
+        (Y - ((1 - 4 * p) * τ) • (A + B) -
+          ((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B) := by
+    have h1 : (4 : 𝕂) • X = (4 * p * τ) • (A + B) +
+        ((4 : 𝕂) • X - (4 * p * τ) • (A + B)) := by abel
+    have h2 : Y = ((1 - 4 * p) * τ) • (A + B) +
+        (Y - ((1 - 4 * p) * τ) • (A + B)) := by abel
+    have h_bilin := sym_cubic_poly_linear_part_smul_V_sub_eq (𝕂 := 𝕂)
+      (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+      ((4 : 𝕂) • X - (4 * p * τ) • (A + B))
+      (Y - ((1 - 4 * p) * τ) • (A + B))
+      ((4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B)
+      (((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B)
+    -- h_bilin: L(δa,δb) - L(δa_lead,δb_lead) = L(δa - δa_lead, δb - δb_lead)
+    -- Goal after substituting h1, h2: rearrange to use h_bilin.
+    conv_lhs => rw [h1, h2]
+    rw [← h_bilin]
+    abel
+  rw [key]
+  -- Now apply triangle inequality.
+  refine le_trans (norm_add_le _ _) ?_
+  -- Bound each term.
+  have hα_le : ‖((4 * p * τ : 𝕂)) • (A + B)‖ ≤
+      ‖((4 * p * τ : 𝕂)) • (A + B)‖ + ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ := by
+    linarith [norm_nonneg ((((1 - 4 * p) * τ : 𝕂)) • (A + B))]
+  have hβ_le : ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ ≤
+      ‖((4 * p * τ : 𝕂)) • (A + B)‖ + ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ := by
+    linarith [norm_nonneg ((((4 * p * τ : 𝕂))) • (A + B))]
+  have hN_nn : (0 : ℝ) ≤ ‖((4 * p * τ : 𝕂)) • (A + B)‖ +
+      ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖ := by positivity
+  have h_QC := norm_sym_cubic_poly_sub_linear_part_le (𝕂 := 𝕂) (A + B)
+      (4 * p * τ) ((1 - 4 * p) * τ)
+      ((4 : 𝕂) • X - (4 * p * τ) • (A + B))
+      (Y - ((1 - 4 * p) * τ) • (A + B))
+      (‖((4 * p * τ : 𝕂)) • (A + B)‖ + ‖(((1 - 4 * p) * τ : 𝕂)) • (A + B)‖)
+      hα_le hβ_le hN_nn
+  have h_L_extra := norm_sym_cubic_poly_linear_part_smul_V_le (𝕂 := 𝕂)
+      (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+      ((4 : 𝕂) • X - (4 * p * τ) • (A + B) -
+        (4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B)
+      (Y - ((1 - 4 * p) * τ) • (A + B) -
+        ((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B)
+  -- Now bound the per-block residuals.
+  have h_res_eq : (4 : 𝕂) • X - (4 * p * τ) • (A + B) -
+      (4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B =
+      (4 : 𝕂) • (X - strangBlock_log_target 𝕂 A B p τ) := by
+    rw [hX_def]
+    exact strangBlock_residue_eq_smul_X_sub_target (𝕂 := 𝕂) A B
+      (strangBlock_log 𝕂 A B p τ) p τ
+  have h_resq_eq : Y - ((1 - 4 * p) * τ) • (A + B) -
+      ((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B =
+      Y - strangBlock_log_target 𝕂 A B (1 - 4 * p) τ := by
+    unfold strangBlock_log_target
+    abel
+  have h_4_norm : ‖(4 : 𝕂)‖ = 4 := by rw [RCLike.norm_ofNat]
+  have h_Rp_bound : ‖(4 : 𝕂) • X - (4 * p * τ) • (A + B) -
+      (4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B‖ ≤
+      4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) := by
+    rw [h_res_eq]
+    have hRp := norm_strangBlock_log_sub_target_le (𝕂 := 𝕂) A B p τ hp
+    rw [hX_def] at *
+    calc ‖(4 : 𝕂) • (strangBlock_log 𝕂 A B p τ - strangBlock_log_target 𝕂 A B p τ)‖
+        ≤ ‖(4 : 𝕂)‖ *
+            ‖strangBlock_log 𝕂 A B p τ - strangBlock_log_target 𝕂 A B p τ‖ :=
+          norm_smul_le _ _
+      _ = 4 * ‖strangBlock_log 𝕂 A B p τ - strangBlock_log_target 𝕂 A B p τ‖ := by
+          rw [h_4_norm]
+      _ ≤ 4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5) := by gcongr
+  have h_Rq_bound : ‖Y - ((1 - 4 * p) * τ) • (A + B) -
+      ((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B‖ ≤
+      10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5 := by
+    rw [h_resq_eq]
+    rw [hY_def]
+    exact norm_strangBlock_log_sub_target_le (𝕂 := 𝕂) A B (1 - 4 * p) τ h1m4p
+  -- Apply norm bounds in the L_extra term.
+  have h_L_extra_bnd :
+      ‖sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+          ((4 : 𝕂) • X - (4 * p * τ) • (A + B) -
+            (4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B)
+          (Y - ((1 - 4 * p) * τ) • (A + B) -
+            ((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B)‖ ≤
+      (1 / 6 : ℝ) * ‖((4 * p * τ + 2 * ((1 - 4 * p) * τ)) : 𝕂)‖ * ‖A + B‖ ^ 2 *
+        (‖(((1 - 4 * p) * τ) : 𝕂)‖ *
+            (4 * (10000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 5)) +
+         ‖((4 * p * τ) : 𝕂)‖ *
+            (10000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 5)) := by
+    refine le_trans h_L_extra ?_
+    have hCoef_nn : (0 : ℝ) ≤ (1 / 6 : ℝ) *
+        ‖((4 * p * τ + 2 * ((1 - 4 * p) * τ)) : 𝕂)‖ * ‖A + B‖ ^ 2 := by positivity
+    apply mul_le_mul_of_nonneg_left _ hCoef_nn
+    have hβ_nn : (0 : ℝ) ≤ ‖(((1 - 4 * p) * τ) : 𝕂)‖ := norm_nonneg _
+    have hα_nn : (0 : ℝ) ≤ ‖((4 * p * τ) : 𝕂)‖ := norm_nonneg _
+    have h1 := mul_le_mul_of_nonneg_left h_Rp_bound hβ_nn
+    have h2 := mul_le_mul_of_nonneg_left h_Rq_bound hα_nn
+    linarith
+  -- Combine via linarith.
+  linarith
+
 /-! ### Specialization: commutator bound for `[4·X, Y]` in the Suzuki setting
 
 Combining `norm_commutator_near_V_le` (slice 8) and
@@ -3264,7 +3529,7 @@ include 𝕂 in
 /-- Helper: linearizes `norm_strangBlock_log_le` to a single-term bound
 `‖strangBlock_log‖ ≤ 40002·η` for η ≤ 1/4. The constant `40002` covers
 `1 + 1/16 + 10⁷/256` (since η² ≤ 1/16, η⁴ ≤ 1/256). -/
-private lemma norm_strangBlock_log_linear
+lemma norm_strangBlock_log_linear
     (A B : 𝔸) (c τ : 𝕂)
     (h : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ < 1/4) :
     ‖strangBlock_log 𝕂 A B c τ‖ ≤
