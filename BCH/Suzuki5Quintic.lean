@@ -342,6 +342,76 @@ theorem norm_suzuki5_R5_le_bchFourFoldSum
         ‖childsComm₅ A B‖ + ‖childsComm₆ A B‖ + ‖childsComm₇ A B‖ + ‖childsComm₈ A B‖ := by
         linarith [hC₁, hC₂, hC₃, hC₄, hC₅, hC₆, hC₇, hC₈]
 
+/-! ### B2.2.e τ⁵ matching identity: L_leading + γ5·E_5 = R₅(A,B,p)
+
+The cornerstone polynomial-in-p identity that combines:
+- the L_leading projection (`comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis`),
+- the E_5 projection (`smul_5760_symmetric_bch_quintic_poly_eq_childs_basis`),
+- the Jacobi relations C₂=C₃, C₆=C₇,
+to identify the τ⁵ content of `suzuki5_bch` as `R₅(A, B, p)` modulo IsSuzukiCubic.
+
+Proof structure:
+1. Apply Childs projections to rewrite `[V,[V,E_3]]` and `E_5` on the basis.
+2. Apply Jacobi to swap C₃↔C₂ and C₇↔C₆.
+3. Unfold R₅(A,B,p) and βᵢ(p).
+4. Express each βᵢ(p) as `(LHS polynomial in p) - 0` modulo `4p³+(1-4p)³`
+   via 6 `linear_combination` calls (one per non-trivial Cᵢ).
+5. Substitute and close via `module` (pure ring identity in p, no hcubic). -/
+
+/-- **B2.2.e τ⁵ matching identity (sans τ⁵ scaling)**: under `IsSuzukiCubic p`,
+the L_leading and γ5·E_5 contributions on the Childs basis sum to `R₅(A, B, p)`. -/
+theorem L_leading_plus_E5_eq_R5 (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    ((1 / 3 : ℝ) * (p * (1 - 4 * p) * (1 - 2 * p) * (p ^ 2 - (1 - 4 * p) ^ 2))) •
+        commBr (A + B) (commBr (A + B) (symmetric_bch_cubic_poly ℝ A B)) +
+      (4 * p ^ 5 + (1 - 4 * p) ^ 5) • symmetric_bch_quintic_poly ℝ A B =
+    suzuki5_R5 A B p := by
+  -- Unfold IsSuzukiCubic to get the cubic identity 4p³+(1-4p)³ = 0.
+  have hcubic' : 4 * p ^ 3 + (1 - 4 * p) ^ 3 = 0 := hcubic
+  -- Substitute Childs projections.
+  have h24 := comm_V_V_symmetric_bch_cubic_poly_eq_childs_basis (𝕂 := ℝ) A B
+  have h5760 := smul_5760_symmetric_bch_quintic_poly_eq_childs_basis (𝕂 := ℝ) A B
+  have h24_inv : commBr (A + B) (commBr (A + B) (symmetric_bch_cubic_poly ℝ A B)) =
+      (1 / 24 : ℝ) • ((24 : ℝ) • commBr (A + B) (commBr (A + B) (symmetric_bch_cubic_poly ℝ A B))) := by
+    rw [smul_smul]; norm_num
+  have h5760_inv : symmetric_bch_quintic_poly ℝ A B =
+      (1 / 5760 : ℝ) • ((5760 : ℝ) • symmetric_bch_quintic_poly ℝ A B) := by
+    rw [smul_smul]; norm_num
+  rw [h24_inv, h5760_inv, h24, h5760]
+  -- Apply Jacobi C₂ = C₃ and C₆ = C₇.
+  rw [← childsComm₂_eq_childsComm₃ A B, ← childsComm₆_eq_childsComm₇ A B]
+  unfold suzuki5_R5 suzuki5_β₁ suzuki5_β₂ suzuki5_β₃ suzuki5_β₄
+    suzuki5_β₅ suzuki5_β₆ suzuki5_β₇ suzuki5_β₈
+  -- Set up `p_p` and `g5` shorthands; prove the 6 βᵢ ↔ poly identities under hcubic.
+  set p_p : ℝ := p * (1 - 4 * p) * (1 - 2 * p) * (p ^ 2 - (1 - 4 * p) ^ 2) with hp_p
+  set g5 : ℝ := 4 * p ^ 5 + (1 - 4 * p) ^ 5 with hg5
+  have eq1 : 127 * p ^ 2 / 144000 + 13 * p / 36000 - 1 / 24000 =
+             p_p / 72 - 7 * g5 / 5760 := by
+    rw [hp_p, hg5]
+    linear_combination (-(41 * p ^ 2 / 5760 - 29 * p / 7200 - 169 / 144000)) * hcubic'
+  have eq2 : p ^ 2 / 12000 + 13 * p / 6000 - 1 / 4000 =
+             p_p / 24 - 12 * g5 / 5760 := by
+    rw [hp_p, hg5]
+    linear_combination (-(23 * p ^ 2 / 480 - 29 * p / 1200 - 11 / 6000)) * hcubic'
+  have eq4 : -61 * p ^ 2 / 9000 + 13 * p / 3000 - 1 / 2000 =
+             p_p / 36 + 16 * g5 / 5760 := by
+    rw [hp_p, hg5]
+    linear_combination (-(37 * p ^ 2 / 360 - 29 * p / 600 + 59 / 18000)) * hcubic'
+  have eq5 : 31 * p ^ 2 / 9000 - 13 * p / 18000 + 1 / 12000 =
+             p_p / 72 - 16 * g5 / 5760 := by
+    rw [hp_p, hg5]
+    linear_combination (-(-7 * p ^ 2 / 360 + 29 * p / 3600 - 103 / 36000)) * hcubic'
+  have eq6 : 31 * p ^ 2 / 3000 - 13 * p / 6000 + 1 / 4000 =
+             p_p / 24 - 48 * g5 / 5760 := by
+    rw [hp_p, hg5]
+    linear_combination (-(-7 * p ^ 2 / 120 + 29 * p / 1200 - 103 / 12000)) * hcubic'
+  have eq8 : p ^ 2 / 18000 + 13 * p / 9000 - 1 / 6000 =
+             p_p / 36 - 8 * g5 / 5760 := by
+    rw [hp_p, hg5]
+    linear_combination (-(23 * p ^ 2 / 720 - 29 * p / 1800 - 11 / 9000)) * hcubic'
+  -- Substitute β_i with the L_leading + γ5·E_5 form.
+  rw [eq1, eq2, eq4, eq5, eq6, eq8]
+  module
+
 /-!
 ## Headline theorem: τ⁵ identification of `log(suzuki5Product)`
 
