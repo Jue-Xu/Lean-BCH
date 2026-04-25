@@ -2748,4 +2748,119 @@ theorem suzuki5_log_product_quintic_tight_at_suzukiP (A B : 𝔸) :
 
 end TightBridge
 
+/-!
+## Septic identification at Suzuki p (R₅ + R₇ + tail)
+
+Extends the τ⁵ identification by one more order: identifies the τ⁷
+leading term of `suzuki5_bch` with a uniform CAS-derived bound, leaving
+an `O(τ⁸)` tail. This is the BCH-side input to Lean-Trotter's
+`bch_uniform_integrated`.
+
+### Constants
+
+* `bchR7UniformConstant : ℝ := 0.01951` — a rational ceiling for the
+  CAS-computed value `K = Σ_w |coef(w)| ≈ 0.019509`, where the sum runs
+  over the 126 non-zero 7-letter `{A, B}`-words appearing in `R₇` at
+  Suzuki `p`. Defined in `Lean-Trotter/scripts/compute_bch_r7.py`.
+
+* `bchR7Bound A B := bchR7UniformConstant * max ‖A‖ ‖B‖ ^ 7` — the
+  triangle-inequality bound: each 7-letter word `w` satisfies
+  `‖w‖ ≤ max(‖A‖, ‖B‖) ^ 7`, so `‖R₇‖ ≤ K · max(‖A‖, ‖B‖) ^ 7`.
+
+### The axiom and its public bridge
+
+The current Lean-BCH expansion stops at the τ⁵ Childs-basis projection.
+Extending to τ⁷ requires:
+
+1. A sextic BCH remainder bound (extend `bch_quartic_term` by one
+   degree).
+2. A 7-letter Childs-basis projection of `R₇` (extend
+   `compute_bch_prefactors.py` to `max_degree = 7`).
+3. Per-word numerical bound `|coef(w)|` at Suzuki `p`, summed via the
+   triangle inequality to recover `bchR7UniformConstant`.
+
+These are tier-1, tier-2 work analogous to the τ⁵ discharge in
+session 12. The septic identification is therefore axiomatized as a
+single `private axiom`, with the discharge roadmap mirrored from the
+P1 axiom template.
+
+The axiom states the existential-δ bound directly in the form needed
+by Lean-Trotter, so the Lean-Trotter-side composition reduces to
+exp-Lipschitz + triangle inequality.
+-/
+
+section SepticBridge
+
+variable {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra ℝ 𝔸]
+  [NormOneClass 𝔸] [CompleteSpace 𝔸]
+
+/-- Rational ceiling for the CAS-computed `K = Σ_w |coef(w)|` over the
+non-zero 7-letter `{A, B}`-words in `R₇` at Suzuki `p`. The exact CAS
+value is `K ≈ 0.019509`; we use `0.01951` to match
+`Lean-Trotter/Suzuki4ViaBCH.lean`'s `bchR7UniformConstant`. -/
+noncomputable def bchR7UniformConstant : ℝ := 0.01951
+
+lemma bchR7UniformConstant_eq : bchR7UniformConstant = 0.01951 := rfl
+
+lemma bchR7UniformConstant_nonneg : 0 ≤ bchR7UniformConstant := by
+  unfold bchR7UniformConstant; norm_num
+
+lemma bchR7UniformConstant_covers_cas :
+    (0.019509 : ℝ) < bchR7UniformConstant := by
+  unfold bchR7UniformConstant; norm_num
+
+/-- Uniform bound on `‖R₇(A, B)‖`: `K · max(‖A‖, ‖B‖) ^ 7`, with `K`
+the rational ceiling above. -/
+noncomputable def bchR7Bound (A B : 𝔸) : ℝ :=
+  bchR7UniformConstant * max ‖A‖ ‖B‖ ^ 7
+
+lemma bchR7Bound_nonneg (A B : 𝔸) : 0 ≤ bchR7Bound A B := by
+  unfold bchR7Bound
+  have := bchR7UniformConstant_nonneg
+  have hmax : 0 ≤ max ‖A‖ ‖B‖ := le_max_of_le_left (norm_nonneg A)
+  positivity
+
+/-- **Septic identification axiom** (Tier-2 status, awaiting full
+discharge analogous to the P1 chain). Asserts that the τ⁷ leading
+coefficient of `suzuki5_bch ℝ A B suzukiP τ − τ • (A + B)` is bounded
+by `bchR7Bound A B = K · max(‖A‖, ‖B‖) ^ 7` (with `K` from CAS), modulo
+an `O(τ⁸)` tail.
+
+Specifically: there exist `δ > 0` and `M ≥ 0` such that for all
+`τ ∈ [0, δ)`,
+```
+  ‖suzuki5_bch ℝ A B suzukiP τ − τ • (A + B)‖ ≤
+    τ⁵ · bchTightPrefactors.boundSum A B +
+    τ⁷ · bchR7Bound A B +
+    M · τ⁸
+```
+
+Combines the existing τ⁵ identification (`suzuki5_R5_decomp`) with the
+τ⁷ Childs-basis identification (`R₇`) and a sextic-BCH-remainder tail
+bound. The discharge roadmap mirrors the P1 axiom chain (regime
+helpers + per-term bounds + `under_regime` assembly); estimated
+~2-3 weeks of Lean work.
+
+Used downstream by `suzuki5_log_product_septic_at_suzukiP` (the public
+bridge), which feeds Lean-Trotter's `bch_uniform_integrated`. -/
+private axiom suzuki5_log_product_septic_at_suzukiP_axiom (A B : 𝔸) :
+    ∃ δ > (0 : ℝ), ∃ M ≥ (0 : ℝ), ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B)‖ ≤
+        τ ^ 5 * bchTightPrefactors.boundSum A B +
+        τ ^ 7 * bchR7Bound A B +
+        M * τ ^ 8
+
+/-- **Public bridge** matching Lean-Trotter's `bch_uniform_integrated`
+shape. Direct re-export of the axiom; provided as a `theorem` so that
+downstream `#print axioms` traces the axiom dependency cleanly. -/
+theorem suzuki5_log_product_septic_at_suzukiP (A B : 𝔸) :
+    ∃ δ > (0 : ℝ), ∃ M ≥ (0 : ℝ), ∀ τ : ℝ, 0 ≤ τ → τ < δ →
+      ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B)‖ ≤
+        τ ^ 5 * bchTightPrefactors.boundSum A B +
+        τ ^ 7 * bchR7Bound A B +
+        M * τ ^ 8 :=
+  suzuki5_log_product_septic_at_suzukiP_axiom A B
+
+end SepticBridge
+
 end BCH
