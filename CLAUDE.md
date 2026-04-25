@@ -368,13 +368,39 @@ standard (verified via `#print axioms`).
   closure is to identify `sym_cubic_poly(4X, Y) + sym_quintic_poly(4X, Y)`
   (under `IsSuzukiCubic p`) with `τ⁵·suzuki5_R5 A B p`.
 
-**Open**: **B2.2/B2.3/B2.4** — symbolic τ⁵ identification (~3-4 weeks of
-focused work per session prompt at `claude/lean-bch-B2-session-prompt.md`).
-Project the polynomials `sym_cubic_poly(4X, Y) + sym_quintic_poly(4X, Y)`
-onto the Childs 4-fold commutator basis, matching the βᵢ(p) prefactors
-already encoded in `BCH.suzuki5_R5`. The CAS pipeline at
-`Lean-Trotter/scripts/compute_bch_prefactors.py` already computes this
-projection at the symbolic level.
+**B2.2.a + B2.2.b done (session 9)**: vanishing identities for the symmetric
+poly's on scalar•V inputs (in `BCH/SymmetricQuintic.lean`):
+
+- `BCH.symmetric_bch_quintic_poly_apply_smul_smul (V α β) :`
+  `symmetric_bch_quintic_poly 𝕂 (α•V) (β•V) = 0`. Proof: each 5-letter
+  word collapses to `(α^k·β^(5−k))•V⁵`; the sum of word coefficients per
+  k-group is identically zero (k=4: 7−28+42−28+7=0; k=3:
+  −28+72+12−48−48+12+32−48+72−28=0; k=2:
+  32−48−48+32−48+192−48−48−48+32=0; k=1: −8+32−48+32−8=0; k∈{0,5}: no
+  terms). Closed via `simp + ← add_smul + ring` after a 5-fold smul-mul
+  absorption helper. Zero new axioms.
+- `BCH.symmetric_bch_cubic_poly_apply_smul_smul (V α β) :`
+  `symmetric_bch_cubic_poly 𝕂 (α•V) (β•V) = 0`. Trivial: the inner
+  commutator `(α•V)(β•V) − (β•V)(α•V) = αβ·V² − αβ·V² = 0`. Zero new
+  axioms.
+
+**Significance**: These are the structural foundations for B2.2. They show
+that the "leading τ⁵" contribution from `sym_cubic_poly(4X, Y)` and
+`sym_quintic_poly(4X, Y)` (substituting only the linear `(cτ)•V` parts of
+X, Y) vanishes identically. The non-zero τ⁵ contribution comes from the
+"linear-in-residual" terms of `sym_cubic_poly(4X, Y)` (where one slot has
+the `(cτ)³·E_sym` cubic residue), giving 4-fold commutators in V's
+letters — exactly the Childs basis structure. The `sym_quintic_poly(4X, Y)`
+contribution at τ⁵ is `0` (since linear-in-residual would be τ⁷, beyond
+the τ⁵ window).
+
+**Open**: **B2.2.c/B2.2.d** (multilinear Lipschitz bounds, ~few days) and
+**B2.2.e** (symbolic τ⁵-to-Childs-basis projection, the ~weeks-long
+symbolic work). Project the linear-in-residual part of
+`sym_cubic_poly(4X, Y)` onto the Childs 4-fold commutator basis, matching
+the βᵢ(p) prefactors in `BCH.suzuki5_R5`. CAS pipeline at
+`Lean-Trotter/scripts/compute_bch_prefactors.py` already does this at
+the symbolic level.
 
 ### Axiom 2 infrastructure (sessions 7–8, this branch)
 
