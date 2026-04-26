@@ -111,39 +111,40 @@ Before the main theorem, likely need these new pieces in `BCH/Basic.lean`:
 
 4. **[DONE session 13]** `norm_bch_quintic_term_le` — `‖Z₅(a,b)‖ ≤ s⁵`.
 
-5. **[NEXT]** `quintic_identity` — analog of `quartic_identity`
-   (Basic.lean:1898), one degree higher. **Genuinely the hardest
-   technical step left.** The LHS form is now CONFIRMED via CAS at
-   `Lean-Trotter/scripts/discover_quintic_identity.py`:
+5. **[NEXT, partial progress]** `quintic_identity` — analog of
+   `quartic_identity` (Basic.lean:1898), one degree higher. **Genuinely
+   the hardest technical step left.**
 
+   Confirmed LHS form (verified via CAS substitution check at
+   `Lean-Trotter/scripts/discover_quintic_identity.py`, rev 9ee89b4):
    ```
    LHS = ½W_H1 + ⅓y³ - ¼y⁴ + ⅕y⁵ - C₃ - C₄ - C₅
-   quintic_identity:
-     LHS = (sum of degree-5+ pieces in F's, G's, H's, P's)
    ```
+   substituting ea → exp(a)_6, eb → exp(b)_6 gives a polynomial in
+   {a, b} with all degrees ≤5 vanishing (only 64 degree-6 terms remain).
 
-   **Verified (Lean-Trotter rev 9ee89b4)**: substituting ea → exp(a)_6,
-   eb → exp(b)_6 into LHS gives a polynomial in {a, b} with all
-   degrees ≤5 vanishing (only 64 non-zero degree-6 terms remain). This
-   confirms C₅ from extract_bch_z5.py is correct AND that the LHS
-   shape is the right starting point.
+   **Parametric RHS solver attempt (rev fb5a735)**: tried 17-element
+   then 61-element candidate basis (G's, F's, cross-products, P·X,
+   z·Y, sandwich D-D-D triples, ab/ba cross-D's, z²·D, z·E·z, etc.).
+   Both attempts: **INCONSISTENT — basis insufficient**. The
+   structural decomposition is more subtle than "natural extension of
+   quartic_identity's RHS pattern".
 
-   **What remains (next session)**: discover the RHS shape. Candidate
-   building blocks (each "degree-5+" when ea=exp(a), eb=exp(b)):
-   - G₁, G₂ (single-variable degree-5 exp remainders)
-   - a·F₂, F₁·b (cross-cubic-quartic)
-   - D₁·E₂, E₁·D₂ (cross-cubic-quadratic of degree 5)
-   - D₁·D₂·D₁ etc. (triple-D, degree 6)
-   - z·(F's + Q'_quintic)·z corrections
-   - P·X + X·P type cross terms (where X = E₁+E₂+Q from quartic_identity)
-   - -⅓P³ analog of -½P²
+   **Working hypotheses** (try in order for next session):
+   - **(a)** Add basis terms involving more products of D, E, F, G with
+     specific {a, b} substring patterns matching C₅'s 30 word-types.
+     E.g., D₁·b·a·D₂, a·D₁·D₂·a, D₁·b²·a, a²·D₂·b, b·a·D₁·D₂, etc.
+   - **(b)** Take a fundamentally different approach: use the
+     Lyndon-Hall basis decomposition for the free Lie algebra at
+     degree 5 (6 elements) and map to the corresponding ring identity.
+   - **(c)** Compute the residual LHS - (current best 61-basis fit)
+     directly, then check if the residual factors into a small number
+     of new candidate building blocks. This is "diff-driven" basis
+     construction.
 
-   Recommended workflow: extend `discover_quintic_identity.py` to
-   parametrize a candidate RHS with unknown coefficients on each
-   building block, then solve the linear system "LHS - RHS = 0" via
-   sympy. Once a working RHS is found, port to Lean. Expected
-   ~150-300 Lean lines, possibly higher heartbeats than
-   `quartic_identity`'s 64M.
+   Once a working identity is found, port to Lean as `private theorem
+   quintic_identity`. Expected ~150-300 Lean lines, possibly higher
+   heartbeats than `quartic_identity`'s 64M.
 
 6. **[After 5]** `norm_bch_sextic_remainder_le` — for `bch(a, b)`, bound:
    `‖bch(a, b) − (a+b) − ½[a,b] − cubic − quartic − quintic‖ ≤
