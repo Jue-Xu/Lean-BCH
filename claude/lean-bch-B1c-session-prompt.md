@@ -1,5 +1,29 @@
 # Lean-BCH next session — B1.c (quintic Taylor bridge for symmetric BCH)
 
+## Status update (2026-04-26, session 13)
+
+**P1 axiom discharged (session 12).** Repository on `main` @ `4cc5a5a`,
+0 sorries, 1 scoped private axiom (`symmetric_bch_quintic_sub_poly_axiom`
+= B1.c) + Lean's 3 standard. After session 12, Lean-Trotter also added
+a new axiom `suzuki5_R5_R7_identification_axiom` for axiom-3 work
+(commit `cf5eea3`); this is independent of B1.c.
+
+**Session 13 added Tier-1 foundation pieces only:**
+
+- `BCH/LogSeries.lean`: `summable_logSeriesTerm_shift5`,
+  `logSeriesTerm_four`, `logOnePlus_sub_sub_sub_sub_sub_eq_tsum`,
+  `norm_logOnePlus_sub_sub_sub_sub_sub_le` (~45 lines).
+- `BCH/Basic.lean`: `norm_exp_sub_one_sub_sub_sub_sub_sub_le`,
+  `real_exp_sixth_order_le_sextic` (~108 lines).
+
+These are mechanical mirrors of the existing order-5 patterns
+(`norm_logOnePlus_sub_sub_sub_sub_le`, `norm_exp_sub_one_sub_sub_sub
+_sub_le`, `real_exp_fifth_order_le_quintic`) at one degree higher. Build
+clean. Both private (consumed only within Basic.lean's planned
+`norm_bch_sextic_remainder_le`).
+
+**Remaining for full B1.c (Tier 1 + Tier 2 + Tier 3) — see below.**
+
 ## Context
 
 Continuing Priority B (discharge `suzuki5_R5_identification_axiom` on
@@ -54,21 +78,41 @@ bounds. For B1.c, we extend this to one higher order.
 
 Before the main theorem, likely need these new pieces in `BCH/Basic.lean`:
 
-1. **`bch_quintic_term 𝕂 a b : 𝔸`** — the τ⁵ coefficient of
-   `bch(a, b) = a + b + ½[a,b] + bch_cubic_term + bch_quartic_term +
-   bch_quintic_term + O(s⁶)`.
-   Analog of existing `bch_cubic_term` and `bch_quartic_term`.
+1. **[DONE session 13]** Log/exp tail bounds at order 6:
+   - `norm_logOnePlus_sub_sub_sub_sub_sub_le` (in LogSeries.lean)
+   - `norm_exp_sub_one_sub_sub_sub_sub_sub_le`
+   - `real_exp_sixth_order_le_sextic`
 
-2. **`bch_quintic_term_smul`** — `c⁵` homogeneity. Analog of
+2. **[TODO]** `bch_quintic_term 𝕂 a b : 𝔸` — the τ⁵ coefficient of
+   `bch(a, b) = a + b + ½[a,b] + bch_cubic_term + bch_quartic_term +
+   bch_quintic_term + O(s⁶)`. Analog of existing `bch_cubic_term` and
+   `bch_quartic_term`. **Definition discovery requires CAS** — the Hall
+   basis Z₅ has 6 free Lie algebra dim'l elements with non-trivial
+   rational coefficients. Recommend extending
+   `Lean-Trotter/scripts/compute_bch_prefactors.py` to extract Z₅
+   symbolically (the `ncpoly_log_one_plus(ncpoly_mul(exp_a, exp_b),
+   max_degree=5)` call already returns the full degree-5 BCH expansion;
+   subtract the known degrees 1-4 to get Z₅ as an NC-polynomial).
+
+3. **[TODO]** `bch_quintic_term_smul` — `c⁵` homogeneity. Analog of
    `bch_cubic_term_smul` / `bch_quartic_term_smul`.
 
-3. **`norm_bch_quintic_term_le`** — `‖bch_quintic_term a b‖ ≤ K·(‖a‖+‖b‖)⁵`.
-   Explicit constant via triangle inequality on the term's definition.
+4. **[TODO]** `norm_bch_quintic_term_le` — `‖bch_quintic_term a b‖ ≤
+   K·(‖a‖+‖b‖)⁵`. Explicit constant via triangle inequality on the
+   term's definition.
 
-4. **`norm_bch_sextic_remainder_le`** — for `bch(a, b)`, bound on
+5. **[TODO]** `quintic_identity` — analog of `quartic_identity`
+   (Basic.lean:1563), one degree higher. Statement form:
+   `½W_H1 + ⅓z³ + ¼y⁴ - bch_cubic_term - bch_quartic_term - bch_quintic_term =
+    [quintic+ terms expressible via F₁, F₂, G₁, G₂, E·b, a·E, etc.]`.
+   Discovery requires CAS. The existing 100-line `quartic_identity` proof
+   at 64M heartbeats indicates the analog will be ~150-200 lines at
+   higher heartbeat budget.
+
+6. **[TODO]** `norm_bch_sextic_remainder_le` — for `bch(a, b)`, bound on
    `‖bch(a, b) − (a+b) − ½[a,b] − cubic − quartic − quintic‖ ≤
     K·(‖a‖+‖b‖)⁶/(2−exp(s))`.
-   Analog of `norm_bch_quintic_remainder_le` (one order higher).
+   Analog of `norm_bch_quintic_remainder_le` (~800 lines, one order higher).
 
 ### Main theorem proof structure (mirror of the cubic version)
 
