@@ -2,27 +2,46 @@
 
 ## Status update (2026-04-26, session 13)
 
-**P1 axiom discharged (session 12).** Repository on `main` @ `4cc5a5a`,
+**P1 axiom discharged (session 12).** Repository on `main` @ `973b5d6`,
 0 sorries, 1 scoped private axiom (`symmetric_bch_quintic_sub_poly_axiom`
 = B1.c) + Lean's 3 standard. After session 12, Lean-Trotter also added
 a new axiom `suzuki5_R5_R7_identification_axiom` for axiom-3 work
 (commit `cf5eea3`); this is independent of B1.c.
 
-**Session 13 added Tier-1 foundation pieces only:**
+**Session 13 added Tier-1 foundation + bch_quintic_term (~488 lines, all
+zero new axioms, build clean):**
 
-- `BCH/LogSeries.lean`: `summable_logSeriesTerm_shift5`,
-  `logSeriesTerm_four`, `logOnePlus_sub_sub_sub_sub_sub_eq_tsum`,
-  `norm_logOnePlus_sub_sub_sub_sub_sub_le` (~45 lines).
-- `BCH/Basic.lean`: `norm_exp_sub_one_sub_sub_sub_sub_sub_le`,
-  `real_exp_sixth_order_le_sextic` (~108 lines).
+### `BCH/LogSeries.lean` (~45 lines)
+- `summable_logSeriesTerm_shift5`, `logSeriesTerm_four` (simp),
+  `logOnePlus_sub_sub_sub_sub_sub_eq_tsum`,
+  `norm_logOnePlus_sub_sub_sub_sub_sub_le`. Mechanical extension of the
+  existing order-5 pattern at one degree higher.
 
-These are mechanical mirrors of the existing order-5 patterns
-(`norm_logOnePlus_sub_sub_sub_sub_le`, `norm_exp_sub_one_sub_sub_sub
-_sub_le`, `real_exp_fifth_order_le_quintic`) at one degree higher. Build
-clean. Both private (consumed only within Basic.lean's planned
-`norm_bch_sextic_remainder_le`).
+### `BCH/Basic.lean` (~443 lines)
+- `norm_exp_sub_one_sub_sub_sub_sub_sub_le` (private),
+  `real_exp_sixth_order_le_sextic` (private).
+- **`bch_quintic_term`** — the τ⁵ BCH coefficient (Z₅) defined via 30
+  explicit 5-letter words on `{a, b}` with rational coefficients,
+  decomposed into 4 sub-groups by absolute coefficient:
+  - `bch_quintic_group_1` (4 monomials, |coeff|=1): -1/720·{aaaab,
+    abbbb, baaaa, bbbba}
+  - `bch_quintic_group_4` (10 monomials, |coeff|=4): +1/180·{...}
+  - `bch_quintic_group_6` (14 monomials, |coeff|=6): -1/120·{...}
+  - `bch_quintic_group_24` (2 monomials, |coeff|=24): +1/30·{ababa, babab}
+- `bch_quintic_term_smul`: `Z₅(c•a, c•b) = c⁵·Z₅(a, b)` (analog of
+  `bch_cubic_term_smul` / `bch_quartic_term_smul`).
+- `norm_bch_quintic_term_le`: `‖Z₅(a, b)‖ ≤ s⁵` (sum of |coeffs| =
+  4+40+84+48 = 176; multiplied by `‖(720)⁻¹‖ = 1/720` gives
+  `176/720 ≈ 0.244`).
 
-**Remaining for full B1.c (Tier 1 + Tier 2 + Tier 3) — see below.**
+### `Lean-Trotter/scripts/extract_bch_z5.py` (~204 lines, local commit `8c30bf2`)
+- CAS extraction script. Re-uses `compute_bch_prefactors.py`
+  infrastructure. Output is the source of truth for `bch_quintic_term`.
+- Verifies degree 1 = a + b and degree 2 = ½(ab - ba) match the H1
+  form before extracting Z₅. Prints both NC-polynomial form, grouped
+  Lean expression form, and the LCM-720 integer-coefficient form.
+
+**Remaining for full B1.c (5 steps) — see below.**
 
 ## Context
 
@@ -83,36 +102,43 @@ Before the main theorem, likely need these new pieces in `BCH/Basic.lean`:
    - `norm_exp_sub_one_sub_sub_sub_sub_sub_le`
    - `real_exp_sixth_order_le_sextic`
 
-2. **[TODO]** `bch_quintic_term 𝕂 a b : 𝔸` — the τ⁵ coefficient of
-   `bch(a, b) = a + b + ½[a,b] + bch_cubic_term + bch_quartic_term +
-   bch_quintic_term + O(s⁶)`. Analog of existing `bch_cubic_term` and
-   `bch_quartic_term`. **Definition discovery requires CAS** — the Hall
-   basis Z₅ has 6 free Lie algebra dim'l elements with non-trivial
-   rational coefficients. Recommend extending
-   `Lean-Trotter/scripts/compute_bch_prefactors.py` to extract Z₅
-   symbolically (the `ncpoly_log_one_plus(ncpoly_mul(exp_a, exp_b),
-   max_degree=5)` call already returns the full degree-5 BCH expansion;
-   subtract the known degrees 1-4 to get Z₅ as an NC-polynomial).
+2. **[DONE session 13]** `bch_quintic_term 𝕂 a b : 𝔸` — the τ⁵ coefficient
+   of `bch(a, b)`. Defined as 30 explicit 5-letter words on `{a, b}`
+   grouped by absolute coefficient (4 sub-groups: 1/4/6/24). Extracted
+   by CAS at `Lean-Trotter/scripts/extract_bch_z5.py`.
 
-3. **[TODO]** `bch_quintic_term_smul` — `c⁵` homogeneity. Analog of
-   `bch_cubic_term_smul` / `bch_quartic_term_smul`.
+3. **[DONE session 13]** `bch_quintic_term_smul` — `c⁵` homogeneity.
 
-4. **[TODO]** `norm_bch_quintic_term_le` — `‖bch_quintic_term a b‖ ≤
-   K·(‖a‖+‖b‖)⁵`. Explicit constant via triangle inequality on the
-   term's definition.
+4. **[DONE session 13]** `norm_bch_quintic_term_le` — `‖Z₅(a,b)‖ ≤ s⁵`.
 
-5. **[TODO]** `quintic_identity` — analog of `quartic_identity`
-   (Basic.lean:1563), one degree higher. Statement form:
-   `½W_H1 + ⅓z³ + ¼y⁴ - bch_cubic_term - bch_quartic_term - bch_quintic_term =
-    [quintic+ terms expressible via F₁, F₂, G₁, G₂, E·b, a·E, etc.]`.
-   Discovery requires CAS. The existing 100-line `quartic_identity` proof
-   at 64M heartbeats indicates the analog will be ~150-200 lines at
-   higher heartbeat budget.
+5. **[NEXT]** `quintic_identity` — analog of `quartic_identity`
+   (Basic.lean:1898), one degree higher. **Genuinely the hardest
+   technical step left.** The identity statement requires CAS-based
+   discovery; once stated, the proof follows the same pattern (multiply
+   by LCM 720, scalar simp, `noncomm_ring`).
 
-6. **[TODO]** `norm_bch_sextic_remainder_le` — for `bch(a, b)`, bound on
+   Approximate statement form:
+   ```
+   I₁_quintic := (½W_H1) + (⅓z³) - C₃ - C₄
+   quintic_identity:
+     I₁_quintic = G₁ + G₂ + a·F₂ + F₁·b + ... (degree-5+ terms only)
+   ```
+   where G₁, G₂ are quintic exp remainders and F₁, F₂ are the existing
+   quartic exp remainders. Expected ~150-300 lines, may need higher
+   heartbeats than `quartic_identity`'s 64M.
+
+   **Recommended approach**: extend `extract_bch_z5.py` (or write a new
+   CAS script) to compute the right-hand-side decomposition of
+   `½W_H1 + ⅓z³ - C₃ - C₄` symbolically, expressing it in terms of
+   known exp/log remainders. Then port to Lean.
+
+6. **[After 5]** `norm_bch_sextic_remainder_le` — for `bch(a, b)`, bound:
    `‖bch(a, b) − (a+b) − ½[a,b] − cubic − quartic − quintic‖ ≤
     K·(‖a‖+‖b‖)⁶/(2−exp(s))`.
-   Analog of `norm_bch_quintic_remainder_le` (~800 lines, one order higher).
+   Analog of `norm_bch_quintic_remainder_le` (Basic.lean:2326, ~800 lines).
+   Strategy: extend the existing pieceA/pieceB decomposition. pieceA uses
+   the new `norm_logOnePlus_sub_sub_sub_sub_sub_le`. pieceB uses the new
+   `quintic_identity` to extract `bch_quintic_term`.
 
 ### Main theorem proof structure (mirror of the cubic version)
 
