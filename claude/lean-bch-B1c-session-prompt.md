@@ -113,24 +113,37 @@ Before the main theorem, likely need these new pieces in `BCH/Basic.lean`:
 
 5. **[NEXT]** `quintic_identity` — analog of `quartic_identity`
    (Basic.lean:1898), one degree higher. **Genuinely the hardest
-   technical step left.** The identity statement requires CAS-based
-   discovery; once stated, the proof follows the same pattern (multiply
-   by LCM 720, scalar simp, `noncomm_ring`).
+   technical step left.** The LHS form is now CONFIRMED via CAS at
+   `Lean-Trotter/scripts/discover_quintic_identity.py`:
 
-   Approximate statement form:
    ```
-   I₁_quintic := (½W_H1) + (⅓z³) - C₃ - C₄
+   LHS = ½W_H1 + ⅓y³ - ¼y⁴ + ⅕y⁵ - C₃ - C₄ - C₅
    quintic_identity:
-     I₁_quintic = G₁ + G₂ + a·F₂ + F₁·b + ... (degree-5+ terms only)
+     LHS = (sum of degree-5+ pieces in F's, G's, H's, P's)
    ```
-   where G₁, G₂ are quintic exp remainders and F₁, F₂ are the existing
-   quartic exp remainders. Expected ~150-300 lines, may need higher
-   heartbeats than `quartic_identity`'s 64M.
 
-   **Recommended approach**: extend `extract_bch_z5.py` (or write a new
-   CAS script) to compute the right-hand-side decomposition of
-   `½W_H1 + ⅓z³ - C₃ - C₄` symbolically, expressing it in terms of
-   known exp/log remainders. Then port to Lean.
+   **Verified (Lean-Trotter rev 9ee89b4)**: substituting ea → exp(a)_6,
+   eb → exp(b)_6 into LHS gives a polynomial in {a, b} with all
+   degrees ≤5 vanishing (only 64 non-zero degree-6 terms remain). This
+   confirms C₅ from extract_bch_z5.py is correct AND that the LHS
+   shape is the right starting point.
+
+   **What remains (next session)**: discover the RHS shape. Candidate
+   building blocks (each "degree-5+" when ea=exp(a), eb=exp(b)):
+   - G₁, G₂ (single-variable degree-5 exp remainders)
+   - a·F₂, F₁·b (cross-cubic-quartic)
+   - D₁·E₂, E₁·D₂ (cross-cubic-quadratic of degree 5)
+   - D₁·D₂·D₁ etc. (triple-D, degree 6)
+   - z·(F's + Q'_quintic)·z corrections
+   - P·X + X·P type cross terms (where X = E₁+E₂+Q from quartic_identity)
+   - -⅓P³ analog of -½P²
+
+   Recommended workflow: extend `discover_quintic_identity.py` to
+   parametrize a candidate RHS with unknown coefficients on each
+   building block, then solve the linear system "LHS - RHS = 0" via
+   sympy. Once a working RHS is found, port to Lean. Expected
+   ~150-300 Lean lines, possibly higher heartbeats than
+   `quartic_identity`'s 64M.
 
 6. **[After 5]** `norm_bch_sextic_remainder_le` — for `bch(a, b)`, bound:
    `‖bch(a, b) − (a+b) − ½[a,b] − cubic − quartic − quintic‖ ≤
