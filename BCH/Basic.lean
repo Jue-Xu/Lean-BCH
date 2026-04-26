@@ -1552,6 +1552,341 @@ theorem norm_bch_quartic_term_le (a b : 𝔸) :
           nlinarith [h1]
         nlinarith
 
+/-! ### Fifth-order BCH term (Z₅) -/
+
+/-- **Sign-1 group** of `bch_quintic_term`: the four 5-letter words with
+  absolute coefficient 1 (the "almost-pure" pattern AAAAB / ABBBB / BAAAA /
+  BBBBA). Each appears with coefficient -1/720 in Z₅.
+
+  Factored separately to keep the proofs of `bch_quintic_term_smul` and
+  `norm_bch_quintic_term_le` tractable. -/
+private noncomputable def bch_quintic_group_1 {𝔸 : Type*} [NormedRing 𝔸]
+    (a b : 𝔸) : 𝔸 :=
+  a * a * a * a * b + a * b * b * b * b + b * a * a * a * a + b * b * b * b * a
+
+/-- **Sign-4 group** of `bch_quintic_term`: the ten 5-letter words with
+  absolute coefficient 4. Each appears with coefficient +4/720 = 1/180. -/
+private noncomputable def bch_quintic_group_4 {𝔸 : Type*} [NormedRing 𝔸]
+    (a b : 𝔸) : 𝔸 :=
+  a * a * a * b * a + a * a * a * b * b + a * a * b * b * b +
+  a * b * a * a * a + a * b * b * b * a + b * a * a * a * b +
+  b * a * b * b * b + b * b * a * a * a + b * b * b * a * a +
+  b * b * b * a * b
+
+/-- **Sign-6 group** of `bch_quintic_term`: the fourteen 5-letter words
+  with absolute coefficient 6. Each appears with coefficient -6/720 = -1/120. -/
+private noncomputable def bch_quintic_group_6 {𝔸 : Type*} [NormedRing 𝔸]
+    (a b : 𝔸) : 𝔸 :=
+  a * a * b * a * a + a * a * b * a * b + a * a * b * b * a +
+  a * b * a * a * b + a * b * a * b * b + a * b * b * a * a +
+  a * b * b * a * b + b * a * a * b * a + b * a * a * b * b +
+  b * a * b * a * a + b * a * b * b * a + b * b * a * a * b +
+  b * b * a * b * a + b * b * a * b * b
+
+/-- **Sign-24 group** of `bch_quintic_term`: the two 5-letter palindromic
+  words with absolute coefficient 24. Each appears with coefficient
+  +24/720 = 1/30. -/
+private noncomputable def bch_quintic_group_24 {𝔸 : Type*} [NormedRing 𝔸]
+    (a b : 𝔸) : 𝔸 :=
+  a * b * a * b * a + b * a * b * a * b
+
+/-- The degree-5 BCH term: τ⁵ coefficient of `bch(a,b) = log(exp(a)·exp(b))`.
+
+Extracted symbolically by `Lean-Trotter/scripts/extract_bch_z5.py` from the
+truncated NC-polynomial expansion of `log(1 + (exp(a)·exp(b) - 1))` to
+degree 5. Has 30 non-zero 5-letter words on `{a, b}`; the only words that
+do NOT appear are the pure `aaaaa` and `bbbbb` (since `bch(a, 0) = a` and
+`bch(0, b) = b` have no quintic correction). LCM of denominators is 720.
+
+Decomposed into four `bch_quintic_group_n` pieces grouped by absolute
+coefficient (n ∈ {1, 4, 6, 24}) for clean smul and norm bookkeeping.
+
+This is the next term in the expansion:
+`bch(a,b) = a + b + ½[a,b] + bch_cubic_term + bch_quartic_term +
+  bch_quintic_term + O(s⁶)`. -/
+noncomputable def bch_quintic_term (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+  (720 : 𝕂)⁻¹ • (
+    -bch_quintic_group_1 a b
+    + (4 : 𝕂) • bch_quintic_group_4 a b
+    - (6 : 𝕂) • bch_quintic_group_6 a b
+    + (24 : 𝕂) • bch_quintic_group_24 a b
+  )
+
+/-! #### Homogeneity of bch_quintic_term -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem bch_quintic_group_1_smul (a b : 𝔸) (c : 𝕂) :
+    bch_quintic_group_1 (c • a) (c • b) = c ^ 5 • bch_quintic_group_1 a b := by
+  unfold bch_quintic_group_1
+  have quint : ∀ x₁ x₂ x₃ x₄ x₅ : 𝔸,
+      (c • x₁) * (c • x₂) * (c • x₃) * (c • x₄) * (c • x₅) =
+        c ^ 5 • (x₁ * x₂ * x₃ * x₄ * x₅) := by
+    intros; simp only [smul_mul_assoc, mul_smul_comm, smul_smul]; congr 1; ring
+  simp only [quint, ← smul_add]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem bch_quintic_group_4_smul (a b : 𝔸) (c : 𝕂) :
+    bch_quintic_group_4 (c • a) (c • b) = c ^ 5 • bch_quintic_group_4 a b := by
+  unfold bch_quintic_group_4
+  have quint : ∀ x₁ x₂ x₃ x₄ x₅ : 𝔸,
+      (c • x₁) * (c • x₂) * (c • x₃) * (c • x₄) * (c • x₅) =
+        c ^ 5 • (x₁ * x₂ * x₃ * x₄ * x₅) := by
+    intros; simp only [smul_mul_assoc, mul_smul_comm, smul_smul]; congr 1; ring
+  simp only [quint, ← smul_add]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem bch_quintic_group_6_smul (a b : 𝔸) (c : 𝕂) :
+    bch_quintic_group_6 (c • a) (c • b) = c ^ 5 • bch_quintic_group_6 a b := by
+  unfold bch_quintic_group_6
+  have quint : ∀ x₁ x₂ x₃ x₄ x₅ : 𝔸,
+      (c • x₁) * (c • x₂) * (c • x₃) * (c • x₄) * (c • x₅) =
+        c ^ 5 • (x₁ * x₂ * x₃ * x₄ * x₅) := by
+    intros; simp only [smul_mul_assoc, mul_smul_comm, smul_smul]; congr 1; ring
+  simp only [quint, ← smul_add]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem bch_quintic_group_24_smul (a b : 𝔸) (c : 𝕂) :
+    bch_quintic_group_24 (c • a) (c • b) = c ^ 5 • bch_quintic_group_24 a b := by
+  unfold bch_quintic_group_24
+  have quint : ∀ x₁ x₂ x₃ x₄ x₅ : 𝔸,
+      (c • x₁) * (c • x₂) * (c • x₃) * (c • x₄) * (c • x₅) =
+        c ^ 5 • (x₁ * x₂ * x₃ * x₄ * x₅) := by
+    intros; simp only [smul_mul_assoc, mul_smul_comm, smul_smul]; congr 1; ring
+  simp only [quint, ← smul_add]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Homogeneity of bch_quintic_term**: Z₅(c·a, c·b) = c⁵·Z₅(a,b). -/
+theorem bch_quintic_term_smul (a b : 𝔸) (c : 𝕂) :
+    bch_quintic_term 𝕂 (c • a) (c • b) = c ^ 5 • bch_quintic_term 𝕂 a b := by
+  unfold bch_quintic_term
+  rw [bch_quintic_group_1_smul, bch_quintic_group_4_smul,
+      bch_quintic_group_6_smul, bch_quintic_group_24_smul]
+  -- Pull c^5 out of each smul'd group; then out of the (720)⁻¹ smul
+  rw [smul_comm ((4 : 𝕂)) (c ^ 5), smul_comm ((6 : 𝕂)) (c ^ 5),
+      smul_comm ((24 : 𝕂)) (c ^ 5),
+      ← smul_neg, ← smul_add, ← smul_sub, ← smul_add,
+      smul_comm ((720 : 𝕂)⁻¹) (c ^ 5)]
+
+/-! #### Norm bounds for the four groups + the headline bound -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Helper: any 5-letter word on `{a, b}` has norm ≤ s⁵ where s = ‖a‖+‖b‖. -/
+private lemma norm_word5_le {𝔸 : Type*} [NormedRing 𝔸] (a b : 𝔸)
+    (x₁ x₂ x₃ x₄ x₅ : 𝔸)
+    (h₁ : x₁ = a ∨ x₁ = b) (h₂ : x₂ = a ∨ x₂ = b) (h₃ : x₃ = a ∨ x₃ = b)
+    (h₄ : x₄ = a ∨ x₄ = b) (h₅ : x₅ = a ∨ x₅ = b) :
+    ‖x₁ * x₂ * x₃ * x₄ * x₅‖ ≤ (‖a‖ + ‖b‖) ^ 5 := by
+  set s := ‖a‖ + ‖b‖
+  have ha := norm_nonneg a
+  have hb := norm_nonneg b
+  have hxs : ∀ x : 𝔸, x = a ∨ x = b → ‖x‖ ≤ s := by
+    intro x hx
+    cases hx with
+    | inl h => rw [h]; linarith
+    | inr h => rw [h]; linarith
+  calc ‖x₁ * x₂ * x₃ * x₄ * x₅‖
+      ≤ ‖x₁ * x₂ * x₃ * x₄‖ * ‖x₅‖ := norm_mul_le _ _
+    _ ≤ ‖x₁ * x₂ * x₃‖ * ‖x₄‖ * ‖x₅‖ := by gcongr; exact norm_mul_le _ _
+    _ ≤ ‖x₁ * x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ := by gcongr; exact norm_mul_le _ _
+    _ ≤ ‖x₁‖ * ‖x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ := by gcongr; exact norm_mul_le _ _
+    _ ≤ s * s * s * s * s := by
+        gcongr <;> [exact hxs _ h₁; exact hxs _ h₂; exact hxs _ h₃;
+                    exact hxs _ h₄; exact hxs _ h₅]
+    _ = s ^ 5 := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem norm_bch_quintic_group_1_le (a b : 𝔸) :
+    ‖bch_quintic_group_1 a b‖ ≤ 4 * (‖a‖ + ‖b‖) ^ 5 := by
+  unfold bch_quintic_group_1
+  set s := ‖a‖ + ‖b‖
+  have m1 := norm_word5_le a b a a a a b
+    (Or.inl rfl) (Or.inl rfl) (Or.inl rfl) (Or.inl rfl) (Or.inr rfl)
+  have m2 := norm_word5_le a b a b b b b
+    (Or.inl rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl)
+  have m3 := norm_word5_le a b b a a a a
+    (Or.inr rfl) (Or.inl rfl) (Or.inl rfl) (Or.inl rfl) (Or.inl rfl)
+  have m4 := norm_word5_le a b b b b b a
+    (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inl rfl)
+  have step1 := norm_add_le (a*a*a*a*b + a*b*b*b*b + b*a*a*a*a) (b*b*b*b*a)
+  have step2 := norm_add_le (a*a*a*a*b + a*b*b*b*b) (b*a*a*a*a)
+  have step3 := norm_add_le (a*a*a*a*b) (a*b*b*b*b)
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem norm_bch_quintic_group_4_le (a b : 𝔸) :
+    ‖bch_quintic_group_4 a b‖ ≤ 10 * (‖a‖ + ‖b‖) ^ 5 := by
+  unfold bch_quintic_group_4
+  set s := ‖a‖ + ‖b‖
+  have m1 := norm_word5_le a b a a a b a
+    (Or.inl rfl) (Or.inl rfl) (Or.inl rfl) (Or.inr rfl) (Or.inl rfl)
+  have m2 := norm_word5_le a b a a a b b
+    (Or.inl rfl) (Or.inl rfl) (Or.inl rfl) (Or.inr rfl) (Or.inr rfl)
+  have m3 := norm_word5_le a b a a b b b
+    (Or.inl rfl) (Or.inl rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl)
+  have m4 := norm_word5_le a b a b a a a
+    (Or.inl rfl) (Or.inr rfl) (Or.inl rfl) (Or.inl rfl) (Or.inl rfl)
+  have m5 := norm_word5_le a b a b b b a
+    (Or.inl rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inl rfl)
+  have m6 := norm_word5_le a b b a a a b
+    (Or.inr rfl) (Or.inl rfl) (Or.inl rfl) (Or.inl rfl) (Or.inr rfl)
+  have m7 := norm_word5_le a b b a b b b
+    (Or.inr rfl) (Or.inl rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl)
+  have m8 := norm_word5_le a b b b a a a
+    (Or.inr rfl) (Or.inr rfl) (Or.inl rfl) (Or.inl rfl) (Or.inl rfl)
+  have m9 := norm_word5_le a b b b b a a
+    (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inl rfl) (Or.inl rfl)
+  have m10 := norm_word5_le a b b b b a b
+    (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inl rfl) (Or.inr rfl)
+  have step1 := norm_add_le (a*a*a*b*a + a*a*a*b*b + a*a*b*b*b + a*b*a*a*a +
+      a*b*b*b*a + b*a*a*a*b + b*a*b*b*b + b*b*a*a*a + b*b*b*a*a) (b*b*b*a*b)
+  have step2 := norm_add_le (a*a*a*b*a + a*a*a*b*b + a*a*b*b*b + a*b*a*a*a +
+      a*b*b*b*a + b*a*a*a*b + b*a*b*b*b + b*b*a*a*a) (b*b*b*a*a)
+  have step3 := norm_add_le (a*a*a*b*a + a*a*a*b*b + a*a*b*b*b + a*b*a*a*a +
+      a*b*b*b*a + b*a*a*a*b + b*a*b*b*b) (b*b*a*a*a)
+  have step4 := norm_add_le (a*a*a*b*a + a*a*a*b*b + a*a*b*b*b + a*b*a*a*a +
+      a*b*b*b*a + b*a*a*a*b) (b*a*b*b*b)
+  have step5 := norm_add_le (a*a*a*b*a + a*a*a*b*b + a*a*b*b*b + a*b*a*a*a +
+      a*b*b*b*a) (b*a*a*a*b)
+  have step6 := norm_add_le (a*a*a*b*a + a*a*a*b*b + a*a*b*b*b + a*b*a*a*a) (a*b*b*b*a)
+  have step7 := norm_add_le (a*a*a*b*a + a*a*a*b*b + a*a*b*b*b) (a*b*a*a*a)
+  have step8 := norm_add_le (a*a*a*b*a + a*a*a*b*b) (a*a*b*b*b)
+  have step9 := norm_add_le (a*a*a*b*a) (a*a*a*b*b)
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem norm_bch_quintic_group_6_le (a b : 𝔸) :
+    ‖bch_quintic_group_6 a b‖ ≤ 14 * (‖a‖ + ‖b‖) ^ 5 := by
+  unfold bch_quintic_group_6
+  set s := ‖a‖ + ‖b‖
+  have m1 := norm_word5_le a b a a b a a
+    (Or.inl rfl) (Or.inl rfl) (Or.inr rfl) (Or.inl rfl) (Or.inl rfl)
+  have m2 := norm_word5_le a b a a b a b
+    (Or.inl rfl) (Or.inl rfl) (Or.inr rfl) (Or.inl rfl) (Or.inr rfl)
+  have m3 := norm_word5_le a b a a b b a
+    (Or.inl rfl) (Or.inl rfl) (Or.inr rfl) (Or.inr rfl) (Or.inl rfl)
+  have m4 := norm_word5_le a b a b a a b
+    (Or.inl rfl) (Or.inr rfl) (Or.inl rfl) (Or.inl rfl) (Or.inr rfl)
+  have m5 := norm_word5_le a b a b a b b
+    (Or.inl rfl) (Or.inr rfl) (Or.inl rfl) (Or.inr rfl) (Or.inr rfl)
+  have m6 := norm_word5_le a b a b b a a
+    (Or.inl rfl) (Or.inr rfl) (Or.inr rfl) (Or.inl rfl) (Or.inl rfl)
+  have m7 := norm_word5_le a b a b b a b
+    (Or.inl rfl) (Or.inr rfl) (Or.inr rfl) (Or.inl rfl) (Or.inr rfl)
+  have m8 := norm_word5_le a b b a a b a
+    (Or.inr rfl) (Or.inl rfl) (Or.inl rfl) (Or.inr rfl) (Or.inl rfl)
+  have m9 := norm_word5_le a b b a a b b
+    (Or.inr rfl) (Or.inl rfl) (Or.inl rfl) (Or.inr rfl) (Or.inr rfl)
+  have m10 := norm_word5_le a b b a b a a
+    (Or.inr rfl) (Or.inl rfl) (Or.inr rfl) (Or.inl rfl) (Or.inl rfl)
+  have m11 := norm_word5_le a b b a b b a
+    (Or.inr rfl) (Or.inl rfl) (Or.inr rfl) (Or.inr rfl) (Or.inl rfl)
+  have m12 := norm_word5_le a b b b a a b
+    (Or.inr rfl) (Or.inr rfl) (Or.inl rfl) (Or.inl rfl) (Or.inr rfl)
+  have m13 := norm_word5_le a b b b a b a
+    (Or.inr rfl) (Or.inr rfl) (Or.inl rfl) (Or.inr rfl) (Or.inl rfl)
+  have m14 := norm_word5_le a b b b a b b
+    (Or.inr rfl) (Or.inr rfl) (Or.inl rfl) (Or.inr rfl) (Or.inr rfl)
+  have step1 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b +
+      a*b*a*b*b + a*b*b*a*a + a*b*b*a*b + b*a*a*b*a + b*a*a*b*b + b*a*b*a*a +
+      b*a*b*b*a + b*b*a*a*b + b*b*a*b*a) (b*b*a*b*b)
+  have step2 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b +
+      a*b*a*b*b + a*b*b*a*a + a*b*b*a*b + b*a*a*b*a + b*a*a*b*b + b*a*b*a*a +
+      b*a*b*b*a + b*b*a*a*b) (b*b*a*b*a)
+  have step3 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b +
+      a*b*a*b*b + a*b*b*a*a + a*b*b*a*b + b*a*a*b*a + b*a*a*b*b + b*a*b*a*a +
+      b*a*b*b*a) (b*b*a*a*b)
+  have step4 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b +
+      a*b*a*b*b + a*b*b*a*a + a*b*b*a*b + b*a*a*b*a + b*a*a*b*b + b*a*b*a*a)
+      (b*a*b*b*a)
+  have step5 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b +
+      a*b*a*b*b + a*b*b*a*a + a*b*b*a*b + b*a*a*b*a + b*a*a*b*b) (b*a*b*a*a)
+  have step6 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b +
+      a*b*a*b*b + a*b*b*a*a + a*b*b*a*b + b*a*a*b*a) (b*a*a*b*b)
+  have step7 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b +
+      a*b*a*b*b + a*b*b*a*a + a*b*b*a*b) (b*a*a*b*a)
+  have step8 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b +
+      a*b*a*b*b + a*b*b*a*a) (a*b*b*a*b)
+  have step9 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b +
+      a*b*a*b*b) (a*b*b*a*a)
+  have step10 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a + a*b*a*a*b)
+      (a*b*a*b*b)
+  have step11 := norm_add_le (a*a*b*a*a + a*a*b*a*b + a*a*b*b*a) (a*b*a*a*b)
+  have step12 := norm_add_le (a*a*b*a*a + a*a*b*a*b) (a*a*b*b*a)
+  have step13 := norm_add_le (a*a*b*a*a) (a*a*b*a*b)
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem norm_bch_quintic_group_24_le (a b : 𝔸) :
+    ‖bch_quintic_group_24 a b‖ ≤ 2 * (‖a‖ + ‖b‖) ^ 5 := by
+  unfold bch_quintic_group_24
+  set s := ‖a‖ + ‖b‖
+  have m1 := norm_word5_le a b a b a b a
+    (Or.inl rfl) (Or.inr rfl) (Or.inl rfl) (Or.inr rfl) (Or.inl rfl)
+  have m2 := norm_word5_le a b b a b a b
+    (Or.inr rfl) (Or.inl rfl) (Or.inr rfl) (Or.inl rfl) (Or.inr rfl)
+  have step1 := norm_add_le (a*b*a*b*a) (b*a*b*a*b)
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Norm bound for `bch_quintic_term`: `‖Z₅(a,b)‖ ≤ s⁵` where `s = ‖a‖+‖b‖`.
+
+  Sum of |coefficients|: 4·1 + 10·4 + 14·6 + 2·24 = 176. Multiplied by
+  `‖(720)⁻¹‖ = 1/720` gives `176/720 ≈ 0.244`, well below 1. -/
+theorem norm_bch_quintic_term_le (a b : 𝔸) :
+    ‖bch_quintic_term 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 5 := by
+  unfold bch_quintic_term
+  set s := ‖a‖ + ‖b‖
+  have hs_nn : 0 ≤ s := by positivity
+  have hs5_nn : 0 ≤ s ^ 5 := pow_nonneg hs_nn 5
+  -- Per-group bounds
+  have hg1 := norm_bch_quintic_group_1_le a b
+  have hg4 := norm_bch_quintic_group_4_le a b
+  have hg6 := norm_bch_quintic_group_6_le a b
+  have hg24 := norm_bch_quintic_group_24_le a b
+  -- Negation preserves norm
+  have hng1 : ‖-bch_quintic_group_1 a b‖ ≤ 4 * s ^ 5 := by rw [norm_neg]; exact hg1
+  -- Bounds on (n : 𝕂) • group, using ‖(n : 𝕂)‖ = n in RCLike
+  have h4n : ‖((4 : 𝕂)) • bch_quintic_group_4 a b‖ ≤ 40 * s ^ 5 := by
+    calc ‖((4 : 𝕂)) • bch_quintic_group_4 a b‖
+        ≤ ‖((4 : 𝕂))‖ * ‖bch_quintic_group_4 a b‖ := norm_smul_le _ _
+      _ = 4 * ‖bch_quintic_group_4 a b‖ := by rw [RCLike.norm_ofNat]
+      _ ≤ 4 * (10 * s ^ 5) := by gcongr
+      _ = 40 * s ^ 5 := by ring
+  have h6n : ‖((6 : 𝕂)) • bch_quintic_group_6 a b‖ ≤ 84 * s ^ 5 := by
+    calc ‖((6 : 𝕂)) • bch_quintic_group_6 a b‖
+        ≤ ‖((6 : 𝕂))‖ * ‖bch_quintic_group_6 a b‖ := norm_smul_le _ _
+      _ = 6 * ‖bch_quintic_group_6 a b‖ := by rw [RCLike.norm_ofNat]
+      _ ≤ 6 * (14 * s ^ 5) := by gcongr
+      _ = 84 * s ^ 5 := by ring
+  have h24n : ‖((24 : 𝕂)) • bch_quintic_group_24 a b‖ ≤ 48 * s ^ 5 := by
+    calc ‖((24 : 𝕂)) • bch_quintic_group_24 a b‖
+        ≤ ‖((24 : 𝕂))‖ * ‖bch_quintic_group_24 a b‖ := norm_smul_le _ _
+      _ = 24 * ‖bch_quintic_group_24 a b‖ := by rw [RCLike.norm_ofNat]
+      _ ≤ 24 * (2 * s ^ 5) := by gcongr
+      _ = 48 * s ^ 5 := by ring
+  -- Inner sum: 4 + 40 + 84 + 48 = 176
+  have h_inner : ‖-bch_quintic_group_1 a b + (4 : 𝕂) • bch_quintic_group_4 a b -
+      (6 : 𝕂) • bch_quintic_group_6 a b + (24 : 𝕂) • bch_quintic_group_24 a b‖ ≤
+      176 * s ^ 5 := by
+    have step1 := norm_add_le (-bch_quintic_group_1 a b + (4 : 𝕂) • bch_quintic_group_4 a b -
+      (6 : 𝕂) • bch_quintic_group_6 a b) ((24 : 𝕂) • bch_quintic_group_24 a b)
+    have step2 := norm_sub_le (-bch_quintic_group_1 a b + (4 : 𝕂) • bch_quintic_group_4 a b)
+      ((6 : 𝕂) • bch_quintic_group_6 a b)
+    have step3 := norm_add_le (-bch_quintic_group_1 a b)
+      ((4 : 𝕂) • bch_quintic_group_4 a b)
+    linarith
+  -- Outer (720)⁻¹ smul: ‖(720)⁻¹‖ = 1/720 in RCLike
+  have h720 : ‖((720 : 𝕂)⁻¹)‖ = 1 / 720 := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  calc ‖((720 : 𝕂)⁻¹) • (-bch_quintic_group_1 a b + (4 : 𝕂) • bch_quintic_group_4 a b -
+      (6 : 𝕂) • bch_quintic_group_6 a b + (24 : 𝕂) • bch_quintic_group_24 a b)‖
+      ≤ ‖((720 : 𝕂)⁻¹)‖ * ‖-bch_quintic_group_1 a b + (4 : 𝕂) • bch_quintic_group_4 a b -
+        (6 : 𝕂) • bch_quintic_group_6 a b + (24 : 𝕂) • bch_quintic_group_24 a b‖ :=
+        norm_smul_le _ _
+    _ ≤ (1 / 720) * (176 * s ^ 5) := by rw [h720]; gcongr
+    _ ≤ s ^ 5 := by nlinarith [hs5_nn]
+
 /-! ### Quartic algebraic identity for BCH -/
 
 set_option maxHeartbeats 64000000 in
