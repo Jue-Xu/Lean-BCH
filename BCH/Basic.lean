@@ -1843,6 +1843,114 @@ private lemma real_exp_fifth_order_le_quintic {s : ℝ} (hs : 0 ≤ s) (hs1 : s 
         rw [div_le_iff₀ (by nlinarith : (0 : ℝ) < 120 * (1 - s))]
         nlinarith [sq_nonneg s, pow_nonneg hs 5]
 
+/-! ### Sixth-order exp helpers -/
+
+-- Sixth-order exp remainder:
+--   ‖exp(x) - 1 - x - ½x² - ⅙x³ - (1/24)x⁴ - (1/120)x⁵‖ ≤
+--   exp(‖x‖) - 1 - ‖x‖ - ‖x‖²/2 - ‖x‖³/6 - ‖x‖⁴/24 - ‖x‖⁵/120
+include 𝕂 in
+private theorem norm_exp_sub_one_sub_sub_sub_sub_sub_le (x : 𝔸) :
+    ‖exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3 - (24 : 𝕂)⁻¹ • x ^ 4 -
+        (120 : 𝕂)⁻¹ • x ^ 5‖ ≤
+      Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6 - ‖x‖ ^ 4 / 24 -
+        ‖x‖ ^ 5 / 120 := by
+  set f : ℕ → 𝔸 := fun n => (n !⁻¹ : 𝕂) • x ^ n
+  have hf_summ : Summable f := NormedSpace.expSeries_summable' (𝕂 := 𝕂) x
+  have hf0 : f 0 = 1 := by simp [f]
+  have hf1 : f 1 = x := by simp [f]
+  have hf2 : f 2 = (2 : 𝕂)⁻¹ • x ^ 2 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    ring
+  have hf3 : f 3 = (6 : 𝕂)⁻¹ • x ^ 3 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf4 : f 4 = (24 : 𝕂)⁻¹ • x ^ 4 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf5 : f 5 = (120 : 𝕂)⁻¹ • x ^ 5 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have h_sub : exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3 -
+      (24 : 𝕂)⁻¹ • x ^ 4 - (120 : 𝕂)⁻¹ • x ^ 5 = ∑' n, f (n + 6) := by
+    rw [congr_fun (exp_eq_tsum 𝕂 (𝔸 := 𝔸)) x]
+    have h1 := hf_summ.tsum_eq_zero_add; rw [hf0] at h1
+    have h2 := ((summable_nat_add_iff 1).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf1] at h2
+    have h3 := ((summable_nat_add_iff 2).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf2] at h3
+    have h4 := ((summable_nat_add_iff 3).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf3] at h4
+    have h5 := ((summable_nat_add_iff 4).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf4] at h5
+    have h6 := ((summable_nat_add_iff 5).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf5] at h6
+    rw [h1, add_sub_cancel_left, h2, add_sub_cancel_left, h3, add_sub_cancel_left,
+        h4, add_sub_cancel_left, h5, add_sub_cancel_left, h6, add_sub_cancel_left]
+  rw [h_sub]
+  have h_rexp := hasSum_real_exp ‖x‖
+  have h_summ6 : Summable (fun n => ((n + 6) !⁻¹ : ℝ) * ‖x‖ ^ (n + 6)) :=
+    (summable_nat_add_iff 6).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 6) !⁻¹ : ℝ) * ‖x‖ ^ (n + 6))
+      (Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6 - ‖x‖ ^ 4 / 24 -
+        ‖x‖ ^ 5 / 120) := by
+    rw [h_summ6.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split5 := ((summable_nat_add_iff 4).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split6 := ((summable_nat_add_iff 5).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4 h_split5 h_split6
+    linarith
+  exact tsum_of_norm_bounded h_val (fun n => norm_expSeries_term_le' (𝕂 := 𝕂) x (n + 6))
+
+-- For 0 ≤ s with s < 3/4, the sixth-order Taylor remainder satisfies
+-- exp(s) - 1 - s - s²/2 - s³/6 - s⁴/24 - s⁵/120 ≤ s⁶.
+private lemma real_exp_sixth_order_le_sextic {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 3 / 4) :
+    Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 - s ^ 5 / 120 ≤ s ^ 6 := by
+  have hs_lt1 : s < 1 := by linarith
+  have h_rexp := hasSum_real_exp s
+  have h_summ6 : Summable (fun n => ((n + 6) !⁻¹ : ℝ) * s ^ (n + 6)) :=
+    (summable_nat_add_iff 6).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 6) !⁻¹ : ℝ) * s ^ (n + 6))
+      (Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 - s ^ 5 / 120) := by
+    rw [h_summ6.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split5 := ((summable_nat_add_iff 4).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split6 := ((summable_nat_add_iff 5).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4 h_split5 h_split6
+    linarith
+  -- Comparison: (n+6)!⁻¹ * s^(n+6) ≤ (720)⁻¹ * s^(n+6) since (n+6)! ≥ 6! = 720
+  have h_geom_summ : Summable (fun n => s ^ (n + 6) / 720) := by
+    apply Summable.div_const
+    exact (summable_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 6) |>.congr fun n => by ring
+  have hterm : ∀ n, ((n + 6) !⁻¹ : ℝ) * s ^ (n + 6) ≤ s ^ (n + 6) * (720 : ℝ)⁻¹ := by
+    intro n
+    rw [mul_comm]
+    apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs _)
+    rw [inv_le_inv₀ (by positivity : (0 : ℝ) < (n + 6)!) (by positivity : (0 : ℝ) < 720)]
+    have : (6 : ℕ)! ≤ (n + 6)! := Nat.factorial_le (by omega)
+    exact_mod_cast this
+  have h_geom : HasSum (fun n => s ^ (n + 6) * (720 : ℝ)⁻¹) (s ^ 6 * (1 - s)⁻¹ * (720 : ℝ)⁻¹) := by
+    have hg := (hasSum_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 6)
+    have h_eq : (fun n => s ^ 6 * s ^ n) = (fun n => s ^ (n + 6)) := by ext n; ring
+    rw [h_eq] at hg
+    exact hg.mul_right (720 : ℝ)⁻¹
+  calc Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 - s ^ 5 / 120
+      = ∑' n, ((n + 6) !⁻¹ : ℝ) * s ^ (n + 6) := h_val.tsum_eq.symm
+    _ ≤ ∑' n, (s ^ (n + 6) * (720 : ℝ)⁻¹) :=
+        h_summ6.tsum_le_tsum hterm h_geom.summable
+    _ = s ^ 6 * (1 - s)⁻¹ * (720 : ℝ)⁻¹ := h_geom.tsum_eq
+    _ = s ^ 6 / (720 * (1 - s)) := by rw [div_eq_mul_inv, mul_inv_rev]; ring
+    _ ≤ s ^ 6 := by
+        rw [div_le_iff₀ (by nlinarith : (0 : ℝ) < 720 * (1 - s))]
+        nlinarith [sq_nonneg s, pow_nonneg hs 6]
+
 set_option maxHeartbeats 32000000 in
 include 𝕂 in
 /-- **Fourth-order BCH**: `bch(a,b) = (a+b) + ½[a,b] + bch_cubic_term(a,b) + O(s⁴)`.
