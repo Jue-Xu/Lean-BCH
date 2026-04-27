@@ -152,32 +152,62 @@ Before the main theorem, likely need these new pieces in `BCH/Basic.lean`:
    worse: more pure {a, b} contributions (32 deg-5 words from ⅕z⁵
    instead of just C₅'s 30).
 
-   **Working hypotheses** (try in order for next session):
-   - **(a)** Add a `sextic_pure_identity` (pure {a, b} ring identity
-     analogous to `quintic_pure_identity` at Basic.lean:2705). For the
-     existing quintic remainder proof, the pure {a, b} cancellation is:
-     `corr₁ + corr₂ - ¼z⁴ - C₄ = 0`. The sextic version would need
-     `corr₁_5 + corr₂_5 - ⅕z⁵ - C₅ = 0` (a degree-5 free Lie algebra
-     identity in {a, b}). This MAY split the discovery into manageable
-     sub-identities. Note: the pure {a, b} structure for degree 5 has
-     a 6-element Hall basis; the corr_k's must collectively span this.
-   - **(b)** Direct sandwich strategy: the basis CAN reach the LHS if
-     we abandon the requirement that each summand is structurally
-     O(s⁶) — instead, accept that some terms are O(s⁵) and use FINER
-     bounds (e.g., `norm_bch_quintic_term_le` shows ‖C₅‖ ≤ s⁵
-     directly). This converts B1.c's bound from O(s⁷) to O(s⁵)·(s²)
-     via a different decomposition.
-   - **(c)** Lyndon-Hall basis approach: enumerate the 6 Hall basis
-     elements at deg 5 ({[a,[a,[a,[a,b]]]], [a,[a,[a,[b,a]]]], ...}),
-     express -C₅ in this basis, identify which sandwich basis
-     produces each.
-   - **(d)** Fallback: keep `symmetric_bch_quintic_sub_poly_axiom` as
-     scoped private axiom, proceed with B1.d + B2 work using its
-     signature.
+   **STRATEGY (a) VERIFIED — `sextic_pure_identity` holds at deg 5**
+   (Lean-Trotter rev `6d029b6`, session 13):
 
-   Once a working identity is found, port to Lean as `private theorem
-   quintic_identity`. Expected ~150-300 Lean lines, possibly higher
-   heartbeats than `quartic_identity`'s 64M.
+   ```
+   ½·W_subst[5] + ⅓·y³_subst[5] - ¼·y⁴_subst[5] + ⅕·y⁵_subst[5] - C₅ = 0
+   ```
+
+   Verified by CAS to give EXACTLY 0 non-zero monomials in pure {a, b}.
+   Component sizes: W_subst[5] has 26 monomials, y³_subst[5]/y⁴_subst[5]
+   /y⁵_subst[5] each have 32, C₅ has 30. After coefficient combination:
+   identity = 0 in {a, b} algebra.
+
+   Also re-verified the existing quintic_pure_identity at deg 4:
+   `½·W_subst[4] + ⅓·y³_subst[4] - ¼·z⁴ - C₄ = 0`.
+
+   **Key insight**: The natural extension of `quartic_identity` DOES
+   exist, but at the level of SUBSTITUTED polynomials in {a, b},
+   NOT at the unsubstituted {a, b, ea, eb} ring level. The earlier
+   parametric search was looking for a structural decomposition where
+   each summand was bounded by O(s⁶) in unsubstituted form, which is
+   impossible (per the bbbba/bbbbA coupling obstruction). The
+   sextic_pure_identity sidesteps this by working post-substitution.
+
+   **Next concrete step (Lean port)**:
+
+   Define a `private theorem sextic_pure_identity` in `BCH/Basic.lean`,
+   analogous to `quintic_pure_identity` at line 2705. The Lean form:
+
+   ```lean
+   private theorem sextic_pure_identity (𝕂 : Type*) [RCLike 𝕂]
+       {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) :
+       (let W5 := ⟨26-monomial polynomial in a, b⟩;
+        let y3_5 := z²·T₃ + z·T₃·z + T₃·z² + z·T₂² + T₂·z·T₂ + T₂²·z;
+        let y4_5 := z³·T₂ + z²·T₂·z + z·T₂·z² + T₂·z³;
+        let y5_5 := z⁵;
+        (2:𝕂)⁻¹ • W5 + (3:𝕂)⁻¹ • y3_5 - (4:𝕂)⁻¹ • y4_5 +
+          (5:𝕂)⁻¹ • y5_5 - bch_quintic_term 𝕂 a b) = 0
+   ```
+
+   where T₂ = a·b + ½a² + ½b² (= P₂ in existing proof) and
+         T₃ = ⅙a³ + ½a²b + ½ab² + ⅙b³.
+
+   Proof: ×720 scalar clearing (LCM of 2,3,4,5 = 60; ×720 covers C₅'s
+   denominator) + `noncomm_ring` on the resulting integer-coef identity.
+   Total ~150 monomials at deg 5 after expansion.
+
+   Estimated **~300-500 Lean lines** for the identity itself, plus
+   downstream usage in `norm_bch_sextic_remainder_le`. Heartbeats
+   probably 100M-500M (analog to quintic_pure_identity's 800M).
+
+   **Alternative strategies** (if Tier 1 still proves too costly):
+   - **(b)** Loosen B1.c bound from O(s⁷) to O(s⁵)·O(s²): ‖sym_bch -
+     sym_E₃ - sym_E₅‖ ≤ ‖sym_bch - sym_E₃‖ + ‖sym_E₅‖ ≤ 10⁷·s⁵ + s⁵.
+     Doesn't give the τ⁶ shape needed downstream.
+   - **(c)** Lyndon-Hall basis (6 deg-5 free Lie elements).
+   - **(d)** Keep axiom + proceed downstream.
 
 6. **[After 5]** `norm_bch_sextic_remainder_le` — for `bch(a, b)`, bound:
    `‖bch(a, b) − (a+b) − ½[a,b] − cubic − quartic − quintic‖ ≤

@@ -205,19 +205,50 @@ Introduced `private` so only the public theorems appear in the API.
   coef 0. So the discovery approach (each summand structurally O(s⁶))
   fundamentally cannot close the constraint.
 
-- **Implication**: a "natural extension of `quartic_identity`" doesn't
-  exist. The proof of `norm_bch_sextic_remainder_le` must either:
-  (a) Use a `sextic_pure_identity` (pure {a,b} ring identity at deg
-      5, analogous to existing `quintic_pure_identity` at deg 4 in
-      Basic.lean:2705) — captures degree-5 cancellation in the post-
-      substitution {a,b} polynomial.
-  (b) Accept O(s⁵)·(s²) decomposition via `norm_bch_quintic_term_le`
-      directly (loosens the bound shape).
-  (c) Lyndon-Hall basis for free Lie algebra at deg 5 (6 elements).
-  (d) Keep the axiom; proceed with downstream work using its signature.
+- **Implication**: a "natural extension of `quartic_identity`" at the
+  unsubstituted ring level doesn't exist. The proof of
+  `norm_bch_sextic_remainder_le` must work post-substitution.
 
-- See `claude/lean-bch-B1c-session-prompt.md` for full discovery
-  history, working hypotheses, and CAS verification details.
+**Strategy (a) VERIFIED — `sextic_pure_identity` holds at deg 5**
+(Lean-Trotter `6d029b6`, session 13):
+
+```
+½·W_subst[5] + ⅓·y³_subst[5] - ¼·y⁴_subst[5] + ⅕·y⁵_subst[5] - C₅ = 0
+```
+
+CAS-verified to give EXACTLY 0 non-zero monomials in pure {a, b}.
+Components: W_subst[5] has 26 monomials, y³/y⁴/y⁵_subst[5] each 32,
+C₅ has 30. The natural extension of `quartic_identity` DOES exist —
+it just operates on SUBSTITUTED polynomials in {a, b}, NOT the
+unsubstituted {a, b, ea, eb} level. This sidesteps the bbbba/bbbbA
+coupling obstruction.
+
+**Next session — Lean port** (Tier 1 next concrete step):
+
+Define `private theorem sextic_pure_identity` in `BCH/Basic.lean`,
+analogous to `quintic_pure_identity` at line 2705. Form:
+
+```
+(2:𝕂)⁻¹•W5 + (3:𝕂)⁻¹•y3_5 - (4:𝕂)⁻¹•y4_5 + (5:𝕂)⁻¹•z⁵
+  - bch_quintic_term 𝕂 a b = 0
+```
+
+where W5, y3_5, y4_5 are explicit polynomials in {a, b}:
+- W5 = explicit 26-monomial sum (from W's 2(E+aD+Db+DD)-zP-Pz-P²
+  structure substituted at deg 5).
+- y3_5 = z²·T₃ + z·T₃·z + T₃·z² + z·T₂² + T₂·z·T₂ + T₂²·z
+  (where T₂ = ½a²+ab+½b², T₃ = ⅙a³+½a²b+½ab²+⅙b³).
+- y4_5 = z³·T₂ + z²·T₂·z + z·T₂·z² + T₂·z³.
+
+Proof: ×720 scalar clearing + `noncomm_ring`. Estimated 300-500 lines.
+Heartbeats likely 100M-500M.
+
+Then build `norm_bch_sextic_remainder_le` using sextic_pure_identity
+(deg-5 cancellation) + existing quintic_pure_identity (deg-4) + per-term
+norm bounds. Estimated ~800 lines (paralleling
+`norm_bch_quintic_remainder_le` at Basic.lean:2326).
+
+- See `claude/lean-bch-B1c-session-prompt.md` for full details.
 
 ### Rigorously proved (no axioms) — Axiom 2 infrastructure (sessions 7–8)
 
