@@ -186,6 +186,39 @@ prompt at `claude/lean-bch-B1c-session-prompt.md`):
 
 Introduced `private` so only the public theorems appear in the API.
 
+**Session 13 (2026-04-26 / 2026-04-27) progress on Tier 1**:
+
+- ~488 lines committed (`973b5d6`, `4cc5a5a`): log/exp tail bounds at
+  order 6, `bch_quintic_term` (= Z₅) definition + smul + norm bound,
+  `real_exp_sixth_order_le_sextic`, `norm_logOnePlus_sub_sub_sub_sub_sub_le`.
+- **`quintic_identity` discovery hit a structural wall.** CAS script
+  `Lean-Trotter/scripts/discover_quintic_identity.py` (rev `f50ed7f`)
+  iterated through 17 → 61 → 86 → 115 → 131-133 candidate basis
+  elements. With 131+ elements, all 50 LHS_full monomials are covered
+  by the basis support, but ONE inconsistency row remains:
+  `720·LHS[bbbba] + 720·LHS[bbbbA] = 1`.
+
+  **Root cause**: the basis can produce bbbba (5-letter pure {a,b}) and
+  bbbbA (5-letter ending in ea) only in COUPLED form — e.g.,
+  `bbbbD₁ = bbbbA - bbbb - bbbba` always couples them with sum 0.
+  But the LHS has bbbba with coef +1/720 (from -C₅) and bbbbA with
+  coef 0. So the discovery approach (each summand structurally O(s⁶))
+  fundamentally cannot close the constraint.
+
+- **Implication**: a "natural extension of `quartic_identity`" doesn't
+  exist. The proof of `norm_bch_sextic_remainder_le` must either:
+  (a) Use a `sextic_pure_identity` (pure {a,b} ring identity at deg
+      5, analogous to existing `quintic_pure_identity` at deg 4 in
+      Basic.lean:2705) — captures degree-5 cancellation in the post-
+      substitution {a,b} polynomial.
+  (b) Accept O(s⁵)·(s²) decomposition via `norm_bch_quintic_term_le`
+      directly (loosens the bound shape).
+  (c) Lyndon-Hall basis for free Lie algebra at deg 5 (6 elements).
+  (d) Keep the axiom; proceed with downstream work using its signature.
+
+- See `claude/lean-bch-B1c-session-prompt.md` for full discovery
+  history, working hypotheses, and CAS verification details.
+
 ### Rigorously proved (no axioms) — Axiom 2 infrastructure (sessions 7–8)
 
 All of the following depend only on Lean's 3 standard axioms:
