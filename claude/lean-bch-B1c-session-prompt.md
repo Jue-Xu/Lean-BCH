@@ -123,24 +123,57 @@ Before the main theorem, likely need these new pieces in `BCH/Basic.lean`:
    substituting ea → exp(a)_6, eb → exp(b)_6 gives a polynomial in
    {a, b} with all degrees ≤5 vanishing (only 64 degree-6 terms remain).
 
-   **Parametric RHS solver attempt (rev fb5a735)**: tried 17-element
-   then 61-element candidate basis (G's, F's, cross-products, P·X,
-   z·Y, sandwich D-D-D triples, ab/ba cross-D's, z²·D, z·E·z, etc.).
-   Both attempts: **INCONSISTENT — basis insufficient**. The
-   structural decomposition is more subtle than "natural extension of
-   quartic_identity's RHS pattern".
+   **Parametric RHS solver attempt (rev fb5a735, then iterated to ~133
+   basis elements in current session 13)**: progressively tried 17,
+   then 61, then 86, then 115, then 131-133 candidate basis (G's, F's,
+   cross-products, P·X, z·Y, sandwich D-D-D triples, F-sandwich
+   sandwiches like aF₂a, bF₁b, ba·D₁·ba; explicit a^k·D_m·a^l for k+l=4
+   and a·D₂·a·D₂·a alternations; y² and y³ direct). All attempts:
+   **INCONSISTENT — basis insufficient.**
+
+   Diff-driven analysis after each iteration narrowed down what's
+   missing. With 131 elements (last attempt session 13):
+   - 0 monomials uncovered (every LHS_full monomial appears in some
+     basis element's support).
+   - 1 inconsistency row remains: `720·LHS[bbbba] + 720·LHS[bbbbA] = 1`,
+     i.e., the basis can produce bbbba and bbbbA only in COUPLED form
+     (e.g., bbbbD₁ = bbbbA - bbbb - bbbba), so it can't simultaneously
+     match LHS[bbbba] = +1/720 (from -C₅) and LHS[bbbbA] = 0.
+
+   **Why this is structurally hard**: the LHS has pure {a, b} 5-letter
+   contributions (from -C₅) of specific coefficients that the natural
+   "compensated" basis (each sandwich produces COUPLED ea-monomial +
+   pure-{a,b} contributions) can't isolate. The natural decomposition
+   isn't "sum of sandwich elements" — it requires a more subtle
+   structural identity.
+
+   **Tried also** (rejected): switching LHS to ½W + ⅓z³ - ¼z⁴ + ⅕z⁵ -
+   C₃ - C₄ - C₅ (z-powers instead of y-powers). This makes things
+   worse: more pure {a, b} contributions (32 deg-5 words from ⅕z⁵
+   instead of just C₅'s 30).
 
    **Working hypotheses** (try in order for next session):
-   - **(a)** Add basis terms involving more products of D, E, F, G with
-     specific {a, b} substring patterns matching C₅'s 30 word-types.
-     E.g., D₁·b·a·D₂, a·D₁·D₂·a, D₁·b²·a, a²·D₂·b, b·a·D₁·D₂, etc.
-   - **(b)** Take a fundamentally different approach: use the
-     Lyndon-Hall basis decomposition for the free Lie algebra at
-     degree 5 (6 elements) and map to the corresponding ring identity.
-   - **(c)** Compute the residual LHS - (current best 61-basis fit)
-     directly, then check if the residual factors into a small number
-     of new candidate building blocks. This is "diff-driven" basis
-     construction.
+   - **(a)** Add a `sextic_pure_identity` (pure {a, b} ring identity
+     analogous to `quintic_pure_identity` at Basic.lean:2705). For the
+     existing quintic remainder proof, the pure {a, b} cancellation is:
+     `corr₁ + corr₂ - ¼z⁴ - C₄ = 0`. The sextic version would need
+     `corr₁_5 + corr₂_5 - ⅕z⁵ - C₅ = 0` (a degree-5 free Lie algebra
+     identity in {a, b}). This MAY split the discovery into manageable
+     sub-identities. Note: the pure {a, b} structure for degree 5 has
+     a 6-element Hall basis; the corr_k's must collectively span this.
+   - **(b)** Direct sandwich strategy: the basis CAN reach the LHS if
+     we abandon the requirement that each summand is structurally
+     O(s⁶) — instead, accept that some terms are O(s⁵) and use FINER
+     bounds (e.g., `norm_bch_quintic_term_le` shows ‖C₅‖ ≤ s⁵
+     directly). This converts B1.c's bound from O(s⁷) to O(s⁵)·(s²)
+     via a different decomposition.
+   - **(c)** Lyndon-Hall basis approach: enumerate the 6 Hall basis
+     elements at deg 5 ({[a,[a,[a,[a,b]]]], [a,[a,[a,[b,a]]]], ...}),
+     express -C₅ in this basis, identify which sandwich basis
+     produces each.
+   - **(d)** Fallback: keep `symmetric_bch_quintic_sub_poly_axiom` as
+     scoped private axiom, proceed with B1.d + B2 work using its
+     signature.
 
    Once a working identity is found, port to Lean as `private theorem
    quintic_identity`. Expected ~150-300 Lean lines, possibly higher
