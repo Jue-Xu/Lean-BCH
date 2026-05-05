@@ -1,5 +1,63 @@
 # Lean-BCH next session — B1.c (quintic Taylor bridge for symmetric BCH)
 
+## Status update (2026-05-05, session 14 — sextic_pure_identity PROVED)
+
+**Major progress on B1.c.** Repository on `main` @ `dcf140f`, 0 sorries,
+still just 1 scoped private axiom (B1.c). Two BCH axioms total (B1.c +
+septic_at_suzukiP, the latter for axiom-3 work).
+
+**Session 14 achievement** (continuing 13): the **`sextic_pure_identity`**
+is now a fully proved Lean theorem in `BCH/Basic.lean` (commit
+`1763d10`, +104 lines, 0 new axioms, build clean):
+
+```lean
+private theorem sextic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) :
+    let z : 𝔸 := a + b
+    let T₂ : 𝔸 := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+    let T₃ : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + ... + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + ... + (24 : 𝕂)⁻¹ • b ^ 4
+    let W5 : 𝔸 := (60 : 𝕂)⁻¹ • a ^ 5 + ... + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2)
+                - (z * T₄ + T₄ * z) - (T₂ * T₃ + T₃ * T₂)
+    let y3_5 : 𝔸 := z^2 * T₃ + z * T₃ * z + T₃ * z^2 + z * T₂^2
+                  + T₂ * z * T₂ + T₂^2 * z
+    let y4_5 : 𝔸 := z^3 * T₂ + z^2 * T₂ * z + z * T₂ * z^2 + T₂ * z^3
+    (2:𝕂)⁻¹ • W5 + (3:𝕂)⁻¹ • y3_5 - (4:𝕂)⁻¹ • y4_5 + (5:𝕂)⁻¹ • z^5
+      - bch_quintic_term 𝕂 a b = 0
+```
+
+Proof: ×720 scalar clearing + ~30 simp lemmas (incl. 3 new
+`(720) * ((720)⁻¹ * N) = N` lemmas to handle nested inverses in the
+bch_quintic_term expansion) + noncomm_ring at maxHeartbeats 4 billion.
+Build time ~8 minutes.
+
+**Key insight**: The natural extension of `quartic_identity` operates
+at the level of SUBSTITUTED polynomials in {a, b}, not unsubstituted
+{a, b, ea, eb}. This sidesteps the bbbba/bbbbA coupling obstruction
+that blocked the parametric search at session 13.
+
+**Next concrete step — `norm_bch_sextic_remainder_le`** (~800 lines).
+Mirrors `norm_bch_quintic_remainder_le` at Basic.lean:2769, extending
+one degree higher:
+
+- pieceA = log tail at order 6, bounded by `‖y‖⁶/(1-‖y‖)` ≤
+  `(exp(s)-1)⁶/(2-exp(s))` (uses `norm_logOnePlus_sub_sub_sub_sub_sub_le`).
+- pieceB = ½W + ⅓y³ - ¼y⁴ + ⅕y⁵ - C₃ - C₄ - C₅. Decompose:
+  - I_1 = ½W + ⅓z³ - C₃ → quartic_identity
+  - I_2 = ⅓(y³-z³), I_3 = -¼y⁴+¼z⁴, I_4 = ⅕y⁵-⅕z⁵: telescoping
+  - I_5 = -¼z⁴, I_6 = +⅕z⁵: pure {a, b} terms
+  - quintic_pure_identity for deg-4 cancellation, sextic_pure_identity
+    for deg-5 cancellation.
+- Each residual O(s⁶/(2-exp s)). Constants probably ~10000.
+
+After norm_bch_sextic_remainder_le, extend cubic template
+`norm_symmetric_bch_cubic_sub_poly_le` (line ~3798) to give B1.c
+(`norm_symmetric_bch_quintic_sub_poly_le`), ~400-600 additional lines.
+
+**Total remaining for B1.c discharge: ~1500-2000 lines of Lean.**
+
+---
+
 ## Status update (2026-04-26, session 13)
 
 **P1 axiom discharged (session 12).** Repository on `main` @ `973b5d6`,
