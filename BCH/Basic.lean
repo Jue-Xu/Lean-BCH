@@ -2757,6 +2757,110 @@ private theorem quintic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
   -- After clearing, the goal is a pure ring/nsmul identity provable by noncomm_ring.
   noncomm_ring
 
+/-! ### Sixth-order BCH: degree-5 cancellation identity (sextic_pure_identity) -/
+
+-- Pure {a, b} ring identity for the degree-5 cancellation of pieceB_sextic.
+-- After substituting ea → exp(a), eb → exp(b), the deg-5 part of
+--   ½W_H1 + ⅓y³ - ¼y⁴ + ⅕y⁵ - C₃ - C₄ - C₅
+-- vanishes. This identity expresses that vanishing as an explicit pure
+-- {a, b} ring identity.
+--
+-- Notation (for readability):
+--   z  = a + b
+--   T₂ = ab + ½a² + ½b²        (= y_subst[2])
+--   T₃ = ⅙a³ + ½a²b + ½ab² + ⅙b³  (= y_subst[3])
+--   T₄ = (1/24)a⁴ + ⅙a³b + ¼a²b² + ⅙ab³ + (1/24)b⁴  (= y_subst[4])
+--
+--   W5 = (60)⁻¹·a⁵ + (60)⁻¹·b⁵ + (12)⁻¹·ab⁴ + (12)⁻¹·a⁴b
+--      + (6)⁻¹·a²b³ + (6)⁻¹·a³b² - (z·T₄ + T₄·z) - (T₂·T₃ + T₃·T₂)
+--   y3_5 = z²·T₃ + z·T₃·z + T₃·z² + z·T₂² + T₂·z·T₂ + T₂²·z
+--   y4_5 = z³·T₂ + z²·T₂·z + z·T₂·z² + T₂·z³
+--   y5_5 = z⁵
+--
+-- Identity: ½·W5 + ⅓·y3_5 - ¼·y4_5 + ⅕·z⁵ - bch_quintic_term = 0.
+-- Verified by Lean-Trotter/scripts/discover_quintic_identity.py rev 6d029b6.
+set_option maxHeartbeats 4000000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem sextic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) :
+    let z : 𝔸 := a + b
+    let T₂ : 𝔸 := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+    let T₃ : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    let W5 : 𝔸 := (60 : 𝕂)⁻¹ • a ^ 5 + (60 : 𝕂)⁻¹ • b ^ 5 +
+        (12 : 𝕂)⁻¹ • (a * b ^ 4) + (12 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (6 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) -
+        (z * T₄ + T₄ * z) - (T₂ * T₃ + T₃ * T₂)
+    let y3_5 : 𝔸 := z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+        z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z
+    let y4_5 : 𝔸 := z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3
+    (2 : 𝕂)⁻¹ • W5 + (3 : 𝕂)⁻¹ • y3_5 - (4 : 𝕂)⁻¹ • y4_5 + (5 : 𝕂)⁻¹ • z ^ 5
+      - bch_quintic_term 𝕂 a b = 0 := by
+  -- Multiply by 720 (LCM covers all denominators).
+  have h720ne : (720 : 𝕂) ≠ 0 := by exact_mod_cast (show (720 : ℕ) ≠ 0 by norm_num)
+  have hinj : Function.Injective ((720 : 𝕂) • · : 𝔸 → 𝔸) := by
+    intro x₀ y₀ hxy; have := congrArg ((720 : 𝕂)⁻¹ • ·) hxy
+    simp only [smul_smul, inv_mul_cancel₀ h720ne, one_smul] at this; exact this
+  apply hinj; simp only [smul_zero]
+  unfold bch_quintic_term bch_quintic_group_1 bch_quintic_group_4
+    bch_quintic_group_6 bch_quintic_group_24
+  -- Expand powers first so scalar smuls inside (e.g. T₂^2) get distributed.
+  simp only [pow_succ, pow_zero, one_mul]
+  -- Distribute scalars through all algebraic operations.
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul, mul_sub, sub_mul]
+  -- Clear scalar products.
+  simp only [mul_assoc,
+    mul_inv_cancel₀ (show (2 : 𝕂) ≠ 0 from two_ne_zero),
+    inv_mul_cancel₀ (show (2 : 𝕂) ≠ 0 from two_ne_zero),
+    mul_inv_cancel₀ h720ne,
+    show (720 : 𝕂) * (2 : 𝕂)⁻¹ = 360 from by norm_num,
+    show (720 : 𝕂) * (3 : 𝕂)⁻¹ = 240 from by norm_num,
+    show (720 : 𝕂) * (4 : 𝕂)⁻¹ = 180 from by norm_num,
+    show (720 : 𝕂) * (5 : 𝕂)⁻¹ = 144 from by norm_num,
+    show (720 : 𝕂) * (6 : 𝕂)⁻¹ = 120 from by norm_num,
+    show (720 : 𝕂) * (12 : 𝕂)⁻¹ = 60 from by norm_num,
+    show (720 : 𝕂) * (24 : 𝕂)⁻¹ = 30 from by norm_num,
+    show (720 : 𝕂) * (60 : 𝕂)⁻¹ = 12 from by norm_num,
+    show (720 : 𝕂) * (720 : 𝕂)⁻¹ = 1 from mul_inv_cancel₀ h720ne,
+    -- Two-level nesting
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 180 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹) = 120 from by norm_num,
+    show (720 : 𝕂) * ((3 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 120 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (4 : 𝕂)⁻¹) = 90 from by norm_num,
+    show (720 : 𝕂) * ((4 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 90 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 60 from by norm_num,
+    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 60 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (24 : 𝕂)⁻¹) = 15 from by norm_num,
+    show (720 : 𝕂) * ((24 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 15 from by norm_num,
+    show (720 : 𝕂) * ((3 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 40 from by norm_num,
+    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹) = 40 from by norm_num,
+    show (720 : 𝕂) * ((3 : 𝕂)⁻¹ * (4 : 𝕂)⁻¹) = 60 from by norm_num,
+    show (720 : 𝕂) * ((4 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹) = 60 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹) = 30 from by norm_num,
+    show (720 : 𝕂) * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 30 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (60 : 𝕂)⁻¹) = 6 from by norm_num,
+    show (720 : 𝕂) * ((60 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by norm_num,
+    -- Three-level nesting
+    show (720 : 𝕂) * ((3 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 60 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 90 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹)) = 30 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 30 from by norm_num,
+    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 30 from by norm_num,
+    -- 720·(720⁻¹·N) form (from bch_quintic_term inner factors)
+    show (720 : 𝕂) * ((720 : 𝕂)⁻¹ * (4 : 𝕂)) = 4 from by
+      rw [← mul_assoc, mul_inv_cancel₀ h720ne, one_mul],
+    show (720 : 𝕂) * ((720 : 𝕂)⁻¹ * (6 : 𝕂)) = 6 from by
+      rw [← mul_assoc, mul_inv_cancel₀ h720ne, one_mul],
+    show (720 : 𝕂) * ((720 : 𝕂)⁻¹ * (24 : 𝕂)) = 24 from by
+      rw [← mul_assoc, mul_inv_cancel₀ h720ne, one_mul],
+    one_smul, mul_one]
+  simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
+  noncomm_ring
+
 set_option maxHeartbeats 128000000 in
 include 𝕂 in
 /-- **Fifth-order BCH**: `bch(a,b) = (a+b) + ½[a,b] + bch_cubic_term(a,b) + bch_quartic_term(a,b) + O(s⁵)`.
