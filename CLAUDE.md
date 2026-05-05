@@ -209,44 +209,53 @@ Introduced `private` so only the public theorems appear in the API.
   unsubstituted ring level doesn't exist. The proof of
   `norm_bch_sextic_remainder_le` must work post-substitution.
 
-**Strategy (a) VERIFIED — `sextic_pure_identity` holds at deg 5**
-(Lean-Trotter `6d029b6`, session 13):
+**Strategy (a) PROVED in Lean — `sextic_pure_identity` (session 13/14)**
+
+CAS-verified at session 13 (`6d029b6`): the deg-5 cancellation identity
 
 ```
 ½·W_subst[5] + ⅓·y³_subst[5] - ¼·y⁴_subst[5] + ⅕·y⁵_subst[5] - C₅ = 0
 ```
 
-CAS-verified to give EXACTLY 0 non-zero monomials in pure {a, b}.
 Components: W_subst[5] has 26 monomials, y³/y⁴/y⁵_subst[5] each 32,
 C₅ has 30. The natural extension of `quartic_identity` DOES exist —
-it just operates on SUBSTITUTED polynomials in {a, b}, NOT the
-unsubstituted {a, b, ea, eb} level. This sidesteps the bbbba/bbbbA
-coupling obstruction.
+it operates on SUBSTITUTED polynomials in {a, b}, NOT unsubstituted
+{a, b, ea, eb} ring elements. This sidesteps the bbbba/bbbbA coupling
+obstruction from the parametric search.
 
-**Next session — Lean port** (Tier 1 next concrete step):
-
-Define `private theorem sextic_pure_identity` in `BCH/Basic.lean`,
-analogous to `quintic_pure_identity` at line 2705. Form:
+**Lean port DONE** (commit `1763d10`, BCH/Basic.lean +104 lines, 0 new
+axioms). The Lean theorem `private theorem sextic_pure_identity`
+states (with z = a+b, T₂ = ab+½a²+½b², T₃ = ⅙a³+½a²b+½ab²+⅙b³,
+T₄ = ¹⁄₂₄a⁴+⅙a³b+¼a²b²+⅙ab³+¹⁄₂₄b⁴):
 
 ```
-(2:𝕂)⁻¹•W5 + (3:𝕂)⁻¹•y3_5 - (4:𝕂)⁻¹•y4_5 + (5:𝕂)⁻¹•z⁵
+(2:𝕂)⁻¹ • W5 + (3:𝕂)⁻¹ • y3_5 - (4:𝕂)⁻¹ • y4_5 + (5:𝕂)⁻¹ • z⁵
   - bch_quintic_term 𝕂 a b = 0
 ```
 
-where W5, y3_5, y4_5 are explicit polynomials in {a, b}:
-- W5 = explicit 26-monomial sum (from W's 2(E+aD+Db+DD)-zP-Pz-P²
-  structure substituted at deg 5).
-- y3_5 = z²·T₃ + z·T₃·z + T₃·z² + z·T₂² + T₂·z·T₂ + T₂²·z
-  (where T₂ = ½a²+ab+½b², T₃ = ⅙a³+½a²b+½ab²+⅙b³).
-- y4_5 = z³·T₂ + z²·T₂·z + z·T₂·z² + T₂·z³.
+with W5, y3_5, y4_5 explicit 𝔸-expressions in `let` bindings. Proof:
+×720 scalar clearing + ~30 simp lemmas (incl. 3 new
+`720·(720⁻¹·N)=N` lemmas to reduce nested inverse products in the
+bch_quintic_term expansion) + noncomm_ring. `maxHeartbeats
+4000000000`. Build time ~8 min.
 
-Proof: ×720 scalar clearing + `noncomm_ring`. Estimated 300-500 lines.
-Heartbeats likely 100M-500M.
+**Next concrete step — `norm_bch_sextic_remainder_le`** (~800 lines).
+Mirrors `norm_bch_quintic_remainder_le` at Basic.lean:2326, extending
+one degree higher. Strategy:
 
-Then build `norm_bch_sextic_remainder_le` using sextic_pure_identity
-(deg-5 cancellation) + existing quintic_pure_identity (deg-4) + per-term
-norm bounds. Estimated ~800 lines (paralleling
-`norm_bch_quintic_remainder_le` at Basic.lean:2326).
+- pieceA = log tail at order 6, bounded by `‖y‖⁶/(1-‖y‖)` (uses
+  `norm_logOnePlus_sub_sub_sub_sub_sub_le`).
+- pieceB = ½W + ⅓y³ - ¼y⁴ + ⅕y⁵ - C₃ - C₄ - C₅. Decompose via
+  quartic_identity (for I_1 = ½W + ⅓z³ - C₃) + telescoping for
+  ⅓(y³-z³), -¼(y⁴-z⁴), ⅕(y⁵-z⁵). Use sextic_pure_identity for the
+  deg-5 cancellation, quintic_pure_identity for deg-4.
+- Each residual O(s⁶/(2-exp s)). Constants ~10K.
+
+Then extend the cubic template `norm_symmetric_bch_cubic_sub_poly_le`
+(line ~3798) to give B1.c (`norm_symmetric_bch_quintic_sub_poly_le`),
+~400-600 additional lines.
+
+Total remaining for B1.c discharge: ~1500-2000 lines.
 
 - See `claude/lean-bch-B1c-session-prompt.md` for full details.
 
