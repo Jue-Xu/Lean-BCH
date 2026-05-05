@@ -3676,6 +3676,243 @@ private theorem norm_bch_sextic_remainder_large_s_le (a b : 𝔸)
     _ ≤ 100000 * s ^ 6 / (2 - Real.exp s) :=
         div_le_div_of_nonneg_right h_le hdenom.le
 
+/-! ### Sextic remainder small-s case helpers
+
+These are building blocks for the (future) `norm_bch_sextic_remainder_small_s_le`
+which handles `s < 1/10` via the deg-5 cancellation in `sextic_pure_identity`.
+
+Each helper is a self-contained lemma about non-commutative algebra,
+provable by `noncomm_ring` after scalar clearing.
+-/
+
+/-- 5-fold non-commutative telescoping: `y⁵ - (y - P)⁵` expands as a sum of
+five 5-letter words, each with one `P` factor and four `y`/`(y-P)` factors. -/
+private theorem pow5_sub_zpow5_telescope (y P : 𝔸) :
+    y ^ 5 - (y - P) ^ 5 =
+      y ^ 4 * P + y ^ 3 * P * (y - P) + y ^ 2 * P * (y - P) ^ 2 +
+        y * P * (y - P) ^ 3 + P * (y - P) ^ 4 := by
+  noncomm_ring
+
+/-- 4-fold non-commutative telescoping: `y⁴ - (y - P)⁴` expands as a sum of
+four 4-letter words, each with one `P` factor and three `y`/`(y-P)` factors. -/
+private theorem pow4_sub_zpow4_telescope (y P : 𝔸) :
+    y ^ 4 - (y - P) ^ 4 =
+      y ^ 3 * P + y ^ 2 * P * (y - P) + y * P * (y - P) ^ 2 + P * (y - P) ^ 3 := by
+  noncomm_ring
+
+/-- 3-fold non-commutative telescoping: `y³ - (y - P)³`. -/
+private theorem pow3_sub_zpow3_telescope (y P : 𝔸) :
+    y ^ 3 - (y - P) ^ 3 =
+      y ^ 2 * P + y * P * (y - P) + P * (y - P) ^ 2 := by
+  noncomm_ring
+
+/-- Algebraic decomposition of `y⁴ - z⁴ - y4_5` where `z = y - P` and
+`y4_5 = z³T₂ + z²T₂z + zT₂z² + T₂z³` is the deg-5 contribution from
+`y⁴ = (z + T₂ + ...)⁴`. Expresses the difference as a sum of 7 deg-6+
+terms in the BCH context where `‖y‖ ≤ 2s`, `‖P‖ ≤ s²`, `‖z‖ ≤ s`,
+`‖P-T₂‖ ≤ 5s³`. -/
+private theorem y4_sub_z4_sub_y4_5_decomp (y P T₂ : 𝔸) :
+    y ^ 4 - (y - P) ^ 4 -
+      ((y - P) ^ 3 * T₂ + (y - P) ^ 2 * T₂ * (y - P) +
+        (y - P) * T₂ * (y - P) ^ 2 + T₂ * (y - P) ^ 3) =
+      (y - P) ^ 3 * (P - T₂) + (y - P) ^ 2 * (P - T₂) * (y - P) +
+        (y - P) * (P - T₂) * (y - P) ^ 2 + (P - T₂) * (y - P) ^ 3 +
+      (y ^ 3 - (y - P) ^ 3) * P + (y ^ 2 - (y - P) ^ 2) * P * (y - P) +
+      P * P * (y - P) ^ 2 := by
+  noncomm_ring
+
+/-- Norm bound for the 5-fold telescoping: given `‖y‖ ≤ 2s`, `‖z‖ ≤ s`,
+`‖P‖ ≤ s²`, `‖y⁵ - z⁵‖ ≤ 31·s⁶`. Used in the small-s case of the sextic
+remainder bound. -/
+private theorem norm_pow5_sub_zpow5_le (y P : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hy : ‖y‖ ≤ 2 * s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2) :
+    ‖y ^ 5 - (y - P) ^ 5‖ ≤ 31 * s ^ 6 := by
+  rw [pow5_sub_zpow5_telescope]
+  -- 5 terms: y⁴P + y³P(y-P) + y²P(y-P)² + yP(y-P)³ + P(y-P)⁴
+  -- Bounds: 16s⁶ + 8s⁶ + 4s⁶ + 2s⁶ + s⁶ = 31s⁶
+  set z : 𝔸 := y - P with hz_def
+  have hzn : ‖z‖ ≤ s := hz
+  have h_y4P : ‖y ^ 4 * P‖ ≤ (2 * s) ^ 4 * s ^ 2 :=
+    calc ‖y ^ 4 * P‖ ≤ ‖y ^ 4‖ * ‖P‖ := norm_mul_le _ _
+      _ ≤ ‖y‖ ^ 4 * ‖P‖ := by gcongr; exact norm_pow_le y 4
+      _ ≤ (2 * s) ^ 4 * s ^ 2 :=
+          mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hy 4) hP (by positivity) (by positivity)
+  have h_y3Pz : ‖y ^ 3 * P * z‖ ≤ (2 * s) ^ 3 * s ^ 2 * s :=
+    calc ‖y ^ 3 * P * z‖ ≤ ‖y ^ 3 * P‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖y‖ ^ 3 * ‖P‖) * ‖z‖ := by
+          gcongr
+          calc _ ≤ ‖y ^ 3‖ * ‖P‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le y 3
+      _ ≤ ((2 * s) ^ 3 * s ^ 2) * s := by
+          apply mul_le_mul _ hzn (norm_nonneg _) (by positivity)
+          exact mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hy 3) hP
+            (norm_nonneg _) (by positivity)
+  have h_y2Pz2 : ‖y ^ 2 * P * z ^ 2‖ ≤ (2 * s) ^ 2 * s ^ 2 * s ^ 2 :=
+    calc ‖y ^ 2 * P * z ^ 2‖ ≤ ‖y ^ 2 * P‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ (‖y‖ ^ 2 * ‖P‖) * ‖z‖ ^ 2 := by
+          gcongr
+          · calc _ ≤ ‖y ^ 2‖ * ‖P‖ := norm_mul_le _ _
+              _ ≤ _ := by gcongr; exact norm_pow_le y 2
+          · exact norm_pow_le z 2
+      _ ≤ ((2 * s) ^ 2 * s ^ 2) * s ^ 2 := by
+          apply mul_le_mul _ (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+            (by positivity) (by positivity)
+          exact mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hy 2) hP
+            (norm_nonneg _) (by positivity)
+  have h_yPz3 : ‖y * P * z ^ 3‖ ≤ 2 * s * s ^ 2 * s ^ 3 :=
+    calc ‖y * P * z ^ 3‖ ≤ ‖y * P‖ * ‖z ^ 3‖ := norm_mul_le _ _
+      _ ≤ (‖y‖ * ‖P‖) * ‖z‖ ^ 3 := by
+          gcongr
+          · exact norm_mul_le _ _
+          · exact norm_pow_le z 3
+      _ ≤ (2 * s * s ^ 2) * s ^ 3 := by
+          apply mul_le_mul _ (pow_le_pow_left₀ (norm_nonneg _) hzn 3)
+            (by positivity) (by positivity)
+          exact mul_le_mul hy hP (norm_nonneg _) (by positivity)
+  have h_Pz4 : ‖P * z ^ 4‖ ≤ s ^ 2 * s ^ 4 :=
+    calc ‖P * z ^ 4‖ ≤ ‖P‖ * ‖z ^ 4‖ := norm_mul_le _ _
+      _ ≤ ‖P‖ * ‖z‖ ^ 4 := by gcongr; exact norm_pow_le z 4
+      _ ≤ s ^ 2 * s ^ 4 := mul_le_mul hP (pow_le_pow_left₀ (norm_nonneg _) hzn 4)
+          (by positivity) (by positivity)
+  -- Sum via triangle inequality
+  have ht1 := norm_add_le (y ^ 4 * P + y ^ 3 * P * z + y ^ 2 * P * z ^ 2 + y * P * z ^ 3)
+    (P * z ^ 4)
+  have ht2 := norm_add_le (y ^ 4 * P + y ^ 3 * P * z + y ^ 2 * P * z ^ 2) (y * P * z ^ 3)
+  have ht3 := norm_add_le (y ^ 4 * P + y ^ 3 * P * z) (y ^ 2 * P * z ^ 2)
+  have ht4 := norm_add_le (y ^ 4 * P) (y ^ 3 * P * z)
+  nlinarith [pow_nonneg hs_nn 6]
+
+/-- Norm bound for `y² - z²` (2-fold telescoping) where `z = y - P`,
+given `‖y‖ ≤ 2s`, `‖P‖ ≤ s²`, `‖z‖ ≤ s`. -/
+private theorem norm_pow2_sub_zpow2_le (y P : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hy : ‖y‖ ≤ 2 * s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2) :
+    ‖y ^ 2 - (y - P) ^ 2‖ ≤ 3 * s ^ 3 := by
+  have hY2_eq : y ^ 2 - (y - P) ^ 2 = y * P + P * (y - P) := by noncomm_ring
+  rw [hY2_eq]
+  have h_yP : ‖y * P‖ ≤ 2 * s * s ^ 2 :=
+    calc ‖y * P‖ ≤ ‖y‖ * ‖P‖ := norm_mul_le _ _
+      _ ≤ 2 * s * s ^ 2 := mul_le_mul hy hP (norm_nonneg _) (by positivity)
+  have h_Pz : ‖P * (y - P)‖ ≤ s ^ 2 * s :=
+    calc ‖P * (y - P)‖ ≤ ‖P‖ * ‖y - P‖ := norm_mul_le _ _
+      _ ≤ s ^ 2 * s := mul_le_mul hP hz (norm_nonneg _) (by positivity)
+  calc ‖y * P + P * (y - P)‖ ≤ ‖y * P‖ + ‖P * (y - P)‖ := norm_add_le _ _
+    _ ≤ 2 * s * s ^ 2 + s ^ 2 * s := by linarith
+    _ = 3 * s ^ 3 := by ring
+
+/-- Norm bound for `y³ - z³` (3-fold telescoping). -/
+private theorem norm_pow3_sub_zpow3_le (y P : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hy : ‖y‖ ≤ 2 * s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2) :
+    ‖y ^ 3 - (y - P) ^ 3‖ ≤ 7 * s ^ 4 := by
+  rw [pow3_sub_zpow3_telescope]
+  set z : 𝔸 := y - P with hz_def
+  have hzn : ‖z‖ ≤ s := hz
+  have h_y2P : ‖y ^ 2 * P‖ ≤ (2 * s) ^ 2 * s ^ 2 :=
+    calc ‖y ^ 2 * P‖ ≤ ‖y ^ 2‖ * ‖P‖ := norm_mul_le _ _
+      _ ≤ ‖y‖ ^ 2 * ‖P‖ := by gcongr; exact norm_pow_le y 2
+      _ ≤ (2 * s) ^ 2 * s ^ 2 :=
+          mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hy 2) hP
+            (by positivity) (by positivity)
+  have h_yPz : ‖y * P * z‖ ≤ 2 * s * s ^ 2 * s :=
+    calc ‖y * P * z‖ ≤ ‖y * P‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖y‖ * ‖P‖) * ‖z‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (2 * s * s ^ 2) * s := by
+          apply mul_le_mul _ hzn (norm_nonneg _) (by positivity)
+          exact mul_le_mul hy hP (norm_nonneg _) (by positivity)
+  have h_Pz2 : ‖P * z ^ 2‖ ≤ s ^ 2 * s ^ 2 :=
+    calc ‖P * z ^ 2‖ ≤ ‖P‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ ‖P‖ * ‖z‖ ^ 2 := by gcongr; exact norm_pow_le z 2
+      _ ≤ s ^ 2 * s ^ 2 := mul_le_mul hP (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+          (by positivity) (by positivity)
+  have ht1 := norm_add_le (y ^ 2 * P + y * P * z) (P * z ^ 2)
+  have ht2 := norm_add_le (y ^ 2 * P) (y * P * z)
+  nlinarith
+
+/-- Norm bound for `y⁴ - z⁴ - y4_5` where `y4_5 = z³T₂ + z²T₂z + zT₂z² + T₂z³`,
+given the BCH-context norm bounds. The bound is `31·s⁶`. -/
+private theorem norm_y4_sub_z4_sub_y4_5_le (y P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hy : ‖y‖ ≤ 2 * s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2)
+    (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3) :
+    ‖y ^ 4 - (y - P) ^ 4 -
+      ((y - P) ^ 3 * T₂ + (y - P) ^ 2 * T₂ * (y - P) +
+        (y - P) * T₂ * (y - P) ^ 2 + T₂ * (y - P) ^ 3)‖ ≤ 31 * s ^ 6 := by
+  rw [y4_sub_z4_sub_y4_5_decomp]
+  set z : 𝔸 := y - P with hz_def
+  have hzn : ‖z‖ ≤ s := hz
+  -- 7 terms to bound
+  -- (y-P)^3 (P-T₂) etc.: ≤ s^3 * 5s^3 = 5s^6, four of these = 20s^6
+  have h_z3PT : ‖z ^ 3 * (P - T₂)‖ ≤ s ^ 3 * (5 * s ^ 3) :=
+    calc ‖z ^ 3 * (P - T₂)‖ ≤ ‖z ^ 3‖ * ‖P - T₂‖ := norm_mul_le _ _
+      _ ≤ ‖z‖ ^ 3 * ‖P - T₂‖ := by gcongr; exact norm_pow_le z 3
+      _ ≤ s ^ 3 * (5 * s ^ 3) := mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hzn 3)
+          hPmT₂ (norm_nonneg _) (by positivity)
+  have h_z2PTz : ‖z ^ 2 * (P - T₂) * z‖ ≤ s ^ 2 * (5 * s ^ 3) * s :=
+    calc _ ≤ ‖z ^ 2 * (P - T₂)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖z‖ ^ 2 * ‖P - T₂‖) * ‖z‖ := by
+          gcongr
+          calc _ ≤ ‖z ^ 2‖ * ‖P - T₂‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le z 2
+      _ ≤ (s ^ 2 * (5 * s ^ 3)) * s := by
+          apply mul_le_mul _ hzn (norm_nonneg _) (by positivity)
+          exact mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hzn 2) hPmT₂
+            (norm_nonneg _) (by positivity)
+  have h_zPTz2 : ‖z * (P - T₂) * z ^ 2‖ ≤ s * (5 * s ^ 3) * s ^ 2 :=
+    calc _ ≤ ‖z * (P - T₂)‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ (‖z‖ * ‖P - T₂‖) * ‖z‖ ^ 2 := by
+          gcongr
+          · exact norm_mul_le _ _
+          · exact norm_pow_le z 2
+      _ ≤ (s * (5 * s ^ 3)) * s ^ 2 := by
+          apply mul_le_mul _ (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+            (by positivity) (by positivity)
+          exact mul_le_mul hzn hPmT₂ (norm_nonneg _) (by positivity)
+  have h_PTz3 : ‖(P - T₂) * z ^ 3‖ ≤ (5 * s ^ 3) * s ^ 3 :=
+    calc _ ≤ ‖P - T₂‖ * ‖z ^ 3‖ := norm_mul_le _ _
+      _ ≤ ‖P - T₂‖ * ‖z‖ ^ 3 := by gcongr; exact norm_pow_le z 3
+      _ ≤ (5 * s ^ 3) * s ^ 3 := mul_le_mul hPmT₂
+          (pow_le_pow_left₀ (norm_nonneg _) hzn 3) (by positivity) (by positivity)
+  -- (y³ - z³) P term
+  have hy3z3 := norm_pow3_sub_zpow3_le y P hs_nn hy hz hP
+  have h_y3z3P : ‖(y ^ 3 - z ^ 3) * P‖ ≤ (7 * s ^ 4) * s ^ 2 :=
+    calc _ ≤ ‖y ^ 3 - z ^ 3‖ * ‖P‖ := norm_mul_le _ _
+      _ ≤ (7 * s ^ 4) * s ^ 2 :=
+          mul_le_mul hy3z3 hP (norm_nonneg _) (by positivity)
+  -- (y² - z²) P z term
+  have hy2z2 := norm_pow2_sub_zpow2_le y P hs_nn hy hz hP
+  have h_y2z2Pz : ‖(y ^ 2 - z ^ 2) * P * z‖ ≤ (3 * s ^ 3) * s ^ 2 * s :=
+    calc _ ≤ ‖(y ^ 2 - z ^ 2) * P‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖y ^ 2 - z ^ 2‖ * ‖P‖) * ‖z‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((3 * s ^ 3) * s ^ 2) * s := by
+          apply mul_le_mul _ hzn (norm_nonneg _) (by positivity)
+          exact mul_le_mul hy2z2 hP (norm_nonneg _) (by positivity)
+  -- P · P · z² term (note: P*P*z² in the decomp formula)
+  have h_PPz2 : ‖P * P * z ^ 2‖ ≤ s ^ 2 * s ^ 2 * s ^ 2 :=
+    calc _ ≤ ‖P * P‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ (‖P‖ * ‖P‖) * ‖z‖ ^ 2 := by
+          gcongr
+          · exact norm_mul_le _ _
+          · exact norm_pow_le z 2
+      _ ≤ (s ^ 2 * s ^ 2) * s ^ 2 := by
+          apply mul_le_mul _ (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+            (by positivity) (by positivity)
+          exact mul_le_mul hP hP (norm_nonneg _) (by positivity)
+  -- Sum via triangle inequality (7 terms)
+  have ht := norm_add_le
+    (z ^ 3 * (P - T₂) + z ^ 2 * (P - T₂) * z + z * (P - T₂) * z ^ 2 + (P - T₂) * z ^ 3 +
+      (y ^ 3 - z ^ 3) * P + (y ^ 2 - z ^ 2) * P * z) (P * P * z ^ 2)
+  have ht2 := norm_add_le
+    (z ^ 3 * (P - T₂) + z ^ 2 * (P - T₂) * z + z * (P - T₂) * z ^ 2 + (P - T₂) * z ^ 3 +
+      (y ^ 3 - z ^ 3) * P) ((y ^ 2 - z ^ 2) * P * z)
+  have ht3 := norm_add_le
+    (z ^ 3 * (P - T₂) + z ^ 2 * (P - T₂) * z + z * (P - T₂) * z ^ 2 + (P - T₂) * z ^ 3)
+    ((y ^ 3 - z ^ 3) * P)
+  have ht4 := norm_add_le
+    (z ^ 3 * (P - T₂) + z ^ 2 * (P - T₂) * z + z * (P - T₂) * z ^ 2)
+    ((P - T₂) * z ^ 3)
+  have ht5 := norm_add_le
+    (z ^ 3 * (P - T₂) + z ^ 2 * (P - T₂) * z) (z * (P - T₂) * z ^ 2)
+  have ht6 := norm_add_le (z ^ 3 * (P - T₂)) (z ^ 2 * (P - T₂) * z)
+  nlinarith [pow_nonneg hs_nn 6]
+
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
 For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:
