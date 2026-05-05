@@ -3620,6 +3620,62 @@ theorem norm_bch_quintic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
                 apply div_le_div_of_nonneg_right _ hdenom.le; linarith
             _ = 3000 * s ^ 5 / (2 - Real.exp s) := by ring_nf
 
+include 𝕂 in
+/-- **Sixth-order BCH remainder, large-s case** (private helper for the future
+`norm_bch_sextic_remainder_le`).
+
+Crude bound for `‖a‖+‖b‖ ≥ 1/10`: combines `norm_bch_quintic_remainder_le`
+with `‖C₅‖ ≤ s⁵` to give
+
+  `‖LHS_sextic‖ ≤ 3001·s⁵/(2-exp(s)) ≤ 100000·s⁶/(2-exp(s))`
+
+(since `3001 ≤ 100000·s` when `s ≥ 1/10`).
+
+This is the crude case of the full sextic remainder theorem. The full
+theorem requires the small-s analytic case (`s < 1/10`), which uses
+`sextic_pure_identity` for the deg-5 cancellation (~700 lines, deferred to
+future session). See `claude/sextic_remainder_strategy.md`. -/
+private theorem norm_bch_sextic_remainder_large_s_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) (hs_large : 1 / 10 ≤ ‖a‖ + ‖b‖) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b‖ ≤
+      100000 * (‖a‖ + ‖b‖) ^ 6 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have hexp_lt : Real.exp s < 2 := by
+    calc Real.exp s < Real.exp (Real.log 2) := Real.exp_strictMono hab
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom : 0 < 2 - Real.exp s := by linarith
+  have hdenom_le1 : 2 - Real.exp s ≤ 1 := by linarith [Real.add_one_le_exp s]
+  have hR₄ := norm_bch_quintic_remainder_le (𝕂 := 𝕂) a b hab
+  have hC₅ : ‖bch_quintic_term 𝕂 a b‖ ≤ s ^ 5 := norm_bch_quintic_term_le a b
+  -- Algebraic split: LHS_sextic = LHS_quintic - C₅
+  have hLHS_eq : bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b - bch_quintic_term 𝕂 a b =
+      (bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+       bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b) - bch_quintic_term 𝕂 a b := by abel
+  -- ‖LHS‖ ≤ 3000s⁵/(2-exp(s)) + s⁵ ≤ 3001 s⁵/(2-exp(s))
+  have hLHS_3001 : ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b - bch_quintic_term 𝕂 a b‖ ≤
+      3001 * s ^ 5 / (2 - Real.exp s) := by
+    rw [hLHS_eq]
+    calc _ ≤ ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+          bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b‖ + ‖bch_quintic_term 𝕂 a b‖ :=
+        norm_sub_le _ _
+      _ ≤ 3000 * s ^ 5 / (2 - Real.exp s) + s ^ 5 := by linarith
+      _ ≤ 3000 * s ^ 5 / (2 - Real.exp s) + s ^ 5 / (2 - Real.exp s) := by
+          gcongr; rw [le_div_iff₀ hdenom]
+          nlinarith [pow_nonneg hs_nn 5]
+      _ = 3001 * s ^ 5 / (2 - Real.exp s) := by ring
+  -- Bound 3001·s⁵ ≤ 100000·s⁶ via 3001 ≤ 100000·s (using s ≥ 1/10)
+  have h_le : 3001 * s ^ 5 ≤ 100000 * s ^ 6 := by
+    have h3001 : 3001 ≤ 100000 * s := by linarith
+    nlinarith [pow_nonneg hs_nn 5]
+  calc _ ≤ 3001 * s ^ 5 / (2 - Real.exp s) := hLHS_3001
+    _ ≤ 100000 * s ^ 6 / (2 - Real.exp s) :=
+        div_le_div_of_nonneg_right h_le hdenom.le
+
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
 For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:

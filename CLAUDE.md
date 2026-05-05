@@ -251,13 +251,35 @@ one degree higher. Strategy:
   deg-5 cancellation, quintic_pure_identity for deg-4.
 - Each residual O(s⁶/(2-exp s)). Constants ~10K.
 
+**Session 15 progress (partial)**: Added the **large-s helper**
+`private theorem norm_bch_sextic_remainder_large_s_le` in `BCH/Basic.lean`
+(after `norm_bch_quintic_remainder_le`, ~50 lines, 0 new axioms). Proves
+the bound for `‖a‖+‖b‖ ≥ 1/10` via the crude approach
+`‖LHS_sextic‖ ≤ ‖LHS_quintic‖ + ‖C₅‖ ≤ 3001·s⁵/(2-exp s) ≤ 100000·s⁶/(2-exp s)`
+(since `3001 ≤ 100000·s` for `s ≥ 1/10`). Strategy doc:
+`claude/sextic_remainder_strategy.md`.
+
+Remaining for full `norm_bch_sextic_remainder_le`:
+1. **Small-s case** (`s < 1/10`, ~700 lines): analytic decomposition
+   `pieceB'' = (I₁ - corr₁ - corr₁_5) + (I₂ - corr₂ - corr₂_5) - ¼(y⁴ - z⁴ - y4_5) + ⅕(y⁵ - z⁵)`.
+   QPI handles deg-4 cancellation (corr₁ + corr₂ - ¼z⁴ - C₄ = 0);
+   sextic_pure_identity handles deg-5 cancellation
+   (corr₁_5 + corr₂_5 - ¼y4_5 + ⅕z⁵ - C₅ = 0). Each summand bounded by
+   ~K_i·s⁶ via triangle inequality (K_1+K_2+K_3+K_4 ≈ 52, well within
+   100000 budget).
+2. **Theorem assembly** (~10 lines): combine large-s and small-s
+   helpers via `by_cases` and the existing `pieceA_sextic` log-tail bound.
+
 Then extend the cubic template `norm_symmetric_bch_cubic_sub_poly_le`
 (line ~3798) to give B1.c (`norm_symmetric_bch_quintic_sub_poly_le`),
 ~400-600 additional lines.
 
-Total remaining for B1.c discharge: ~1500-2000 lines.
+Total remaining for B1.c discharge: ~1100-1300 lines (was ~1500-2000;
+session 15 reduced by ~50 lines + sketched the architecture).
 
 - See `claude/lean-bch-B1c-session-prompt.md` for full details.
+- See `claude/sextic_remainder_strategy.md` for the small-s case
+  decomposition strategy and per-term bounds.
 
 ### Rigorously proved (no axioms) — Axiom 2 infrastructure (sessions 7–8)
 
