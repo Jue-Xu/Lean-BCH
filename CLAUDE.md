@@ -4,12 +4,15 @@
 
 Branch: `trotter-5factor-palindromic`. Repository is **0 sorries**.
 
-**Axiom count: 3 scoped `private axiom`s + Lean's 3 standard.**
+**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard.**
 - `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2, in `SymmetricQuintic.lean`.
-- `BCH.norm_bch_sextic_remainder_small_s_le` — B1.c Tier-1 small-s case (NEW session 16),
-  in `Basic.lean`. Discharge plan in `claude/sextic_remainder_strategy.md`.
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
+
+**Session 16 discharge of `norm_bch_sextic_remainder_small_s_le`** (Tier-1 small-s,
+~580 lines): mirrors quintic proof's H1 + quartic_identity pattern. Bounds 4 sub-pieces
+(S₁ ≤ 20·s⁶, S₂ ≤ 17·s⁶, S₃ ≤ 8·s⁶, S₄ ≤ 7·s⁶) via `pieceB_sextic_decomp` + helpers.
+Combined with pieceA ≤ 2·s⁶/(2-exp(s)) gives 100·s⁶/(2-exp(s)).
 
 **Key theorems** (Lean-Trotter interface):
 - Axiom 1 (P1, `bch_w4Deriv_quintic_level2`): **discharged session 12** via

@@ -4478,40 +4478,594 @@ introduced as a scoped private axiom; the proof requires combining
 plan.
 -/
 
-/-- **Sixth-order BCH remainder, small-s case** (scoped private axiom).
+set_option maxHeartbeats 4000000000 in
+include 𝕂 in
+/-- **Sixth-order BCH remainder, small-s case** (Tier-1 of B1.c).
 
-For `s = ‖a‖+‖b‖ < 1/10`:
-`‖LHS_sextic‖ ≤ 100·s⁶/(2-exp(s))`.
+For `s = ‖a‖+‖b‖ < 1/10`: `‖LHS_sextic‖ ≤ 100·s⁶/(2-exp(s))`.
 
-The proof requires combining `pieceB_sextic_decomp` (the central algebraic
-decomposition derived from `quintic_pure_identity` and
-`sextic_pure_identity`) with the per-term norm bounds. The infrastructure
-is fully in place: `pieceB_sextic_decomp`, `I1_residual_decomp_eq`,
-`norm_I1_residual_RHS_le` (≤20·s⁶), `I2_residual_decomp_eq`,
-`norm_I2_residual_inner_le` (≤50·s⁶ → ⅓·50 = 17·s⁶ for `S₂`),
-`norm_y4_sub_z4_sub_y4_5_le` (≤31·s⁶ → ¼·31 = 8·s⁶ for `S₃`),
-`norm_pow5_sub_zpow5_le` (≤31·s⁶ → ⅕·31 = 7·s⁶ for `S₄`). Total
-4-piece sum ≤ 52·s⁶. Combined with `pieceA ≤ 2·s⁶/(2-exp(s))` (small-s
-bound on `(exp(s)-1)⁶`), the public bound holds with constant ≤ 100.
+Combines `pieceB_sextic_decomp` (the central decomposition from QPI+SPI)
+with per-term bounds: `norm_I1_residual_RHS_le` (S₁ ≤ 20·s⁶),
+`norm_I2_residual_inner_le` (→ S₂ ≤ 17·s⁶), `norm_y4_sub_z4_sub_y4_5_le`
+(→ S₃ ≤ 8·s⁶), `norm_pow5_sub_zpow5_le` (→ S₄ ≤ 7·s⁶). Total ≤ 52·s⁶.
+Plus pieceA ≤ 2·s⁶/(2-exp(s)) for `s ≤ 1/10`. Final ≤ 100·s⁶/(2-exp(s)).
 
-Discharge requires ~250-300 lines of Lean. Key challenges:
-- `linear_combination (norm := module)` is unreliable for non-commutative
-  algebra + smul; use `convert` tactic with `abel` for term reordering.
-- T₃_QPI vs T₃_SPI ordering must be handled (they're equal as values but
-  differ syntactically); `pieceB_sextic_decomp` separates them via
-  let-bindings.
-- The S₁ bound requires the H1 identity + quartic_identity + I1_residual_decomp_eq
-  chain; mirror the quintic proof's `hH1` + `hI₁_quartic` pattern.
-
-See `claude/sextic_remainder_strategy.md` for the full proof strategy. -/
-private axiom norm_bch_sextic_remainder_small_s_le {𝕂 : Type*} [RCLike 𝕂]
-    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
-    [NormOneClass 𝔸] [CompleteSpace 𝔸] (a b : 𝔸)
+Mirrors the quintic proof's `hH1` + `hI₁_quartic` pattern, extended one
+degree higher. -/
+private theorem norm_bch_sextic_remainder_small_s_le (a b : 𝔸)
     (hab : ‖a‖ + ‖b‖ < Real.log 2) (hs_small : ‖a‖ + ‖b‖ < 1 / 10) :
     ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
       bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
       bch_quintic_term 𝕂 a b‖ ≤
-      100 * (‖a‖ + ‖b‖) ^ 6 / (2 - Real.exp (‖a‖ + ‖b‖))
+      100 * (‖a‖ + ‖b‖) ^ 6 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  -- SETUP.
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set α := ‖a‖
+  set β := ‖b‖
+  have hs_nn : 0 ≤ s := by positivity
+  have hα_nn : (0 : ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0 : ℝ) ≤ β := norm_nonneg b
+  have hα_le : α ≤ s := le_add_of_nonneg_right hβ_nn
+  have hβ_le : β ≤ s := le_add_of_nonneg_left hα_nn
+  have hs_small_le : s ≤ 1 / 10 := hs_small.le
+  have hexp_lt : Real.exp s < 2 := by
+    calc Real.exp s < Real.exp (Real.log 2) := Real.exp_strictMono hab
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom : 0 < 2 - Real.exp s := by linarith
+  have hdenom_le1 : 2 - Real.exp s ≤ 1 := by linarith [Real.add_one_le_exp s]
+  have hs1 : s < 1 := by linarith
+  have hs34 : s < 3 / 4 := by linarith
+  have hs56 : s < 5 / 6 := by linarith
+  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+  set y := exp a * exp b - 1 with hy_def
+  set z := a + b with hz_def
+  set P := y - z with hP_def
+  have hy_lt : ‖y‖ < 1 := norm_exp_mul_exp_sub_one_lt_one (𝕂 := 𝕂) a b hab
+  have hy_le : ‖y‖ ≤ Real.exp s - 1 := by
+    have hy_eq : y = (exp a - 1) * exp b + (exp b - 1) := by
+      rw [hy_def, sub_mul, one_mul]; abel
+    calc ‖y‖ = ‖(exp a - 1) * exp b + (exp b - 1)‖ := by rw [hy_eq]
+      _ ≤ ‖exp a - 1‖ * ‖exp b‖ + ‖exp b - 1‖ := by
+          calc _ ≤ ‖(exp a - 1) * exp b‖ + _ := norm_add_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (Real.exp α - 1) * Real.exp β + (Real.exp β - 1) := by
+          apply add_le_add
+          · exact mul_le_mul (norm_exp_sub_one_le (𝕂 := 𝕂) a) (norm_exp_le (𝕂 := 𝕂) b)
+              (norm_nonneg _) (by linarith [Real.add_one_le_exp α])
+          · exact norm_exp_sub_one_le (𝕂 := 𝕂) b
+      _ = Real.exp s - 1 := by rw [hs_def, Real.exp_add]; ring
+  have hEs_nn : 0 ≤ Real.exp s - 1 - s := by
+    linarith [Real.quadratic_le_exp_of_nonneg hs_nn, sq_nonneg s]
+  have hEs2 : Real.exp s - 1 - s ≤ s ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖s‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hs_nn]; linarith)
+    rwa [Real.norm_eq_abs, abs_of_nonneg hEs_nn,
+         Real.norm_eq_abs, abs_of_nonneg hs_nn] at h
+  have hy_le2 : ‖y‖ ≤ 2 * s := by
+    calc ‖y‖ ≤ Real.exp s - 1 := hy_le
+      _ ≤ s + s ^ 2 := by linarith
+      _ ≤ 2 * s := by nlinarith [sq_nonneg s]
+  have hz_le : ‖z‖ ≤ s := by rw [hz_def]; exact norm_add_le _ _
+  -- Exp remainders.
+  set D₁ := exp a - 1 - a with hD₁_def
+  set D₂ := exp b - 1 - b with hD₂_def
+  set E₁ := D₁ - (2 : 𝕂)⁻¹ • a ^ 2 with hE₁_def
+  set E₂ := D₂ - (2 : 𝕂)⁻¹ • b ^ 2 with hE₂_def
+  set F₁ := E₁ - (6 : 𝕂)⁻¹ • a ^ 3 with hF₁_def
+  set F₂ := E₂ - (6 : 𝕂)⁻¹ • b ^ 3 with hF₂_def
+  set G₁ := F₁ - (24 : 𝕂)⁻¹ • a ^ 4 with hG₁_def
+  set G₂ := F₂ - (24 : 𝕂)⁻¹ • b ^ 4 with hG₂_def
+  set H₁ := G₁ - (120 : 𝕂)⁻¹ • a ^ 5 with hH₁_def
+  set H₂ := G₂ - (120 : 𝕂)⁻¹ • b ^ 5 with hH₂_def
+  set Q := a * D₂ + D₁ * b + D₁ * D₂ with hQ_def
+  set W_H1 := (2 : 𝕂) • (E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂) -
+      z * P - P * z - P ^ 2 with hW_H1_def
+  set T₂ := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2 with hT₂_def
+  -- T₃ in T₃_SPI ordering (matches I1/I2_residual_decomp_eq).
+  set T₃ := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+      (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3 with hT₃_def
+  set T₄ := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+      (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+      (24 : 𝕂)⁻¹ • b ^ 4 with hT₄_def
+  set W5 := (60 : 𝕂)⁻¹ • a ^ 5 + (60 : 𝕂)⁻¹ • b ^ 5 +
+      (12 : 𝕂)⁻¹ • (a * b ^ 4) + (12 : 𝕂)⁻¹ • (a ^ 4 * b) +
+      (6 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) -
+      (z * T₄ + T₄ * z) - (T₂ * T₃ + T₃ * T₂) with hW5_def
+  set y3_5 := z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+      z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z with hy3_5_def
+  set y4_5 := z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3 with hy4_5_def
+  -- Norm bounds for D, E, F, G, H.
+  have hD₁_le : ‖D₁‖ ≤ Real.exp α - 1 - α := norm_exp_sub_one_sub_le (𝕂 := 𝕂) a
+  have hD₂_le : ‖D₂‖ ≤ Real.exp β - 1 - β := norm_exp_sub_one_sub_le (𝕂 := 𝕂) b
+  have hDa_nn : 0 ≤ Real.exp α - 1 - α := by
+    linarith [Real.quadratic_le_exp_of_nonneg hα_nn, sq_nonneg α]
+  have hDb_nn : 0 ≤ Real.exp β - 1 - β := by
+    linarith [Real.quadratic_le_exp_of_nonneg hβ_nn, sq_nonneg β]
+  have hDa2 : Real.exp α - 1 - α ≤ α ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖α‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hα_nn]; linarith)
+    rwa [Real.norm_eq_abs, abs_of_nonneg hDa_nn,
+         Real.norm_eq_abs, abs_of_nonneg hα_nn] at h
+  have hDb2 : Real.exp β - 1 - β ≤ β ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖β‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hβ_nn]; linarith)
+    rwa [Real.norm_eq_abs, abs_of_nonneg hDb_nn,
+         Real.norm_eq_abs, abs_of_nonneg hβ_nn] at h
+  have hE₁_le : ‖E₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 :=
+    norm_exp_sub_one_sub_sub_le (𝕂 := 𝕂) a
+  have hE₂_le : ‖E₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 :=
+    norm_exp_sub_one_sub_sub_le (𝕂 := 𝕂) b
+  have hEa3 : Real.exp α - 1 - α - α ^ 2 / 2 ≤ α ^ 3 :=
+    real_exp_third_order_le_cube hα_nn (lt_of_le_of_lt hα_le hs56)
+  have hEb3 : Real.exp β - 1 - β - β ^ 2 / 2 ≤ β ^ 3 :=
+    real_exp_third_order_le_cube hβ_nn (lt_of_le_of_lt hβ_le hs56)
+  have hF₁_le : ‖F₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 :=
+    norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) a
+  have hF₂_le : ‖F₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 :=
+    norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) b
+  have hFa4 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 ≤ α ^ 4 :=
+    real_exp_fourth_order_le_quartic hα_nn (lt_of_le_of_lt hα_le hs34)
+  have hFb4 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 ≤ β ^ 4 :=
+    real_exp_fourth_order_le_quartic hβ_nn (lt_of_le_of_lt hβ_le hs34)
+  have hG₁_le : ‖G₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 :=
+    norm_exp_sub_one_sub_sub_sub_sub_le (𝕂 := 𝕂) a
+  have hG₂_le : ‖G₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 :=
+    norm_exp_sub_one_sub_sub_sub_sub_le (𝕂 := 𝕂) b
+  have hGa5 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 ≤ α ^ 5 :=
+    real_exp_fifth_order_le_quintic hα_nn (lt_of_le_of_lt hα_le hs34)
+  have hGb5 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 ≤ β ^ 5 :=
+    real_exp_fifth_order_le_quintic hβ_nn (lt_of_le_of_lt hβ_le hs34)
+  have hH₁_le : ‖H₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 -
+      α ^ 5 / 120 :=
+    norm_exp_sub_one_sub_sub_sub_sub_sub_le (𝕂 := 𝕂) a
+  have hH₂_le : ‖H₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 -
+      β ^ 5 / 120 :=
+    norm_exp_sub_one_sub_sub_sub_sub_sub_le (𝕂 := 𝕂) b
+  have hHa6 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 - α ^ 5 / 120 ≤
+      α ^ 6 :=
+    real_exp_sixth_order_le_sextic hα_nn (lt_of_le_of_lt hα_le hs34)
+  have hHb6 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 - β ^ 5 / 120 ≤
+      β ^ 6 :=
+    real_exp_sixth_order_le_sextic hβ_nn (lt_of_le_of_lt hβ_le hs34)
+  -- ‖P‖ ≤ s² and friends.
+  have hP_le : ‖P‖ ≤ Real.exp s - 1 - s := by
+    have hP_split : P = a * (exp b - 1) + D₁ * exp b + D₂ := by
+      simp only [hP_def, hy_def, hz_def, hD₁_def, hD₂_def]; noncomm_ring
+    calc ‖P‖ = ‖a * (exp b - 1) + D₁ * exp b + D₂‖ := by rw [hP_split]
+      _ ≤ ‖a * (exp b - 1)‖ + ‖D₁ * exp b‖ + ‖D₂‖ := by
+          calc _ ≤ ‖a * (exp b - 1) + D₁ * exp b‖ + ‖D₂‖ := norm_add_le _ _
+            _ ≤ ‖a * (exp b - 1)‖ + ‖D₁ * exp b‖ + ‖D₂‖ := by
+                gcongr; exact norm_add_le _ _
+      _ ≤ α * (Real.exp β - 1) + (Real.exp α - 1 - α) * Real.exp β +
+          (Real.exp β - 1 - β) := by
+          have h1 : ‖a * (exp b - 1)‖ ≤ α * (Real.exp β - 1) :=
+            calc _ ≤ ‖a‖ * ‖exp b - 1‖ := norm_mul_le _ _
+              _ ≤ _ := by gcongr; exact norm_exp_sub_one_le (𝕂 := 𝕂) b
+          have h2 : ‖D₁ * exp b‖ ≤ (Real.exp α - 1 - α) * Real.exp β :=
+            calc _ ≤ ‖D₁‖ * ‖exp b‖ := norm_mul_le _ _
+              _ ≤ _ := mul_le_mul hD₁_le (norm_exp_le (𝕂 := 𝕂) b)
+                  (norm_nonneg _) (by linarith)
+          linarith [hD₂_le]
+      _ = Real.exp s - 1 - s := by rw [hs_def, Real.exp_add]; ring
+  have hP_le_s2 : ‖P‖ ≤ s ^ 2 := le_trans hP_le hEs2
+  have hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3 := by
+    have hS_eq : P - T₂ = E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂ := by
+      simp only [hP_def, hy_def, hT₂_def, hE₁_def, hE₂_def, hD₁_def, hD₂_def, hz_def]
+      noncomm_ring
+    rw [hS_eq]
+    have hE₁_s3 : ‖E₁‖ ≤ α ^ 3 := le_trans hE₁_le hEa3
+    have hE₂_s3 : ‖E₂‖ ≤ β ^ 3 := le_trans hE₂_le hEb3
+    have haD₂ : ‖a * D₂‖ ≤ α * β ^ 2 :=
+      calc _ ≤ ‖a‖ * ‖D₂‖ := norm_mul_le _ _
+        _ ≤ _ := mul_le_mul_of_nonneg_left (le_trans hD₂_le hDb2) hα_nn
+    have hD₁b : ‖D₁ * b‖ ≤ α ^ 2 * β :=
+      calc _ ≤ ‖D₁‖ * ‖b‖ := norm_mul_le _ _
+        _ ≤ _ := mul_le_mul (le_trans hD₁_le hDa2) le_rfl hβ_nn (by positivity)
+    have hDD : ‖D₁ * D₂‖ ≤ α ^ 2 * β ^ 2 :=
+      calc _ ≤ ‖D₁‖ * ‖D₂‖ := norm_mul_le _ _
+        _ ≤ _ := mul_le_mul (le_trans hD₁_le hDa2) (le_trans hD₂_le hDb2)
+            (norm_nonneg _) (by positivity)
+    calc ‖E₁ + E₂ + a * D₂ + D₁ * b + D₁ * D₂‖
+        ≤ ‖E₁‖ + ‖E₂‖ + ‖a * D₂‖ + ‖D₁ * b‖ + ‖D₁ * D₂‖ := by
+          have := norm_add_le E₁ E₂
+          have := norm_add_le (E₁ + E₂) (a * D₂)
+          have := norm_add_le (E₁ + E₂ + a * D₂) (D₁ * b)
+          have := norm_add_le (E₁ + E₂ + a * D₂ + D₁ * b) (D₁ * D₂)
+          linarith
+      _ ≤ α ^ 3 + β ^ 3 + α * β ^ 2 + α ^ 2 * β + α ^ 2 * β ^ 2 := by
+          linarith [hE₁_s3, hE₂_s3, haD₂, hD₁b, hDD]
+      _ ≤ 5 * s ^ 3 := by
+          nlinarith [pow_le_pow_left₀ hα_nn hα_le 3, pow_le_pow_left₀ hβ_nn hβ_le 3,
+            pow_le_pow_left₀ hα_nn hα_le 2, pow_le_pow_left₀ hβ_nn hβ_le 2,
+            pow_nonneg hs_nn 4]
+  have hPmT₂mT₃ : ‖P - T₂ - T₃‖ ≤ 5 * s ^ 4 := by
+    have h := norm_P_sub_T2_sub_T3_le (𝕂 := 𝕂) a b hs_nn hs34 hα_le hβ_le
+    have hP_unfold : P = exp a * exp b - 1 - (a + b) := by
+      rw [hP_def, hy_def, hz_def]
+    rw [hP_unfold, hT₂_def, hT₃_def]
+    exact h
+  have h2_le : ‖(2 : 𝕂)⁻¹‖ ≤ 1 := by rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  have h2eq : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h3eq : ‖(3 : 𝕂)⁻¹‖ = (3 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h4eq : ‖(4 : 𝕂)⁻¹‖ = (4 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h5eq : ‖(5 : 𝕂)⁻¹‖ = (5 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have hT₂_le : ‖T₂‖ ≤ s ^ 2 := by
+    have h1 : ‖a * b‖ ≤ α * β := norm_mul_le _ _
+    have h2 : ‖(2:𝕂)⁻¹ • a^2‖ ≤ α^2 :=
+      calc _ ≤ 1 * ‖a‖ ^ 2 := (norm_smul_le _ _).trans
+              (mul_le_mul h2_le (norm_pow_le a 2) (norm_nonneg _) (by norm_num))
+        _ = α^2 := one_mul _
+    have h3 : ‖(2:𝕂)⁻¹ • b^2‖ ≤ β^2 :=
+      calc _ ≤ 1 * ‖b‖ ^ 2 := (norm_smul_le _ _).trans
+              (mul_le_mul h2_le (norm_pow_le b 2) (norm_nonneg _) (by norm_num))
+        _ = β^2 := one_mul _
+    have htriangle : ‖T₂‖ ≤ ‖a * b‖ + ‖(2:𝕂)⁻¹ • a^2‖ + ‖(2:𝕂)⁻¹ • b^2‖ := by
+      rw [hT₂_def]
+      have n1 := norm_add_le (a * b + (2:𝕂)⁻¹ • a^2) ((2:𝕂)⁻¹ • b^2)
+      have n2 := norm_add_le (a * b) ((2:𝕂)⁻¹ • a^2)
+      linarith
+    have hs2 : s^2 = α^2 + 2*α*β + β^2 := by rw [hs_def]; ring
+    have hαβ : 0 ≤ α * β := mul_nonneg hα_nn hβ_nn
+    linarith
+  have hT₃_le : ‖T₃‖ ≤ s ^ 3 := by
+    have h6_le : ‖(6:𝕂)⁻¹‖ ≤ 1 := by rw [norm_inv, RCLike.norm_ofNat]; norm_num
+    have h6eq : ‖(6:𝕂)⁻¹‖ = (6:ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+    have hT1 : ‖(6:𝕂)⁻¹ • a^3‖ ≤ α^3 / 6 := by
+      calc _ ≤ ‖(6:𝕂)⁻¹‖ * ‖a^3‖ := norm_smul_le _ _
+        _ ≤ (6:ℝ)⁻¹ * α^3 := by
+            rw [h6eq]; exact mul_le_mul_of_nonneg_left (norm_pow_le _ _) (by norm_num)
+        _ = α^3 / 6 := by ring
+    have hT2 : ‖(2:𝕂)⁻¹ • (a^2*b)‖ ≤ α^2 * β / 2 := by
+      have hab_le : ‖a^2*b‖ ≤ α^2 * β :=
+        calc _ ≤ ‖a^2‖ * ‖b‖ := norm_mul_le _ _
+          _ ≤ α^2 * β := mul_le_mul (norm_pow_le _ _) le_rfl hβ_nn (by positivity)
+      calc _ ≤ ‖(2:𝕂)⁻¹‖ * ‖a^2*b‖ := norm_smul_le _ _
+        _ ≤ (2:ℝ)⁻¹ * (α^2 * β) := by
+            rw [h2eq]; exact mul_le_mul_of_nonneg_left hab_le (by norm_num)
+        _ = α^2 * β / 2 := by ring
+    have hT3 : ‖(2:𝕂)⁻¹ • (a*b^2)‖ ≤ α * β^2 / 2 := by
+      have hab_le : ‖a*b^2‖ ≤ α * β^2 :=
+        calc _ ≤ ‖a‖ * ‖b^2‖ := norm_mul_le _ _
+          _ ≤ α * β^2 := mul_le_mul le_rfl (norm_pow_le _ _) (by positivity) hα_nn
+      calc _ ≤ ‖(2:𝕂)⁻¹‖ * ‖a*b^2‖ := norm_smul_le _ _
+        _ ≤ (2:ℝ)⁻¹ * (α * β^2) := by
+            rw [h2eq]; exact mul_le_mul_of_nonneg_left hab_le (by norm_num)
+        _ = α * β^2 / 2 := by ring
+    have hT4 : ‖(6:𝕂)⁻¹ • b^3‖ ≤ β^3 / 6 := by
+      calc _ ≤ ‖(6:𝕂)⁻¹‖ * ‖b^3‖ := norm_smul_le _ _
+        _ ≤ (6:ℝ)⁻¹ * β^3 := by
+            rw [h6eq]; exact mul_le_mul_of_nonneg_left (norm_pow_le _ _) (by norm_num)
+        _ = β^3 / 6 := by ring
+    have htriangle : ‖T₃‖ ≤ ‖(6:𝕂)⁻¹ • a^3‖ + ‖(2:𝕂)⁻¹ • (a^2*b)‖ +
+        ‖(2:𝕂)⁻¹ • (a*b^2)‖ + ‖(6:𝕂)⁻¹ • b^3‖ := by
+      rw [hT₃_def]
+      have n1 := norm_add_le ((6:𝕂)⁻¹ • a^3 + (2:𝕂)⁻¹ • (a^2*b) +
+        (2:𝕂)⁻¹ • (a*b^2)) ((6:𝕂)⁻¹ • b^3)
+      have n2 := norm_add_le ((6:𝕂)⁻¹ • a^3 + (2:𝕂)⁻¹ • (a^2*b)) ((2:𝕂)⁻¹ • (a*b^2))
+      have n3 := norm_add_le ((6:𝕂)⁻¹ • a^3) ((2:𝕂)⁻¹ • (a^2*b))
+      linarith
+    have hs3 : s^3 = α^3 + 3*α^2*β + 3*α*β^2 + β^3 := by rw [hs_def]; ring
+    have hαβ : 0 ≤ α * β := mul_nonneg hα_nn hβ_nn
+    have hα2β : 0 ≤ α^2 * β := mul_nonneg (sq_nonneg _) hβ_nn
+    have hαβ2 : 0 ≤ α * β^2 := mul_nonneg hα_nn (sq_nonneg _)
+    nlinarith [pow_nonneg hα_nn 3, pow_nonneg hβ_nn 3]
+  -- H1 identity (mirror quintic proof's hH1).
+  have hH1 : y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 =
+      (2 : 𝕂)⁻¹ • W_H1 := by
+    suffices h : (2 : 𝕂) • (y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+        (2 : 𝕂)⁻¹ • y ^ 2) = (2 : 𝕂) • ((2 : 𝕂)⁻¹ • W_H1) by
+      have hinj : Function.Injective ((2 : 𝕂) • · : 𝔸 → 𝔸) := by
+        intro x₀ y₀ hxy; have := congrArg ((2 : 𝕂)⁻¹ • ·) hxy
+        simp only [smul_smul, inv_mul_cancel₀ h2ne, one_smul] at this; exact this
+      exact hinj h
+    rw [smul_smul, mul_inv_cancel₀ h2ne, one_smul]
+    simp only [hE₁_def, hE₂_def, hD₁_def, hD₂_def, hP_def, hy_def, hW_H1_def, hz_def,
+      smul_sub, smul_add, smul_smul, mul_inv_cancel₀ h2ne, one_smul, two_smul]
+    noncomm_ring
+  -- Decomposition.
+  have hdecomp : bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b - bch_quintic_term 𝕂 a b =
+      (logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 - (3 : 𝕂)⁻¹ • y ^ 3 +
+        (4 : 𝕂)⁻¹ • y ^ 4 - (5 : 𝕂)⁻¹ • y ^ 5) +
+      (y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+        (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 + (5 : 𝕂)⁻¹ • y ^ 5 -
+        bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+        bch_quintic_term 𝕂 a b) := by
+    unfold bch; rw [hz_def]; abel
+  rw [hdecomp]
+  -- Bound pieceA.
+  have hpieceA : ‖logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 -
+      (3 : 𝕂)⁻¹ • y ^ 3 + (4 : 𝕂)⁻¹ • y ^ 4 - (5 : 𝕂)⁻¹ • y ^ 5‖ ≤
+      (Real.exp s - 1) ^ 6 / (2 - Real.exp s) :=
+    calc _ ≤ ‖y‖ ^ 6 / (1 - ‖y‖) :=
+          norm_logOnePlus_sub_sub_sub_sub_sub_le (𝕂 := 𝕂) y hy_lt
+      _ ≤ _ := div_le_div₀ (pow_nonneg (by linarith [Real.add_one_le_exp s]) _)
+          (pow_le_pow_left₀ (norm_nonneg _) hy_le _) hdenom (by linarith)
+  have hexp6 : (Real.exp s - 1) ^ 6 ≤ 2 * s ^ 6 := by
+    have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
+    calc (Real.exp s - 1) ^ 6 ≤ (s + s ^ 2) ^ 6 :=
+          pow_le_pow_left₀ hE1_nn (by linarith) 6
+      _ = s ^ 6 * (1 + s) ^ 6 := by ring
+      _ ≤ s ^ 6 * 2 := by
+          apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs_nn 6)
+          have h1 : (1 + s) ^ 6 ≤ (1 + 1/10) ^ 6 :=
+            pow_le_pow_left₀ (by linarith) (by linarith) 6
+          have h2 : (1 + 1/10 : ℝ) ^ 6 ≤ 2 := by norm_num
+          linarith
+      _ = 2 * s ^ 6 := by ring
+  -- Define I₁ in the H1 form and apply quartic_identity.
+  set I₁ := (2 : 𝕂)⁻¹ • W_H1 + (3 : 𝕂)⁻¹ • z ^ 3 -
+      bch_cubic_term 𝕂 a b with hI₁_def
+  have hI₁_quartic : I₁ =
+      F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+      (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) -
+      (2 : 𝕂)⁻¹ • P ^ 2 := by
+    rw [hI₁_def]; exact quartic_identity 𝕂 (exp a) (exp b) a b
+  -- Set R for I1_residual_decomp_eq's RHS.
+  set R := T₃ - E₁ - E₂ - Q + T₄ with hR_def
+  set T22_resid := T₂ ^ 2 - P ^ 2 + T₂ * T₃ + T₃ * T₂ with hT22_def
+  -- I1_residual_decomp_eq applied: I₁ - corr₁_T3SPI - ½W5 = I1_RHS.
+  have hI1_decomp_full :
+      (F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+        (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) -
+        (2 : 𝕂)⁻¹ • P ^ 2) -
+        ((24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+          (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+          (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+          (2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) - (2 : 𝕂)⁻¹ • T₂ ^ 2) -
+        (2 : 𝕂)⁻¹ • W5 =
+      H₁ + H₂ + a * G₂ + G₁ * b +
+      (E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂) + (2 : 𝕂)⁻¹ • (F₁ * b ^ 2)) +
+      (2 : 𝕂)⁻¹ • (z * R + R * z) +
+      (2 : 𝕂)⁻¹ • T22_resid := by
+    have h := I1_residual_decomp_eq 𝕂 (exp a) (exp b) a b
+    simp only [hH₁_def, hH₂_def, hG₁_def, hG₂_def, hF₁_def, hF₂_def,
+      hE₁_def, hE₂_def, hD₁_def, hD₂_def, hQ_def, hR_def, hT22_def,
+      hP_def, hy_def, hz_def, hT₂_def, hT₃_def, hT₄_def, hW5_def] at h
+    convert h using 1
+  -- Compute per-component norm bounds for the I1_residual_decomp_eq RHS.
+  have hH₁_s6 : ‖H₁‖ ≤ s ^ 6 :=
+    le_trans hH₁_le (le_trans hHa6 (pow_le_pow_left₀ hα_nn hα_le 6))
+  have hH₂_s6 : ‖H₂‖ ≤ s ^ 6 :=
+    le_trans hH₂_le (le_trans hHb6 (pow_le_pow_left₀ hβ_nn hβ_le 6))
+  have h_aG₂_s6 : ‖a * G₂‖ ≤ s ^ 6 :=
+    calc _ ≤ ‖a‖ * ‖G₂‖ := norm_mul_le _ _
+      _ ≤ α * β ^ 5 := mul_le_mul_of_nonneg_left
+          (le_trans hG₂_le hGb5) hα_nn
+      _ ≤ s * s ^ 5 := mul_le_mul hα_le (pow_le_pow_left₀ hβ_nn hβ_le 5)
+          (by positivity) hs_nn
+      _ = s ^ 6 := by ring
+  have h_G₁b_s6 : ‖G₁ * b‖ ≤ s ^ 6 :=
+    calc _ ≤ ‖G₁‖ * ‖b‖ := norm_mul_le _ _
+      _ ≤ α ^ 5 * β := mul_le_mul (le_trans hG₁_le hGa5) le_rfl hβ_nn
+          (by positivity)
+      _ ≤ s ^ 5 * s := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 5) hβ_le
+          (by positivity) (by positivity)
+      _ = s ^ 6 := by ring
+  have h_E₁E₂_s6 : ‖E₁ * E₂‖ ≤ s ^ 6 :=
+    calc _ ≤ ‖E₁‖ * ‖E₂‖ := norm_mul_le _ _
+      _ ≤ α ^ 3 * β ^ 3 := mul_le_mul (le_trans hE₁_le hEa3)
+          (le_trans hE₂_le hEb3) (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 3 * s ^ 3 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3)
+          (pow_le_pow_left₀ hβ_nn hβ_le 3) (by positivity) (by positivity)
+      _ = s ^ 6 := by ring
+  have h_a2F₂_s6 : ‖a ^ 2 * F₂‖ ≤ s ^ 6 :=
+    calc _ ≤ ‖a ^ 2‖ * ‖F₂‖ := norm_mul_le _ _
+      _ ≤ α ^ 2 * β ^ 4 := mul_le_mul (norm_pow_le _ _)
+          (le_trans hF₂_le hFb4) (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 2 * s ^ 4 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+          (pow_le_pow_left₀ hβ_nn hβ_le 4) (by positivity) (by positivity)
+      _ = s ^ 6 := by ring
+  have h_F₁b2_s6 : ‖F₁ * b ^ 2‖ ≤ s ^ 6 :=
+    calc _ ≤ ‖F₁‖ * ‖b ^ 2‖ := norm_mul_le _ _
+      _ ≤ α ^ 4 * β ^ 2 := mul_le_mul (le_trans hF₁_le hFa4)
+          (norm_pow_le _ _) (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 4 * s ^ 2 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 4)
+          (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
+      _ = s ^ 6 := by ring
+  -- ‖R‖ ≤ 6·s⁵ via R_eq_neg_deg5_residual + norm_R_residual_sum_le.
+  have hR_neg : R = -(G₁ + G₂ + a * F₂ + F₁ * b + E₁ * E₂ +
+      (2 : 𝕂)⁻¹ • (E₁ * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * E₂)) := by
+    have h := R_eq_neg_deg5_residual 𝕂 (exp a) (exp b) a b
+    simp only [hR_def, hG₁_def, hG₂_def, hF₁_def, hF₂_def, hE₁_def, hE₂_def,
+      hD₁_def, hD₂_def, hQ_def, hT₃_def, hT₄_def] at h
+    convert h using 1
+  have h_aF₂_s5 : ‖a * F₂‖ ≤ s ^ 5 :=
+    calc _ ≤ ‖a‖ * ‖F₂‖ := norm_mul_le _ _
+      _ ≤ α * β ^ 4 := mul_le_mul_of_nonneg_left (le_trans hF₂_le hFb4) hα_nn
+      _ ≤ s * s ^ 4 := mul_le_mul hα_le (pow_le_pow_left₀ hβ_nn hβ_le 4)
+          (by positivity) hs_nn
+      _ = s ^ 5 := by ring
+  have h_F₁b_s5 : ‖F₁ * b‖ ≤ s ^ 5 :=
+    calc _ ≤ ‖F₁‖ * ‖b‖ := norm_mul_le _ _
+      _ ≤ α ^ 4 * β := mul_le_mul (le_trans hF₁_le hFa4) le_rfl hβ_nn (by positivity)
+      _ ≤ s ^ 4 * s := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 4) hβ_le
+          (by positivity) (by positivity)
+      _ = s ^ 5 := by ring
+  have h_G₁_s5 : ‖G₁‖ ≤ s ^ 5 :=
+    le_trans hG₁_le (le_trans hGa5 (pow_le_pow_left₀ hα_nn hα_le 5))
+  have h_G₂_s5 : ‖G₂‖ ≤ s ^ 5 :=
+    le_trans hG₂_le (le_trans hGb5 (pow_le_pow_left₀ hβ_nn hβ_le 5))
+  have h_E₁b2_s5 : ‖E₁ * b ^ 2‖ ≤ s ^ 5 :=
+    calc _ ≤ ‖E₁‖ * ‖b ^ 2‖ := norm_mul_le _ _
+      _ ≤ α ^ 3 * β ^ 2 := mul_le_mul (le_trans hE₁_le hEa3)
+          (norm_pow_le _ _) (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 3 * s ^ 2 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3)
+          (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
+      _ = s ^ 5 := by ring
+  have h_a2E₂_s5 : ‖a ^ 2 * E₂‖ ≤ s ^ 5 :=
+    calc _ ≤ ‖a ^ 2‖ * ‖E₂‖ := norm_mul_le _ _
+      _ ≤ α ^ 2 * β ^ 3 := mul_le_mul (norm_pow_le _ _)
+          (le_trans hE₂_le hEb3) (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 2 * s ^ 3 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+          (pow_le_pow_left₀ hβ_nn hβ_le 3) (by positivity) (by positivity)
+      _ = s ^ 5 := by ring
+  have hR_le : ‖R‖ ≤ 6 * s ^ 5 := by
+    rw [hR_neg, norm_neg]
+    exact norm_R_residual_sum_le G₁ G₂ F₁ F₂ E₁ E₂ a b hs_nn hs_small_le
+      h_G₁_s5 h_G₂_s5 h_aF₂_s5 h_F₁b_s5 h_E₁E₂_s6 h_E₁b2_s5 h_a2E₂_s5
+  have h_zRpRz_le : ‖z * R + R * z‖ ≤ 12 * s ^ 6 := by
+    have h1 : ‖z * R‖ ≤ s * (6 * s ^ 5) :=
+      (norm_mul_le _ _).trans (mul_le_mul hz_le hR_le (norm_nonneg _) hs_nn)
+    have h2 : ‖R * z‖ ≤ (6 * s ^ 5) * s :=
+      (norm_mul_le _ _).trans (mul_le_mul hR_le hz_le (norm_nonneg _) (by positivity))
+    have htri := norm_add_le (z * R) (R * z)
+    nlinarith [pow_nonneg hs_nn 6]
+  have h_T22_le : ‖T22_resid‖ ≤ 15 * s ^ 6 := by
+    rw [hT22_def]
+    exact norm_T22_sub_P2_etc_le P T₂ T₃ hs_nn hP_le_s2 hT₂_le hT₃_le hPmT₂ hPmT₂mT₃
+  -- I1_RHS bound: ‖I1_RHS‖ ≤ 20·s⁶.
+  have hI1_RHS_le :
+      ‖H₁ + H₂ + a * G₂ + G₁ * b +
+        (E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂) + (2 : 𝕂)⁻¹ • (F₁ * b ^ 2)) +
+        (2 : 𝕂)⁻¹ • (z * R + R * z) +
+        (2 : 𝕂)⁻¹ • T22_resid‖ ≤ 20 * s ^ 6 :=
+    norm_I1_residual_RHS_le a b z H₁ H₂ G₁ G₂ F₁ F₂ E₁ E₂ R T22_resid hs_nn
+      hH₁_s6 hH₂_s6 h_aG₂_s6 h_G₁b_s6 h_E₁E₂_s6 h_a2F₂_s6 h_F₁b2_s6
+      h_zRpRz_le h_T22_le
+  -- Bound ‖I₁ - corr₁_T3SPI - ½W5‖ ≤ 20·s⁶.
+  have hI1_minus_corr_le :
+      ‖I₁ - ((24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+        (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+        (2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) - (2 : 𝕂)⁻¹ • T₂ ^ 2) -
+        (2 : 𝕂)⁻¹ • W5‖ ≤ 20 * s ^ 6 := by
+    rw [hI₁_quartic, hI1_decomp_full]
+    exact hI1_RHS_le
+  -- Now bound pieceB''.
+  have hpieceB : ‖y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+      (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 + (5 : 𝕂)⁻¹ • y ^ 5 -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b‖ ≤ 52 * s ^ 6 := by
+    -- Apply pieceB_sextic_decomp.
+    rw [pieceB_sextic_decomp 𝕂 a b]
+    -- Goal: ‖S₁_pieceB + S₂_pieceB - S₃_pieceB + S₄_pieceB‖ ≤ 52·s⁶
+    -- For S₁, convert from pieceB_sextic_decomp form (T₃_QPI in corr₁) to my form (T₃_SPI).
+    -- pieceB_sextic_decomp's S₁ = (y - z - ½(ab-ba) - ½y² + ⅓z³ - C₃) - corr₁_QPI - ½W5.
+    -- I have: I₁ = ½W_H1 + ⅓z³ - C₃ = (y - z - ½(ab-ba) - ½y² + ⅓z³ - C₃) by hH1.
+    -- And T₃_QPI = T₃_SPI by abel (in corr₁).
+    have hI₁_eq_form :
+        (2 : 𝕂)⁻¹ • W_H1 + (3 : 𝕂)⁻¹ • z ^ 3 - bch_cubic_term 𝕂 a b =
+        y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+          (3 : 𝕂)⁻¹ • z ^ 3 - bch_cubic_term 𝕂 a b := by
+      rw [← hH1]
+    have hT3_QPI_eq_SPI :
+        (6 : 𝕂)⁻¹ • a ^ 3 + (6 : 𝕂)⁻¹ • b ^ 3 +
+          (2 : 𝕂)⁻¹ • (a * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * b) =
+        (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+          (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3 := by abel
+    have hS1_le :
+        ‖(y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+            (3 : 𝕂)⁻¹ • z ^ 3 - bch_cubic_term 𝕂 a b) -
+          ((24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+            (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+            (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+            (2 : 𝕂)⁻¹ • (z * ((6 : 𝕂)⁻¹ • a ^ 3 + (6 : 𝕂)⁻¹ • b ^ 3 +
+                (2 : 𝕂)⁻¹ • (a * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * b)) +
+              ((6 : 𝕂)⁻¹ • a ^ 3 + (6 : 𝕂)⁻¹ • b ^ 3 +
+                (2 : 𝕂)⁻¹ • (a * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * b)) * z) -
+            (2 : 𝕂)⁻¹ • T₂ ^ 2) -
+          (2 : 𝕂)⁻¹ • W5‖ ≤ 20 * s ^ 6 := by
+      -- Convert T₃_QPI to T₃_SPI in corr₁.
+      rw [hT3_QPI_eq_SPI]
+      -- Convert (y - z - ½(ab-ba) - ½y² + ⅓z³ - C₃) to I₁ via H1.
+      rw [← hI₁_eq_form]
+      exact hI1_minus_corr_le
+    -- S₂ = ⅓•(y³-z³) - ⅓•(z²T₂+zT₂z+T₂z²) - ⅓•y3_5.
+    -- Bound: ‖S₂‖ ≤ 17·s⁶ via I2_residual_decomp_eq + ⅓ scaling.
+    have hyzP : y = z + P := by rw [hP_def]; abel
+    have hS2_inner_eq : y ^ 3 - z ^ 3 - (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2) -
+        (z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+          z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z) =
+        z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z +
+        (P - T₂ - T₃) * z ^ 2 + z * (P ^ 2 - T₂ ^ 2) +
+        (P * z * P - T₂ * z * T₂) + (P ^ 2 - T₂ ^ 2) * z + P ^ 3 := by
+      rw [hyzP]; exact I2_residual_decomp_eq z P T₂ T₃
+    have hS2_inner_le :
+        ‖z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z + (P - T₂ - T₃) * z ^ 2 +
+          z * (P ^ 2 - T₂ ^ 2) + (P * z * P - T₂ * z * T₂) + (P ^ 2 - T₂ ^ 2) * z +
+          P ^ 3‖ ≤ 50 * s ^ 6 :=
+      norm_I2_residual_inner_le z P T₂ T₃ hs_nn hs_small_le hz_le hP_le_s2 hT₂_le
+        hPmT₂ hPmT₂mT₃
+    have hS2_inner_full : ‖y ^ 3 - z ^ 3 - (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2) -
+        (z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+          z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z)‖ ≤ 50 * s ^ 6 := by
+      rw [hS2_inner_eq]; exact hS2_inner_le
+    have hS2_smul_eq :
+        (3 : 𝕂)⁻¹ • (y ^ 3 - z ^ 3) -
+        (3 : 𝕂)⁻¹ • (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2) -
+        (3 : 𝕂)⁻¹ • (z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+          z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z) =
+        (3 : 𝕂)⁻¹ • (y ^ 3 - z ^ 3 - (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2) -
+          (z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+            z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z)) := by
+      simp only [smul_sub]
+    have hS2_le :
+        ‖(3 : 𝕂)⁻¹ • (y ^ 3 - z ^ 3) -
+          (3 : 𝕂)⁻¹ • (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2) -
+          (3 : 𝕂)⁻¹ • (z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+            z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z)‖ ≤ 17 * s ^ 6 := by
+      rw [hS2_smul_eq]
+      calc _ ≤ ‖(3 : 𝕂)⁻¹‖ * ‖y ^ 3 - z ^ 3 -
+                (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2) -
+                (z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+                  z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z)‖ := norm_smul_le _ _
+        _ ≤ (3 : ℝ)⁻¹ * (50 * s ^ 6) := by
+            rw [h3eq]; exact mul_le_mul_of_nonneg_left hS2_inner_full (by norm_num)
+        _ ≤ 17 * s ^ 6 := by nlinarith [pow_nonneg hs_nn 6]
+    -- S₃ = ¼•(y⁴-z⁴-y4_5).
+    have hzeq : z = y - P := by rw [hP_def]; abel
+    have hS3_inner_le : ‖y ^ 4 - z ^ 4 -
+        (z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3)‖ ≤ 31 * s ^ 6 := by
+      have h := norm_y4_sub_z4_sub_y4_5_le y P T₂ hs_nn hy_le2
+        (by rw [← hzeq]; exact hz_le) hP_le_s2 hPmT₂
+      rwa [show y - P = z from hzeq.symm] at h
+    have hS3_le : ‖(4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4 -
+        (z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3))‖ ≤
+        8 * s ^ 6 := by
+      calc _ ≤ ‖(4 : 𝕂)⁻¹‖ * ‖y ^ 4 - z ^ 4 -
+                (z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3)‖ :=
+            norm_smul_le _ _
+        _ ≤ (4 : ℝ)⁻¹ * (31 * s ^ 6) := by
+            rw [h4eq]; exact mul_le_mul_of_nonneg_left hS3_inner_le (by norm_num)
+        _ ≤ 8 * s ^ 6 := by nlinarith [pow_nonneg hs_nn 6]
+    -- S₄ = ⅕•(y⁵-z⁵).
+    have hS4_inner_le : ‖y ^ 5 - z ^ 5‖ ≤ 31 * s ^ 6 := by
+      have h := norm_pow5_sub_zpow5_le y P hs_nn hy_le2
+        (by rw [← hzeq]; exact hz_le) hP_le_s2
+      rwa [show y - P = z from hzeq.symm] at h
+    have hS4_le : ‖(5 : 𝕂)⁻¹ • (y ^ 5 - z ^ 5)‖ ≤ 7 * s ^ 6 := by
+      calc _ ≤ ‖(5 : 𝕂)⁻¹‖ * ‖y ^ 5 - z ^ 5‖ := norm_smul_le _ _
+        _ ≤ (5 : ℝ)⁻¹ * (31 * s ^ 6) := by
+            rw [h5eq]; exact mul_le_mul_of_nonneg_left hS4_inner_le (by norm_num)
+        _ ≤ 7 * s ^ 6 := by nlinarith [pow_nonneg hs_nn 6]
+    -- Triangle inequality on the 4-piece sum.
+    -- Goal: ‖S₁ + S₂ - S₃ + S₄‖ ≤ 52*s^6
+    refine (norm_add_le _ _).trans ?_
+    refine (add_le_add (norm_sub_le _ _) le_rfl).trans ?_
+    refine (add_le_add (add_le_add (norm_add_le _ _) le_rfl) le_rfl).trans ?_
+    calc _ ≤ 20 * s ^ 6 + 17 * s ^ 6 + 8 * s ^ 6 + 7 * s ^ 6 :=
+        add_le_add (add_le_add (add_le_add hS1_le hS2_le) hS3_le) hS4_le
+      _ = 52 * s ^ 6 := by ring
+  -- COMBINE pieceA + pieceB''.
+  calc _ ≤ ‖logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 -
+          (3 : 𝕂)⁻¹ • y ^ 3 + (4 : 𝕂)⁻¹ • y ^ 4 - (5 : 𝕂)⁻¹ • y ^ 5‖ +
+        ‖y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+          (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 + (5 : 𝕂)⁻¹ • y ^ 5 -
+          bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+          bch_quintic_term 𝕂 a b‖ := norm_add_le _ _
+    _ ≤ (Real.exp s - 1) ^ 6 / (2 - Real.exp s) + 52 * s ^ 6 := by
+        linarith [hpieceA, hpieceB]
+    _ ≤ (Real.exp s - 1) ^ 6 / (2 - Real.exp s) +
+        52 * s ^ 6 / (2 - Real.exp s) := by
+        gcongr
+        rw [le_div_iff₀ hdenom]
+        nlinarith [pow_nonneg hs_nn 6]
+    _ = ((Real.exp s - 1) ^ 6 + 52 * s ^ 6) / (2 - Real.exp s) :=
+        (add_div _ _ _).symm
+    _ ≤ 100 * s ^ 6 / (2 - Real.exp s) := by
+        apply div_le_div_of_nonneg_right _ hdenom.le
+        linarith [hexp6, pow_nonneg hs_nn 6]
 
 include 𝕂 in
 /-- **Sixth-order BCH remainder bound** (public theorem, Tier-1 of B1.c).
