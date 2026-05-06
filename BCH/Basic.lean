@@ -4463,6 +4463,98 @@ private theorem norm_P_sub_T2_sub_T3_le (a b : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
   have ha4 := norm_add_le F₁ F₂
   linarith
 
+/-! ### Sixth-order BCH remainder bound
+
+The public theorem `norm_bch_sextic_remainder_le` extends
+`norm_bch_quintic_remainder_le` by one degree, providing the order-6 bound
+needed for the B1.c (`norm_symmetric_bch_quintic_sub_poly_le`) discharge.
+
+The large-s case (`s ≥ 1/10`) is fully proved as
+`norm_bch_sextic_remainder_large_s_le`. The small-s case (`s < 1/10`) is
+introduced as a scoped private axiom; the proof requires combining
+`pieceB_sextic_decomp` with the per-term bounds (`norm_I1_residual_RHS_le`,
+`norm_I2_residual_inner_le`, `norm_y4_sub_z4_sub_y4_5_le`,
+`norm_pow5_sub_zpow5_le`) — see Task #17b in `claude/` for the discharge
+plan.
+-/
+
+/-- **Sixth-order BCH remainder, small-s case** (scoped private axiom).
+
+For `s = ‖a‖+‖b‖ < 1/10`:
+`‖LHS_sextic‖ ≤ 100·s⁶/(2-exp(s))`.
+
+The proof requires combining `pieceB_sextic_decomp` (the central algebraic
+decomposition derived from `quintic_pure_identity` and
+`sextic_pure_identity`) with the per-term norm bounds. The infrastructure
+is fully in place: `pieceB_sextic_decomp`, `I1_residual_decomp_eq`,
+`norm_I1_residual_RHS_le` (≤20·s⁶), `I2_residual_decomp_eq`,
+`norm_I2_residual_inner_le` (≤50·s⁶ → ⅓·50 = 17·s⁶ for `S₂`),
+`norm_y4_sub_z4_sub_y4_5_le` (≤31·s⁶ → ¼·31 = 8·s⁶ for `S₃`),
+`norm_pow5_sub_zpow5_le` (≤31·s⁶ → ⅕·31 = 7·s⁶ for `S₄`). Total
+4-piece sum ≤ 52·s⁶. Combined with `pieceA ≤ 2·s⁶/(2-exp(s))` (small-s
+bound on `(exp(s)-1)⁶`), the public bound holds with constant ≤ 100.
+
+Discharge requires ~250-300 lines of Lean. Key challenges:
+- `linear_combination (norm := module)` is unreliable for non-commutative
+  algebra + smul; use `convert` tactic with `abel` for term reordering.
+- T₃_QPI vs T₃_SPI ordering must be handled (they're equal as values but
+  differ syntactically); `pieceB_sextic_decomp` separates them via
+  let-bindings.
+- The S₁ bound requires the H1 identity + quartic_identity + I1_residual_decomp_eq
+  chain; mirror the quintic proof's `hH1` + `hI₁_quartic` pattern.
+
+See `claude/sextic_remainder_strategy.md` for the full proof strategy. -/
+private axiom norm_bch_sextic_remainder_small_s_le {𝕂 : Type*} [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    [NormOneClass 𝔸] [CompleteSpace 𝔸] (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) (hs_small : ‖a‖ + ‖b‖ < 1 / 10) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b‖ ≤
+      100 * (‖a‖ + ‖b‖) ^ 6 / (2 - Real.exp (‖a‖ + ‖b‖))
+
+include 𝕂 in
+/-- **Sixth-order BCH remainder bound** (public theorem, Tier-1 of B1.c).
+
+Extends `norm_bch_quintic_remainder_le` by one degree:
+
+  `‖bch a b - (a+b) - ½[a,b] - C₃ - C₄ - C₅‖ ≤ 100000·s⁶/(2-exp(s))`
+
+for `s = ‖a‖+‖b‖ < log 2`, where `C_k = bch_*_term 𝕂 a b` denotes the
+degree-k commutator coefficient.
+
+Proof: case split on `s ≥ 1/10` (uses `norm_bch_sextic_remainder_large_s_le`,
+fully proved) vs. `s < 1/10` (uses `norm_bch_sextic_remainder_small_s_le`,
+currently a scoped axiom — see its docstring).
+
+This theorem is the Tier-1 piece needed to discharge the B1.c axiom
+(`symmetric_bch_quintic_sub_poly_axiom`). Per the strategy, after Tier 1
+we extend the cubic template `norm_symmetric_bch_cubic_sub_poly_le` (line
+~3798) to give the quintic version, replacing the B1.c axiom. -/
+theorem norm_bch_sextic_remainder_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b‖ ≤
+      100000 * (‖a‖ + ‖b‖) ^ 6 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  by_cases hs : 1 / 10 ≤ ‖a‖ + ‖b‖
+  · -- Large-s: ‖LHS‖ ≤ 100000·s⁶/(2-exp(s)) directly.
+    exact norm_bch_sextic_remainder_large_s_le (𝕂 := 𝕂) a b hab hs
+  · -- Small-s: ‖LHS‖ ≤ 100·s⁶/(2-exp(s)) ≤ 100000·s⁶/(2-exp(s)).
+    push_neg at hs
+    have h_small := norm_bch_sextic_remainder_small_s_le (𝕂 := 𝕂) a b hab hs
+    have hexp_lt : Real.exp (‖a‖ + ‖b‖) < 2 := by
+      calc Real.exp (‖a‖ + ‖b‖) < Real.exp (Real.log 2) := Real.exp_strictMono hab
+        _ = 2 := Real.exp_log (by norm_num)
+    have hdenom : 0 < 2 - Real.exp (‖a‖ + ‖b‖) := by linarith
+    have hs_nn : 0 ≤ ‖a‖ + ‖b‖ := by positivity
+    calc _ ≤ 100 * (‖a‖ + ‖b‖) ^ 6 / (2 - Real.exp (‖a‖ + ‖b‖)) := h_small
+      _ ≤ 100000 * (‖a‖ + ‖b‖) ^ 6 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+          apply div_le_div_of_nonneg_right _ hdenom.le
+          have : 100 * (‖a‖ + ‖b‖) ^ 6 ≤ 100000 * (‖a‖ + ‖b‖) ^ 6 := by
+            nlinarith [pow_nonneg hs_nn 6]
+          linarith
+
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
 For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:

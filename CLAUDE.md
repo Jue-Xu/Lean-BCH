@@ -7,7 +7,7 @@
 
 Session 9 closed **B1.c** (quintic Taylor bridge for 3-factor symmetric BCH, `norm_symmetric_bch_quintic_sub_poly_le`) and **B1.d** (per-block `strangBlock_log` quintic wrapper, `norm_strangBlock_log_sub_quintic_target_le`) via a scoped Tier-2 axiom `symmetric_bch_quintic_sub_poly_axiom` (see "Remaining axioms"). Sessions 10-12 used the resulting infrastructure to discharge **P1**.
 
-Repository remains 0-sorry. **Axiom count: 1 scoped `private axiom` + Lean's 3 standard** (P1 discharged session 12, only P3 = B1.c remains). See "Remaining axioms" section below.
+Repository remains 0-sorry. **Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (P1 discharged session 12; B1.c Tier-2 axiom remains; B1.c Tier-1 small-s sextic axiom added session 16 to enable the public theorem `norm_bch_sextic_remainder_le`). See "Remaining axioms" section below.
 
 Earlier state: Basic: H1, H2, M1, quintic BCH, symmetric quartic identity, alt-form, decomposition equality, all six triangle-inequality bounds (R₁, R₂, T3, T4, and the T5/T6 ring-identity bounds with the `(96)⁻¹·[b,DC_a]` cancellation), and the downstream `norm_symmetric_bch_cubic_sub_smul_le` all complete. Palindromic: M1–M4b closed, telescoping bound, exp-Lipschitz `norm_exp_add_sub_exp_le`, **M6 Trotter h4 theorem** `norm_s4Func_sub_exp_le_of_IsSuzukiCubic` — `‖s4Func(t/n, n) - exp(t•(A+B))‖ = O(|t|⁵·s⁵/n⁴)` under IsSuzukiCubic — and **M4b RHS quintic corollary** `suzuki5_bch_M4b_RHS_le_t5_of_IsSuzukiCubic` (∃ δ, K, ∀ τ < δ, RHS ≤ K·‖τ‖⁵), which is the payoff lemma for downstream Lean-Trotter.
 
@@ -136,6 +136,42 @@ Lean's 3 standard + B1.c remain.
 splitting into per-term `private lemma`s avoids kernel whnf blowup. Final
 combination via `le_trans` (not `linarith`) sidesteps def-unfolding
 arithmetic for huge expressions.
+
+### Axiom 3 (NEW session 16): `BCH.norm_bch_sextic_remainder_small_s_le`
+
+(in `BCH/Basic.lean`, scope-`private`) — the small-s case of the sixth-order
+BCH remainder bound. Asserts that for `‖a‖+‖b‖ < log 2` and `‖a‖+‖b‖ < 1/10`,
+
+```
+‖bch a b − (a+b) − ½[a,b] − C₃ − C₄ − C₅‖ ≤ 100·s⁶/(2-exp(s))
+```
+
+The infrastructure for the proof is fully in place: `pieceB_sextic_decomp`
+(the central decomposition derived from QPI + SPI) plus the per-term norm
+bounds (`norm_I1_residual_RHS_le` ≤20·s⁶, `norm_I2_residual_inner_le`
+≤50·s⁶ → ⅓·50 = 17·s⁶ for `S₂`, `norm_y4_sub_z4_sub_y4_5_le` ≤31·s⁶
+→ ¼·31 = 8·s⁶ for `S₃`, `norm_pow5_sub_zpow5_le` ≤31·s⁶ → ⅕·31 = 7·s⁶
+for `S₄`). Total 4-piece sum ≤ 52·s⁶. Combined with `pieceA ≤ 2·s⁶/(2-exp(s))`
+(small-s bound on `(exp(s)-1)⁶`), the public bound holds with constant ≤ 100.
+
+Used by the public theorem `norm_bch_sextic_remainder_le` (case split on
+`s ≥ 1/10`).
+
+Discharging this axiom (~250-300 lines) faces specific Lean-tactic
+challenges:
+- `linear_combination (norm := module)` is unreliable for non-commutative
+  algebra + smul. Use `convert` tactic with `abel` for term reordering,
+  or scalar clearing + `noncomm_ring`.
+- `T₃_QPI` (= `(6)⁻¹·a³ + (6)⁻¹·b³ + (2)⁻¹·ab² + (2)⁻¹·a²b`) and `T₃_SPI`
+  (= `(6)⁻¹·a³ + (2)⁻¹·a²b + (2)⁻¹·ab² + (6)⁻¹·b³`) are equal as values
+  but differ syntactically; QPI uses the former, SPI the latter.
+  `pieceB_sextic_decomp` separates them via let-bindings.
+- The S₁ bound requires the H1 + quartic_identity + I1_residual_decomp_eq
+  chain; mirror the quintic proof's `hH1` + `hI₁_quartic` pattern (lines
+  3208 and 3239 of `Basic.lean`).
+
+See `claude/sextic_remainder_strategy.md` for the per-term bounds and
+the full proof strategy.
 
 ### Axiom 2 (NEW session 9): `BCH.symmetric_bch_quintic_sub_poly_axiom`
 
@@ -305,22 +341,43 @@ Used as a `‖P-T₂-T₃‖ ≤ 5·s⁴` hypothesis input to I1/I2 residual nor
 
 **Tasks #14, #15, #16 all completed in session 15.**
 
-Remaining for full `norm_bch_sextic_remainder_le` (~300 lines):
+**Session 16 (2026-05-06) progress on Tier 1**:
 
-1. **Small-s main theorem** (task #17, ~250 lines): SETUP + setup variables
-(D, E, F, G, H, P, z, Q, T₂, T₃, T₄ via `set`) + compute norm bounds (mostly
-inline using existing exp tail bounds) + apply `pieceB_sextic_decomp` + 4
-sub-term bounds (using helpers from items 5, 8, 9, 10) + pieceA bound (via
-`norm_logOnePlus_sub_sub_sub_sub_sub_le`). All structural pieces ready.
-2. **Public theorem** (task #18, ~30 lines): combines large-s and small-s
-via `by_cases`.
+- **Task #18 (public theorem `norm_bch_sextic_remainder_le`) completed**
+  via case split on `s ≥ 1/10` (uses `norm_bch_sextic_remainder_large_s_le`,
+  fully proved) vs. `s < 1/10` (uses
+  `norm_bch_sextic_remainder_small_s_le`, scoped axiom). Public bound:
+  `‖LHS_sextic‖ ≤ 100000·s⁶/(2-exp(s))`.
+- **Task #17 (small-s case) introduced as scoped private axiom**
+  `norm_bch_sextic_remainder_small_s_le`. Tried a full proof first
+  (~600 lines) but ran into persistent issues with
+  `linear_combination (norm := module)` for non-commutative algebra +
+  smul, plus T₃_QPI vs T₃_SPI ordering mismatches between QPI and SPI
+  hypotheses. Discharging the axiom (Task #17b) requires ~250-300 lines
+  with careful tactic use:
+  - Avoid `linear_combination (norm := module)`; use `convert` + `abel`
+    for term reordering, or scalar clearing (×720) + `noncomm_ring`.
+  - Mirror the quintic proof's H1 + quartic_identity + I1_residual_decomp_eq
+    chain for the S₁ sub-piece.
+  - Apply `pieceB_sextic_decomp` directly via `rw` so the let-bindings
+    propagate to the goal.
 
-Then extend the cubic template `norm_symmetric_bch_cubic_sub_poly_le`
-(line ~3798) to give B1.c (`norm_symmetric_bch_quintic_sub_poly_le`),
-~400-600 additional lines.
+**Axiom count: 3 scoped `private axiom`s + Lean's 3 standard.**
+- `symmetric_bch_quintic_sub_poly_axiom` (B1.c Tier-2, session 9).
+- `norm_bch_sextic_remainder_small_s_le` (B1.c Tier-1 small-s, session 16).
+- `suzuki5_log_product_septic_at_suzukiP_axiom` (axiom 3 / septic
+  identification at Suzuki p, separate downstream chain).
 
-Total remaining for B1.c discharge: ~1100-1300 lines (was ~1500-2000;
-session 15 reduced by ~50 lines + sketched the architecture).
+Remaining for full B1.c discharge:
+
+1. **Discharge `norm_bch_sextic_remainder_small_s_le` axiom** (Task #17b,
+   ~250-300 lines).
+2. **Tier 2** (~400-600 lines): extend the cubic template
+   `norm_symmetric_bch_cubic_sub_poly_le` (line ~3798) to give
+   `norm_symmetric_bch_quintic_sub_poly_le`, replacing the B1.c Tier-2
+   axiom. Uses Tier-1's `norm_bch_sextic_remainder_le`.
+
+Total remaining: ~700-900 lines.
 
 - See `claude/lean-bch-B1c-session-prompt.md` for full details.
 - See `claude/sextic_remainder_strategy.md` for the small-s case
