@@ -4366,6 +4366,103 @@ private theorem pieceB_sextic_decomp (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
   -- Try linear_combination with module as norm
   linear_combination (norm := module) hQPI + hSPI
 
+/-- Norm bound `‖P - T₂ - T₃‖ ≤ 5·s⁴` where P = exp(a)*exp(b)-1-(a+b),
+T₂ = ab+½a²+½b², T₃ = ⅙a³+½a²b+½ab²+⅙b³. Algebraic identity:
+`P - T₂ - T₃ = F₁ + F₂ + a·E₂ + E₁·b + D₁·D₂` where each piece has deg-4+
+structure. -/
+private theorem norm_P_sub_T2_sub_T3_le (a b : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hs34 : s < 3 / 4) (hα_le : ‖a‖ ≤ s) (hβ_le : ‖b‖ ≤ s) :
+    ‖exp a * exp b - 1 - (a + b) -
+      (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) -
+      ((6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3)‖ ≤ 5 * s ^ 4 := by
+  set α := ‖a‖
+  set β := ‖b‖
+  have hα_nn : (0 : ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0 : ℝ) ≤ β := norm_nonneg b
+  have hs56 : s < 5 / 6 := by linarith
+  -- Set up D, E, F variables
+  set D₁ := exp a - 1 - a with hD₁_def
+  set D₂ := exp b - 1 - b with hD₂_def
+  set E₁ := D₁ - (2 : 𝕂)⁻¹ • a ^ 2 with hE₁_def
+  set E₂ := D₂ - (2 : 𝕂)⁻¹ • b ^ 2 with hE₂_def
+  set F₁ := E₁ - (6 : 𝕂)⁻¹ • a ^ 3 with hF₁_def
+  set F₂ := E₂ - (6 : 𝕂)⁻¹ • b ^ 3 with hF₂_def
+  -- Algebraic identity: P - T₂ - T₃ = F₁ + F₂ + a·E₂ + E₁·b + D₁·D₂
+  have h_alg : exp a * exp b - 1 - (a + b) -
+      (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) -
+      ((6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3) =
+      F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ := by
+    simp only [hF₁_def, hF₂_def, hE₁_def, hE₂_def, hD₁_def, hD₂_def]
+    noncomm_ring
+  rw [h_alg]
+  -- Bounds for D, E, F
+  have hD₁_le : ‖D₁‖ ≤ Real.exp α - 1 - α := norm_exp_sub_one_sub_le (𝕂 := 𝕂) a
+  have hD₂_le : ‖D₂‖ ≤ Real.exp β - 1 - β := norm_exp_sub_one_sub_le (𝕂 := 𝕂) b
+  have hDa_nn : 0 ≤ Real.exp α - 1 - α := by
+    linarith [Real.quadratic_le_exp_of_nonneg hα_nn, sq_nonneg α]
+  have hDb_nn : 0 ≤ Real.exp β - 1 - β := by
+    linarith [Real.quadratic_le_exp_of_nonneg hβ_nn, sq_nonneg β]
+  have hDa2 : Real.exp α - 1 - α ≤ α ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖α‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hα_nn]; linarith)
+    rwa [Real.norm_eq_abs, abs_of_nonneg hDa_nn,
+         Real.norm_eq_abs, abs_of_nonneg hα_nn] at h
+  have hDb2 : Real.exp β - 1 - β ≤ β ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖β‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hβ_nn]; linarith)
+    rwa [Real.norm_eq_abs, abs_of_nonneg hDb_nn,
+         Real.norm_eq_abs, abs_of_nonneg hβ_nn] at h
+  have hE₁_le : ‖E₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 :=
+    norm_exp_sub_one_sub_sub_le (𝕂 := 𝕂) a
+  have hE₂_le : ‖E₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 :=
+    norm_exp_sub_one_sub_sub_le (𝕂 := 𝕂) b
+  have hEa3 : Real.exp α - 1 - α - α ^ 2 / 2 ≤ α ^ 3 :=
+    real_exp_third_order_le_cube hα_nn (lt_of_le_of_lt hα_le hs56)
+  have hEb3 : Real.exp β - 1 - β - β ^ 2 / 2 ≤ β ^ 3 :=
+    real_exp_third_order_le_cube hβ_nn (lt_of_le_of_lt hβ_le hs56)
+  have hF₁_le : ‖F₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 :=
+    norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) a
+  have hF₂_le : ‖F₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 :=
+    norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) b
+  have hFa4 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 ≤ α ^ 4 :=
+    real_exp_fourth_order_le_quartic hα_nn (lt_of_le_of_lt hα_le hs34)
+  have hFb4 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 ≤ β ^ 4 :=
+    real_exp_fourth_order_le_quartic hβ_nn (lt_of_le_of_lt hβ_le hs34)
+  -- Component bounds
+  have hF₁s : ‖F₁‖ ≤ s ^ 4 := le_trans (le_trans hF₁_le hFa4)
+    (pow_le_pow_left₀ hα_nn hα_le 4)
+  have hF₂s : ‖F₂‖ ≤ s ^ 4 := le_trans (le_trans hF₂_le hFb4)
+    (pow_le_pow_left₀ hβ_nn hβ_le 4)
+  have h_aE₂ : ‖a * E₂‖ ≤ s ^ 4 :=
+    calc _ ≤ ‖a‖ * ‖E₂‖ := norm_mul_le _ _
+      _ ≤ α * β ^ 3 := mul_le_mul_of_nonneg_left
+          (le_trans hE₂_le hEb3) hα_nn
+      _ ≤ s * s ^ 3 := mul_le_mul hα_le (pow_le_pow_left₀ hβ_nn hβ_le 3)
+          (by positivity) hs_nn
+      _ = s ^ 4 := by ring
+  have h_E₁b : ‖E₁ * b‖ ≤ s ^ 4 :=
+    calc _ ≤ ‖E₁‖ * ‖b‖ := norm_mul_le _ _
+      _ ≤ α ^ 3 * β := mul_le_mul (le_trans hE₁_le hEa3) le_rfl
+          hβ_nn (by positivity)
+      _ ≤ s ^ 3 * s := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3)
+          hβ_le (by positivity) (by positivity)
+      _ = s ^ 4 := by ring
+  have h_D₁D₂ : ‖D₁ * D₂‖ ≤ s ^ 4 :=
+    calc _ ≤ ‖D₁‖ * ‖D₂‖ := norm_mul_le _ _
+      _ ≤ α ^ 2 * β ^ 2 := mul_le_mul (le_trans hD₁_le hDa2)
+          (le_trans hD₂_le hDb2) (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 2 * s ^ 2 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+          (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
+      _ = s ^ 4 := by ring
+  -- Triangle inequality
+  have ha1 := norm_add_le (F₁ + F₂ + a * E₂ + E₁ * b) (D₁ * D₂)
+  have ha2 := norm_add_le (F₁ + F₂ + a * E₂) (E₁ * b)
+  have ha3 := norm_add_le (F₁ + F₂) (a * E₂)
+  have ha4 := norm_add_le F₁ F₂
+  linarith
+
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
 For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:
