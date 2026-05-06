@@ -160,3 +160,122 @@ Given the size, write incrementally. Since repo invariant is 0 sorries, the WIP 
 2. Define intermediate **helper lemmas** that each can compile independently, build up the main theorem from them.
 
 Approach 2 is preferred for incremental progress visibility.
+
+## Session 16 attempt (Task #17b) — findings
+
+Attempted to discharge `norm_bch_sextic_remainder_small_s_le` by writing
+the full proof inline. Got the SETUP, decomposition, and pieceA bound
+working (~150 lines compiling cleanly). Hit obstacles in the pieceB''
+bound:
+
+### What works
+- `pieceB_sextic_decomp` applies via direct `rw` (let-bindings propagate
+  transparently to the goal).
+- pieceA bound via `norm_logOnePlus_sub_sub_sub_sub_sub_le` + sharpening
+  `(exp(s)-1)⁶ ≤ 2·s⁶` for `s ≤ 1/10` is straightforward.
+- All exp remainder norm bounds (D, E, F, G, H of orders 1..5 in α, β)
+  follow the quintic proof's pattern.
+- `‖P‖ ≤ s²`, `‖P-T₂‖ ≤ 5·s³` (via inline algebraic identity), and
+  `‖P-T₂-T₃‖ ≤ 5·s⁴` (via `norm_P_sub_T2_sub_T3_le`) all work.
+- T₂, T₃ norm bounds via `norm_smul_le` chain.
+- Combine pieceA + pieceB'' via `add_div` (NOT `div_add_div_same`!) +
+  `div_le_div_of_nonneg_right`.
+
+### What does NOT work cleanly
+- `linear_combination (norm := module) hQPI + hSPI` in a goal where my
+  T₃ uses T₃_SPI ordering but hQPI has T₃_QPI ordering. The underlying
+  `module` calls `ring` which fails on the non-commutative residual.
+  *Workaround*: use `pieceB_sextic_decomp` directly via `rw`, which
+  separates T₃_QPI and T₃_SPI as let-bindings. Don't try to redo the
+  decomposition with `set` variables.
+- `linear_combination (norm := module) hqid` for the H1 + quartic_identity
+  step. quartic_identity's LHS form is `½ • (2•(...) - z*P - P*z - P²)`
+  while my goal has `y - z - ½(ab-ba) - ½y²` — these are equal by H1
+  identity but `module` doesn't see this. *Workaround*: mirror the
+  quintic proof's pattern (lines 3208-3219 of `Basic.lean`):
+  - Set `Q`, `W_H1` explicitly.
+  - Prove `hH1 : y - z - ½(ab-ba) - ½y² = ½ • W_H1` via ×2 scalar
+    clearing + `noncomm_ring`.
+  - Apply `quartic_identity 𝕂 (exp a) (exp b) a b` directly.
+
+### Per-piece bound strategy (next session)
+
+After `rw [pieceB_sextic_decomp 𝕂 a b]`, the goal becomes
+`‖S₁ + S₂ - S₃ + S₄‖ ≤ 52·s⁶` with let-bindings T₂, T₃_QPI, T₃_SPI,
+T₄, W5, y3_5, y4_5, corr₁ (= explicit form using T₃_QPI), corr₂, etc.
+
+**S₃ (easiest)** — `‖¼ • (y⁴ - z⁴ - y4_5)‖ ≤ 8·s⁶`:
+```lean
+have h_zPeq : z = y - P := by rw [hP_def]; abel
+have hS3_inner : ‖y^4 - z^4 - y4_5‖ ≤ 31 * s^6 := by
+  rw [h_zPeq]  -- match norm_y4_sub_z4_sub_y4_5_le's (y-P) form
+  exact norm_y4_sub_z4_sub_y4_5_le y P T₂ hs_nn hy_le2 hz_le hP_le_s2 hPmT₂
+have h4eq : ‖(4:𝕂)⁻¹‖ = (4:ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+-- ‖¼ • _‖ ≤ ¼ * 31 * s⁶ = 7.75 ≤ 8
+```
+
+**S₄ (next easiest)** — `‖⅕ • (y⁵ - z⁵)‖ ≤ 7·s⁶`:
+Similar pattern using `norm_pow5_sub_zpow5_le`. ⅕ * 31 = 6.2 ≤ 7.
+
+**S₂** — `‖⅓(y³-z³) - corr₂ - corr₂_5‖ ≤ 17·s⁶`:
+The inner expression equals `⅓ • [(y³-z³) - (z²T₂+zT₂z+T₂z²) - y3_5]`
+by smul distributivity. By `I2_residual_decomp_eq` with `y = z + P`,
+the inner sum equals 7 deg-6+ terms bounded by `norm_I2_residual_inner_le`
+(≤ 50·s⁶). With ⅓ scaling: ⅓·50 = 16.67 ≤ 17.
+
+```lean
+have hS2_eq : ⅓•(y³-z³) - ⅓•(z²T₂+zT₂z+T₂z²) - ⅓•y3_5 =
+              ⅓ • (y³-z³ - (z²T₂+zT₂z+T₂z²) - y3_5) := by
+  rw [smul_sub, smul_sub]; abel  -- uses smul distribution
+
+have hyzP : y = z + P := by rw [hP_def]; abel
+have hS2_inner_eq : y^3 - z^3 - (z²T₂+zT₂z+T₂z²) - y3_5 =
+    z²(P-T₂-T₃) + ... + P³ := by
+  rw [hyzP]; exact I2_residual_decomp_eq z P T₂ T₃
+```
+
+But wait: pieceB_sextic_decomp's y3_5 uses T₃_SPI, and I2_residual_decomp_eq
+also uses T₃_SPI. They match.
+
+**S₁ (hardest)** — `‖I₁_form - corr₁_QPI - corr₁_5‖ ≤ 20·s⁶`:
+1. Convert I₁_form to quartic_id form via H1 + quartic_identity.
+2. Convert corr₁_QPI to corr₁_SPI form via abel (T₃_QPI = T₃_SPI as values).
+3. Apply I1_residual_decomp_eq.
+4. Apply norm_I1_residual_RHS_le.
+
+Step 1 mirrors quintic proof's hH1 + hI₁_quartic. ~50 lines.
+Step 2 is a single abel rewrite on hQPI's T₃_QPI sum. ~5 lines.
+Step 3 is a `rw` + helper application. ~10 lines.
+Step 4 supplies all the per-component bounds. ~80 lines (mostly bound
+each H_i, G_i, F_i, E_i, etc. by s⁶/s⁵/s⁴; ‖R‖ via R_eq_neg_deg5_residual
++ norm_R_residual_sum_le; ‖z*R+R*z‖ ≤ 12·s⁶; ‖T22_resid‖ via
+norm_T22_sub_P2_etc_le ≤ 15·s⁶).
+
+Total estimated S₁ proof: ~150 lines.
+
+### Combine pieceA + pieceB''
+
+```lean
+calc _ ≤ ‖pieceA‖ + ‖pieceB''‖ := norm_add_le _ _
+  _ ≤ (Real.exp s - 1)^6/(2-exp s) + 52*s^6 := by linarith [hpieceA, hpieceB]
+  _ ≤ (Real.exp s - 1)^6/(2-exp s) + 52*s^6/(2-exp s) := by
+      gcongr; rw [le_div_iff₀ hdenom]; nlinarith [pow_nonneg hs_nn 6]
+  _ = ((exp s - 1)^6 + 52*s^6) / (2-exp s) := (add_div _ _ _).symm
+  _ ≤ 100*s^6 / (2-exp s) := by
+      apply div_le_div_of_nonneg_right _ hdenom.le
+      linarith [hexp6, pow_nonneg hs_nn 6]
+```
+
+### Total proof size estimate
+- SETUP: ~150 lines (DONE in session 16 attempt).
+- pieceA bound: ~15 lines (DONE).
+- S₁ bound: ~150 lines.
+- S₂ bound: ~30 lines.
+- S₃ bound: ~15 lines.
+- S₄ bound: ~15 lines.
+- Triangle inequality combine: ~20 lines.
+- Final pieceA+pieceB'' combine: ~15 lines (DONE).
+
+Total: ~410 lines (more than the original 250-300 estimate due to S₁
+complexity). Use `set_option maxHeartbeats 4000000000` for the whole
+theorem.
