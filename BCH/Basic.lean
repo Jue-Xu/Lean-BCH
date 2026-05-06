@@ -4066,6 +4066,44 @@ private theorem R_eq_neg_deg5_residual (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type
   simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
   noncomm_ring
 
+/-- Norm bound `‖R-residual sum‖ ≤ 6·s⁵` from precomputed component bounds.
+The 7 terms come from R_eq_neg_deg5_residual: G₁+G₂+a·F₂+F₁·b+E₁·E₂+½E₁b²+½a²E₂. -/
+private theorem norm_R_residual_sum_le (G₁ G₂ F₁ F₂ E₁ E₂ a b : 𝔸) {s : ℝ}
+    (hs_nn : 0 ≤ s) (hs_small : s ≤ 1 / 10)
+    (hG₁_le : ‖G₁‖ ≤ s ^ 5) (hG₂_le : ‖G₂‖ ≤ s ^ 5)
+    (h_aF₂_le : ‖a * F₂‖ ≤ s ^ 5) (h_F₁b_le : ‖F₁ * b‖ ≤ s ^ 5)
+    (h_E₁E₂_le : ‖E₁ * E₂‖ ≤ s ^ 6)
+    (h_E₁b2_le : ‖E₁ * b ^ 2‖ ≤ s ^ 5)
+    (h_a2E₂_le : ‖a ^ 2 * E₂‖ ≤ s ^ 5) :
+    ‖G₁ + G₂ + a * F₂ + F₁ * b + E₁ * E₂ +
+      (2 : 𝕂)⁻¹ • (E₁ * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * E₂)‖ ≤ 6 * s ^ 5 := by
+  have h2eq : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h_smul1 : ‖(2 : 𝕂)⁻¹ • (E₁ * b ^ 2)‖ ≤ s ^ 5 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖E₁ * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 5 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_E₁b2_le (by norm_num)
+      _ = s ^ 5 / 2 := by ring
+  have h_smul2 : ‖(2 : 𝕂)⁻¹ • (a ^ 2 * E₂)‖ ≤ s ^ 5 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a ^ 2 * E₂‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 5 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_a2E₂_le (by norm_num)
+      _ = s ^ 5 / 2 := by ring
+  have hs6 : s ^ 6 ≤ s ^ 5 / 10 := by
+    have h_eq : s ^ 6 = s ^ 5 * s := by ring
+    rw [h_eq]
+    have : s ^ 5 * s ≤ s ^ 5 * (1 / 10) := by
+      apply mul_le_mul_of_nonneg_left hs_small (pow_nonneg hs_nn 5)
+    linarith
+  have ha1 := norm_add_le (G₁ + G₂ + a * F₂ + F₁ * b + E₁ * E₂ +
+    (2 : 𝕂)⁻¹ • (E₁ * b ^ 2)) ((2 : 𝕂)⁻¹ • (a ^ 2 * E₂))
+  have ha2 := norm_add_le (G₁ + G₂ + a * F₂ + F₁ * b + E₁ * E₂)
+    ((2 : 𝕂)⁻¹ • (E₁ * b ^ 2))
+  have ha3 := norm_add_le (G₁ + G₂ + a * F₂ + F₁ * b) (E₁ * E₂)
+  have ha4 := norm_add_le (G₁ + G₂ + a * F₂) (F₁ * b)
+  have ha5 := norm_add_le (G₁ + G₂) (a * F₂)
+  have ha6 := norm_add_le G₁ G₂
+  linarith [pow_nonneg hs_nn 5, pow_nonneg hs_nn 6]
+
 /-- Norm bound for `‖PzP - T₂zT₂‖ ≤ 13·s⁶` for small s (`s < 1/10`).
 Splits via `P = T₂ + (P-T₂)` into 3 terms each bounded by Cs⁶. -/
 private theorem norm_PzP_sub_T2zT2_le (z P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
