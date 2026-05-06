@@ -4018,6 +4018,54 @@ private theorem I1_residual_decomp_eq (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
   simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
   noncomm_ring
 
+set_option maxHeartbeats 800000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **R algebraic identity** for the I₁ residual bound.
+Expresses `R = T₃ - E₁ - E₂ - Q + T₄` (the deg-5+ part of `-(E_i+Q) + T₃ + T₄`)
+as `R = -(G₁ + G₂ + a·F₂ + F₁·b + E₁·E₂ + ½·E₁·b² + ½·a²·E₂)`. -/
+private theorem R_eq_neg_deg5_residual (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (ea eb a b : 𝔸) :
+    let D₁ : 𝔸 := ea - 1 - a
+    let D₂ : 𝔸 := eb - 1 - b
+    let E₁ : 𝔸 := D₁ - (2 : 𝕂)⁻¹ • a ^ 2
+    let E₂ : 𝔸 := D₂ - (2 : 𝕂)⁻¹ • b ^ 2
+    let F₁ : 𝔸 := E₁ - (6 : 𝕂)⁻¹ • a ^ 3
+    let F₂ : 𝔸 := E₂ - (6 : 𝕂)⁻¹ • b ^ 3
+    let G₁ : 𝔸 := F₁ - (24 : 𝕂)⁻¹ • a ^ 4
+    let G₂ : 𝔸 := F₂ - (24 : 𝕂)⁻¹ • b ^ 4
+    let Q : 𝔸 := a * D₂ + D₁ * b + D₁ * D₂
+    let T₃ : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    T₃ - E₁ - E₂ - Q + T₄ =
+    -(G₁ + G₂ + a * F₂ + F₁ * b + E₁ * E₂ +
+      (2 : 𝕂)⁻¹ • (E₁ * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * E₂)) := by
+  dsimp only
+  rw [← sub_eq_zero]
+  have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
+  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+  have hinj : Function.Injective ((24 : 𝕂) • · : 𝔸 → 𝔸) := by
+    intro x₀ y₀ hxy; have := congrArg ((24 : 𝕂)⁻¹ • ·) hxy
+    simp only [smul_smul, inv_mul_cancel₀ h24ne, one_smul] at this; exact this
+  apply hinj; simp only [smul_zero]
+  simp only [pow_succ, pow_zero, one_mul]
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul, mul_sub, sub_mul]
+  simp only [mul_assoc, mul_inv_cancel₀ h2ne, inv_mul_cancel₀ h2ne,
+    show (24 : 𝕂) * (2 : 𝕂)⁻¹ = 12 from by norm_num,
+    show (24 : 𝕂) * (3 : 𝕂)⁻¹ = 8 from by norm_num,
+    show (24 : 𝕂) * (4 : 𝕂)⁻¹ = 6 from by norm_num,
+    show (24 : 𝕂) * (6 : 𝕂)⁻¹ = 4 from by norm_num,
+    show (24 : 𝕂) * (24 : 𝕂)⁻¹ = 1 from mul_inv_cancel₀ h24ne,
+    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by norm_num,
+    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 2 from by norm_num,
+    show (24 : 𝕂) * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 2 from by norm_num,
+    one_smul, mul_one]
+  simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
+  noncomm_ring
+
 /-- Norm bound for `‖PzP - T₂zT₂‖ ≤ 13·s⁶` for small s (`s < 1/10`).
 Splits via `P = T₂ + (P-T₂)` into 3 terms each bounded by Cs⁶. -/
 private theorem norm_PzP_sub_T2zT2_le (z P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
