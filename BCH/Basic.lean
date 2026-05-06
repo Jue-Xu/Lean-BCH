@@ -4066,6 +4066,70 @@ private theorem R_eq_neg_deg5_residual (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type
   simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
   noncomm_ring
 
+/-- Norm bound `‖I₁ residual (RHS form)‖ ≤ 20·s⁶` from precomputed component bounds.
+This is the I₁ residual bound from precomputed individual norm bounds.
+Combined with I1_residual_decomp_eq (commit 2fccfa8), gives
+`‖I₁ - corr₁ - corr₁_5‖ ≤ 20·s⁶` where `s ≤ 1/10`.
+
+The decomp RHS: H₁+H₂+a·G₂+G₁·b+(E₁E₂+½a²F₂+½F₁b²)+½(z·R+R·z)+½(T₂²-P²+T₂T₃+T₃T₂).
+Per-term: 1+1+1+1+1+½+½+6+7.5 = 19.5 ≤ 20. -/
+private theorem norm_I1_residual_RHS_le (a b z H₁ H₂ G₁ G₂ F₁ F₂ E₁ E₂ R T22 : 𝔸)
+    {s : ℝ} (hs_nn : 0 ≤ s)
+    (hH₁_le : ‖H₁‖ ≤ s ^ 6) (hH₂_le : ‖H₂‖ ≤ s ^ 6)
+    (h_aG₂_le : ‖a * G₂‖ ≤ s ^ 6) (h_G₁b_le : ‖G₁ * b‖ ≤ s ^ 6)
+    (h_E₁E₂_le : ‖E₁ * E₂‖ ≤ s ^ 6)
+    (h_a2F₂_le : ‖a ^ 2 * F₂‖ ≤ s ^ 6) (h_F₁b2_le : ‖F₁ * b ^ 2‖ ≤ s ^ 6)
+    (h_zRpRz_le : ‖z * R + R * z‖ ≤ 12 * s ^ 6)
+    (h_T22_le : ‖T22‖ ≤ 15 * s ^ 6) :
+    ‖H₁ + H₂ + a * G₂ + G₁ * b +
+      (E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂) + (2 : 𝕂)⁻¹ • (F₁ * b ^ 2)) +
+      (2 : 𝕂)⁻¹ • (z * R + R * z) +
+      (2 : 𝕂)⁻¹ • T22‖ ≤ 20 * s ^ 6 := by
+  have h2eq : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h_a2F2_smul : ‖(2 : 𝕂)⁻¹ • (a ^ 2 * F₂)‖ ≤ s ^ 6 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a ^ 2 * F₂‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 6 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_a2F₂_le (by norm_num)
+      _ = s ^ 6 / 2 := by ring
+  have h_F1b2_smul : ‖(2 : 𝕂)⁻¹ • (F₁ * b ^ 2)‖ ≤ s ^ 6 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖F₁ * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 6 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_F₁b2_le (by norm_num)
+      _ = s ^ 6 / 2 := by ring
+  have h_zRpRz_smul : ‖(2 : 𝕂)⁻¹ • (z * R + R * z)‖ ≤ 6 * s ^ 6 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖z * R + R * z‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * (12 * s ^ 6) := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_zRpRz_le (by norm_num)
+      _ = 6 * s ^ 6 := by ring
+  have h_T22_smul : ‖(2 : 𝕂)⁻¹ • T22‖ ≤ 15 * s ^ 6 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖T22‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * (15 * s ^ 6) := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_T22_le (by norm_num)
+      _ = 15 * s ^ 6 / 2 := by ring
+  -- Triangle inequality on the 9-term sum
+  -- Outer: (H₁+H₂+a*G₂+G₁*b) + inner_3 + ½(zR+Rz) + ½T22
+  -- Inner_3 = E₁*E₂ + ½(a²*F₂) + ½(F₁*b²)
+  have h_inner3 : ‖E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂) +
+      (2 : 𝕂)⁻¹ • (F₁ * b ^ 2)‖ ≤ s ^ 6 + s ^ 6 / 2 + s ^ 6 / 2 := by
+    have hi1 := norm_add_le (E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂))
+      ((2 : 𝕂)⁻¹ • (F₁ * b ^ 2))
+    have hi2 := norm_add_le (E₁ * E₂) ((2 : 𝕂)⁻¹ • (a ^ 2 * F₂))
+    linarith
+  -- Outer chain: 4 + inner + 2 = 7 norm_add_le applications
+  have ha1 := norm_add_le (H₁ + H₂ + a * G₂ + G₁ * b +
+    (E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂) + (2 : 𝕂)⁻¹ • (F₁ * b ^ 2)) +
+    (2 : 𝕂)⁻¹ • (z * R + R * z)) ((2 : 𝕂)⁻¹ • T22)
+  have ha2 := norm_add_le (H₁ + H₂ + a * G₂ + G₁ * b +
+    (E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂) + (2 : 𝕂)⁻¹ • (F₁ * b ^ 2)))
+    ((2 : 𝕂)⁻¹ • (z * R + R * z))
+  have ha3 := norm_add_le (H₁ + H₂ + a * G₂ + G₁ * b)
+    (E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂) + (2 : 𝕂)⁻¹ • (F₁ * b ^ 2))
+  have ha4 := norm_add_le (H₁ + H₂ + a * G₂) (G₁ * b)
+  have ha5 := norm_add_le (H₁ + H₂) (a * G₂)
+  have ha6 := norm_add_le H₁ H₂
+  -- Sum: 1+1+1+1 + (1+½+½) + 6 + 7.5 = 19.5 ≤ 20
+  linarith [pow_nonneg hs_nn 6]
+
 /-- Norm bound `‖T₂² - P² + T₂T₃ + T₃T₂‖ ≤ 15·s⁶`. Decomposition uses
 `P² - T₂² - T₂T₃ - T₃T₂ = (P-T₂-T₃)·P + T₂·(P-T₂-T₃) + T₃·(P-T₂)`. -/
 private theorem norm_T22_sub_P2_etc_le (P T₂ T₃ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
