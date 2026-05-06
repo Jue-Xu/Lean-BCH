@@ -4066,6 +4066,29 @@ private theorem R_eq_neg_deg5_residual (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type
   simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
   noncomm_ring
 
+/-- Norm bound `‖T₂² - P² + T₂T₃ + T₃T₂‖ ≤ 15·s⁶`. Decomposition uses
+`P² - T₂² - T₂T₃ - T₃T₂ = (P-T₂-T₃)·P + T₂·(P-T₂-T₃) + T₃·(P-T₂)`. -/
+private theorem norm_T22_sub_P2_etc_le (P T₂ T₃ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hP : ‖P‖ ≤ s ^ 2) (hT₂ : ‖T₂‖ ≤ s ^ 2) (hT₃ : ‖T₃‖ ≤ s ^ 3)
+    (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3)
+    (hPmT₂mT₃ : ‖P - T₂ - T₃‖ ≤ 5 * s ^ 4) :
+    ‖T₂ ^ 2 - P ^ 2 + T₂ * T₃ + T₃ * T₂‖ ≤ 15 * s ^ 6 := by
+  have heq : T₂ ^ 2 - P ^ 2 + T₂ * T₃ + T₃ * T₂ =
+      -((P - T₂ - T₃) * P + T₂ * (P - T₂ - T₃) + T₃ * (P - T₂)) := by noncomm_ring
+  rw [heq, norm_neg]
+  have h1 : ‖(P - T₂ - T₃) * P‖ ≤ (5 * s ^ 4) * s ^ 2 :=
+    calc _ ≤ ‖P - T₂ - T₃‖ * ‖P‖ := norm_mul_le _ _
+      _ ≤ (5 * s ^ 4) * s ^ 2 := mul_le_mul hPmT₂mT₃ hP (norm_nonneg _) (by positivity)
+  have h2 : ‖T₂ * (P - T₂ - T₃)‖ ≤ s ^ 2 * (5 * s ^ 4) :=
+    calc _ ≤ ‖T₂‖ * ‖P - T₂ - T₃‖ := norm_mul_le _ _
+      _ ≤ s ^ 2 * (5 * s ^ 4) := mul_le_mul hT₂ hPmT₂mT₃ (norm_nonneg _) (by positivity)
+  have h3 : ‖T₃ * (P - T₂)‖ ≤ s ^ 3 * (5 * s ^ 3) :=
+    calc _ ≤ ‖T₃‖ * ‖P - T₂‖ := norm_mul_le _ _
+      _ ≤ s ^ 3 * (5 * s ^ 3) := mul_le_mul hT₃ hPmT₂ (norm_nonneg _) (by positivity)
+  have ha1 := norm_add_le ((P - T₂ - T₃) * P + T₂ * (P - T₂ - T₃)) (T₃ * (P - T₂))
+  have ha2 := norm_add_le ((P - T₂ - T₃) * P) (T₂ * (P - T₂ - T₃))
+  linarith [pow_nonneg hs_nn 6]
+
 /-- Norm bound `‖R-residual sum‖ ≤ 6·s⁵` from precomputed component bounds.
 The 7 terms come from R_eq_neg_deg5_residual: G₁+G₂+a·F₂+F₁·b+E₁·E₂+½E₁b²+½a²E₂. -/
 private theorem norm_R_residual_sum_le (G₁ G₂ F₁ F₂ E₁ E₂ a b : 𝔸) {s : ℝ}
