@@ -251,7 +251,7 @@ one degree higher. Strategy:
   deg-5 cancellation, quintic_pure_identity for deg-4.
 - Each residual O(s⁶/(2-exp s)). Constants ~10K.
 
-**Session 15 progress**: ~750 lines, 0 new axioms, 12 commits.
+**Session 15 progress**: ~847 lines, 0 new axioms, 14 commits.
 
 1. **Large-s helper** `norm_bch_sextic_remainder_large_s_le` (commit `79f6ea1`):
 crude bound for `s ≥ 1/10` via `‖LHS_sextic‖ ≤ ‖LHS_quintic‖ + ‖C₅‖`.
@@ -298,6 +298,10 @@ the 7-term R sum by 6·s⁵ from precomputed components.
 the I₁ residual decomposition RHS by 20·s⁶ from precomputed component
 bounds. Combined with I1_residual_decomp_eq, gives ‖I₁ - corr₁ - corr₁_5‖
 ≤ 20·s⁶.
+
+11. **`norm_P_sub_T2_sub_T3_le`** (commit `07663ad`, ~70 lines): bounds
+‖P - T₂ - T₃‖ ≤ 5·s⁴ via algebraic identity P-T₂-T₃ = F₁+F₂+aE₂+E₁b+D₁D₂.
+Used as a `‖P-T₂-T₃‖ ≤ 5·s⁴` hypothesis input to I1/I2 residual norm bounds.
 
 **Tasks #14, #15, #16 all completed in session 15.**
 
