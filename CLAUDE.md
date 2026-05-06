@@ -251,7 +251,7 @@ one degree higher. Strategy:
   deg-5 cancellation, quintic_pure_identity for deg-4.
 - Each residual O(s⁶/(2-exp s)). Constants ~10K.
 
-**Session 15 progress**: ~580 lines, 0 new axioms, 8 commits.
+**Session 15 progress**: ~628 lines, 0 new axioms, 10 commits.
 
 1. **Large-s helper** `norm_bch_sextic_remainder_large_s_le` (commit `79f6ea1`):
 crude bound for `s ≥ 1/10` via `‖LHS_sextic‖ ≤ ‖LHS_quintic‖ + ‖C₅‖`.
@@ -283,6 +283,10 @@ the proof mirrors `quartic_identity` and `sextic_pure_identity`:
 simp only [pow_succ, ...] ; simp only [smul_sub, ...] ; simp only
 [mul_assoc, ...] ; simp only [ofNat_smul_eq_nsmul (R := 𝕂)] ;
 noncomm_ring`.
+
+7. **`R_eq_neg_deg5_residual`** (commit `7c170c6`, ~46 lines): expresses
+R = T₃-E₁-E₂-Q+T₄ as -(G₁+G₂+a·F₂+F₁·b+E₁·E₂+½·E₁·b²+½·a²·E₂). Helper for
+‖R‖ ≤ 6s⁵ in the I₁ residual norm bound.
 
 Remaining for full `norm_bch_sextic_remainder_le` (~400 lines):
 
