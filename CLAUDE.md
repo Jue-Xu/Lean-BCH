@@ -251,7 +251,7 @@ one degree higher. Strategy:
   deg-5 cancellation, quintic_pure_identity for deg-4.
 - Each residual O(s⁶/(2-exp s)). Constants ~10K.
 
-**Session 15 progress**: ~628 lines, 0 new axioms, 10 commits.
+**Session 15 progress**: ~750 lines, 0 new axioms, 12 commits.
 
 1. **Large-s helper** `norm_bch_sextic_remainder_large_s_le` (commit `79f6ea1`):
 crude bound for `s ≥ 1/10` via `‖LHS_sextic‖ ≤ ‖LHS_quintic‖ + ‖C₅‖`.
@@ -288,19 +288,27 @@ noncomm_ring`.
 R = T₃-E₁-E₂-Q+T₄ as -(G₁+G₂+a·F₂+F₁·b+E₁·E₂+½·E₁·b²+½·a²·E₂). Helper for
 ‖R‖ ≤ 6s⁵ in the I₁ residual norm bound.
 
-Remaining for full `norm_bch_sextic_remainder_le` (~400 lines):
+8. **`norm_R_residual_sum_le`** (commit `6ffcd7c`, ~38 lines): bounds
+the 7-term R sum by 6·s⁵ from precomputed components.
 
-1. **I₁_residual norm bound** (task #16, ~200 lines): triangle inequality
-on the 7 deg-6+ terms. Needs:
-   - ‖R‖ ≤ 6s⁵ where R = T₃-E₁-E₂-Q+T₄ (use new algebraic identity
-     `R = -(G₁+G₂+aF₂+F₁b+E₁E₂+½E₁b²+½a²E₂)` provable via dsimp+noncomm_ring
-     in same style as I1_residual_decomp_eq).
-   - ‖T₂² - P² + T₂T₃ + T₃T₂‖ ≤ 15s⁶ (split via `(P-T₂-T₃)·P + T₂·(P-T₂-T₃) + T₃·(P-T₂)`).
-   - H₁, H₂ exp remainders at order 6 (use existing
-     `norm_exp_sub_one_sub_sub_sub_sub_sub_le` + `real_exp_sixth_order_le_sextic`).
-2. **Small-s main theorem** (task #17, ~100 lines): SETUP + apply
-`pieceB_sextic_decomp` + 4 norm bounds + pieceA bound (order-6 log tail).
-3. **Public theorem** (task #18, ~30 lines): combines large-s and small-s
+9. **`norm_T22_sub_P2_etc_le`** (commit `8b75446`, ~22 lines): bounds
+‖T₂² - P² + T₂T₃ + T₃T₂‖ ≤ 15·s⁶ via 3-term decomposition.
+
+10. **`norm_I1_residual_RHS_le`** (commit `5791b25`, ~57 lines): bounds
+the I₁ residual decomposition RHS by 20·s⁶ from precomputed component
+bounds. Combined with I1_residual_decomp_eq, gives ‖I₁ - corr₁ - corr₁_5‖
+≤ 20·s⁶.
+
+**Tasks #14, #15, #16 all completed in session 15.**
+
+Remaining for full `norm_bch_sextic_remainder_le` (~300 lines):
+
+1. **Small-s main theorem** (task #17, ~250 lines): SETUP + setup variables
+(D, E, F, G, H, P, z, Q, T₂, T₃, T₄ via `set`) + compute norm bounds (mostly
+inline using existing exp tail bounds) + apply `pieceB_sextic_decomp` + 4
+sub-term bounds (using helpers from items 5, 8, 9, 10) + pieceA bound (via
+`norm_logOnePlus_sub_sub_sub_sub_sub_le`). All structural pieces ready.
+2. **Public theorem** (task #18, ~30 lines): combines large-s and small-s
 via `by_cases`.
 
 Then extend the cubic template `norm_symmetric_bch_cubic_sub_poly_le`
