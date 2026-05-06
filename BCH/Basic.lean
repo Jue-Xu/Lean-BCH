@@ -3913,6 +3913,69 @@ private theorem norm_y4_sub_z4_sub_y4_5_le (y P T₂ : 𝔸) {s : ℝ} (hs_nn : 
   have ht6 := norm_add_le (z ^ 3 * (P - T₂)) (z ^ 2 * (P - T₂) * z)
   nlinarith [pow_nonneg hs_nn 6]
 
+set_option maxHeartbeats 1024000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Algebraic decomposition of `pieceB''` for the sextic remainder small-s case.**
+
+States that pieceB'' (the algebraic part of the sextic remainder, with H1
+NOT applied — keeping the `y - z - ½[a,b] - ½y²` form) decomposes as:
+
+```
+pieceB'' = (I₁ - corr₁ - corr₁_5) + (I₂ - corr₂ - corr₂_5)
+           - ¼(y⁴ - z⁴ - y4_5) + ⅕(y⁵ - z⁵)
+```
+
+where:
+- `I₁ = y - z - ½[a,b] - ½y² + ⅓z³ - C₃` (== ½W + ⅓z³ - C₃ via H1)
+- `I₂ = ⅓(y³ - z³)`
+- `corr₁`, `corr₂` from `quintic_pure_identity` (deg-4 corrections)
+- `corr₁_5 = ½·W5`, `corr₂_5 = ⅓·y3_5` from `sextic_pure_identity` (deg-5)
+
+Proof: `pieceB'' - RHS = (LHS_QPI) + (LHS_SPI) = 0 + 0 = 0` via QPI + SPI. -/
+private theorem pieceB_sextic_decomp (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) :
+    let z : 𝔸 := a + b
+    let T₂ : 𝔸 := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+    let T₃_QPI : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (6 : 𝕂)⁻¹ • b ^ 3 +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * b)
+    let T₃_SPI : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    let W5 : 𝔸 := (60 : 𝕂)⁻¹ • a ^ 5 + (60 : 𝕂)⁻¹ • b ^ 5 +
+        (12 : 𝕂)⁻¹ • (a * b ^ 4) + (12 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (6 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) -
+        (z * T₄ + T₄ * z) - (T₂ * T₃_SPI + T₃_SPI * T₂)
+    let y3_5 : 𝔸 := z ^ 2 * T₃_SPI + z * T₃_SPI * z + T₃_SPI * z ^ 2 +
+        z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z
+    let y4_5 : 𝔸 := z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3
+    let y : 𝔸 := exp a * exp b - 1
+    let corr₁ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+        (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+        (2 : 𝕂)⁻¹ • (z * T₃_QPI + T₃_QPI * z) - (2 : 𝕂)⁻¹ • T₂ ^ 2
+    let corr₂ : 𝔸 := (3 : 𝕂)⁻¹ • (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2)
+    let corr₁_5 : 𝔸 := (2 : 𝕂)⁻¹ • W5
+    let corr₂_5 : 𝔸 := (3 : 𝕂)⁻¹ • y3_5
+    -- pieceB''
+    y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+      (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 + (5 : 𝕂)⁻¹ • y ^ 5 -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b =
+    -- RHS
+    ((y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+        (3 : 𝕂)⁻¹ • z ^ 3 - bch_cubic_term 𝕂 a b) - corr₁ - corr₁_5) +
+    ((3 : 𝕂)⁻¹ • (y ^ 3 - z ^ 3) - corr₂ - corr₂_5) -
+    (4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4 - y4_5) +
+    (5 : 𝕂)⁻¹ • (y ^ 5 - z ^ 5) := by
+  intro z T₂ T₃_QPI T₃_SPI T₄ W5 y3_5 y4_5 y corr₁ corr₂ corr₁_5 corr₂_5
+  -- Use QPI + SPI
+  have hQPI := quintic_pure_identity 𝕂 a b
+  have hSPI := sextic_pure_identity 𝕂 a b
+  -- Try linear_combination with module as norm
+  linear_combination (norm := module) hQPI + hSPI
+
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
 For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:
