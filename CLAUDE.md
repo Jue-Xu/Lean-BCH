@@ -251,45 +251,53 @@ one degree higher. Strategy:
   deg-5 cancellation, quintic_pure_identity for deg-4.
 - Each residual O(s⁶/(2-exp s)). Constants ~10K.
 
-**Session 15 progress (partial)**: ~370 lines, 0 new axioms, 5 commits.
+**Session 15 progress**: ~580 lines, 0 new axioms, 8 commits.
 
-1. **Large-s helper** `norm_bch_sextic_remainder_large_s_le` (commit `79f6ea1`,
-~50 lines). Proves the sextic bound for `s ≥ 1/10` via the crude approach
-`‖LHS_sextic‖ ≤ ‖LHS_quintic‖ + ‖C₅‖ ≤ 3001·s⁵/(2-exp s) ≤ 100000·s⁶/(2-exp s)`.
+1. **Large-s helper** `norm_bch_sextic_remainder_large_s_le` (commit `79f6ea1`):
+crude bound for `s ≥ 1/10` via `‖LHS_sextic‖ ≤ ‖LHS_quintic‖ + ‖C₅‖`.
 
-2. **8 telescoping helper lemmas** (commit `fe10730`, ~237 lines):
-  - `pow{3,4,5}_sub_zpow{3,4,5}_telescope`: y^k - (y-P)^k = sum of k terms.
-  - `y4_sub_z4_sub_y4_5_decomp`: y⁴ - z⁴ - y4_5 = sum of 7 deg-6+ terms.
-  - `norm_pow{2,3,5}_sub_zpow{2,3,5}_le`: norm bounds for k = 2, 3, 5.
-  - `norm_y4_sub_z4_sub_y4_5_le`: ‖y⁴ - z⁴ - y4_5‖ ≤ 31s⁶.
+2. **8 telescoping helper lemmas** (commit `fe10730`):
+  - `pow{3,4,5}_sub_zpow{3,4,5}_telescope`, `y4_sub_z4_sub_y4_5_decomp`
+  - `norm_pow{2,3,5}_sub_zpow{2,3,5}_le`, `norm_y4_sub_z4_sub_y4_5_le` (≤31s⁶).
 
-3. **`pieceB_sextic_decomp`** (commit `f13b0cf`, ~63 lines) — **central
-algebraic identity** for the small-s case: pieceB'' equals the 4-residual
-sum via QPI + sextic_pure_identity. **Key insight**: `linear_combination
-(norm := module) hQPI + hSPI` works (the `module` tactic handles smul +
-non-comm ring algebra correctly, unlike `abel` which can't distribute or
-`noncomm_ring` which has no smul support).
+3. **`pieceB_sextic_decomp`** (commit `f13b0cf`): central algebraic identity
+via `linear_combination (norm := module) hQPI + hSPI`. Key insight: `module`
+handles smul + non-comm ring algebra (where `abel` can't distribute and
+`noncomm_ring` lacks smul support).
 
-4. **`I2_residual_decomp_eq`** (commit `5585932`, ~16 lines): pure ring
-identity expressing the 7-term deg-6+ decomposition of I₂_residual. Proved
-by `noncomm_ring`.
+4. **`I2_residual_decomp_eq`** (commit `5585932`): 7-term deg-6+
+decomposition of I₂ residual.
 
-Remaining for full `norm_bch_sextic_remainder_le` (~600 lines):
+5. **I₂ residual norm bound** (commit `b8d38f4`, ~112 lines, 3 helpers):
+`norm_PzP_sub_T2zT2_le` (≤13s⁶), `norm_P2_sub_T22_le` (≤10s⁵),
+`norm_I2_residual_inner_le` (≤50s⁶ for the 7 deg-6+ inner terms; with the
+outer `(3:𝕂)⁻¹` the I₂ residual is ≤17s⁶).
 
-1. **`I1_residual_decomp_eq`** (~100-200 lines, attempted in session 15
-but the let-binding unfolding caused noncomm_ring to fail post scalar
-clearing; needs different tactic strategy or inline approach in the main
-theorem). The identity expresses
-`(I₁ quartic_id form) - corr₁ - corr₁_5 = H₁ + H₂ + aG₂ + G₁b + (E₁E₂ + ½a²F₂ + ½F₁b²) + ½(z·R+R·z) + ½(T₂² - P² + T₂T₃ + T₃T₂)`
-where R = T₃-E₁-E₂-Q+T₄.
-2. **I₂_residual norm bound** (~100 lines): triangle inequality on the 7
-   deg-6+ terms. Need helper `‖P-P₂-T₃‖ ≤ 5·s⁴`.
-3. **I₁_residual norm bound** (~200 lines): triangle inequality on the 7
-   deg-6+ terms.
-4. **Small-s main theorem** (~100 lines): SETUP + apply `pieceB_sextic_decomp`
-   + 4 norm bounds + pieceA bound (log tail at order 6).
-5. **Public theorem `norm_bch_sextic_remainder_le`** (~30 lines): combines
-   large-s and small-s via `by_cases`.
+6. **`I1_residual_decomp_eq`** (commit `2fccfa8`, ~89 lines): the central
+algebraic identity for I₁ residual, expressing it as 7 deg-6+ terms.
+**Key tactic discovery**: `dsimp only` BEFORE the scalar clearing pipeline
+unfolds let-bindings transparently — without it, `noncomm_ring` saw
+daggered (have-bound) variables as opaque atoms and failed. With dsimp,
+the proof mirrors `quartic_identity` and `sextic_pure_identity`:
+`dsimp only ; rw [← sub_eq_zero] ; apply hinj ; simp only [smul_zero] ;
+simp only [pow_succ, ...] ; simp only [smul_sub, ...] ; simp only
+[mul_assoc, ...] ; simp only [ofNat_smul_eq_nsmul (R := 𝕂)] ;
+noncomm_ring`.
+
+Remaining for full `norm_bch_sextic_remainder_le` (~400 lines):
+
+1. **I₁_residual norm bound** (task #16, ~200 lines): triangle inequality
+on the 7 deg-6+ terms. Needs:
+   - ‖R‖ ≤ 6s⁵ where R = T₃-E₁-E₂-Q+T₄ (use new algebraic identity
+     `R = -(G₁+G₂+aF₂+F₁b+E₁E₂+½E₁b²+½a²E₂)` provable via dsimp+noncomm_ring
+     in same style as I1_residual_decomp_eq).
+   - ‖T₂² - P² + T₂T₃ + T₃T₂‖ ≤ 15s⁶ (split via `(P-T₂-T₃)·P + T₂·(P-T₂-T₃) + T₃·(P-T₂)`).
+   - H₁, H₂ exp remainders at order 6 (use existing
+     `norm_exp_sub_one_sub_sub_sub_sub_sub_le` + `real_exp_sixth_order_le_sextic`).
+2. **Small-s main theorem** (task #17, ~100 lines): SETUP + apply
+`pieceB_sextic_decomp` + 4 norm bounds + pieceA bound (order-6 log tail).
+3. **Public theorem** (task #18, ~30 lines): combines large-s and small-s
+via `by_cases`.
 
 Then extend the cubic template `norm_symmetric_bch_cubic_sub_poly_le`
 (line ~3798) to give B1.c (`norm_symmetric_bch_quintic_sub_poly_le`),
