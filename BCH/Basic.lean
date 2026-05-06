@@ -3929,6 +3929,95 @@ private theorem I2_residual_decomp_eq (z P T₂ T₃ : 𝔸) :
     (P ^ 2 - T₂ ^ 2) * z + P ^ 3 := by
   noncomm_ring
 
+set_option maxHeartbeats 4000000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **I₁ residual decomposition** (pure algebraic identity in (ea, eb, a, b)):
+expresses `(I₁ in quartic_id form) - corr₁ - corr₁_5` as a sum of 7 deg-6+ terms.
+
+Proof: ×720 scalar clearing + dsimp (unfold let-bindings) + simp distribution
++ noncomm_ring. Mirrors the pattern of `quartic_identity` and
+`sextic_pure_identity`. -/
+private theorem I1_residual_decomp_eq (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (ea eb a b : 𝔸) :
+    let D₁ : 𝔸 := ea - 1 - a
+    let D₂ : 𝔸 := eb - 1 - b
+    let E₁ : 𝔸 := D₁ - (2 : 𝕂)⁻¹ • a ^ 2
+    let E₂ : 𝔸 := D₂ - (2 : 𝕂)⁻¹ • b ^ 2
+    let F₁ : 𝔸 := E₁ - (6 : 𝕂)⁻¹ • a ^ 3
+    let F₂ : 𝔸 := E₂ - (6 : 𝕂)⁻¹ • b ^ 3
+    let G₁ : 𝔸 := F₁ - (24 : 𝕂)⁻¹ • a ^ 4
+    let G₂ : 𝔸 := F₂ - (24 : 𝕂)⁻¹ • b ^ 4
+    let H₁ : 𝔸 := G₁ - (120 : 𝕂)⁻¹ • a ^ 5
+    let H₂ : 𝔸 := G₂ - (120 : 𝕂)⁻¹ • b ^ 5
+    let P : 𝔸 := ea * eb - 1 - (a + b)
+    let z : 𝔸 := a + b
+    let Q : 𝔸 := a * D₂ + D₁ * b + D₁ * D₂
+    let T₂ : 𝔸 := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+    let T₃ : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    let W5 : 𝔸 := (60 : 𝕂)⁻¹ • a ^ 5 + (60 : 𝕂)⁻¹ • b ^ 5 +
+        (12 : 𝕂)⁻¹ • (a * b ^ 4) + (12 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (6 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) -
+        (z * T₄ + T₄ * z) - (T₂ * T₃ + T₃ * T₂)
+    let R : 𝔸 := T₃ - E₁ - E₂ - Q + T₄
+    -- LHS: I₁ (quartic_identity form) - corr₁ - corr₁_5
+    (F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+        (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) -
+        (2 : 𝕂)⁻¹ • P ^ 2) -
+      ((24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+        (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+        (2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) - (2 : 𝕂)⁻¹ • T₂ ^ 2) -
+      (2 : 𝕂)⁻¹ • W5 =
+    -- RHS: 7 deg-6+ terms
+    H₁ + H₂ + a * G₂ + G₁ * b +
+    (E₁ * E₂ + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂) + (2 : 𝕂)⁻¹ • (F₁ * b ^ 2)) +
+    (2 : 𝕂)⁻¹ • (z * R + R * z) +
+    (2 : 𝕂)⁻¹ • (T₂ ^ 2 - P ^ 2 + T₂ * T₃ + T₃ * T₂) := by
+  -- KEY: dsimp only unfolds the let-bindings (transparent reduction)
+  dsimp only
+  rw [← sub_eq_zero]
+  -- Multiply by 720 to clear denominators (LCM)
+  have h720ne : (720 : 𝕂) ≠ 0 := by exact_mod_cast (show (720 : ℕ) ≠ 0 by norm_num)
+  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
+  have hinj : Function.Injective ((720 : 𝕂) • · : 𝔸 → 𝔸) := by
+    intro x₀ y₀ hxy; have := congrArg ((720 : 𝕂)⁻¹ • ·) hxy
+    simp only [smul_smul, inv_mul_cancel₀ h720ne, one_smul] at this; exact this
+  apply hinj; simp only [smul_zero]
+  simp only [pow_succ, pow_zero, one_mul]
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul, mul_sub, sub_mul]
+  simp only [mul_assoc, mul_inv_cancel₀ h2ne, inv_mul_cancel₀ h2ne,
+    show (720 : 𝕂) * (2 : 𝕂)⁻¹ = 360 from by norm_num,
+    show (720 : 𝕂) * (3 : 𝕂)⁻¹ = 240 from by norm_num,
+    show (720 : 𝕂) * (4 : 𝕂)⁻¹ = 180 from by norm_num,
+    show (720 : 𝕂) * (6 : 𝕂)⁻¹ = 120 from by norm_num,
+    show (720 : 𝕂) * (12 : 𝕂)⁻¹ = 60 from by norm_num,
+    show (720 : 𝕂) * (24 : 𝕂)⁻¹ = 30 from by norm_num,
+    show (720 : 𝕂) * (60 : 𝕂)⁻¹ = 12 from by norm_num,
+    show (720 : 𝕂) * (120 : 𝕂)⁻¹ = 6 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 180 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 60 from by norm_num,
+    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 60 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (24 : 𝕂)⁻¹) = 15 from by norm_num,
+    show (720 : 𝕂) * ((24 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 15 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (4 : 𝕂)⁻¹) = 90 from by norm_num,
+    show (720 : 𝕂) * ((4 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 90 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹) = 30 from by norm_num,
+    show (720 : 𝕂) * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 30 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (60 : 𝕂)⁻¹) = 6 from by norm_num,
+    show (720 : 𝕂) * ((60 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (120 : 𝕂)⁻¹) = 3 from by norm_num,
+    show (720 : 𝕂) * ((120 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 3 from by norm_num,
+    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 20 from by norm_num,
+    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 90 from by norm_num,
+    one_smul, mul_one]
+  simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
+  noncomm_ring
+
 /-- Norm bound for `‖PzP - T₂zT₂‖ ≤ 13·s⁶` for small s (`s < 1/10`).
 Splits via `P = T₂ + (P-T₂)` into 3 terms each bounded by Cs⁶. -/
 private theorem norm_PzP_sub_T2zT2_le (z P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
