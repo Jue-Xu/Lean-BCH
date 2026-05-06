@@ -3913,6 +3913,22 @@ private theorem norm_y4_sub_z4_sub_y4_5_le (y P T₂ : 𝔸) {s : ℝ} (hs_nn : 
   have ht6 := norm_add_le (z ^ 3 * (P - T₂)) (z ^ 2 * (P - T₂) * z)
   nlinarith [pow_nonneg hs_nn 6]
 
+/-- **I₂ residual decomposition**: pure ring identity in `(z, P, T₂, T₃)` for
+`(z+P)³ - z³ - (z²T₂+zT₂z+T₂z²) - (z²T₃+zT₃z+T₃z²+zT₂²+T₂zT₂+T₂²z)`,
+which when multiplied by `(3:𝕂)⁻¹` becomes `I₂ - corr₂ - corr₂_5`.
+
+Each summand on the RHS has deg-6+ structure (since `P-T₂-T₃` has deg-4+,
+`P²-T₂²` has deg-5+, `PzP-T₂zT₂` has deg-6+, `P³` has deg-6). -/
+private theorem I2_residual_decomp_eq (z P T₂ T₃ : 𝔸) :
+    (z + P) ^ 3 - z ^ 3 -
+      (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2) -
+      (z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+        z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z) =
+    z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z + (P - T₂ - T₃) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2) + (P * z * P - T₂ * z * T₂) +
+    (P ^ 2 - T₂ ^ 2) * z + P ^ 3 := by
+  noncomm_ring
+
 set_option maxHeartbeats 1024000000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **Algebraic decomposition of `pieceB''` for the sextic remainder small-s case.**
