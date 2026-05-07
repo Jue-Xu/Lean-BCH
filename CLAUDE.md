@@ -249,6 +249,13 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
   (`‖Z₆(a,b)‖ ≤ s⁶`). 28-term explicit polynomial in {a,b}, LCM 1440,
   numerators in {±1, ±4, ±6, ±24}. Used as the deg-6 leading term in the
   sextic identity for the parent discharge.
+- ✅ T2-F7e infrastructure step 2 (session 18): `BCH.septic_pure_identity`
+  — the deg-6 cancellation algebraic identity (analog of `sextic_pure_identity`
+  at one higher degree). Asserts:
+  `½·W6 + ⅓·y3_6 - ¼·y4_6 + ⅕·y5_6 - ⅙·z⁶ - bch_sextic_term = 0`
+  where W6, y3_6, y4_6, y5_6 capture deg-6 contributions from y, y², y³, y⁴, y⁵.
+  Pure {a, b} polynomial identity, proved via `match_scalars <;> ring`
+  (only 16M heartbeats, vs 4 BILLION for the original sextic_pure_identity).
 - ✅ T2-F1: `norm_three_factor_exp_product_sub_one_le` —
   `‖P-1‖ ≤ exp(s)-1` (Palindromic.lean).
 - ✅ T2-F2: `norm_three_factor_exp_product_sub_one_lt_one` —
