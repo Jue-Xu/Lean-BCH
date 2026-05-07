@@ -162,9 +162,41 @@ Public theorems depending on this axiom:
 
 CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
 2, 4, 6 vanish identically (palindromic symmetry); degree-7 residual has
-126 non-zero `{a,b}`-words. Discharge requires extending the cubic template
-`norm_symmetric_bch_cubic_sub_poly_le` (line ~3798) with 8-10 additional
-algebraic terms + per-term O(s⁷) bounds (~400-600 lines).
+126 non-zero `{a,b}`-words.
+
+**Discharge plan** (~1 week of dedicated Lean work):
+
+Extends the cubic template `norm_symmetric_bch_cubic_sub_poly_le` (line
+~5834 of `Basic.lean`, ~800 lines) by one degree higher. The cubic template's
+6-term decomposition becomes 8-10 terms, with each new term capturing a
+degree-5 correction:
+
+1. **R₁_sextic, R₂_sextic** — replace `norm_bch_quintic_remainder_le` with
+   the just-discharged `norm_bch_sextic_remainder_le` (Task #17b done).
+   Each gives O(s⁶) instead of O(s⁵), so R₁_sextic = R₁_quintic - C₅(a',b)
+   with ‖R₁_sextic‖ ≤ 100000·s₁⁶/(2-exp(s₁)).
+2. **Extract C₅(a',b), C₅(z,a')** — explicit degree-5 contributions from
+   inner/outer BCH expansions.
+3. **Identify the degree-5 part of each existing term** via CAS (run
+   `Lean-Trotter/scripts/compute_bch_prefactors.py` extended to degree 7).
+   The sum of these degree-5 parts must equal `symmetric_bch_quintic_poly`
+   (verified by CAS structurally).
+4. **Bound each term's residual** (term minus its degree-5 part) by O(s⁷).
+
+The CAS pipeline is the hardest bottleneck — it discovers the algebraic
+decomposition mechanically. Without it, the per-term degree-5 identification
+is intractable by hand.
+
+**Estimated proof size**: ~1000-1200 lines (extending the existing 800-line
+cubic template). Use `set_option maxHeartbeats 4000000000`.
+
+**Recommendation for next session**:
+- Run `compute_bch_prefactors.py` extended to degree 7; extract the 8-10
+  term decomposition.
+- Mirror the cubic template's structure (lines 5834-6614 of `Basic.lean`),
+  replacing `norm_bch_quintic_remainder_le` calls with `norm_bch_sextic_remainder_le`.
+- Per-term bounds: each new degree-5 cancellation term needs explicit O(s⁷)
+  bound (similar to the cubic template's 5×10⁶ + 5000 + ... constant chain).
 
 ## Lean-Trotter interface (axioms 1–3)
 
