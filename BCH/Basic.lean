@@ -5539,6 +5539,62 @@ theorem norm_bch_sextic_remainder_le (a b : 𝔸)
             nlinarith [pow_nonneg hs_nn 6]
           linarith
 
+/-- **Order-7 BCH remainder small-s axiom** (private placeholder for the future
+discharge of `norm_bch_septic_remainder_le`). For `‖a‖+‖b‖ < 1/10`,
+
+  `‖bch(a, b) - through-deg-6 expansion‖ ≤ 1000 · s⁷ / (2 - exp(s))`
+
+The full discharge mirrors `norm_bch_sextic_remainder_small_s_le` (~580 lines)
+at one degree higher, using `septic_pure_identity` for the deg-6 cancellation.
+This axiom can be combined with `norm_bch_septic_remainder_large_s_le` to give
+the public `norm_bch_septic_remainder_le`. -/
+private axiom norm_bch_septic_remainder_small_s_axiom
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Real.log 2) (hs : ‖a‖ + ‖b‖ < 1 / 10) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b‖ ≤
+      1000 * (‖a‖ + ‖b‖) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖))
+
+include 𝕂 in
+/-- **Order-7 BCH remainder bound** (public theorem, T2-F7e step 4):
+
+  `‖bch(a, b) - (a+b) - ½[a,b] - C₃ - C₄ - bqt - bch_sextic_term‖ ≤
+   1000010 · s⁷ / (2 - exp(s))`  for `s < log 2`.
+
+Proof: case split on `s ≥ 1/10` (uses `norm_bch_septic_remainder_large_s_le`,
+fully proved) vs. `s < 1/10` (uses `norm_bch_septic_remainder_small_s_axiom`,
+currently a scoped axiom — see its docstring).
+
+This is the deg-7+ remainder of the BCH series after subtracting the
+through-deg-6 expansion. It's the order-7 analog of `norm_bch_sextic_remainder_le`
+and the foundation for extending the cubic template to discharge the parent
+Tier-2 axiom (T2-F7e). -/
+theorem norm_bch_septic_remainder_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b‖ ≤
+      1000010 * (‖a‖ + ‖b‖) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  by_cases hs : 1 / 10 ≤ ‖a‖ + ‖b‖
+  · -- Large-s: ‖LHS‖ ≤ 1000010·s⁷/(2-exp(s)) directly.
+    exact norm_bch_septic_remainder_large_s_le (𝕂 := 𝕂) a b hab hs
+  · -- Small-s: axiom gives ≤ 1000·s⁷/(2-exp(s)) ≤ 1000010·s⁷/(2-exp(s)).
+    push_neg at hs
+    have h_small := norm_bch_septic_remainder_small_s_axiom (𝕂 := 𝕂) a b hab hs
+    have hexp_lt : Real.exp (‖a‖ + ‖b‖) < 2 := by
+      calc Real.exp (‖a‖ + ‖b‖) < Real.exp (Real.log 2) := Real.exp_strictMono hab
+        _ = 2 := Real.exp_log (by norm_num)
+    have hdenom : 0 < 2 - Real.exp (‖a‖ + ‖b‖) := by linarith
+    have hs_nn : 0 ≤ ‖a‖ + ‖b‖ := by positivity
+    calc _ ≤ 1000 * (‖a‖ + ‖b‖) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := h_small
+      _ ≤ 1000010 * (‖a‖ + ‖b‖) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+          apply div_le_div_of_nonneg_right _ hdenom.le
+          have : 1000 * (‖a‖ + ‖b‖) ^ 7 ≤ 1000010 * (‖a‖ + ‖b‖) ^ 7 := by
+            nlinarith [pow_nonneg hs_nn 7]
+          linarith
+
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
 For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:
