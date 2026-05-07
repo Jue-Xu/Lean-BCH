@@ -203,6 +203,9 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
 - ✅ T2-F7-aux: `norm_three_factor_exp_product_sub_one_sub_add_le` —
   `‖P − 1 − (a+b)‖ ≤ exp(s) − 1 − s`. Plus inductive helper
   `norm_mul_exp_sub_one_sub_le` (deg-2 chain step).
+- ✅ T2-F7-prelim: `norm_polynomial_in_y_sub_add_le` — coarse O(s²) bound
+  on the deg-2+ residual of polynomial_in_y after subtracting (a+b). Sums
+  per-term ‖y^k/k‖ bounds via triangle inequality.
 
 **Pending sub-tasks**:
 
