@@ -220,6 +220,9 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
   direction: any T2-F7g witness `K` discharges the parent with bound
   `K + tail`. Together with T2-F7g-tight establishes mathematical
   equivalence T2-F7g ⟺ parent axiom.
+- ✅ T2-G: `norm_symmetric_bch_quintic_correction_poly_le` — norm bound
+  on the 25-term correction polynomial: `‖correction(a,b)‖ ≤ s⁵`.
+  Sum of |numerators|/11520 = 1360/11520 ≈ 0.118 < 1.
 
 **Pending sub-tasks**:
 
