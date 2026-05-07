@@ -200,6 +200,9 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
 - ✅ T2-F6: `symmetric_bch_cubic_sub_polynomial_in_y_le` — combined
   framework bound: `‖sym_bch_cubic - polynomial-in-y‖ ≤ tail`
   (Palindromic.lean).
+- ✅ T2-F7-aux: `norm_three_factor_exp_product_sub_one_sub_add_le` —
+  `‖P − 1 − (a+b)‖ ≤ exp(s) − 1 − s`. Plus inductive helper
+  `norm_mul_exp_sub_one_sub_le` (deg-2 chain step).
 
 **Pending sub-tasks**:
 
