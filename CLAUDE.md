@@ -15,12 +15,19 @@ Branch: `trotter-5factor-palindromic`. Repository is **0 sorries**.
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
 
-**Session 17 progress (Tier-2 decomposition + initial attack)**:
-- T2-A done: CAS pipeline `Lean-Trotter/scripts/discover_quintic_alt_form.py`
-  discovers and prints the explicit decomposition. Verified residual = 0.
-- T2-B done: alt-form lemma added (as scoped axiom for now); 25-term correction
-  polynomial defined as `BCH.symmetric_bch_quintic_correction_poly`.
-- T2-C/D/E pending: sextic identity, extended hdecomp, per-term bounds.
+**Session 17 final state (29 commits, 15 working lemmas)**:
+- T2-A done: CAS pipeline `Lean-Trotter/scripts/discover_quintic_alt_form.py`.
+- T2-B done: alt-form (axiom) + correction polynomial defined.
+- T2-F1 through T2-F6 done: full framework from `‖P-1‖` bounds through
+  the bridge `bch∘bch = logOnePlus(P-1)` to combined framework bound.
+- T2-F7-aux, T2-F7-prelim, T2-F7-prelim2, T2-F7g-coarse done: progressively
+  tighter bounds (O(s²) → O(s⁵)).
+- T2-F7g-tight, T2-F-equiv done: T2-F7g ⟺ parent axiom (Lean-proved both
+  directions modulo small tail term).
+- T2-G done: `‖correction polynomial‖ ≤ s⁵`.
+- **T2-F7e is the SOLE remaining math piece**: identify deg-5 of polynomial_in_y
+  as sym_E₅ algebraically. Combined with T2-F-equiv, this immediately
+  discharges the parent Tier-2 axiom.
 
 **Session 16 discharge of `norm_bch_sextic_remainder_small_s_le`** (Tier-1 small-s,
 ~580 lines): mirrors quintic proof's H1 + quartic_identity pattern. Bounds 4 sub-pieces
