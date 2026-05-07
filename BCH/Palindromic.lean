@@ -1106,6 +1106,43 @@ lemma symmetric_bch_cubic_sub_polynomial_in_y_le (a b : 𝔸)
   exact htail
 
 include 𝕂 in
+/-- **T2-F7-prelim2** (deg-4+ residual): combines T2-F6 (framework) with the
+existing cubic template `norm_symmetric_bch_cubic_sub_poly_le` to bound:
+
+  ‖polynomial_in_y(y) − (a+b) − sym_E₃‖ ≤ 10⁷ · s⁵ + (exp(s)−1)⁷ / (2−exp(s))
+
+where polynomial_in_y(y) = y − y²/2 + y³/3 − y⁴/4 + y⁵/5 − y⁶/6 and
+y = exp(½a)·exp(b)·exp(½a) − 1. The first term is the cubic template's
+O(s⁵) bound; the second is the deg-7+ logOnePlus tail (O(s⁷) for s ≤ 1/4).
+
+Tighter than T2-F7-prelim (O(s²)). One degree closer to T2's target O(s⁷).
+Final step requires identifying the deg-5 contribution as sym_E₅ (T2-F7e). -/
+lemma norm_polynomial_in_y_sub_add_sub_E3_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖((exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) -
+        (2 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 2 +
+        (3 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 3 -
+        (4 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 4 +
+        (5 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 5 -
+        (6 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 6) -
+        (a + b) - symmetric_bch_cubic_poly 𝕂 a b‖ ≤
+      10000000 * (‖a‖ + ‖b‖) ^ 5 +
+        (Real.exp (‖a‖ + ‖b‖) - 1) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  have h_cubic := norm_symmetric_bch_cubic_sub_poly_le (𝕂 := 𝕂) a b hab
+  have h_framework := symmetric_bch_cubic_sub_polynomial_in_y_le (𝕂 := 𝕂) a b hab
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set y := exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1 with hy_def
+  set poly_in_y := y - (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 +
+      (5 : 𝕂)⁻¹ • y ^ 5 - (6 : 𝕂)⁻¹ • y ^ 6 with hpoly_def
+  -- Triangle: poly_in_y - (a+b) - sym_E₃ = (sym_bch_cubic - sym_E₃) - (sym_bch_cubic - poly_in_y + (a+b))
+  have h_diff : poly_in_y - (a + b) - symmetric_bch_cubic_poly 𝕂 a b =
+      (symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b) -
+        (symmetric_bch_cubic 𝕂 a b - poly_in_y + (a + b)) := by abel
+  rw [h_diff]
+  refine (norm_sub_le _ _).trans ?_
+  linarith
+
+include 𝕂 in
 /-- Merging of A-exponentials: `exp(α•A) · exp(β•A) = exp((α+β)•A)`
     since `[A, A] = 0`. -/
 lemma exp_smul_mul_exp_smul_self (A : 𝔸) (α β : 𝕂) :
