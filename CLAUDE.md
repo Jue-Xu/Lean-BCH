@@ -190,51 +190,52 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
 
 **Pending sub-tasks**:
 
-**T2-C**: `symmetric_bch_sextic_identity` — assert that the sum of degree-6
-contributions to `sym_bch_cubic - sym_E₃ - sym_E₅` equals zero (palindromic
-vanishing of even degrees). Mirrors `symmetric_bch_quartic_identity`
-(`Basic.lean:5760`). Requires either:
-- (a) Defining `bch_sextic_term` explicitly (~30+ term polynomial), OR
-- (b) Algebraic argument via palindromic structure (no explicit form).
+**T2-C** (revised): `symmetric_bch_sextic_part_zero` — assert that the
+deg-6 part of `sym_bch_cubic - sym_E₃ - sym_E₅` equals zero (palindromic
+vanishing of even degrees in the 3-factor product).
 
-**T2-D**: Extended `hdecomp` for the quintic case. New decomposition has
-~7 terms:
-1. `R₁_sextic` (uses just-discharged `norm_bch_sextic_remainder_le`)
-2. `R₂_sextic`
-3. `½·[R₁_sextic, ½a]`
-4. `½·[bch_quintic_term(½a, b), ½a]` (NEW)
-5. `bch_quintic_term(z, ½a) - bch_quintic_term(½a+b, ½a)` (NEW)
-6. `(bch_cubic_term(z,½a) - bch_cubic_term(½a+b,½a)) - C_d4 - T₄`
-7. `(bch_quartic_term(z,½a) - bch_quartic_term(½a+b,½a)) - T₅`
+**T2-D** (revised): Extended `hdecomp`. The natural per-piece
+decomposition (R₁_sextic, R₂_sextic, 7 terms) gives only O(s⁶) per term.
+**This decomposition cannot achieve O(s⁷) by itself.**
 
-Algebraic identity provable via the alt-form (T2-B) + `abel`/`noncomm_ring`.
+**T2-E** (revised): **Critical reassessment after session 17 analysis**:
+For `s ≤ 1/4`, an O(s⁶) per-piece bound CANNOT imply O(s⁷): the
+relationship is `s⁶ > s⁷` for `s < 1`. Achieving O(s⁷) requires exploiting
+the palindromic deg-6 cancellation algebraically.
 
-**T2-E**: Per-term bounds. **Critical observation**: each piece in T2-D is
-genuinely O(s⁶), NOT O(s⁷). The deg-6 cancellation IS palindromic but
-happens across pieces (T2-C). To get O(s⁷):
-- Subtract the deg-6 part of each piece (these collectively form
-  `sextic_identity_sum = 0`).
-- Bound each piece's deg-7+ residual by O(s⁷).
-- Triangle inequality: `10⁹·s⁷` constant.
+**Revised discharge strategy** (replaces the per-piece T2-C/D/E approach):
 
-Without bch_sextic_term explicit, the deg-6 extraction is hard. **Two
-strategies**:
-- (i) Define bch_sextic_term + norm_bch_septic_remainder_le (analog of
-  Tier-1 work from session 16; ~1500 lines new infrastructure).
-- (ii) Use a different bound: `K·s⁶` instead of `K·s⁷`. Downstream
-  consumers (`norm_strangBlock_log_sub_quintic_target_le`) would need to
-  be rewritten with the weaker bound. Requires checking that downstream
-  Suzuki bounds still hold.
+Treat `sym_bch_cubic - sym_E₃ - sym_E₅` directly as the deg-7+ tail of
+`log(exp(½a)·exp(b)·exp(½a))`. Bound this tail via a series convergence
+argument analogous to `norm_bch_quintic_remainder_le` (Basic.lean:2873,
+~750 lines).
 
-**Estimated proof size for full Tier-2 discharge**: ~2000-3000 lines.
-Strategy (ii) is faster (~1000 lines) but requires downstream API changes.
+Specifically, write the 3-factor Strang product as:
+```
+P(a, b) := exp(½a) · exp(b) · exp(½a)
+log(P) = (a+b) + sym_E₃(a, b) + sym_E₅(a, b) + sym_E₇(a, b) + ...
+       (palindromic: deg 2, 4, 6 vanish identically)
+```
 
-**Recommendation for next session**: Either
-- (a) Discharge T2-B alt-form first (write the ~150-200 line comprehensive
-  scalar enumeration to remove `symmetric_bch_quintic_poly_alt_form_axiom`).
-- (b) Pursue T2-C/D/E directly assuming the alt-form, and accept the
-  O(s⁶) bound (strategy ii) for faster progress. Then retrofit O(s⁷)
-  with bch_sextic_term infrastructure when needed.
+The bound `‖log(P) - through-deg-5‖ ≤ K · s⁷ / (constant)` follows from:
+1. P - 1 has tail bounded by `(exp(s/2)·exp(s)·exp(s/2)) - 1 - (deg≤6 sum)`.
+2. log(1+y) tail bounded by `‖y‖^7 · series tail`.
+3. Combine with explicit identification of deg-1, deg-3, deg-5 contributions
+   (the latter via the just-discharged alt-form lemma).
+
+**Estimated size**: ~1000-1500 lines (mirrors the structure of
+`norm_bch_quintic_remainder_le`, but for the 3-factor symmetric product).
+
+**Per-piece decomposition (T2-C/D/E original) is REJECTED** as a path —
+fundamentally cannot reach O(s⁷) without the full Tier-1 sextic
+infrastructure (additional ~1500 lines for `bch_sextic_term` +
+`norm_bch_septic_remainder_le`).
+
+**Recommendation for next session**: Pursue the revised tail-bound
+approach. Mirror `norm_bch_quintic_remainder_le`'s structure (Basic.lean
+lines ~2873-3624). The series convergence + tail bound argument is
+well-established; main work is the algebraic identification of deg-3 and
+deg-5 parts in the Strang product expansion.
 
 ## Lean-Trotter interface (axioms 1–3)
 
