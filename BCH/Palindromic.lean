@@ -28,6 +28,7 @@ where e(c,X) := exp(c • X). The coefficient list (p/2, p, p, p, (1-3p)/2, (1-4
 import BCH.Basic
 import BCH.SymmetricQuintic
 import BCH.ChildsBasis
+import Mathlib.Analysis.Complex.ExponentialBounds
 
 namespace BCH
 
@@ -769,6 +770,46 @@ lemma norm_three_factor_exp_product_sub_one_lt_one (a b : 𝔸)
     calc Real.exp (‖a‖ + ‖b‖) < Real.exp (Real.log 2) := Real.exp_strictMono h
       _ = 2 := Real.exp_log (by norm_num)
   linarith
+
+include 𝕂 in
+/-- **Bridge: 3-factor BCH composition equals `logOnePlus` of the product − 1**.
+
+For `‖a‖ + ‖b‖ < 1/4` (so the inner BCH `bch(½a, b)` converges):
+
+    bch(bch(½a, b), ½a) = logOnePlus(exp(½a) · exp(b) · exp(½a) − 1)
+
+This is the foundational identity for T2-F: it lets us bound the deg-7+ tail
+of `bch(bch(½a, b), ½a)` directly via the log series, avoiding the per-piece
+sextic decomposition (which gives O(s⁶) per piece, insufficient for O(s⁷)).
+
+Proof: unfold the outer `bch`, then apply `exp_bch` for the inner BCH to
+rewrite `exp(bch(½a, b))` as `exp(½a) · exp(b)`. -/
+lemma bch_bch_half_eq_logOnePlus_strangBlock_sub_one (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) =
+      logOnePlus (𝕂 := 𝕂)
+        (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) := by
+  -- Setup: the inner BCH converges since ‖½a‖ + ‖b‖ < log 2.
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by
+    rw [norm_inv, RCLike.norm_ofNat]
+  have ha_half_le : ‖((2 : 𝕂)⁻¹ • a)‖ ≤ ‖a‖ / 2 := by
+    calc ‖((2 : 𝕂)⁻¹ • a)‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  have hln2_quarter : (1 : ℝ) / 4 < Real.log 2 := by
+    have h := Real.log_two_gt_d9
+    linarith
+  have hs₁_lt : ‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖ < Real.log 2 := by
+    calc ‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖ ≤ ‖a‖ / 2 + ‖b‖ := by linarith
+      _ ≤ ‖a‖ + ‖b‖ := by linarith [norm_nonneg a]
+      _ < 1 / 4 := hab
+      _ < Real.log 2 := hln2_quarter
+  -- Unfold outer bch, apply exp_bch on inner.
+  unfold bch
+  congr 1
+  rw [show exp (logOnePlus (𝕂 := 𝕂) (exp ((2 : 𝕂)⁻¹ • a) * exp b - 1)) =
+        exp ((2 : 𝕂)⁻¹ • a) * exp b from by
+    have := exp_bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b hs₁_lt
+    unfold bch at this; exact this]
 
 include 𝕂 in
 /-- Merging of A-exponentials: `exp(α•A) · exp(β•A) = exp((α+β)•A)`
