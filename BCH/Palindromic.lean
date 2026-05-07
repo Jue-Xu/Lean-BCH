@@ -759,6 +759,122 @@ lemma norm_three_factor_exp_product_sub_one_le (a b : 𝔸) :
   linarith
 
 include 𝕂 in
+/-- **Inductive step (deg-2 chain)**: if `‖y - 1 - z‖ ≤ exp(r) - 1 - r`
+where `‖z‖ ≤ r` and `r ≥ 0`, then appending `exp(x)` on the right gives
+`‖y · exp(x) - 1 - z - x‖ ≤ exp(r + ‖x‖) - 1 - (r + ‖x‖)`. Analog of
+`norm_mul_exp_sub_one_le` at one degree higher. -/
+lemma norm_mul_exp_sub_one_sub_le (y z x : 𝔸) {r : ℝ} (hr : 0 ≤ r)
+    (hz_le : ‖z‖ ≤ r)
+    (hy : ‖y - 1 - z‖ ≤ Real.exp r - 1 - r) :
+    ‖y * exp x - 1 - z - x‖ ≤ Real.exp (r + ‖x‖) - 1 - (r + ‖x‖) := by
+  letI : NormedAlgebra ℝ 𝔸 := NormedAlgebra.restrictScalars ℝ 𝕂 𝔸
+  letI : NormedAlgebra ℚ 𝔸 := NormedAlgebra.restrictScalars ℚ ℝ 𝔸
+  have hfactor : y * exp x - 1 - z - x =
+      (y - 1 - z) * exp x + z * (exp x - 1) + (exp x - 1 - x) := by
+    rw [sub_mul, sub_mul, one_mul]; noncomm_ring
+  have hexp_x_nn : 0 ≤ Real.exp ‖x‖ := (Real.exp_pos _).le
+  have hexp_norm : ‖exp x‖ ≤ Real.exp ‖x‖ := norm_exp_le (𝕂 := 𝕂) x
+  have hexp_sub_norm : ‖exp x - 1‖ ≤ Real.exp ‖x‖ - 1 := norm_exp_sub_one_le (𝕂 := 𝕂) x
+  have hexp_sub_sub_norm : ‖exp x - 1 - x‖ ≤ Real.exp ‖x‖ - 1 - ‖x‖ :=
+    norm_exp_sub_one_sub_le (𝕂 := 𝕂) x
+  have hexp_r_m1_nn : 0 ≤ Real.exp r - 1 - r := by
+    have := Real.add_one_le_exp r
+    have h2 := Real.quadratic_le_exp_of_nonneg hr
+    nlinarith
+  have hr_nn : (0 : ℝ) ≤ r := hr
+  calc ‖y * exp x - 1 - z - x‖
+      = ‖(y - 1 - z) * exp x + z * (exp x - 1) + (exp x - 1 - x)‖ := by rw [hfactor]
+    _ ≤ ‖(y - 1 - z) * exp x + z * (exp x - 1)‖ + ‖exp x - 1 - x‖ := norm_add_le _ _
+    _ ≤ ‖(y - 1 - z) * exp x‖ + ‖z * (exp x - 1)‖ + ‖exp x - 1 - x‖ := by
+        gcongr; exact norm_add_le _ _
+    _ ≤ ‖y - 1 - z‖ * ‖exp x‖ + ‖z‖ * ‖exp x - 1‖ + ‖exp x - 1 - x‖ := by
+        gcongr <;> exact norm_mul_le _ _
+    _ ≤ (Real.exp r - 1 - r) * Real.exp ‖x‖ + r * (Real.exp ‖x‖ - 1) +
+        (Real.exp ‖x‖ - 1 - ‖x‖) := by
+        gcongr
+    _ = Real.exp (r + ‖x‖) - 1 - (r + ‖x‖) := by rw [Real.exp_add]; ring
+
+include 𝕂 in
+/-- **T2-F7-aux**: bounds the deg-2+ part of `P − 1`:
+
+  ‖exp(½a)·exp(b)·exp(½a) − 1 − (a+b)‖ ≤ exp(s) − 1 − s
+
+where `s = ‖a‖+‖b‖`. The RHS is approximately `s²/2 + s³/6 + …`, so this
+is an O(s²) bound capturing the deg-≥2 contributions of the Strang block.
+
+Built via inductive chain `norm_mul_exp_sub_one_sub_le` analog of T2-F1's
+`norm_mul_exp_sub_one_le`, applied twice through the 3-factor product. -/
+lemma norm_three_factor_exp_product_sub_one_sub_add_le (a b : 𝔸) :
+    ‖exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1 - (a + b)‖ ≤
+      Real.exp (‖a‖ + ‖b‖) - 1 - (‖a‖ + ‖b‖) := by
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by
+    rw [norm_inv, RCLike.norm_ofNat]
+  have ha_half_le : ‖((2 : 𝕂)⁻¹ • a)‖ ≤ ‖a‖ / 2 := by
+    calc ‖((2 : 𝕂)⁻¹ • a)‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  -- Track ‖z₁‖ + ‖z₂‖ + ‖z₃‖ where z₁ = z₃ = ½a, z₂ = b. Bounded by ‖a‖ + ‖b‖.
+  -- Step 1: y₁ = exp(z₁), bound ‖y₁ - 1 - z₁‖ ≤ exp(‖z₁‖) - 1 - ‖z₁‖.
+  have h1 : ‖exp ((2 : 𝕂)⁻¹ • a) - 1 - ((2 : 𝕂)⁻¹ • a)‖ ≤
+      Real.exp ‖((2 : 𝕂)⁻¹ • a)‖ - 1 - ‖((2 : 𝕂)⁻¹ • a)‖ :=
+    norm_exp_sub_one_sub_le (𝕂 := 𝕂) _
+  -- Step 2: extend with exp(b).
+  have h2 : ‖exp ((2 : 𝕂)⁻¹ • a) * exp b - 1 - ((2 : 𝕂)⁻¹ • a) - b‖ ≤
+      Real.exp (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) - 1 -
+        (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) :=
+    norm_mul_exp_sub_one_sub_le (𝕂 := 𝕂) _ _ _ (norm_nonneg _) (le_refl _) h1
+  -- Need to rewrite h2 to expose z = (½a) + b as a single term.
+  have h2' : ‖exp ((2 : 𝕂)⁻¹ • a) * exp b - 1 - (((2 : 𝕂)⁻¹ • a) + b)‖ ≤
+      Real.exp (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) - 1 -
+        (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) := by
+    have heq : exp ((2 : 𝕂)⁻¹ • a) * exp b - 1 - (((2 : 𝕂)⁻¹ • a) + b) =
+        exp ((2 : 𝕂)⁻¹ • a) * exp b - 1 - ((2 : 𝕂)⁻¹ • a) - b := by abel
+    rw [heq]; exact h2
+  -- Step 3: extend with exp(½a) again.
+  have h_z_le : ‖((2 : 𝕂)⁻¹ • a) + b‖ ≤ ‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖ := norm_add_le _ _
+  have h3 : ‖exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) -
+                1 - (((2 : 𝕂)⁻¹ • a) + b) - ((2 : 𝕂)⁻¹ • a)‖ ≤
+      Real.exp ((‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖) - 1 -
+        ((‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖) :=
+    norm_mul_exp_sub_one_sub_le (𝕂 := 𝕂)
+      (exp ((2 : 𝕂)⁻¹ • a) * exp b) (((2 : 𝕂)⁻¹ • a) + b) ((2 : 𝕂)⁻¹ • a)
+      (by positivity) h_z_le h2'
+  -- The accumulator is: (½•a) + b + (½•a) = a + b (algebraic identity).
+  have h_acc_eq : ((2 : 𝕂)⁻¹ • a) + b + ((2 : 𝕂)⁻¹ • a) = a + b := by
+    rw [show ((2 : 𝕂)⁻¹ • a) + b + ((2 : 𝕂)⁻¹ • a) = ((2 : 𝕂)⁻¹ + (2 : 𝕂)⁻¹) • a + b from by
+      simp [add_smul]; abel,
+        show ((2 : 𝕂)⁻¹ + (2 : 𝕂)⁻¹) = (1 : 𝕂) from by ring,
+        one_smul]
+  -- Rewrite h3's LHS to match (a + b) form.
+  have h3' : ‖exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1 - (a + b)‖ ≤
+      Real.exp ((‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖) - 1 -
+        ((‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖) := by
+    have heq : exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1 - (a + b) =
+        exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) -
+          1 - (((2 : 𝕂)⁻¹ • a) + b) - ((2 : 𝕂)⁻¹ • a) := by
+      rw [← h_acc_eq]; abel
+    rw [heq]; exact h3
+  -- Bound the exponent: 2·‖½a‖ + ‖b‖ ≤ ‖a‖ + ‖b‖.
+  have h_arg_le : (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖ ≤ ‖a‖ + ‖b‖ := by
+    calc (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖
+        = 2 * ‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖ := by ring
+      _ ≤ 2 * (‖a‖ / 2) + ‖b‖ := by linarith
+      _ = ‖a‖ + ‖b‖ := by ring
+  -- exp(t) - 1 - t is monotonic in t ≥ 0.
+  have hf_mono : ∀ t₁ t₂ : ℝ, 0 ≤ t₁ → t₁ ≤ t₂ →
+      Real.exp t₁ - 1 - t₁ ≤ Real.exp t₂ - 1 - t₂ := by
+    intro t₁ t₂ ht₁ ht₁₂
+    have h1 : Real.exp t₁ ≥ 1 := Real.one_le_exp ht₁
+    have h2 : Real.exp (t₂ - t₁) ≥ (t₂ - t₁) + 1 := Real.add_one_le_exp _
+    have h3 : Real.exp t₂ = Real.exp t₁ * Real.exp (t₂ - t₁) := by
+      rw [← Real.exp_add]; congr 1; ring
+    nlinarith [Real.exp_pos t₁, Real.exp_pos (t₂ - t₁)]
+  have h_mono : Real.exp ((‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖) - 1 -
+      ((‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖) ≤
+        Real.exp (‖a‖ + ‖b‖) - 1 - (‖a‖ + ‖b‖) :=
+    hf_mono _ _ (by positivity) h_arg_le
+  linarith
+
+include 𝕂 in
 /-- **Strict bound**: when `‖a‖ + ‖b‖ < log 2`, the 3-factor exp product
 satisfies `‖P − 1‖ < 1`. Direct from T2-F1 + `exp(log 2) = 2`. Used to
 ensure absolute convergence of `log(P) = log(1 + (P−1))` series. -/
