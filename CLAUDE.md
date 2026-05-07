@@ -215,10 +215,11 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
   alt-form axiom T2-B); final O(s⁷) requires algebraic deg-5 cancellation
   (T2-F7e).
 - ✅ T2-F7g-tight: `norm_polynomial_in_y_sub_add_sub_E3_sub_E5_via_parent` —
-  O(s⁷) version derived FROM THE PARENT AXIOM. Demonstrates equivalence
-  between T2-F7g and the parent (modulo tail term). The "→" direction
-  (parent ⟹ T2-F7g) is proved; the "←" direction (T2-F7g ⟹ parent)
-  is what we need to discharge the parent.
+  O(s⁷) version derived FROM THE PARENT AXIOM. Forward direction.
+- ✅ T2-F-equiv: `symmetric_bch_quintic_sub_poly_le_via_T2F7g` — reverse
+  direction: any T2-F7g witness `K` discharges the parent with bound
+  `K + tail`. Together with T2-F7g-tight establishes mathematical
+  equivalence T2-F7g ⟺ parent axiom.
 
 **Pending sub-tasks**:
 
