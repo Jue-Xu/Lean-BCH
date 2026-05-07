@@ -1887,6 +1887,371 @@ theorem norm_bch_quintic_term_le (a b : 𝔸) :
     _ ≤ (1 / 720) * (176 * s ^ 5) := by rw [h720]; gcongr
     _ ≤ s ^ 5 := by nlinarith [hs5_nn]
 
+/-! ### `bch_sextic_term` — the τ⁶ coefficient of `bch(a, b)`
+
+Explicit 28-term polynomial in {a, b}, derived via the CAS pipeline at
+`Lean-Trotter/scripts/extract_bch_z6.py` (extends `extract_bch_z5.py` to
+degree 6). Common denominator 1440; integer numerators in {±1, ±4, ±6, ±24}.
+Sum of |numerators|/1440 = 164/1440 ≈ 0.1139 < 1, so `‖Z₆(a,b)‖ ≤ s⁶`.
+
+This is the next term in the BCH expansion after `bch_quintic_term`:
+`bch(a,b) = a + b + ½[a,b] + Z₃ + Z₄ + Z₅ + Z₆ + O(·^7)`.
+
+Used in the sextic identity (T2-F7e) for canceling deg-6 contributions to
+`sym_bch_cubic - sym_E₃ - sym_E₅`. -/
+
+/-- **τ⁶ coefficient of `bch(a, b)`** — explicit 28-term polynomial in {a, b}.
+
+The 28 non-zero 6-letter words (out of 64 = 2⁶ possible) come from the
+free Lie algebra basis at degree 6. Coefficients are rational with LCM 1440. -/
+noncomputable def bch_sextic_term (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (-1 / 1440 : 𝕂) • (a * a * a * a * b * b)
+  + (4 / 1440 : 𝕂) • (a * a * a * b * a * b)
+  + (4 / 1440 : 𝕂) • (a * a * a * b * b * b)
+  + (-6 / 1440 : 𝕂) • (a * a * b * a * a * b)
+  + (-6 / 1440 : 𝕂) • (a * a * b * a * b * b)
+  + (-6 / 1440 : 𝕂) • (a * a * b * b * a * b)
+  + (-1 / 1440 : 𝕂) • (a * a * b * b * b * b)
+  + (4 / 1440 : 𝕂) • (a * b * a * a * a * b)
+  + (-6 / 1440 : 𝕂) • (a * b * a * a * b * b)
+  + (24 / 1440 : 𝕂) • (a * b * a * b * a * b)
+  + (4 / 1440 : 𝕂) • (a * b * a * b * b * b)
+  + (-6 / 1440 : 𝕂) • (a * b * b * a * a * b)
+  + (-6 / 1440 : 𝕂) • (a * b * b * a * b * b)
+  + (4 / 1440 : 𝕂) • (a * b * b * b * a * b)
+  + (-4 / 1440 : 𝕂) • (b * a * a * a * b * a)
+  + (6 / 1440 : 𝕂) • (b * a * a * b * a * a)
+  + (6 / 1440 : 𝕂) • (b * a * a * b * b * a)
+  + (-4 / 1440 : 𝕂) • (b * a * b * a * a * a)
+  + (-24 / 1440 : 𝕂) • (b * a * b * a * b * a)
+  + (6 / 1440 : 𝕂) • (b * a * b * b * a * a)
+  + (-4 / 1440 : 𝕂) • (b * a * b * b * b * a)
+  + (1 / 1440 : 𝕂) • (b * b * a * a * a * a)
+  + (6 / 1440 : 𝕂) • (b * b * a * a * b * a)
+  + (6 / 1440 : 𝕂) • (b * b * a * b * a * a)
+  + (6 / 1440 : 𝕂) • (b * b * a * b * b * a)
+  + (-4 / 1440 : 𝕂) • (b * b * b * a * a * a)
+  + (-4 / 1440 : 𝕂) • (b * b * b * a * b * a)
+  + (1 / 1440 : 𝕂) • (b * b * b * b * a * a)
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **6-fold smul-product identity**: `(c•x₁)·...·(c•x₆) = c⁶ • (x₁·...·x₆)`. -/
+private lemma six_fold_smul_mul (c : 𝕂) (x₁ x₂ x₃ x₄ x₅ x₆ : 𝔸) :
+    (c • x₁) * (c • x₂) * (c • x₃) * (c • x₄) * (c • x₅) * (c • x₆) =
+      c ^ 6 • (x₁ * x₂ * x₃ * x₄ * x₅ * x₆) := by
+  simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
+  congr 1; ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Homogeneity of `bch_sextic_term`**: `Z₆(c•a, c•b) = c⁶ • Z₆(a,b)`. -/
+theorem bch_sextic_term_smul (a b : 𝔸) (c : 𝕂) :
+    bch_sextic_term 𝕂 (c • a) (c • b) = c ^ 6 • bch_sextic_term 𝕂 a b := by
+  unfold bch_sextic_term
+  simp only [six_fold_smul_mul c, smul_comm _ (c ^ 6 : 𝕂), ← smul_add]
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Helper: a 6-letter product `x₁·x₂·x₃·x₄·x₅·x₆` with each `xᵢ ∈ {a, b}`
+has norm ≤ `(‖a‖+‖b‖)⁶`. -/
+private lemma norm_six_word_le {𝔸 : Type*} [NormedRing 𝔸] (a b : 𝔸)
+    (x₁ x₂ x₃ x₄ x₅ x₆ : 𝔸)
+    (h₁ : ‖x₁‖ ≤ ‖a‖ + ‖b‖) (h₂ : ‖x₂‖ ≤ ‖a‖ + ‖b‖)
+    (h₃ : ‖x₃‖ ≤ ‖a‖ + ‖b‖) (h₄ : ‖x₄‖ ≤ ‖a‖ + ‖b‖)
+    (h₅ : ‖x₅‖ ≤ ‖a‖ + ‖b‖) (h₆ : ‖x₆‖ ≤ ‖a‖ + ‖b‖) :
+    ‖x₁ * x₂ * x₃ * x₄ * x₅ * x₆‖ ≤ (‖a‖ + ‖b‖) ^ 6 := by
+  set s := ‖a‖ + ‖b‖
+  have hs_nn : 0 ≤ s := add_nonneg (norm_nonneg _) (norm_nonneg _)
+  calc ‖x₁ * x₂ * x₃ * x₄ * x₅ * x₆‖
+      ≤ ‖x₁ * x₂ * x₃ * x₄ * x₅‖ * ‖x₆‖ := norm_mul_le _ _
+    _ ≤ ‖x₁ * x₂ * x₃ * x₄‖ * ‖x₅‖ * ‖x₆‖ := by
+        gcongr; exact norm_mul_le _ _
+    _ ≤ ‖x₁ * x₂ * x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ := by
+        gcongr; exact norm_mul_le _ _
+    _ ≤ ‖x₁ * x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ := by
+        gcongr; exact norm_mul_le _ _
+    _ ≤ ‖x₁‖ * ‖x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ := by
+        gcongr; exact norm_mul_le _ _
+    _ ≤ s * s * s * s * s * s := by gcongr
+    _ = s ^ 6 := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Helper: `‖((k:𝕂)/1440) • w‖ ≤ |k|/1440·s⁶` for a 6-letter word `w`. -/
+private lemma norm_sextic_word_le {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (k : ℤ) (w : 𝔸) (s : ℝ) (hw : ‖w‖ ≤ s ^ 6) (hs_nn : 0 ≤ s) :
+    ‖((k : 𝕂) / 1440) • w‖ ≤ |(k : ℝ)| / 1440 * s ^ 6 := by
+  have h1440_norm : ‖(1440 : 𝕂)‖ = 1440 := by
+    rw [show (1440 : 𝕂) = ((1440 : ℕ) : 𝕂) from by norm_cast, RCLike.norm_natCast]
+    norm_num
+  have hc_nn : (0 : ℝ) ≤ |(k : ℝ)| / 1440 := by positivity
+  have hk_norm : ‖((k : ℤ) : 𝕂)‖ = |(k : ℝ)| := by
+    rw [show ((k : ℤ) : 𝕂) = ((k : ℝ) : 𝕂) from by push_cast; rfl, RCLike.norm_ofReal]
+  calc ‖((k : 𝕂) / 1440) • w‖
+      ≤ ‖((k : 𝕂) / 1440)‖ * ‖w‖ := norm_smul_le _ _
+    _ = |(k : ℝ)| / 1440 * ‖w‖ := by rw [norm_div, h1440_norm, hk_norm]
+    _ ≤ |(k : ℝ)| / 1440 * s ^ 6 := mul_le_mul_of_nonneg_left hw hc_nn
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Norm bound for `bch_sextic_term`**: `‖Z₆(a,b)‖ ≤ (‖a‖+‖b‖)⁶`.
+
+Sum of |numerators| over the 28 terms = 164. So `‖Z₆‖ ≤ 164/1440·s⁶ ≈ 0.114·s⁶`. -/
+theorem norm_bch_sextic_term_le (a b : 𝔸) :
+    ‖bch_sextic_term 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 6 := by
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have hs6_nn : (0 : ℝ) ≤ s ^ 6 := pow_nonneg hs_nn 6
+  have ha_le : ‖a‖ ≤ s := by linarith [norm_nonneg b]
+  have hb_le : ‖b‖ ≤ s := by linarith [norm_nonneg a]
+  have hw : ∀ (x₁ x₂ x₃ x₄ x₅ x₆ : 𝔸), ‖x₁‖ ≤ s → ‖x₂‖ ≤ s → ‖x₃‖ ≤ s →
+      ‖x₄‖ ≤ s → ‖x₅‖ ≤ s → ‖x₆‖ ≤ s → ‖x₁ * x₂ * x₃ * x₄ * x₅ * x₆‖ ≤ s ^ 6 :=
+    fun x₁ x₂ x₃ x₄ x₅ x₆ h₁ h₂ h₃ h₄ h₅ h₆ => by
+      have := norm_six_word_le (𝔸 := 𝔸) a b x₁ x₂ x₃ x₄ x₅ x₆
+        (by rw [hs_def] at h₁; exact h₁) (by rw [hs_def] at h₂; exact h₂)
+        (by rw [hs_def] at h₃; exact h₃) (by rw [hs_def] at h₄; exact h₄)
+        (by rw [hs_def] at h₅; exact h₅) (by rw [hs_def] at h₆; exact h₆)
+      rw [hs_def]; exact this
+  -- 28 word-norm bounds (one per word in bch_sextic_term)
+  have w01 := hw a a a a b b ha_le ha_le ha_le ha_le hb_le hb_le
+  have w02 := hw a a a b a b ha_le ha_le ha_le hb_le ha_le hb_le
+  have w03 := hw a a a b b b ha_le ha_le ha_le hb_le hb_le hb_le
+  have w04 := hw a a b a a b ha_le ha_le hb_le ha_le ha_le hb_le
+  have w05 := hw a a b a b b ha_le ha_le hb_le ha_le hb_le hb_le
+  have w06 := hw a a b b a b ha_le ha_le hb_le hb_le ha_le hb_le
+  have w07 := hw a a b b b b ha_le ha_le hb_le hb_le hb_le hb_le
+  have w08 := hw a b a a a b ha_le hb_le ha_le ha_le ha_le hb_le
+  have w09 := hw a b a a b b ha_le hb_le ha_le ha_le hb_le hb_le
+  have w10 := hw a b a b a b ha_le hb_le ha_le hb_le ha_le hb_le
+  have w11 := hw a b a b b b ha_le hb_le ha_le hb_le hb_le hb_le
+  have w12 := hw a b b a a b ha_le hb_le hb_le ha_le ha_le hb_le
+  have w13 := hw a b b a b b ha_le hb_le hb_le ha_le hb_le hb_le
+  have w14 := hw a b b b a b ha_le hb_le hb_le hb_le ha_le hb_le
+  have w15 := hw b a a a b a hb_le ha_le ha_le ha_le hb_le ha_le
+  have w16 := hw b a a b a a hb_le ha_le ha_le hb_le ha_le ha_le
+  have w17 := hw b a a b b a hb_le ha_le ha_le hb_le hb_le ha_le
+  have w18 := hw b a b a a a hb_le ha_le hb_le ha_le ha_le ha_le
+  have w19 := hw b a b a b a hb_le ha_le hb_le ha_le hb_le ha_le
+  have w20 := hw b a b b a a hb_le ha_le hb_le hb_le ha_le ha_le
+  have w21 := hw b a b b b a hb_le ha_le hb_le hb_le hb_le ha_le
+  have w22 := hw b b a a a a hb_le hb_le ha_le ha_le ha_le ha_le
+  have w23 := hw b b a a b a hb_le hb_le ha_le ha_le hb_le ha_le
+  have w24 := hw b b a b a a hb_le hb_le ha_le hb_le ha_le ha_le
+  have w25 := hw b b a b b a hb_le hb_le ha_le hb_le hb_le ha_le
+  have w26 := hw b b b a a a hb_le hb_le hb_le ha_le ha_le ha_le
+  have w27 := hw b b b a b a hb_le hb_le hb_le ha_le hb_le ha_le
+  have w28 := hw b b b b a a hb_le hb_le hb_le hb_le ha_le ha_le
+  -- 28 scaled-word bounds (helper applied to each)
+  have c01 : ‖((-1 : 𝕂) / 1440) • (a * a * a * a * b * b)‖ ≤ 1 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-1) _ s w01 hs_nn
+    simpa [show |((-1 : ℤ) : ℝ)| = 1 from by push_cast; norm_num,
+           show ((-1 : ℤ) : 𝕂) / 1440 = (-1 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c02 : ‖((4 : 𝕂) / 1440) • (a * a * a * b * a * b)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 4 _ s w02 hs_nn
+    simpa [show |((4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((4 : ℤ) : 𝕂) / 1440 = (4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c03 : ‖((4 : 𝕂) / 1440) • (a * a * a * b * b * b)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 4 _ s w03 hs_nn
+    simpa [show |((4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((4 : ℤ) : 𝕂) / 1440 = (4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c04 : ‖((-6 : 𝕂) / 1440) • (a * a * b * a * a * b)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-6) _ s w04 hs_nn
+    simpa [show |((-6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((-6 : ℤ) : 𝕂) / 1440 = (-6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c05 : ‖((-6 : 𝕂) / 1440) • (a * a * b * a * b * b)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-6) _ s w05 hs_nn
+    simpa [show |((-6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((-6 : ℤ) : 𝕂) / 1440 = (-6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c06 : ‖((-6 : 𝕂) / 1440) • (a * a * b * b * a * b)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-6) _ s w06 hs_nn
+    simpa [show |((-6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((-6 : ℤ) : 𝕂) / 1440 = (-6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c07 : ‖((-1 : 𝕂) / 1440) • (a * a * b * b * b * b)‖ ≤ 1 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-1) _ s w07 hs_nn
+    simpa [show |((-1 : ℤ) : ℝ)| = 1 from by push_cast; norm_num,
+           show ((-1 : ℤ) : 𝕂) / 1440 = (-1 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c08 : ‖((4 : 𝕂) / 1440) • (a * b * a * a * a * b)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 4 _ s w08 hs_nn
+    simpa [show |((4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((4 : ℤ) : 𝕂) / 1440 = (4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c09 : ‖((-6 : 𝕂) / 1440) • (a * b * a * a * b * b)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-6) _ s w09 hs_nn
+    simpa [show |((-6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((-6 : ℤ) : 𝕂) / 1440 = (-6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c10 : ‖((24 : 𝕂) / 1440) • (a * b * a * b * a * b)‖ ≤ 24 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 24 _ s w10 hs_nn
+    simpa [show |((24 : ℤ) : ℝ)| = 24 from by push_cast; norm_num,
+           show ((24 : ℤ) : 𝕂) / 1440 = (24 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c11 : ‖((4 : 𝕂) / 1440) • (a * b * a * b * b * b)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 4 _ s w11 hs_nn
+    simpa [show |((4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((4 : ℤ) : 𝕂) / 1440 = (4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c12 : ‖((-6 : 𝕂) / 1440) • (a * b * b * a * a * b)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-6) _ s w12 hs_nn
+    simpa [show |((-6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((-6 : ℤ) : 𝕂) / 1440 = (-6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c13 : ‖((-6 : 𝕂) / 1440) • (a * b * b * a * b * b)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-6) _ s w13 hs_nn
+    simpa [show |((-6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((-6 : ℤ) : 𝕂) / 1440 = (-6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c14 : ‖((4 : 𝕂) / 1440) • (a * b * b * b * a * b)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 4 _ s w14 hs_nn
+    simpa [show |((4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((4 : ℤ) : 𝕂) / 1440 = (4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c15 : ‖((-4 : 𝕂) / 1440) • (b * a * a * a * b * a)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-4) _ s w15 hs_nn
+    simpa [show |((-4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((-4 : ℤ) : 𝕂) / 1440 = (-4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c16 : ‖((6 : 𝕂) / 1440) • (b * a * a * b * a * a)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 6 _ s w16 hs_nn
+    simpa [show |((6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((6 : ℤ) : 𝕂) / 1440 = (6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c17 : ‖((6 : 𝕂) / 1440) • (b * a * a * b * b * a)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 6 _ s w17 hs_nn
+    simpa [show |((6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((6 : ℤ) : 𝕂) / 1440 = (6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c18 : ‖((-4 : 𝕂) / 1440) • (b * a * b * a * a * a)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-4) _ s w18 hs_nn
+    simpa [show |((-4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((-4 : ℤ) : 𝕂) / 1440 = (-4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c19 : ‖((-24 : 𝕂) / 1440) • (b * a * b * a * b * a)‖ ≤ 24 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-24) _ s w19 hs_nn
+    simpa [show |((-24 : ℤ) : ℝ)| = 24 from by push_cast; norm_num,
+           show ((-24 : ℤ) : 𝕂) / 1440 = (-24 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c20 : ‖((6 : 𝕂) / 1440) • (b * a * b * b * a * a)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 6 _ s w20 hs_nn
+    simpa [show |((6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((6 : ℤ) : 𝕂) / 1440 = (6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c21 : ‖((-4 : 𝕂) / 1440) • (b * a * b * b * b * a)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-4) _ s w21 hs_nn
+    simpa [show |((-4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((-4 : ℤ) : 𝕂) / 1440 = (-4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c22 : ‖((1 : 𝕂) / 1440) • (b * b * a * a * a * a)‖ ≤ 1 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 1 _ s w22 hs_nn
+    simpa [show |((1 : ℤ) : ℝ)| = 1 from by push_cast; norm_num,
+           show ((1 : ℤ) : 𝕂) / 1440 = (1 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c23 : ‖((6 : 𝕂) / 1440) • (b * b * a * a * b * a)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 6 _ s w23 hs_nn
+    simpa [show |((6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((6 : ℤ) : 𝕂) / 1440 = (6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c24 : ‖((6 : 𝕂) / 1440) • (b * b * a * b * a * a)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 6 _ s w24 hs_nn
+    simpa [show |((6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((6 : ℤ) : 𝕂) / 1440 = (6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c25 : ‖((6 : 𝕂) / 1440) • (b * b * a * b * b * a)‖ ≤ 6 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 6 _ s w25 hs_nn
+    simpa [show |((6 : ℤ) : ℝ)| = 6 from by push_cast; norm_num,
+           show ((6 : ℤ) : 𝕂) / 1440 = (6 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c26 : ‖((-4 : 𝕂) / 1440) • (b * b * b * a * a * a)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-4) _ s w26 hs_nn
+    simpa [show |((-4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((-4 : ℤ) : 𝕂) / 1440 = (-4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c27 : ‖((-4 : 𝕂) / 1440) • (b * b * b * a * b * a)‖ ≤ 4 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) (-4) _ s w27 hs_nn
+    simpa [show |((-4 : ℤ) : ℝ)| = 4 from by push_cast; norm_num,
+           show ((-4 : ℤ) : 𝕂) / 1440 = (-4 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  have c28 : ‖((1 : 𝕂) / 1440) • (b * b * b * b * a * a)‖ ≤ 1 / 1440 * s ^ 6 := by
+    have := norm_sextic_word_le (𝕂 := 𝕂) 1 _ s w28 hs_nn
+    simpa [show |((1 : ℤ) : ℝ)| = 1 from by push_cast; norm_num,
+           show ((1 : ℤ) : 𝕂) / 1440 = (1 : 𝕂) / 1440 from by push_cast; ring]
+      using this
+  -- Triangle inequality across 28 terms.
+  unfold bch_sextic_term
+  set t1 := ((-1 : 𝕂) / 1440) • (a * a * a * a * b * b)
+  set t2 := ((4 : 𝕂) / 1440) • (a * a * a * b * a * b)
+  set t3 := ((4 : 𝕂) / 1440) • (a * a * a * b * b * b)
+  set t4 := ((-6 : 𝕂) / 1440) • (a * a * b * a * a * b)
+  set t5 := ((-6 : 𝕂) / 1440) • (a * a * b * a * b * b)
+  set t6 := ((-6 : 𝕂) / 1440) • (a * a * b * b * a * b)
+  set t7 := ((-1 : 𝕂) / 1440) • (a * a * b * b * b * b)
+  set t8 := ((4 : 𝕂) / 1440) • (a * b * a * a * a * b)
+  set t9 := ((-6 : 𝕂) / 1440) • (a * b * a * a * b * b)
+  set t10 := ((24 : 𝕂) / 1440) • (a * b * a * b * a * b)
+  set t11 := ((4 : 𝕂) / 1440) • (a * b * a * b * b * b)
+  set t12 := ((-6 : 𝕂) / 1440) • (a * b * b * a * a * b)
+  set t13 := ((-6 : 𝕂) / 1440) • (a * b * b * a * b * b)
+  set t14 := ((4 : 𝕂) / 1440) • (a * b * b * b * a * b)
+  set t15 := ((-4 : 𝕂) / 1440) • (b * a * a * a * b * a)
+  set t16 := ((6 : 𝕂) / 1440) • (b * a * a * b * a * a)
+  set t17 := ((6 : 𝕂) / 1440) • (b * a * a * b * b * a)
+  set t18 := ((-4 : 𝕂) / 1440) • (b * a * b * a * a * a)
+  set t19 := ((-24 : 𝕂) / 1440) • (b * a * b * a * b * a)
+  set t20 := ((6 : 𝕂) / 1440) • (b * a * b * b * a * a)
+  set t21 := ((-4 : 𝕂) / 1440) • (b * a * b * b * b * a)
+  set t22 := ((1 : 𝕂) / 1440) • (b * b * a * a * a * a)
+  set t23 := ((6 : 𝕂) / 1440) • (b * b * a * a * b * a)
+  set t24 := ((6 : 𝕂) / 1440) • (b * b * a * b * a * a)
+  set t25 := ((6 : 𝕂) / 1440) • (b * b * a * b * b * a)
+  set t26 := ((-4 : 𝕂) / 1440) • (b * b * b * a * a * a)
+  set t27 := ((-4 : 𝕂) / 1440) • (b * b * b * a * b * a)
+  set t28 := ((1 : 𝕂) / 1440) • (b * b * b * b * a * a)
+  have h12 := norm_add_le t1 t2
+  have h123 := norm_add_le (t1+t2) t3
+  have h1234 := norm_add_le (t1+t2+t3) t4
+  have h12345 := norm_add_le (t1+t2+t3+t4) t5
+  have h123456 := norm_add_le (t1+t2+t3+t4+t5) t6
+  have h1234567 := norm_add_le (t1+t2+t3+t4+t5+t6) t7
+  have h12345678 := norm_add_le (t1+t2+t3+t4+t5+t6+t7) t8
+  have h12_9 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8) t9
+  have h12_10 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8+t9) t10
+  have h12_11 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10) t11
+  have h12_12 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11) t12
+  have h12_13 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12) t13
+  have h12_14 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13) t14
+  have h12_15 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14) t15
+  have h12_16 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15) t16
+  have h12_17 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16) t17
+  have h12_18 := norm_add_le (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17) t18
+  have h12_19 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18) t19
+  have h12_20 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18+t19) t20
+  have h12_21 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18+t19+t20) t21
+  have h12_22 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18+t19+t20+t21) t22
+  have h12_23 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18+t19+t20+t21+t22) t23
+  have h12_24 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18+t19+t20+t21+t22+t23) t24
+  have h12_25 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18+t19+t20+t21+t22+t23+t24) t25
+  have h12_26 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18+t19+t20+t21+t22+t23+t24+t25)
+    t26
+  have h12_27 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18+t19+t20+t21+t22+t23+t24+t25+
+      t26) t27
+  have h12_28 := norm_add_le
+    (t1+t2+t3+t4+t5+t6+t7+t8+t9+t10+t11+t12+t13+t14+t15+t16+t17+t18+t19+t20+t21+t22+t23+t24+t25+
+      t26+t27) t28
+  -- Sum of |numerators|/1440 = 164/1440 ≈ 0.1139 ≤ 1.
+  linarith
+
 /-! ### Quartic algebraic identity for BCH -/
 
 set_option maxHeartbeats 64000000 in
