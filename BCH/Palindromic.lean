@@ -930,6 +930,94 @@ lemma norm_logOnePlus_strangBlock_sub_through_deg_6_le (a b : 𝔸)
         · exact h_denom_le
 
 include 𝕂 in
+/-- **T2-F7 preliminary bound** (loose, O(s²)):
+
+  ‖polynomial_in_y − (a+b)‖ ≤ (exp(s) − 1 − s) + Σₖ₌₂⁶ (exp(s) − 1)ᵏ / k
+
+where polynomial_in_y = y − y²/2 + y³/3 − y⁴/4 + y⁵/5 − y⁶/6.
+
+Coarse O(s²) bound on the deg-2+ residual after subtracting (a+b). Sets
+up the framework for finer T2-F7 work where we identify the deg-3 and
+deg-5 contributions as sym_E₃ and sym_E₅ to refine to O(s⁷). -/
+lemma norm_polynomial_in_y_sub_add_le (a b : 𝔸) :
+    ‖((exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) -
+        (2 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 2 +
+        (3 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 3 -
+        (4 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 4 +
+        (5 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 5 -
+        (6 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 6) -
+        (a + b)‖ ≤
+      (Real.exp (‖a‖ + ‖b‖) - 1 - (‖a‖ + ‖b‖)) +
+        (Real.exp (‖a‖ + ‖b‖) - 1) ^ 2 / 2 +
+        (Real.exp (‖a‖ + ‖b‖) - 1) ^ 3 / 3 +
+        (Real.exp (‖a‖ + ‖b‖) - 1) ^ 4 / 4 +
+        (Real.exp (‖a‖ + ‖b‖) - 1) ^ 5 / 5 +
+        (Real.exp (‖a‖ + ‖b‖) - 1) ^ 6 / 6 := by
+  set y := exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1 with hy_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hy_le : ‖y‖ ≤ Real.exp s - 1 :=
+    norm_three_factor_exp_product_sub_one_le (𝕂 := 𝕂) a b
+  have hy_aux : ‖y - (a + b)‖ ≤ Real.exp s - 1 - s :=
+    norm_three_factor_exp_product_sub_one_sub_add_le (𝕂 := 𝕂) a b
+  have hs_nn : 0 ≤ s := by rw [hs_def]; positivity
+  have hexp_m1_nn : 0 ≤ Real.exp s - 1 := by
+    have := Real.add_one_le_exp s; linarith
+  -- Per-term bounds: ‖(k:𝕂)⁻¹ • y^k‖ ≤ ‖y‖^k / k for k ≥ 1.
+  have h_norm_inv : ∀ (k : ℕ), 0 < k → ‖((k : 𝕂)⁻¹ : 𝕂)‖ = (k : ℝ)⁻¹ := by
+    intro k hk
+    rw [norm_inv]
+    congr 1
+    rw [show ((k : 𝕂) : 𝕂) = ((k : ℕ) : 𝕂) from rfl, RCLike.norm_natCast]
+  have h_smul_pow_le : ∀ (k : ℕ), 0 < k →
+      ‖((k : 𝕂)⁻¹ • y ^ k)‖ ≤ ‖y‖ ^ k / k := by
+    intro k hk
+    have hpow := norm_pow_le' y hk
+    calc ‖((k : 𝕂)⁻¹ • y ^ k)‖ ≤ ‖((k : 𝕂)⁻¹ : 𝕂)‖ * ‖y ^ k‖ := norm_smul_le _ _
+      _ = (k : ℝ)⁻¹ * ‖y ^ k‖ := by rw [h_norm_inv k hk]
+      _ ≤ (k : ℝ)⁻¹ * ‖y‖ ^ k := by
+          apply mul_le_mul_of_nonneg_left hpow
+          positivity
+      _ = ‖y‖ ^ k / k := by field_simp
+  have h2 : ‖((2 : 𝕂)⁻¹ • y ^ 2)‖ ≤ ‖y‖ ^ 2 / 2 := h_smul_pow_le 2 (by norm_num)
+  have h3 : ‖((3 : 𝕂)⁻¹ • y ^ 3)‖ ≤ ‖y‖ ^ 3 / 3 := h_smul_pow_le 3 (by norm_num)
+  have h4 : ‖((4 : 𝕂)⁻¹ • y ^ 4)‖ ≤ ‖y‖ ^ 4 / 4 := h_smul_pow_le 4 (by norm_num)
+  have h5 : ‖((5 : 𝕂)⁻¹ • y ^ 5)‖ ≤ ‖y‖ ^ 5 / 5 := h_smul_pow_le 5 (by norm_num)
+  have h6 : ‖((6 : 𝕂)⁻¹ • y ^ 6)‖ ≤ ‖y‖ ^ 6 / 6 := h_smul_pow_le 6 (by norm_num)
+  -- Triangle inequality: bound the sum.
+  have hpoly_eq : (y - (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 +
+      (5 : 𝕂)⁻¹ • y ^ 5 - (6 : 𝕂)⁻¹ • y ^ 6) - (a + b) =
+      (y - (a + b)) + (-((2 : 𝕂)⁻¹ • y ^ 2)) + ((3 : 𝕂)⁻¹ • y ^ 3) +
+        (-((4 : 𝕂)⁻¹ • y ^ 4)) + ((5 : 𝕂)⁻¹ • y ^ 5) + (-((6 : 𝕂)⁻¹ • y ^ 6)) := by abel
+  rw [hpoly_eq]
+  -- Bound each piece via the per-term bounds + monotonicity (‖y‖^k ≤ (exp(s)-1)^k).
+  have hy2 : ‖((2 : 𝕂)⁻¹ • y ^ 2)‖ ≤ (Real.exp s - 1) ^ 2 / 2 := by
+    apply h2.trans; gcongr
+  have hy3 : ‖((3 : 𝕂)⁻¹ • y ^ 3)‖ ≤ (Real.exp s - 1) ^ 3 / 3 := by
+    apply h3.trans; gcongr
+  have hy4 : ‖((4 : 𝕂)⁻¹ • y ^ 4)‖ ≤ (Real.exp s - 1) ^ 4 / 4 := by
+    apply h4.trans; gcongr
+  have hy5 : ‖((5 : 𝕂)⁻¹ • y ^ 5)‖ ≤ (Real.exp s - 1) ^ 5 / 5 := by
+    apply h5.trans; gcongr
+  have hy6 : ‖((6 : 𝕂)⁻¹ • y ^ 6)‖ ≤ (Real.exp s - 1) ^ 6 / 6 := by
+    apply h6.trans; gcongr
+  -- Triangle inequality on the 6-term sum: chain norm_add_le manually.
+  set A := y - (a + b)
+  set B := -((2 : 𝕂)⁻¹ • y ^ 2)
+  set C := (3 : 𝕂)⁻¹ • y ^ 3
+  set D := -((4 : 𝕂)⁻¹ • y ^ 4)
+  set E := (5 : 𝕂)⁻¹ • y ^ 5
+  set F := -((6 : 𝕂)⁻¹ • y ^ 6)
+  have hAB := norm_add_le A B
+  have hABC := norm_add_le (A + B) C
+  have hABCD := norm_add_le (A + B + C) D
+  have hABCDE := norm_add_le (A + B + C + D) E
+  have hABCDEF := norm_add_le (A + B + C + D + E) F
+  have hB_eq : ‖B‖ = ‖((2 : 𝕂)⁻¹ • y ^ 2)‖ := norm_neg _
+  have hD_eq : ‖D‖ = ‖((4 : 𝕂)⁻¹ • y ^ 4)‖ := norm_neg _
+  have hF_eq : ‖F‖ = ‖((6 : 𝕂)⁻¹ • y ^ 6)‖ := norm_neg _
+  linarith
+
+include 𝕂 in
 /-- **Bridge: 3-factor BCH composition equals `logOnePlus` of the product − 1**.
 
 For `‖a‖ + ‖b‖ < 1/4` (so the inner BCH `bch(½a, b)` converges):
