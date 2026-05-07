@@ -3148,6 +3148,90 @@ private theorem sextic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
     mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
   match_scalars <;> ring
 
+/-! ### Seventh-order BCH: degree-6 cancellation identity (septic_pure_identity)
+
+Analog of `sextic_pure_identity` at one degree higher. After substituting
+ea → exp(a), eb → exp(b), the deg-6 part of
+  `½W_H1 + ⅓y³ - ¼y⁴ + ⅕y⁵ - ⅙y⁶ - C₃ - C₄ - C₅ - C₆`
+vanishes. This identity expresses that vanishing as an explicit pure {a, b}
+ring identity, with the deg-6 leading term `bch_sextic_term`.
+
+Notation:
+- `z = a + b`
+- `T_k = y_dk` for k = 2..5 (deg-k of `y = exp(a)·exp(b) - 1`)
+- `W6 = 2·y_d6 - (y²)_d6`
+- `y3_6 = (y³)_d6`, `y4_6 = (y⁴)_d6`, `y5_6 = (y⁵)_d6`, `y6_6 = z⁶`
+
+CAS-verified (`derive_septic_lean.py`): `½W6 + ⅓y3_6 - ¼y4_6 + ⅕y5_6 - ⅙z⁶ - bch_sextic_term = 0`. -/
+
+set_option maxHeartbeats 16000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem septic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) :
+    let z : 𝔸 := a + b
+    let T₂ : 𝔸 := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+    let T₃ : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    let T₅ : 𝔸 := (120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5
+    -- W6 = 2·y_d6 - (y²)_d6, where (y²)_d6 = z·T_5 + T_2·T_4 + T_3·T_3 + T_4·T_2 + T_5·z
+    let W6 : 𝔸 := (360 : 𝕂)⁻¹ • a ^ 6 + (60 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (24 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (18 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (60 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (360 : 𝕂)⁻¹ • b ^ 6 -
+        (z * T₅ + T₂ * T₄ + T₃ * T₃ + T₄ * T₂ + T₅ * z)
+    -- y3_6 = (y³)_d6: 10 terms from k+l+m=6, each ≥ 1
+    -- partitions: (1,1,4) perms, (1,2,3) perms, (2,2,2)
+    let y3_6 : 𝔸 := z ^ 2 * T₄ + z * T₄ * z + T₄ * z ^ 2 +
+        z * T₂ * T₃ + z * T₃ * T₂ + T₂ * z * T₃ +
+        T₂ * T₃ * z + T₃ * z * T₂ + T₃ * T₂ * z +
+        T₂ ^ 3
+    -- y4_6 = (y⁴)_d6: 10 terms from k+l+m+n=6, each ≥ 1
+    -- partitions: (1,1,1,3) 4 perms, (1,1,2,2) 6 perms
+    let y4_6 : 𝔸 := z ^ 3 * T₃ + z ^ 2 * T₃ * z + z * T₃ * z ^ 2 + T₃ * z ^ 3 +
+        z ^ 2 * T₂ ^ 2 + z * T₂ * z * T₂ + z * T₂ ^ 2 * z +
+        T₂ * z ^ 2 * T₂ + T₂ * z * T₂ * z + T₂ ^ 2 * z ^ 2
+    -- y5_6 = (y⁵)_d6: 5 terms from (1,1,1,1,2) perms
+    let y5_6 : 𝔸 := z ^ 4 * T₂ + z ^ 3 * T₂ * z + z ^ 2 * T₂ * z ^ 2 +
+        z * T₂ * z ^ 3 + T₂ * z ^ 4
+    -- (y⁶)_d6 = z⁶ (only (1,1,1,1,1,1))
+    (2 : 𝕂)⁻¹ • W6 + (3 : 𝕂)⁻¹ • y3_6 - (4 : 𝕂)⁻¹ • y4_6 +
+      (5 : 𝕂)⁻¹ • y5_6 - (6 : 𝕂)⁻¹ • z ^ 6 - bch_sextic_term 𝕂 a b = 0 := by
+  intro z T₂ T₃ T₄ T₅ W6 y3_6 y4_6 y5_6
+  show _ = (0 : 𝔸)
+  simp only [show z = a + b from rfl,
+    show T₂ = a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2 from rfl,
+    show T₃ = (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3 from rfl,
+    show T₄ = (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4 from rfl,
+    show T₅ = (120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5 from rfl,
+    show W6 = (360 : 𝕂)⁻¹ • a ^ 6 + (60 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (24 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (18 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (60 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (360 : 𝕂)⁻¹ • b ^ 6 -
+        (z * T₅ + T₂ * T₄ + T₃ * T₃ + T₄ * T₂ + T₅ * z) from rfl,
+    show y3_6 = z ^ 2 * T₄ + z * T₄ * z + T₄ * z ^ 2 +
+        z * T₂ * T₃ + z * T₃ * T₂ + T₂ * z * T₃ +
+        T₂ * T₃ * z + T₃ * z * T₂ + T₃ * T₂ * z +
+        T₂ ^ 3 from rfl,
+    show y4_6 = z ^ 3 * T₃ + z ^ 2 * T₃ * z + z * T₃ * z ^ 2 + T₃ * z ^ 3 +
+        z ^ 2 * T₂ ^ 2 + z * T₂ * z * T₂ + z * T₂ ^ 2 * z +
+        T₂ * z ^ 2 * T₂ + T₂ * z * T₂ * z + T₂ ^ 2 * z ^ 2 from rfl,
+    show y5_6 = z ^ 4 * T₂ + z ^ 3 * T₂ * z + z ^ 2 * T₂ * z ^ 2 +
+        z * T₂ * z ^ 3 + T₂ * z ^ 4 from rfl]
+  unfold bch_sextic_term
+  simp only [pow_succ, pow_zero, one_mul, smul_sub, smul_add, smul_neg, smul_smul,
+    mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
+
 set_option maxHeartbeats 128000000 in
 include 𝕂 in
 /-- **Fifth-order BCH**: `bch(a,b) = (a+b) + ½[a,b] + bch_cubic_term(a,b) + bch_quartic_term(a,b) + O(s⁵)`.
