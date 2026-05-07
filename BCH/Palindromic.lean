@@ -1176,6 +1176,47 @@ lemma norm_polynomial_in_y_sub_add_sub_E3_sub_E5_le (a b : 𝔸)
   exact (norm_sub_le _ _).trans (by linarith)
 
 include 𝕂 in
+/-- **T2-F7g-tight** (consequence of parent axiom): the O(s⁷) version of
+T2-F7g, derivable from `norm_symmetric_bch_quintic_sub_poly_le` (which
+currently uses the parent Tier-2 axiom) + T2-F6 framework via triangle
+inequality.
+
+  ‖polynomial_in_y(y) − (a+b) − sym_E₃ − sym_E₅‖ ≤
+    10⁹ · s⁷ + (exp(s)−1)⁷ / (2 − exp(s))
+
+This shows T2-F7g is EQUIVALENT to the parent (modulo a small tail term).
+The "→" direction (parent ⟹ T2-F7g): proved here.
+The "←" direction (T2-F7g ⟹ parent): would discharge the parent — requires
+T2-F7e (algebraic deg-5 identification) to actually prove T2-F7g
+independently of the parent. -/
+lemma norm_polynomial_in_y_sub_add_sub_E3_sub_E5_via_parent (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖((exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) -
+        (2 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 2 +
+        (3 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 3 -
+        (4 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 4 +
+        (5 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 5 -
+        (6 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 6) -
+        (a + b) - symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_quintic_poly 𝕂 a b‖ ≤
+      1000000000 * (‖a‖ + ‖b‖) ^ 7 +
+        (Real.exp (‖a‖ + ‖b‖) - 1) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  -- Use the parent (currently axiom-derived): ‖sym_bch_cubic - sym_E₃ - sym_E₅‖ ≤ 10⁹·s⁷.
+  have h_parent := norm_symmetric_bch_quintic_sub_poly_le (𝕂 := 𝕂) a b hab
+  have h_framework := symmetric_bch_cubic_sub_polynomial_in_y_le (𝕂 := 𝕂) a b hab
+  set y := exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1 with hy_def
+  set poly_in_y := y - (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 +
+      (5 : 𝕂)⁻¹ • y ^ 5 - (6 : 𝕂)⁻¹ • y ^ 6 with hpoly_def
+  -- poly_in_y - (a+b) - sym_E₃ - sym_E₅ =
+  --   (sym_bch_cubic - sym_E₃ - sym_E₅) - (sym_bch_cubic - poly_in_y + (a+b))
+  have h_diff : poly_in_y - (a + b) - symmetric_bch_cubic_poly 𝕂 a b -
+        symmetric_bch_quintic_poly 𝕂 a b =
+      (symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b -
+        symmetric_bch_quintic_poly 𝕂 a b) -
+        (symmetric_bch_cubic 𝕂 a b - poly_in_y + (a + b)) := by abel
+  rw [h_diff]
+  exact (norm_sub_le _ _).trans (by linarith)
+
+include 𝕂 in
 /-- Merging of A-exponentials: `exp(α•A) · exp(β•A) = exp((α+β)•A)`
     since `[A, A] = 0`. -/
 lemma exp_smul_mul_exp_smul_self (A : 𝔸) (α β : 𝕂) :
