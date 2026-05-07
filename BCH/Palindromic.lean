@@ -1143,6 +1143,39 @@ lemma norm_polynomial_in_y_sub_add_sub_E3_le (a b : 𝔸)
   linarith
 
 include 𝕂 in
+/-- **T2-F7g-coarse**: a coarser O(s⁵) version of the final T2-F7 target.
+Provable using existing infrastructure (NO algebraic deg-5 identification
+required). Useful as a stepping stone:
+
+  ‖polynomial_in_y(y) − (a+b) − sym_E₃ − sym_E₅‖ ≤
+    (10⁷ + 1) · s⁵ + (exp(s)−1)⁷ / (2 − exp(s))
+
+where polynomial_in_y(y) = y − y²/2 + y³/3 − y⁴/4 + y⁵/5 − y⁶/6,
+y = exp(½a)·exp(b)·exp(½a) − 1, s = ‖a‖+‖b‖.
+
+Combines T2-F7-prelim2 (gives 10⁷·s⁵ + tail) with `norm_symmetric_bch_quintic_poly_le`
+(gives ‖sym_E₅‖ ≤ s⁵) via triangle inequality. Subtracting sym_E₅ from the
+prelim2 bound costs at most ‖sym_E₅‖ ≤ s⁵ on the RHS.
+
+Final O(s⁷) target requires the deg-5 algebraic identification (T2-F7e),
+which is the only remaining mathematical bottleneck for parent-axiom discharge. -/
+lemma norm_polynomial_in_y_sub_add_sub_E3_sub_E5_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖((exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) -
+        (2 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 2 +
+        (3 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 3 -
+        (4 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 4 +
+        (5 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 5 -
+        (6 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 6) -
+        (a + b) - symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_quintic_poly 𝕂 a b‖ ≤
+      (10000000 + 1) * (‖a‖ + ‖b‖) ^ 5 +
+        (Real.exp (‖a‖ + ‖b‖) - 1) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  have h_prelim2 := norm_polynomial_in_y_sub_add_sub_E3_le (𝕂 := 𝕂) a b hab
+  have h_E5 := norm_symmetric_bch_quintic_poly_le (𝕂 := 𝕂) a b
+  -- Apply triangle inequality: the goal is ‖X - sym_E₅‖ where X = poly_in_y - (a+b) - sym_E₃.
+  exact (norm_sub_le _ _).trans (by linarith)
+
+include 𝕂 in
 /-- Merging of A-exponentials: `exp(α•A) · exp(β•A) = exp((α+β)•A)`
     since `[A, A] = 0`. -/
 lemma exp_smul_mul_exp_smul_self (A : 𝔸) (α β : 𝕂) :
