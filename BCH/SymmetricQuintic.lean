@@ -1574,8 +1574,8 @@ theorem norm_symmetric_bch_quintic_correction_poly_le (a b : 𝔸) :
   -- linarith with all 25 c-bounds + 24 triangle inequalities.
   linarith
 
-/-- **Alt-form decomposition of `symmetric_bch_quintic_poly`** (Tier-2 stepping
-stone, currently scoped axiom):
+/-- **Alt-form decomposition of `symmetric_bch_quintic_poly`** (T2-B, Tier-2
+stepping stone — now fully proved):
 
     sym_E₅(a, b) = bch_quintic_term(½a, b)
                  + bch_quintic_term(½a + b, ½a)
@@ -1584,25 +1584,31 @@ stone, currently scoped axiom):
 CAS-derived and CAS-verified (`Lean-Trotter/scripts/discover_quintic_alt_form.py`
 confirms the decomposition is exact: residual = 0 across all 30 5-letter words).
 
-This is a pure polynomial identity in `{a, b}`. Lean tactical discharge requires
-a comprehensive enumeration of ~71 scalar-clearing patterns
-`(N : 𝕂) * (c₁⁻¹ * (c₂⁻¹ * ... * (cₖ⁻¹ * f))) = M`
-where `cᵢ ∈ {2, 720, 5760, 11520}`, `f ∈ {1, 4, 6, 24}`, `k ∈ {0, ..., 5}`,
-combined with `noncomm_ring` on the resulting integer-scalar identity.
-Session 17 attempted ×11520 + 71-pattern enumeration but `simp` does not
-match all generated patterns to what appears in the actual goal (likely
-associativity normalization differences). Approach needs goal-state
-inspection + targeted pattern fix in a future session.
+This is a pure polynomial identity in `{a, b}`. Discharged session 18 via:
+1. `unfold` all definitions on both sides.
+2. `simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+    smul_mul_assoc, mul_add, add_mul]` to fully distribute scalars and
+    products through the polynomial expressions.
+3. `match_scalars` reduces to a sequence of scalar identities (one per
+    {a,b}-word in the basis).
+4. `ring` (commutative `𝕂`-arithmetic) closes each scalar goal.
 
-Mirrors `symmetric_bch_cubic_poly_alt_form` (Basic.lean:5708) extended one
-degree higher (estimated 150-200 lines once pattern set is correct). -/
-private axiom symmetric_bch_quintic_poly_alt_form_axiom
+Earlier sessions attempted `×LCM + comprehensive pattern enumeration +
+noncomm_ring`, which required ~150-200 lines and failed due to simp's
+associativity normalization not matching all enumerated patterns.
+`match_scalars <;> ring` sidesteps that issue by working at the module level. -/
+private theorem symmetric_bch_quintic_poly_alt_form
     {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
     (a b : 𝔸) :
     symmetric_bch_quintic_poly 𝕂 a b =
       bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
       bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) +
-      symmetric_bch_quintic_correction_poly 𝕂 a b
+      symmetric_bch_quintic_correction_poly 𝕂 a b := by
+  unfold symmetric_bch_quintic_poly bch_quintic_term symmetric_bch_quintic_correction_poly
+    bch_quintic_group_1 bch_quintic_group_4 bch_quintic_group_6 bch_quintic_group_24
+  simp only [smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul]
+  match_scalars <;> ring
 
 end SymmetricQuinticAltForm
 
