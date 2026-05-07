@@ -226,6 +226,11 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
   fully proved theorem (3-line proof via `match_scalars <;> ring` after
   unfolding + smul distribution). The 25-term `correction_poly` is defined
   in `SymmetricQuintic.lean`.
+- ✅ T2-F7e infrastructure step 1 (session 18): `BCH.bch_sextic_term` defined
+  + `bch_sextic_term_smul` (homogeneity) + `norm_bch_sextic_term_le`
+  (`‖Z₆(a,b)‖ ≤ s⁶`). 28-term explicit polynomial in {a,b}, LCM 1440,
+  numerators in {±1, ±4, ±6, ±24}. Used as the deg-6 leading term in the
+  sextic identity for the parent discharge.
 - ✅ T2-F1: `norm_three_factor_exp_product_sub_one_le` —
   `‖P-1‖ ≤ exp(s)-1` (Palindromic.lean).
 - ✅ T2-F2: `norm_three_factor_exp_product_sub_one_lt_one` —

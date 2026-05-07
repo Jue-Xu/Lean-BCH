@@ -3065,7 +3065,6 @@ theorem quintic_pure_identity_cleared (a b : 𝔸) :
 -- Same identity as quintic_pure_identity_cleared, but stated with 𝕂-scalars
 -- so it can be used in the NormedAlgebra 𝕂 𝔸 context.
 -- Proved by ×24 scalar clearing (with triple-nesting lemmas) + noncomm_ring.
-set_option maxHeartbeats 800000000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 private theorem quintic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
     [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) :
@@ -3081,46 +3080,10 @@ private theorem quintic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
       (a + b) * (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) * (a + b) +
       (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) * (a + b) ^ 2) -
     (4 : 𝕂)⁻¹ • (a + b) ^ 4 - bch_quartic_term 𝕂 a b = 0 := by
-  have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
-  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
-  have hinj : Function.Injective ((24 : 𝕂) • · : 𝔸 → 𝔸) := by
-    intro x₀ y₀ hxy; have := congrArg ((24 : 𝕂)⁻¹ • ·) hxy
-    simp only [smul_smul, inv_mul_cancel₀ h24ne, one_smul] at this; exact this
-  apply hinj; simp only [smul_zero]
   unfold bch_quartic_term
-  -- Expand powers first so scalar smuls inside (e.g. P₂^2) get distributed
-  simp only [pow_succ, pow_zero, one_mul]
-  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
-    mul_add, add_mul, mul_sub, sub_mul]
-  simp only [mul_assoc,
-    mul_inv_cancel₀ h2ne, inv_mul_cancel₀ h2ne,
-    mul_inv_cancel₀ h24ne,
-    show (24 : 𝕂) * (6 : 𝕂)⁻¹ = 4 from by norm_num,
-    show (24 : 𝕂) * (4 : 𝕂)⁻¹ = 6 from by norm_num,
-    show (24 : 𝕂) * (3 : 𝕂)⁻¹ = 8 from by norm_num,
-    show (24 : 𝕂) * (2 : 𝕂)⁻¹ = 12 from by norm_num,
-    -- Intermediate products that may arise after partial clearing
-    show (12 : 𝕂) * (2 : 𝕂)⁻¹ = 6 from by norm_num,
-    show (6 : 𝕂) * (2 : 𝕂)⁻¹ = 3 from by norm_num,
-    show (4 : 𝕂) * (2 : 𝕂)⁻¹ = 2 from by norm_num,
-    show (8 : 𝕂) * (2 : 𝕂)⁻¹ = 4 from by norm_num,
-    -- Two-level nesting
-    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by norm_num,
-    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 2 from by norm_num,
-    show (24 : 𝕂) * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 2 from by norm_num,
-    show (24 : 𝕂) * ((3 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 4 from by norm_num,
-    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹) = 4 from by norm_num,
-    -- Intermediate two-level
-    show (12 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 3 from by norm_num,
-    -- Three-level nesting (from ⅓·P₂² and ½·P₂² where P₂ has ½ coefficients)
-    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 3 from by norm_num,
-    show (24 : 𝕂) * ((3 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 2 from by norm_num,
-    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * ((3 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 2 from by norm_num,
-    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹)) = 2 from by norm_num,
-    one_smul, mul_one]
-  simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
-  -- After clearing, the goal is a pure ring/nsmul identity provable by noncomm_ring.
-  noncomm_ring
+  simp only [pow_succ, pow_zero, one_mul, smul_sub, smul_add, smul_neg, smul_smul,
+    mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
 
 /-! ### Sixth-order BCH: degree-5 cancellation identity (sextic_pure_identity) -/
 
@@ -3144,7 +3107,6 @@ private theorem quintic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
 --
 -- Identity: ½·W5 + ⅓·y3_5 - ¼·y4_5 + ⅕·z⁵ - bch_quintic_term = 0.
 -- Verified by Lean-Trotter/scripts/discover_quintic_identity.py rev 6d029b6.
-set_option maxHeartbeats 4000000000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 private theorem sextic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
     [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) :
@@ -3164,67 +3126,27 @@ private theorem sextic_pure_identity (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
     let y4_5 : 𝔸 := z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3
     (2 : 𝕂)⁻¹ • W5 + (3 : 𝕂)⁻¹ • y3_5 - (4 : 𝕂)⁻¹ • y4_5 + (5 : 𝕂)⁻¹ • z ^ 5
       - bch_quintic_term 𝕂 a b = 0 := by
-  -- Multiply by 720 (LCM covers all denominators).
-  have h720ne : (720 : 𝕂) ≠ 0 := by exact_mod_cast (show (720 : ℕ) ≠ 0 by norm_num)
-  have hinj : Function.Injective ((720 : 𝕂) • · : 𝔸 → 𝔸) := by
-    intro x₀ y₀ hxy; have := congrArg ((720 : 𝕂)⁻¹ • ·) hxy
-    simp only [smul_smul, inv_mul_cancel₀ h720ne, one_smul] at this; exact this
-  apply hinj; simp only [smul_zero]
+  intro z T₂ T₃ T₄ W5 y3_5 y4_5
+  show _ = (0 : 𝔸)
+  simp only [show z = a + b from rfl,
+    show T₂ = a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2 from rfl,
+    show T₃ = (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3 from rfl,
+    show T₄ = (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4 from rfl,
+    show W5 = (60 : 𝕂)⁻¹ • a ^ 5 + (60 : 𝕂)⁻¹ • b ^ 5 +
+        (12 : 𝕂)⁻¹ • (a * b ^ 4) + (12 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (6 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) -
+        (z * T₄ + T₄ * z) - (T₂ * T₃ + T₃ * T₂) from rfl,
+    show y3_5 = z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+        z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z from rfl,
+    show y4_5 = z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3 from rfl]
   unfold bch_quintic_term bch_quintic_group_1 bch_quintic_group_4
     bch_quintic_group_6 bch_quintic_group_24
-  -- Expand powers first so scalar smuls inside (e.g. T₂^2) get distributed.
-  simp only [pow_succ, pow_zero, one_mul]
-  -- Distribute scalars through all algebraic operations.
-  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
-    mul_add, add_mul, mul_sub, sub_mul]
-  -- Clear scalar products.
-  simp only [mul_assoc,
-    mul_inv_cancel₀ (show (2 : 𝕂) ≠ 0 from two_ne_zero),
-    inv_mul_cancel₀ (show (2 : 𝕂) ≠ 0 from two_ne_zero),
-    mul_inv_cancel₀ h720ne,
-    show (720 : 𝕂) * (2 : 𝕂)⁻¹ = 360 from by norm_num,
-    show (720 : 𝕂) * (3 : 𝕂)⁻¹ = 240 from by norm_num,
-    show (720 : 𝕂) * (4 : 𝕂)⁻¹ = 180 from by norm_num,
-    show (720 : 𝕂) * (5 : 𝕂)⁻¹ = 144 from by norm_num,
-    show (720 : 𝕂) * (6 : 𝕂)⁻¹ = 120 from by norm_num,
-    show (720 : 𝕂) * (12 : 𝕂)⁻¹ = 60 from by norm_num,
-    show (720 : 𝕂) * (24 : 𝕂)⁻¹ = 30 from by norm_num,
-    show (720 : 𝕂) * (60 : 𝕂)⁻¹ = 12 from by norm_num,
-    show (720 : 𝕂) * (720 : 𝕂)⁻¹ = 1 from mul_inv_cancel₀ h720ne,
-    -- Two-level nesting
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 180 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹) = 120 from by norm_num,
-    show (720 : 𝕂) * ((3 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 120 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (4 : 𝕂)⁻¹) = 90 from by norm_num,
-    show (720 : 𝕂) * ((4 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 90 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 60 from by norm_num,
-    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 60 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (24 : 𝕂)⁻¹) = 15 from by norm_num,
-    show (720 : 𝕂) * ((24 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 15 from by norm_num,
-    show (720 : 𝕂) * ((3 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 40 from by norm_num,
-    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹) = 40 from by norm_num,
-    show (720 : 𝕂) * ((3 : 𝕂)⁻¹ * (4 : 𝕂)⁻¹) = 60 from by norm_num,
-    show (720 : 𝕂) * ((4 : 𝕂)⁻¹ * (3 : 𝕂)⁻¹) = 60 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹) = 30 from by norm_num,
-    show (720 : 𝕂) * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 30 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (60 : 𝕂)⁻¹) = 6 from by norm_num,
-    show (720 : 𝕂) * ((60 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by norm_num,
-    -- Three-level nesting
-    show (720 : 𝕂) * ((3 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 60 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 90 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹)) = 30 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 30 from by norm_num,
-    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 30 from by norm_num,
-    -- 720·(720⁻¹·N) form (from bch_quintic_term inner factors)
-    show (720 : 𝕂) * ((720 : 𝕂)⁻¹ * (4 : 𝕂)) = 4 from by
-      rw [← mul_assoc, mul_inv_cancel₀ h720ne, one_mul],
-    show (720 : 𝕂) * ((720 : 𝕂)⁻¹ * (6 : 𝕂)) = 6 from by
-      rw [← mul_assoc, mul_inv_cancel₀ h720ne, one_mul],
-    show (720 : 𝕂) * ((720 : 𝕂)⁻¹ * (24 : 𝕂)) = 24 from by
-      rw [← mul_assoc, mul_inv_cancel₀ h720ne, one_mul],
-    one_smul, mul_one]
-  simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
-  noncomm_ring
+  simp only [pow_succ, pow_zero, one_mul, smul_sub, smul_add, smul_neg, smul_smul,
+    mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
 
 set_option maxHeartbeats 128000000 in
 include 𝕂 in
