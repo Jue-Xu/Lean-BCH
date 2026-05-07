@@ -1316,15 +1316,17 @@ CAS-derived and CAS-verified (`Lean-Trotter/scripts/discover_quintic_alt_form.py
 confirms the decomposition is exact: residual = 0 across all 30 5-letter words).
 
 This is a pure polynomial identity in `{a, b}`. Lean tactical discharge requires
-a comprehensive enumeration of ~60+ scalar-clearing patterns
+a comprehensive enumeration of ~71 scalar-clearing patterns
 `(N : 𝕂) * (c₁⁻¹ * (c₂⁻¹ * ... * (cₖ⁻¹ * f))) = M`
 where `cᵢ ∈ {2, 720, 5760, 11520}`, `f ∈ {1, 4, 6, 24}`, `k ∈ {0, ..., 5}`,
 combined with `noncomm_ring` on the resulting integer-scalar identity.
-Following the pattern of `symmetric_bch_quartic_identity` (Basic.lean:5760)
-but extended one degree higher. Estimated: ~150-200 lines.
+Session 17 attempted ×11520 + 71-pattern enumeration but `simp` does not
+match all generated patterns to what appears in the actual goal (likely
+associativity normalization differences). Approach needs goal-state
+inspection + targeted pattern fix in a future session.
 
-Introduced as a scoped axiom for the Tier-2 discharge pipeline; the parent
-`symmetric_bch_quintic_sub_poly_axiom` discharge would consume this. -/
+Mirrors `symmetric_bch_cubic_poly_alt_form` (Basic.lean:5708) extended one
+degree higher (estimated 150-200 lines once pattern set is correct). -/
 private axiom symmetric_bch_quintic_poly_alt_form_axiom
     {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
     (a b : 𝔸) :
