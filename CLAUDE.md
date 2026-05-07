@@ -209,6 +209,11 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
 - ✅ T2-F7-prelim2: `norm_polynomial_in_y_sub_add_sub_E3_le` — tighter
   O(s⁵) bound after subtracting (a+b) and sym_E₃. Uses cubic template +
   T2-F6 framework via triangle inequality.
+- ✅ T2-F7g-coarse: `norm_polynomial_in_y_sub_add_sub_E3_sub_E5_le` —
+  coarse O(s⁵) version of the final T2-F7g target after subtracting also
+  sym_E₅. Strongest provable bound from existing infrastructure (modulo
+  alt-form axiom T2-B); final O(s⁷) requires algebraic deg-5 cancellation
+  (T2-F7e).
 
 **Pending sub-tasks**:
 
