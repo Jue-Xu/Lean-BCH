@@ -3044,7 +3044,6 @@ theorem norm_bch_quartic_remainder_le (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < Re
 
 -- The degree-4 pure identity: verified by noncomm_ring at Ring level (no 𝕂 needed).
 -- After ×24 clearing: the Y₄-½(Y₁Y₃+Y₂²+Y₃Y₁)+⅓(Y₁²Y₂+...)-¼Y₁⁴+C₄ = 0.
-set_option maxHeartbeats 800000000 in
 omit [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 theorem quintic_pure_identity_cleared (a b : 𝔸) :
     -- 24×[Y₄-½(Y₁Y₃+Y₂²+Y₃Y₁)+⅓(Y₁²Y₂+Y₁Y₂Y₁+Y₂Y₁²)-¼Y₁⁴+C₄] = 0
