@@ -1,23 +1,34 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 17, 2026-05-07)
+## Status (session 18, 2026-05-07)
 
-Branch: `trotter-5factor-palindromic`. Repository is **0 sorries**.
+Branch: `main`. Repository is **0 sorries**.
 
-**Axiom count: 3 scoped `private axiom`s + Lean's 3 standard.**
+**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (down from 3).
 - `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2 PARENT, in
-  `SymmetricQuintic.lean`. Will be discharged via T2-D + T2-E using the alt-form
-  axiom + sextic identity.
-- `BCH.symmetric_bch_quintic_poly_alt_form_axiom` — Tier-2 stepping stone (NEW
-  session 17), CAS-derived pure polynomial identity (T2-A + T2-B). Provable as a
-  `noncomm_ring` identity but requires comprehensive scalar enumeration (~150-200
-  lines).
+  `SymmetricQuintic.lean`. Discharge requires T2-F7e (cubic template
+  extension to deg-5 cancellation), ~1000-1500 lines remaining.
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
 
-**Session 17 final state (29 commits, 15 working lemmas)**:
+**Session 18 highlight (T2-B discharge in 3 lines via `match_scalars <;> ring`)**:
+The CAS-derived alt-form polynomial identity
+`sym_E₅(a, b) = bch_quintic_term(½a, b) + bch_quintic_term(½a+b, ½a) + correction`
+was previously a scoped axiom estimated at 150-200 lines via comprehensive
+scalar pattern enumeration. Discharged via the much cleaner sequence:
+1. `unfold` all definitions on both sides.
+2. `simp only [smul_add, smul_smul, mul_smul_comm, smul_mul_assoc, mul_add, add_mul]`.
+3. `match_scalars <;> ring` — splits into one scalar identity per {a,b}-word
+   and closes each via 𝕂-arithmetic.
+
+This methodology generalizes to ANY pure polynomial identity in {a, b} with
+rational scalar coefficients in 𝕂, replacing ×LCM scalar-clearing
++ noncomm_ring with a much shorter and more robust proof.
+
+**Session 17–18 final state (16 working lemmas + alt-form theorem)**:
 - T2-A done: CAS pipeline `Lean-Trotter/scripts/discover_quintic_alt_form.py`.
-- T2-B done: alt-form (axiom) + correction polynomial defined.
+- T2-B done (session 18, FULLY PROVED — no longer axiom):
+  `symmetric_bch_quintic_poly_alt_form` via `match_scalars <;> ring`.
 - T2-F1 through T2-F6 done: full framework from `‖P-1‖` bounds through
   the bridge `bch∘bch = logOnePlus(P-1)` to combined framework bound.
 - T2-F7-aux, T2-F7-prelim, T2-F7-prelim2, T2-F7g-coarse done: progressively
@@ -110,6 +121,27 @@ The decomposition works only on SUBSTITUTED polynomials in {a, b}.
 - `noncomm_ring` doesn't handle `smul`; combine with `simp [smul_sub, smul_add,
   smul_mul_assoc, mul_smul_comm]` to distribute first.
 
+### `match_scalars <;> ring` for pure {a,b}-poly identities (NEW session 18)
+For polynomial identities in {a, b} with rational scalar coefficients in 𝕂
+(e.g., `symmetric_bch_quintic_poly_alt_form`), the cleanest proof is:
+```lean
+unfold <all definitions>
+simp only [smul_add, smul_smul, mul_smul_comm, smul_mul_assoc, mul_add, add_mul]
+match_scalars <;> ring
+```
+The `simp` distributes scalars/products through the polynomial expressions,
+and `match_scalars` splits the identity into one scalar equation per {a,b}-word.
+Each scalar equation is then closed by `ring` in 𝕂 (commutative arithmetic).
+
+This sidesteps the ×LCM + comprehensive pattern enumeration approach
+(estimated 150-200 lines) used in `symmetric_bch_cubic_poly_alt_form` and
+`symmetric_bch_quartic_identity`. Try this first for any new poly identity.
+
+The simp normalization is necessary because `match_scalars` matches on
+syntactic structure — without distributing `(c•a)·(c•a)·b·...`, it sees
+the smul-prefixed factors as opaque "letters" rather than recognizing them
+as `c²·(a·a·b·...)`.
+
 ### `convert` pattern for QPI/SPI applications
 `convert quintic_pure_identity 𝕂 a b using 2 <;> simp [hz_def] <;> ring` —
 matches a goal that differs from QPI by simple substitution + scalar reduction.
@@ -186,14 +218,14 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
 
 ### Decomposition into sub-tasks T2-A through T2-G
 
-**Session 17 progress** (substantial — 12 commits, 6 working lemmas):
+**Session 17–18 progress** (13+ commits, 16 working lemmas):
 - ✅ T2-A: CAS `Lean-Trotter/scripts/discover_quintic_alt_form.py` discovers
   the explicit alt-form decomposition (residual = 0). Outputs the combined
   correction polynomial (25 terms, denom 11520).
-- ✅ T2-B: `BCH.symmetric_bch_quintic_correction_poly` defined. Alt-form
-  lemma added as scoped axiom `symmetric_bch_quintic_poly_alt_form_axiom`.
-  Tactical discharge needs ~150-200 lines of comprehensive scalar
-  enumeration following `symmetric_bch_quartic_identity` pattern.
+- ✅ T2-B (session 18): `BCH.symmetric_bch_quintic_poly_alt_form` is now a
+  fully proved theorem (3-line proof via `match_scalars <;> ring` after
+  unfolding + smul distribution). The 25-term `correction_poly` is defined
+  in `SymmetricQuintic.lean`.
 - ✅ T2-F1: `norm_three_factor_exp_product_sub_one_le` —
   `‖P-1‖ ≤ exp(s)-1` (Palindromic.lean).
 - ✅ T2-F2: `norm_three_factor_exp_product_sub_one_lt_one` —
@@ -274,17 +306,30 @@ fundamentally cannot reach O(s⁷) without the full Tier-1 sextic
 infrastructure (additional ~1500 lines for `bch_sextic_term` +
 `norm_bch_septic_remainder_le`).
 
-**Recommendation for next session**: Discharge T2-F7 — the algebraic
-identity that the deg-1, 3, 5 parts of `(y - y²/2 + y³/3 - y⁴/4 + y⁵/5
-- y⁶/6)` equal `(a+b) + sym_E₃ + sym_E₅`, with deg-2, 4, 6 vanishing
-palindromically. This is the LAST piece of the T2-F discharge.
+**Recommendation for next session**: Discharge T2-F7e via Option B
+(extending the cubic template `norm_symmetric_bch_cubic_sub_poly_le` at
+`Basic.lean:5834`). The recommended structure:
 
-Form: prove `‖[y - y²/2 + ... - y⁶/6] - (a+b) - sym_E₃ - sym_E₅‖ ≤
-K · s⁷`. Combined with T2-F6 via triangle inequality, gives the parent
-bound `‖sym_bch_cubic - sym_E₃ - sym_E₅‖ ≤ (K + K') · s⁷`.
+1. **Inner BCH expansion to deg-5**: define
+   `inner_R₆ := z - (a'+b) - ½[a',b] - C₃(a',b) - C₄(a',b) - bqt(a',b)`
+   (the deg-6+ remainder after subtracting the explicit deg-5 contribution).
+   Bound: `‖inner_R₆‖ ≤ K · s⁶` via `norm_bch_sextic_remainder_le`.
+2. **Outer BCH expansion to deg-5**: similarly define `outer_R₆`.
+3. **Sextic identity**: an algebraic identity (analog of
+   `symmetric_bch_quartic_identity` at `Basic.lean:5760`) showing that
+   the sum of all deg-6 contributions to `sym_bch_cubic - sym_E₃ - sym_E₅`
+   equals zero. **Try `match_scalars <;> ring` first** — same technique as
+   the alt-form discharge.
+4. **Extended hdecomp**: rewrite `sym_bch_cubic - sym_E₃ - sym_E₅` as a
+   sum of ~7 pieces, each O(s⁷) using the sextic identity for deg-6
+   cancellation.
+5. **Per-piece bounds**: each new term needs O(s⁷) constant.
 
-Estimated: 500-1000 lines (algebraic expansions of y, y², ..., y⁶ to
-deg ≤ 6 + bounds on the deg-7+ residuals).
+**Estimated size**: ~1000-1500 lines total, but possibly less if
+`match_scalars` works for the sextic identity.
+
+The alt-form discharge (T2-B) is now in place to support step 4
+(absorbing the deg-5 contribution from `bqt(a', b) + bqt(a'+b, a')`).
 
 ## Lean-Trotter interface (axioms 1–3)
 
