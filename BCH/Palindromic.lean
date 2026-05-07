@@ -772,6 +772,48 @@ lemma norm_three_factor_exp_product_sub_one_lt_one (a b : 𝔸)
   linarith
 
 include 𝕂 in
+/-- **Tail bound**: for `‖a‖+‖b‖ < log 2`, the deg-7+ tail of
+`logOnePlus(strangBlock - 1)` is bounded by `(exp(s)-1)⁷ / (2 - exp(s))`
+where `s = ‖a‖+‖b‖`.
+
+Direct application of `norm_logOnePlus_sub_sub_sub_sub_sub_sub_le` to
+`y = exp(½a)·exp(b)·exp(½a) - 1` (which has `‖y‖ ≤ exp(s) - 1 < 1`).
+The denominator `1 - ‖y‖ ≥ 2 - exp(s) > 0`. -/
+lemma norm_logOnePlus_strangBlock_sub_through_deg_6_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) :
+    let y := exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1
+    ‖logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 - (3 : 𝕂)⁻¹ • y ^ 3 +
+        (4 : 𝕂)⁻¹ • y ^ 4 - (5 : 𝕂)⁻¹ • y ^ 5 + (6 : 𝕂)⁻¹ • y ^ 6‖ ≤
+      (Real.exp (‖a‖ + ‖b‖) - 1) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  intro y
+  have hy_lt : ‖y‖ < 1 := norm_three_factor_exp_product_sub_one_lt_one (𝕂 := 𝕂) a b hab
+  have hy_le : ‖y‖ ≤ Real.exp (‖a‖ + ‖b‖) - 1 :=
+    norm_three_factor_exp_product_sub_one_le (𝕂 := 𝕂) a b
+  have hexp_lt : Real.exp (‖a‖ + ‖b‖) < 2 := by
+    calc Real.exp (‖a‖ + ‖b‖) < Real.exp (Real.log 2) := Real.exp_strictMono hab
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom_y : 0 < 1 - ‖y‖ := by linarith
+  have hdenom_s : 0 < 2 - Real.exp (‖a‖ + ‖b‖) := by linarith
+  have htail := norm_logOnePlus_sub_sub_sub_sub_sub_sub_le (𝕂 := 𝕂) y hy_lt
+  -- htail : ‖...‖ ≤ ‖y‖^7 / (1 - ‖y‖)
+  -- We want: ≤ (exp(s)-1)^7 / (2 - exp(s))
+  have hy7_le : ‖y‖ ^ 7 ≤ (Real.exp (‖a‖ + ‖b‖) - 1) ^ 7 :=
+    pow_le_pow_left₀ (norm_nonneg _) hy_le 7
+  have h_denom_le : 2 - Real.exp (‖a‖ + ‖b‖) ≤ 1 - ‖y‖ := by
+    have : ‖y‖ ≤ Real.exp (‖a‖ + ‖b‖) - 1 := hy_le
+    linarith
+  -- Apply: (a/b ≤ a'/b' when a ≤ a', 0 < b ≤ b')
+  calc ‖logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 - (3 : 𝕂)⁻¹ • y ^ 3 +
+        (4 : 𝕂)⁻¹ • y ^ 4 - (5 : 𝕂)⁻¹ • y ^ 5 + (6 : 𝕂)⁻¹ • y ^ 6‖
+      ≤ ‖y‖ ^ 7 / (1 - ‖y‖) := htail
+    _ ≤ (Real.exp (‖a‖ + ‖b‖) - 1) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+        apply div_le_div₀
+        · exact pow_nonneg (by linarith [norm_nonneg y, hy_le]) 7
+        · exact hy7_le
+        · exact hdenom_s
+        · exact h_denom_le
+
+include 𝕂 in
 /-- **Bridge: 3-factor BCH composition equals `logOnePlus` of the product − 1**.
 
 For `‖a‖ + ‖b‖ < 1/4` (so the inner BCH `bch(½a, b)` converges):
