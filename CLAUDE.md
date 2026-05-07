@@ -4,10 +4,14 @@
 
 Branch: `main`. Repository is **0 sorries**.
 
-**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (down from 3).
+**Axiom count: 3 scoped `private axiom`s + Lean's 3 standard.**
 - `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2 PARENT, in
   `SymmetricQuintic.lean`. Discharge requires T2-F7e (cubic template
-  extension to deg-5 cancellation), ~1000-1500 lines remaining.
+  extension to deg-5 cancellation), ~1000 lines remaining.
+- `BCH.norm_bch_septic_remainder_small_s_axiom` — NEW session 18, stepping
+  stone for the parent discharge. The 2-factor BCH septic remainder bound
+  at small s (s < 1/10). Discharge plan mirrors the session-16 discharge
+  of `norm_bch_sextic_remainder_small_s_le` (~580 lines).
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
 
@@ -256,6 +260,17 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
   where W6, y3_6, y4_6, y5_6 capture deg-6 contributions from y, y², y³, y⁴, y⁵.
   Pure {a, b} polynomial identity, proved via `match_scalars <;> ring`
   (only 16M heartbeats, vs 4 BILLION for the original sextic_pure_identity).
+- ✅ T2-F7e infrastructure step 3 (session 18):
+  `BCH.norm_bch_septic_remainder_large_s_le` — the easy half of the order-7
+  BCH remainder bound, for s ≥ 1/10. Proved via triangle inequality from
+  `norm_bch_sextic_remainder_le` + `norm_bch_sextic_term_le`. Bound:
+  `‖LHS_septic‖ ≤ 1000010·s⁷/(2-exp(s))`.
+- ✅ T2-F7e infrastructure step 4 (session 18):
+  `BCH.norm_bch_septic_remainder_le` — public theorem combining the
+  large-s case (proved) with a small-s axiom
+  (`norm_bch_septic_remainder_small_s_axiom`). The small-s axiom is a
+  stepping stone (analog of the discharged session-16 sextic small-s
+  axiom; can be discharged similarly using septic_pure_identity).
 - ✅ T2-F1: `norm_three_factor_exp_product_sub_one_le` —
   `‖P-1‖ ≤ exp(s)-1` (Palindromic.lean).
 - ✅ T2-F2: `norm_three_factor_exp_product_sub_one_lt_one` —
