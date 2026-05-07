@@ -1560,13 +1560,13 @@ theorem norm_bch_quartic_term_le (a b : 𝔸) :
 
   Factored separately to keep the proofs of `bch_quintic_term_smul` and
   `norm_bch_quintic_term_le` tractable. -/
-private noncomputable def bch_quintic_group_1 {𝔸 : Type*} [NormedRing 𝔸]
+noncomputable def bch_quintic_group_1 {𝔸 : Type*} [NormedRing 𝔸]
     (a b : 𝔸) : 𝔸 :=
   a * a * a * a * b + a * b * b * b * b + b * a * a * a * a + b * b * b * b * a
 
 /-- **Sign-4 group** of `bch_quintic_term`: the ten 5-letter words with
   absolute coefficient 4. Each appears with coefficient +4/720 = 1/180. -/
-private noncomputable def bch_quintic_group_4 {𝔸 : Type*} [NormedRing 𝔸]
+noncomputable def bch_quintic_group_4 {𝔸 : Type*} [NormedRing 𝔸]
     (a b : 𝔸) : 𝔸 :=
   a * a * a * b * a + a * a * a * b * b + a * a * b * b * b +
   a * b * a * a * a + a * b * b * b * a + b * a * a * a * b +
@@ -1575,7 +1575,7 @@ private noncomputable def bch_quintic_group_4 {𝔸 : Type*} [NormedRing 𝔸]
 
 /-- **Sign-6 group** of `bch_quintic_term`: the fourteen 5-letter words
   with absolute coefficient 6. Each appears with coefficient -6/720 = -1/120. -/
-private noncomputable def bch_quintic_group_6 {𝔸 : Type*} [NormedRing 𝔸]
+noncomputable def bch_quintic_group_6 {𝔸 : Type*} [NormedRing 𝔸]
     (a b : 𝔸) : 𝔸 :=
   a * a * b * a * a + a * a * b * a * b + a * a * b * b * a +
   a * b * a * a * b + a * b * a * b * b + a * b * b * a * a +
@@ -1586,7 +1586,7 @@ private noncomputable def bch_quintic_group_6 {𝔸 : Type*} [NormedRing 𝔸]
 /-- **Sign-24 group** of `bch_quintic_term`: the two 5-letter palindromic
   words with absolute coefficient 24. Each appears with coefficient
   +24/720 = 1/30. -/
-private noncomputable def bch_quintic_group_24 {𝔸 : Type*} [NormedRing 𝔸]
+noncomputable def bch_quintic_group_24 {𝔸 : Type*} [NormedRing 𝔸]
     (a b : 𝔸) : 𝔸 :=
   a * b * a * b * a + b * a * b * a * b
 

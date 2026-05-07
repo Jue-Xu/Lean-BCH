@@ -1,13 +1,26 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 16, 2026-05-06)
+## Status (session 17, 2026-05-07)
 
 Branch: `trotter-5factor-palindromic`. Repository is **0 sorries**.
 
-**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard.**
-- `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2, in `SymmetricQuintic.lean`.
+**Axiom count: 3 scoped `private axiom`s + Lean's 3 standard.**
+- `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2 PARENT, in
+  `SymmetricQuintic.lean`. Will be discharged via T2-D + T2-E using the alt-form
+  axiom + sextic identity.
+- `BCH.symmetric_bch_quintic_poly_alt_form_axiom` — Tier-2 stepping stone (NEW
+  session 17), CAS-derived pure polynomial identity (T2-A + T2-B). Provable as a
+  `noncomm_ring` identity but requires comprehensive scalar enumeration (~150-200
+  lines).
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
+
+**Session 17 progress (Tier-2 decomposition + initial attack)**:
+- T2-A done: CAS pipeline `Lean-Trotter/scripts/discover_quintic_alt_form.py`
+  discovers and prints the explicit decomposition. Verified residual = 0.
+- T2-B done: alt-form lemma added (as scoped axiom for now); 25-term correction
+  polynomial defined as `BCH.symmetric_bch_quintic_correction_poly`.
+- T2-C/D/E pending: sextic identity, extended hdecomp, per-term bounds.
 
 **Session 16 discharge of `norm_bch_sextic_remainder_small_s_le`** (Tier-1 small-s,
 ~580 lines): mirrors quintic proof's H1 + quartic_identity pattern. Bounds 4 sub-pieces

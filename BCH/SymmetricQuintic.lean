@@ -1249,6 +1249,93 @@ theorem norm_symmetric_bch_quintic_poly_apply_smul_add_smul_add_le
 end SymmetricQuinticPoly
 
 /-!
+## Alt-form decomposition of `symmetric_bch_quintic_poly`
+
+CAS-derived (`Lean-Trotter/scripts/discover_quintic_alt_form.py`):
+
+    sym_E₅(a, b) = bch_quintic_term(½a, b)
+                 + bch_quintic_term(½a + b, ½a)
+                 + symmetric_bch_quintic_correction_poly(a, b)
+
+The correction polynomial is a 25-term degree-5 polynomial in `{a, b}` with
+common denominator `11520` and integer numerators in
+`{±15, ±20, ±30, ±40, ±50, ±60, ±90, ±110, ±160}`. It captures the three
+remaining contributions:
+- `½·[bch_quartic_term(½a, b), ½a]` (degree-5 from ½[z, ½a])
+- `(C₃(z, ½a) − C₃(½a+b, ½a))_d5` (linear-in-z_d3 + bilinear-in-z_d2)
+- `(C₄(z, ½a) − C₄(½a+b, ½a))_d5` (linear-in-z_d3 + linear-in-z_d2)
+
+This is the analog of `symmetric_bch_cubic_poly_alt_form` (Basic.lean) at
+one degree higher, and is the key infrastructure for discharging the B1.c
+Tier-2 axiom `symmetric_bch_quintic_sub_poly_axiom`.
+-/
+
+section SymmetricQuinticAltForm
+
+variable {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+
+/-- **Quintic correction polynomial** — the 25-term degree-5 polynomial in
+`{a, b}` that captures `sym_E₅(a, b) − bch_quintic_term(½a, b) −
+bch_quintic_term(½a+b, ½a)`. CAS-derived; common denominator `11520`. -/
+noncomputable def symmetric_bch_quintic_correction_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (15 / 11520 : 𝕂) • (a * a * a * a * b)
+  + (-60 / 11520 : 𝕂) • (a * a * a * b * a)
+  + (-50 / 11520 : 𝕂) • (a * a * a * b * b)
+  + (90 / 11520 : 𝕂) • (a * a * b * a * a)
+  + (110 / 11520 : 𝕂) • (a * a * b * a * b)
+  + (40 / 11520 : 𝕂) • (a * a * b * b * a)
+  + (20 / 11520 : 𝕂) • (a * a * b * b * b)
+  + (-60 / 11520 : 𝕂) • (a * b * a * a * a)
+  + (-30 / 11520 : 𝕂) • (a * b * a * a * b)
+  + (-160 / 11520 : 𝕂) • (a * b * a * b * a)
+  + (-20 / 11520 : 𝕂) • (a * b * a * b * b)
+  + (40 / 11520 : 𝕂) • (a * b * b * a * a)
+  + (-60 / 11520 : 𝕂) • (a * b * b * a * b)
+  + (40 / 11520 : 𝕂) • (a * b * b * b * a)
+  + (15 / 11520 : 𝕂) • (b * a * a * a * a)
+  + (20 / 11520 : 𝕂) • (b * a * a * a * b)
+  + (-30 / 11520 : 𝕂) • (b * a * a * b * a)
+  + (-40 / 11520 : 𝕂) • (b * a * a * b * b)
+  + (110 / 11520 : 𝕂) • (b * a * b * a * a)
+  + (160 / 11520 : 𝕂) • (b * a * b * a * b)
+  + (-60 / 11520 : 𝕂) • (b * a * b * b * a)
+  + (-50 / 11520 : 𝕂) • (b * b * a * a * a)
+  + (-40 / 11520 : 𝕂) • (b * b * a * a * b)
+  + (-20 / 11520 : 𝕂) • (b * b * a * b * a)
+  + (20 / 11520 : 𝕂) • (b * b * b * a * a)
+
+/-- **Alt-form decomposition of `symmetric_bch_quintic_poly`** (Tier-2 stepping
+stone, currently scoped axiom):
+
+    sym_E₅(a, b) = bch_quintic_term(½a, b)
+                 + bch_quintic_term(½a + b, ½a)
+                 + symmetric_bch_quintic_correction_poly(a, b)
+
+CAS-derived and CAS-verified (`Lean-Trotter/scripts/discover_quintic_alt_form.py`
+confirms the decomposition is exact: residual = 0 across all 30 5-letter words).
+
+This is a pure polynomial identity in `{a, b}`. Lean tactical discharge requires
+a comprehensive enumeration of ~60+ scalar-clearing patterns
+`(N : 𝕂) * (c₁⁻¹ * (c₂⁻¹ * ... * (cₖ⁻¹ * f))) = M`
+where `cᵢ ∈ {2, 720, 5760, 11520}`, `f ∈ {1, 4, 6, 24}`, `k ∈ {0, ..., 5}`,
+combined with `noncomm_ring` on the resulting integer-scalar identity.
+Following the pattern of `symmetric_bch_quartic_identity` (Basic.lean:5760)
+but extended one degree higher. Estimated: ~150-200 lines.
+
+Introduced as a scoped axiom for the Tier-2 discharge pipeline; the parent
+`symmetric_bch_quintic_sub_poly_axiom` discharge would consume this. -/
+private axiom symmetric_bch_quintic_poly_alt_form_axiom
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    symmetric_bch_quintic_poly 𝕂 a b =
+      bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+      bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) +
+      symmetric_bch_quintic_correction_poly 𝕂 a b
+
+end SymmetricQuinticAltForm
+
+/-!
 ## Quintic Taylor bridge for the 3-factor symmetric BCH (B1.c)
 
 `norm_symmetric_bch_quintic_sub_poly_le` asserts that after subtracting both
