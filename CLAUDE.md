@@ -177,9 +177,9 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
 2, 4, 6 vanish identically (palindromic symmetry); degree-7 residual has
 126 non-zero `{a,b}`-words.
 
-### Decomposition into 5 sub-tasks (T2-A through T2-E)
+### Decomposition into sub-tasks T2-A through T2-G
 
-**Session 17 progress**:
+**Session 17 progress** (substantial — 12 commits, 6 working lemmas):
 - ✅ T2-A: CAS `Lean-Trotter/scripts/discover_quintic_alt_form.py` discovers
   the explicit alt-form decomposition (residual = 0). Outputs the combined
   correction polynomial (25 terms, denom 11520).
@@ -187,6 +187,19 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
   lemma added as scoped axiom `symmetric_bch_quintic_poly_alt_form_axiom`.
   Tactical discharge needs ~150-200 lines of comprehensive scalar
   enumeration following `symmetric_bch_quartic_identity` pattern.
+- ✅ T2-F1: `norm_three_factor_exp_product_sub_one_le` —
+  `‖P-1‖ ≤ exp(s)-1` (Palindromic.lean).
+- ✅ T2-F2: `norm_three_factor_exp_product_sub_one_lt_one` —
+  `‖P-1‖ < 1` for `s < log 2` (Palindromic.lean).
+- ✅ T2-F3: `norm_logOnePlus_sub_sub_sub_sub_sub_sub_le` — deg-7 log series
+  tail bound `‖.‖ ≤ ‖x‖⁷/(1-‖x‖)` (LogSeries.lean).
+- ✅ T2-F4: `bch_bch_half_eq_logOnePlus_strangBlock_sub_one` — bridge:
+  `bch(bch(½a, b), ½a) = logOnePlus(P-1)` (Palindromic.lean).
+- ✅ T2-F5: `norm_logOnePlus_strangBlock_sub_through_deg_6_le` — deg-7 tail
+  bound on `logOnePlus(P-1)` in terms of `s` (Palindromic.lean).
+- ✅ T2-F6: `symmetric_bch_cubic_sub_polynomial_in_y_le` — combined
+  framework bound: `‖sym_bch_cubic - polynomial-in-y‖ ≤ tail`
+  (Palindromic.lean).
 
 **Pending sub-tasks**:
 
@@ -231,11 +244,17 @@ fundamentally cannot reach O(s⁷) without the full Tier-1 sextic
 infrastructure (additional ~1500 lines for `bch_sextic_term` +
 `norm_bch_septic_remainder_le`).
 
-**Recommendation for next session**: Pursue the revised tail-bound
-approach. Mirror `norm_bch_quintic_remainder_le`'s structure (Basic.lean
-lines ~2873-3624). The series convergence + tail bound argument is
-well-established; main work is the algebraic identification of deg-3 and
-deg-5 parts in the Strang product expansion.
+**Recommendation for next session**: Discharge T2-F7 — the algebraic
+identity that the deg-1, 3, 5 parts of `(y - y²/2 + y³/3 - y⁴/4 + y⁵/5
+- y⁶/6)` equal `(a+b) + sym_E₃ + sym_E₅`, with deg-2, 4, 6 vanishing
+palindromically. This is the LAST piece of the T2-F discharge.
+
+Form: prove `‖[y - y²/2 + ... - y⁶/6] - (a+b) - sym_E₃ - sym_E₅‖ ≤
+K · s⁷`. Combined with T2-F6 via triangle inequality, gives the parent
+bound `‖sym_bch_cubic - sym_E₃ - sym_E₅‖ ≤ (K + K') · s⁷`.
+
+Estimated: 500-1000 lines (algebraic expansions of y, y², ..., y⁶ to
+deg ≤ 6 + bounds on the deg-7+ residuals).
 
 ## Lean-Trotter interface (axioms 1–3)
 
