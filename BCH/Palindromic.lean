@@ -721,6 +721,43 @@ noncomputable def strangBlock (A B : 𝔸) (c τ : 𝕂) : 𝔸 :=
   exp ((c * τ / 2) • A) * exp ((c * τ) • B) * exp ((c * τ / 2) • A)
 
 include 𝕂 in
+/-- **Norm bound for a Strang block minus 1**:
+`‖exp(½a)·exp(b)·exp(½a) - 1‖ ≤ exp(s) - 1` where `s = ‖a‖+‖b‖`.
+
+Three-factor analog of `norm_exp_sub_one_le`. Used as foundation for the
+T2-F discharge of `symmetric_bch_quintic_sub_poly_axiom` via the 3-factor
+Strang tail bound. The crucial property: when `s < log 2`, we have
+`exp(s) - 1 < 1`, so the log series for `log(strangBlock) = log(1 + (P-1))`
+converges absolutely. -/
+lemma norm_three_factor_exp_product_sub_one_le (a b : 𝔸) :
+    ‖exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1‖ ≤
+      Real.exp (‖a‖ + ‖b‖) - 1 := by
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by
+    rw [norm_inv, RCLike.norm_ofNat]
+  have ha_half_le : ‖((2 : 𝕂)⁻¹ • a)‖ ≤ ‖a‖ / 2 := by
+    calc ‖((2 : 𝕂)⁻¹ • a)‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  -- Build via norm_mul_exp_sub_one_le inductively.
+  have h1 : ‖exp ((2 : 𝕂)⁻¹ • a) - 1‖ ≤
+      Real.exp ‖((2 : 𝕂)⁻¹ • a)‖ - 1 := norm_exp_sub_one_le (𝕂 := 𝕂) _
+  have h2 : ‖exp ((2 : 𝕂)⁻¹ • a) * exp b - 1‖ ≤
+      Real.exp (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) - 1 :=
+    norm_mul_exp_sub_one_le (𝕂 := 𝕂) _ _ (norm_nonneg _) h1
+  have h3 : ‖exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1‖ ≤
+      Real.exp ((‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖) - 1 :=
+    norm_mul_exp_sub_one_le (𝕂 := 𝕂) _ _ (by positivity) h2
+  -- Now bound the exponent: 2·‖½a‖ + ‖b‖ ≤ ‖a‖ + ‖b‖
+  have hexp_bound :
+      Real.exp ((‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖) ≤
+        Real.exp (‖a‖ + ‖b‖) := by
+    apply Real.exp_le_exp.mpr
+    calc (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) + ‖((2 : 𝕂)⁻¹ • a)‖
+        = 2 * ‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖ := by ring
+      _ ≤ 2 * (‖a‖ / 2) + ‖b‖ := by linarith
+      _ = ‖a‖ + ‖b‖ := by ring
+  linarith
+
+include 𝕂 in
 /-- Merging of A-exponentials: `exp(α•A) · exp(β•A) = exp((α+β)•A)`
     since `[A, A] = 0`. -/
 lemma exp_smul_mul_exp_smul_self (A : 𝔸) (α β : 𝕂) :
