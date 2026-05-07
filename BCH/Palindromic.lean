@@ -854,6 +854,54 @@ lemma bch_bch_half_eq_logOnePlus_strangBlock_sub_one (a b : 𝔸)
     unfold bch at this; exact this]
 
 include 𝕂 in
+/-- **Combined T2-F framework bound** (T2-F6): bounds the difference between
+`symmetric_bch_cubic(a, b)` and the polynomial-in-`y` expansion truncated
+at degree 6:
+
+  ‖symmetric_bch_cubic(a, b) − (y − y²/2 + y³/3 − y⁴/4 + y⁵/5 − y⁶/6) + (a+b)‖ ≤ tail
+
+where y = exp(½a)·exp(b)·exp(½a) − 1 and tail = (exp(s)−1)⁷/(2−exp(s)).
+
+Combines T2-F4 (bch composition equals logOnePlus(P-1)) with T2-F5
+(deg-7 tail bound on logOnePlus). The remaining gap to the parent bound
+`‖sym_bch_cubic − sym_E₃ − sym_E₅‖ ≤ K·s⁷` is the algebraic identity:
+
+  trunc_to_deg_6(y − y²/2 + ... − y⁶/6) = (a+b) + sym_E₃ + sym_E₅
+  (deg 2, 4, 6 vanish palindromically — CAS-verified)
+
+This identity is T2-F7 and remains pending. -/
+lemma symmetric_bch_cubic_sub_polynomial_in_y_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖symmetric_bch_cubic 𝕂 a b -
+        ((exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1)
+         - (2 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 2
+         + (3 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 3
+         - (4 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 4
+         + (5 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 5
+         - (6 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 6)
+       + (a + b)‖ ≤
+      (Real.exp (‖a‖ + ‖b‖) - 1) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  set y := exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1 with hy_def
+  have hln2_quarter : (1 : ℝ) / 4 < Real.log 2 := by
+    have h := Real.log_two_gt_d9
+    linarith
+  have hab_log2 : ‖a‖ + ‖b‖ < Real.log 2 := lt_trans hab hln2_quarter
+  have hbridge := bch_bch_half_eq_logOnePlus_strangBlock_sub_one (𝕂 := 𝕂) a b hab
+  have htail := norm_logOnePlus_strangBlock_sub_through_deg_6_le (𝕂 := 𝕂) a b hab_log2
+  unfold symmetric_bch_cubic
+  rw [hbridge]
+  -- LHS = (logOnePlus y - (a+b)) - (y - y²/2 + ... - y⁶/6) + (a+b)
+  --     = logOnePlus y - y + y²/2 - y³/3 + y⁴/4 - y⁵/5 + y⁶/6
+  have heq : logOnePlus (𝕂 := 𝕂) y - (a + b) -
+        (y - (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 +
+         (5 : 𝕂)⁻¹ • y ^ 5 - (6 : 𝕂)⁻¹ • y ^ 6) + (a + b) =
+      logOnePlus (𝕂 := 𝕂) y - y + (2 : 𝕂)⁻¹ • y ^ 2 - (3 : 𝕂)⁻¹ • y ^ 3 +
+        (4 : 𝕂)⁻¹ • y ^ 4 - (5 : 𝕂)⁻¹ • y ^ 5 + (6 : 𝕂)⁻¹ • y ^ 6 := by
+    abel
+  rw [heq]
+  exact htail
+
+include 𝕂 in
 /-- Merging of A-exponentials: `exp(α•A) · exp(β•A) = exp((α+β)•A)`
     since `[A, A] = 0`. -/
 lemma exp_smul_mul_exp_smul_self (A : 𝔸) (α β : 𝕂) :
