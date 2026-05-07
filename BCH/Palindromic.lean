@@ -1217,6 +1217,51 @@ lemma norm_polynomial_in_y_sub_add_sub_E3_sub_E5_via_parent (a b : 𝔸)
   exact (norm_sub_le _ _).trans (by linarith)
 
 include 𝕂 in
+/-- **T2-F equivalence (reverse direction)**: any sufficiently tight bound
+on `‖polynomial_in_y - (a+b) - sym_E₃ - sym_E₅‖` of the form `K · s⁷`
+implies the parent Tier-2 bound `‖sym_bch_cubic - sym_E₃ - sym_E₅‖ ≤ (K+K')·s⁷`
+where K' bounds the deg-7+ tail.
+
+This is the converse of T2-F7g-tight. Together they show:
+
+  T2-F7g  ⟺  parent Tier-2 axiom
+
+This documents the structural equivalence: the T2-F framework (T2-F1-F6)
+has reduced the parent axiom to T2-F7g, an equivalent inequality. Since
+T2-F7g is a more "concrete" statement (directly about a polynomial in y),
+it's a more tractable target for future work via T2-F7e (algebraic deg-5
+identification).
+
+For practical use: pass any user-provided T2-F7g witness to derive the
+parent. Currently, T2-F7g is itself unproved (modulo the alt-form axiom);
+T2-F7e is the sole missing piece. -/
+lemma symmetric_bch_quintic_sub_poly_le_via_T2F7g (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) {K : ℝ}
+    (h_T2F7g : ‖((exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) -
+        (2 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 2 +
+        (3 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 3 -
+        (4 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 4 +
+        (5 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 5 -
+        (6 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 6) -
+        (a + b) - symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_quintic_poly 𝕂 a b‖ ≤ K) :
+    ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b -
+        symmetric_bch_quintic_poly 𝕂 a b‖ ≤
+      K + (Real.exp (‖a‖ + ‖b‖) - 1) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  have h_framework := symmetric_bch_cubic_sub_polynomial_in_y_le (𝕂 := 𝕂) a b hab
+  set y := exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1 with hy_def
+  set poly_in_y := y - (2 : 𝕂)⁻¹ • y ^ 2 + (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 +
+      (5 : 𝕂)⁻¹ • y ^ 5 - (6 : 𝕂)⁻¹ • y ^ 6 with hpoly_def
+  -- sym_bch_cubic - sym_E₃ - sym_E₅ =
+  --   (poly_in_y - (a+b) - sym_E₃ - sym_E₅) + (sym_bch_cubic - poly_in_y + (a+b))
+  have h_diff : symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b -
+        symmetric_bch_quintic_poly 𝕂 a b =
+      (poly_in_y - (a + b) - symmetric_bch_cubic_poly 𝕂 a b -
+        symmetric_bch_quintic_poly 𝕂 a b) +
+        (symmetric_bch_cubic 𝕂 a b - poly_in_y + (a + b)) := by abel
+  rw [h_diff]
+  exact (norm_add_le _ _).trans (by linarith)
+
+include 𝕂 in
 /-- Merging of A-exponentials: `exp(α•A) · exp(β•A) = exp((α+β)•A)`
     since `[A, A] = 0`. -/
 lemma exp_smul_mul_exp_smul_self (A : 𝔸) (α β : 𝕂) :
