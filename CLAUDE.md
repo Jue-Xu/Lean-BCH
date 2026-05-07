@@ -11,19 +11,31 @@ Branch: `main`. Repository is **0 sorries**.
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
 
-**Session 18 highlight (T2-B discharge in 3 lines via `match_scalars <;> ring`)**:
-The CAS-derived alt-form polynomial identity
-`sym_E₅(a, b) = bch_quintic_term(½a, b) + bch_quintic_term(½a+b, ½a) + correction`
-was previously a scoped axiom estimated at 150-200 lines via comprehensive
-scalar pattern enumeration. Discharged via the much cleaner sequence:
-1. `unfold` all definitions on both sides.
-2. `simp only [smul_add, smul_smul, mul_smul_comm, smul_mul_assoc, mul_add, add_mul]`.
-3. `match_scalars <;> ring` — splits into one scalar identity per {a,b}-word
-   and closes each via 𝕂-arithmetic.
+**Session 18 highlights (`match_scalars <;> ring` methodology)**:
+A simple 3-line tactic sequence replaces 150+ line scalar pattern enumerations:
+```
+unfold <all definitions>
+simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+  smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+match_scalars <;> ring
+```
 
-This methodology generalizes to ANY pure polynomial identity in {a, b} with
-rational scalar coefficients in 𝕂, replacing ×LCM scalar-clearing
-+ noncomm_ring with a much shorter and more robust proof.
+Refactored proofs (all in `BCH/Basic.lean`):
+- `symmetric_bch_quintic_poly_alt_form` (NEW; T2-B alt-form): 5 lines.
+- `symmetric_bch_cubic_poly_alt_form`: 28 → 5 lines.
+- `symmetric_bch_quartic_identity`: 56 → 5 lines.
+- `quintic_pure_identity`: 50 → 4 lines.
+- `sextic_pure_identity`: 80 lines (with maxHeartbeats 4 BILLION!) → ~20 lines
+  (with explicit let-binding unfolds via `show <name> = <expansion> from rfl`).
+
+Foundation work for T2-F7e:
+- `bch_sextic_term` defined (NEW): 28-term explicit polynomial in {a,b}, LCM
+  1440, numerators in {±1, ±4, ±6, ±24}. With c⁶ homogeneity and norm bound
+  `‖Z₆(a,b)‖ ≤ s⁶`. Used as the deg-6 leading term in the sextic identity
+  for the parent discharge.
+
+This methodology generalizes to ANY pure polynomial identity in (a, b) with
+rational scalar coefficients in 𝕂. Use this template first for new identities.
 
 **Session 17–18 final state (16 working lemmas + alt-form theorem)**:
 - T2-A done: CAS pipeline `Lean-Trotter/scripts/discover_quintic_alt_form.py`.
@@ -121,26 +133,32 @@ The decomposition works only on SUBSTITUTED polynomials in {a, b}.
 - `noncomm_ring` doesn't handle `smul`; combine with `simp [smul_sub, smul_add,
   smul_mul_assoc, mul_smul_comm]` to distribute first.
 
-### `match_scalars <;> ring` for pure {a,b}-poly identities (NEW session 18)
-For polynomial identities in {a, b} with rational scalar coefficients in 𝕂
-(e.g., `symmetric_bch_quintic_poly_alt_form`), the cleanest proof is:
+### `match_scalars <;> ring` for poly identities in 𝕂-modules (NEW session 18)
+For polynomial identities (over `NormedAlgebra 𝕂 𝔸`) with rational scalar
+coefficients in 𝕂, the cleanest proof is:
 ```lean
 unfold <all definitions>
-simp only [smul_add, smul_smul, mul_smul_comm, smul_mul_assoc, mul_add, add_mul]
+simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+  smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
 match_scalars <;> ring
 ```
-The `simp` distributes scalars/products through the polynomial expressions,
-and `match_scalars` splits the identity into one scalar equation per {a,b}-word.
-Each scalar equation is then closed by `ring` in 𝕂 (commutative arithmetic).
 
-This sidesteps the ×LCM + comprehensive pattern enumeration approach
-(estimated 150-200 lines) used in `symmetric_bch_cubic_poly_alt_form` and
-`symmetric_bch_quartic_identity`. Try this first for any new poly identity.
+Why each part:
+- `smul_*` lemmas distribute scalar multiplication through algebraic ops.
+- `mul_smul_comm`, `smul_mul_assoc` pull smul out of products.
+- `mul_*` and `*_mul` distribute multiplication.
+- `← mul_assoc` left-associates products (so `match_scalars` sees `a*b*c`
+  consistently as `(a*b)*c`, otherwise it produces non-trivial scalar goals).
+- `match_scalars` splits the equation into one scalar identity per monomial.
+- `ring` (commutative 𝕂-arithmetic) closes each scalar goal.
 
-The simp normalization is necessary because `match_scalars` matches on
-syntactic structure — without distributing `(c•a)·(c•a)·b·...`, it sees
-the smul-prefixed factors as opaque "letters" rather than recognizing them
-as `c²·(a·a·b·...)`.
+For identities with `let` bindings (e.g., `let z := a + b in ...`), unfold the
+let bindings explicitly first via `simp only [show <name> = <expansion> from rfl]`,
+since `match_scalars` doesn't auto-unfold them.
+
+Refactored: cubic alt-form, quartic identity, quintic_pure_identity,
+sextic_pure_identity (sessions 18). Original proofs used ×LCM + comprehensive
+pattern enumeration (50-200 lines each); new proofs are 4-20 lines.
 
 ### `convert` pattern for QPI/SPI applications
 `convert quintic_pure_identity 𝕂 a b using 2 <;> simp [hz_def] <;> ring` —
