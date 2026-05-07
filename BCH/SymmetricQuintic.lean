@@ -1305,6 +1305,275 @@ noncomputable def symmetric_bch_quintic_correction_poly (𝕂 : Type*) [RCLike �
   + (-20 / 11520 : 𝕂) • (b * b * a * b * a)
   + (20 / 11520 : 𝕂) • (b * b * b * a * a)
 
+private lemma norm_correction_word_le_helper (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (k : ℤ) (w : 𝔸) (s : ℝ) (hw : ‖w‖ ≤ s ^ 5) (hs_nn : 0 ≤ s) :
+    ‖((k : 𝕂) / 11520) • w‖ ≤ |(k : ℝ)| / 11520 * s ^ 5 := by
+  have h11520_norm : ‖(11520 : 𝕂)‖ = 11520 := by
+    rw [show (11520 : 𝕂) = ((11520 : ℕ) : 𝕂) from by norm_cast, RCLike.norm_natCast]
+    norm_num
+  have hc_nn : (0 : ℝ) ≤ |(k : ℝ)| / 11520 := by positivity
+  have hk_norm : ‖((k : ℤ) : 𝕂)‖ = |(k : ℝ)| := by
+    rw [show ((k : ℤ) : 𝕂) = ((k : ℝ) : 𝕂) from by push_cast; rfl, RCLike.norm_ofReal]
+  calc ‖((k : 𝕂) / 11520) • w‖
+      ≤ ‖((k : 𝕂) / 11520)‖ * ‖w‖ := norm_smul_le _ _
+    _ = |(k : ℝ)| / 11520 * ‖w‖ := by
+        rw [norm_div, h11520_norm, hk_norm]
+    _ ≤ |(k : ℝ)| / 11520 * s ^ 5 := mul_le_mul_of_nonneg_left hw hc_nn
+
+/-- **Norm bound for `symmetric_bch_quintic_correction_poly`** (T2-G):
+`‖correction(a, b)‖ ≤ (‖a‖+‖b‖)⁵`.
+
+CAS: sum of |numerators| over the 25 terms = 1360. So sum of bounds is
+1360/11520 · s⁵ ≈ 0.118 · s⁵ ≤ s⁵.
+
+The proof uses the auxiliary `norm_correction_word_le_helper` and standard
+triangle inequality, integer-cast bridge for each of the 25 terms. -/
+theorem norm_symmetric_bch_quintic_correction_poly_le (a b : 𝔸) :
+    ‖symmetric_bch_quintic_correction_poly 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 5 := by
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have hs5_nn : (0 : ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
+  have ha_le : ‖a‖ ≤ s := by linarith [norm_nonneg b]
+  have hb_le : ‖b‖ ≤ s := by linarith [norm_nonneg a]
+  -- Helper: 5-letter word norm.
+  have hw : ∀ (x₁ x₂ x₃ x₄ x₅ : 𝔸), ‖x₁‖ ≤ s → ‖x₂‖ ≤ s → ‖x₃‖ ≤ s →
+      ‖x₄‖ ≤ s → ‖x₅‖ ≤ s → ‖x₁ * x₂ * x₃ * x₄ * x₅‖ ≤ s ^ 5 :=
+    fun x₁ x₂ x₃ x₄ x₅ h₁ h₂ h₃ h₄ h₅ => by
+      have := norm_five_word_le (𝔸 := 𝔸) a b x₁ x₂ x₃ x₄ x₅
+        (by rw [hs_def] at h₁; exact h₁) (by rw [hs_def] at h₂; exact h₂)
+        (by rw [hs_def] at h₃; exact h₃) (by rw [hs_def] at h₄; exact h₄)
+        (by rw [hs_def] at h₅; exact h₅)
+      rw [hs_def]; exact this
+  -- 25 word norm bounds (matches the 25 terms of correction_poly).
+  have w01 := hw a a a a b ha_le ha_le ha_le ha_le hb_le
+  have w02 := hw a a a b a ha_le ha_le ha_le hb_le ha_le
+  have w03 := hw a a a b b ha_le ha_le ha_le hb_le hb_le
+  have w04 := hw a a b a a ha_le ha_le hb_le ha_le ha_le
+  have w05 := hw a a b a b ha_le ha_le hb_le ha_le hb_le
+  have w06 := hw a a b b a ha_le ha_le hb_le hb_le ha_le
+  have w07 := hw a a b b b ha_le ha_le hb_le hb_le hb_le
+  have w08 := hw a b a a a ha_le hb_le ha_le ha_le ha_le
+  have w09 := hw a b a a b ha_le hb_le ha_le ha_le hb_le
+  have w10 := hw a b a b a ha_le hb_le ha_le hb_le ha_le
+  have w11 := hw a b a b b ha_le hb_le ha_le hb_le hb_le
+  have w12 := hw a b b a a ha_le hb_le hb_le ha_le ha_le
+  have w13 := hw a b b a b ha_le hb_le hb_le ha_le hb_le
+  have w14 := hw a b b b a ha_le hb_le hb_le hb_le ha_le
+  have w15 := hw b a a a a hb_le ha_le ha_le ha_le ha_le
+  have w16 := hw b a a a b hb_le ha_le ha_le ha_le hb_le
+  have w17 := hw b a a b a hb_le ha_le ha_le hb_le ha_le
+  have w18 := hw b a a b b hb_le ha_le ha_le hb_le hb_le
+  have w19 := hw b a b a a hb_le ha_le hb_le ha_le ha_le
+  have w20 := hw b a b a b hb_le ha_le hb_le ha_le hb_le
+  have w21 := hw b a b b a hb_le ha_le hb_le hb_le ha_le
+  have w22 := hw b b a a a hb_le hb_le ha_le ha_le ha_le
+  have w23 := hw b b a a b hb_le hb_le ha_le ha_le hb_le
+  have w24 := hw b b a b a hb_le hb_le ha_le hb_le ha_le
+  have w25 := hw b b b a a hb_le hb_le hb_le ha_le ha_le
+  -- 25 per-term scaled-word bounds.
+  have c01 : ‖((15 : 𝕂) / 11520) • (a * a * a * a * b)‖ ≤ 15 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 15 _ s w01 hs_nn
+    simpa [show |((15 : ℤ) : ℝ)| = 15 from by push_cast; norm_num,
+           show ((15 : ℤ) : 𝕂) / 11520 = (15 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c02 : ‖((-60 : 𝕂) / 11520) • (a * a * a * b * a)‖ ≤ 60 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-60) _ s w02 hs_nn
+    simpa [show |((-60 : ℤ) : ℝ)| = 60 from by push_cast; norm_num,
+           show ((-60 : ℤ) : 𝕂) / 11520 = (-60 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c03 : ‖((-50 : 𝕂) / 11520) • (a * a * a * b * b)‖ ≤ 50 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-50) _ s w03 hs_nn
+    simpa [show |((-50 : ℤ) : ℝ)| = 50 from by push_cast; norm_num,
+           show ((-50 : ℤ) : 𝕂) / 11520 = (-50 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c04 : ‖((90 : 𝕂) / 11520) • (a * a * b * a * a)‖ ≤ 90 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 90 _ s w04 hs_nn
+    simpa [show |((90 : ℤ) : ℝ)| = 90 from by push_cast; norm_num,
+           show ((90 : ℤ) : 𝕂) / 11520 = (90 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c05 : ‖((110 : 𝕂) / 11520) • (a * a * b * a * b)‖ ≤ 110 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 110 _ s w05 hs_nn
+    simpa [show |((110 : ℤ) : ℝ)| = 110 from by push_cast; norm_num,
+           show ((110 : ℤ) : 𝕂) / 11520 = (110 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c06 : ‖((40 : 𝕂) / 11520) • (a * a * b * b * a)‖ ≤ 40 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 40 _ s w06 hs_nn
+    simpa [show |((40 : ℤ) : ℝ)| = 40 from by push_cast; norm_num,
+           show ((40 : ℤ) : 𝕂) / 11520 = (40 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c07 : ‖((20 : 𝕂) / 11520) • (a * a * b * b * b)‖ ≤ 20 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 20 _ s w07 hs_nn
+    simpa [show |((20 : ℤ) : ℝ)| = 20 from by push_cast; norm_num,
+           show ((20 : ℤ) : 𝕂) / 11520 = (20 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c08 : ‖((-60 : 𝕂) / 11520) • (a * b * a * a * a)‖ ≤ 60 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-60) _ s w08 hs_nn
+    simpa [show |((-60 : ℤ) : ℝ)| = 60 from by push_cast; norm_num,
+           show ((-60 : ℤ) : 𝕂) / 11520 = (-60 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c09 : ‖((-30 : 𝕂) / 11520) • (a * b * a * a * b)‖ ≤ 30 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-30) _ s w09 hs_nn
+    simpa [show |((-30 : ℤ) : ℝ)| = 30 from by push_cast; norm_num,
+           show ((-30 : ℤ) : 𝕂) / 11520 = (-30 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c10 : ‖((-160 : 𝕂) / 11520) • (a * b * a * b * a)‖ ≤ 160 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-160) _ s w10 hs_nn
+    simpa [show |((-160 : ℤ) : ℝ)| = 160 from by push_cast; norm_num,
+           show ((-160 : ℤ) : 𝕂) / 11520 = (-160 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c11 : ‖((-20 : 𝕂) / 11520) • (a * b * a * b * b)‖ ≤ 20 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-20) _ s w11 hs_nn
+    simpa [show |((-20 : ℤ) : ℝ)| = 20 from by push_cast; norm_num,
+           show ((-20 : ℤ) : 𝕂) / 11520 = (-20 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c12 : ‖((40 : 𝕂) / 11520) • (a * b * b * a * a)‖ ≤ 40 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 40 _ s w12 hs_nn
+    simpa [show |((40 : ℤ) : ℝ)| = 40 from by push_cast; norm_num,
+           show ((40 : ℤ) : 𝕂) / 11520 = (40 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c13 : ‖((-60 : 𝕂) / 11520) • (a * b * b * a * b)‖ ≤ 60 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-60) _ s w13 hs_nn
+    simpa [show |((-60 : ℤ) : ℝ)| = 60 from by push_cast; norm_num,
+           show ((-60 : ℤ) : 𝕂) / 11520 = (-60 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c14 : ‖((40 : 𝕂) / 11520) • (a * b * b * b * a)‖ ≤ 40 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 40 _ s w14 hs_nn
+    simpa [show |((40 : ℤ) : ℝ)| = 40 from by push_cast; norm_num,
+           show ((40 : ℤ) : 𝕂) / 11520 = (40 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c15 : ‖((15 : 𝕂) / 11520) • (b * a * a * a * a)‖ ≤ 15 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 15 _ s w15 hs_nn
+    simpa [show |((15 : ℤ) : ℝ)| = 15 from by push_cast; norm_num,
+           show ((15 : ℤ) : 𝕂) / 11520 = (15 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c16 : ‖((20 : 𝕂) / 11520) • (b * a * a * a * b)‖ ≤ 20 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 20 _ s w16 hs_nn
+    simpa [show |((20 : ℤ) : ℝ)| = 20 from by push_cast; norm_num,
+           show ((20 : ℤ) : 𝕂) / 11520 = (20 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c17 : ‖((-30 : 𝕂) / 11520) • (b * a * a * b * a)‖ ≤ 30 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-30) _ s w17 hs_nn
+    simpa [show |((-30 : ℤ) : ℝ)| = 30 from by push_cast; norm_num,
+           show ((-30 : ℤ) : 𝕂) / 11520 = (-30 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c18 : ‖((-40 : 𝕂) / 11520) • (b * a * a * b * b)‖ ≤ 40 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-40) _ s w18 hs_nn
+    simpa [show |((-40 : ℤ) : ℝ)| = 40 from by push_cast; norm_num,
+           show ((-40 : ℤ) : 𝕂) / 11520 = (-40 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c19 : ‖((110 : 𝕂) / 11520) • (b * a * b * a * a)‖ ≤ 110 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 110 _ s w19 hs_nn
+    simpa [show |((110 : ℤ) : ℝ)| = 110 from by push_cast; norm_num,
+           show ((110 : ℤ) : 𝕂) / 11520 = (110 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c20 : ‖((160 : 𝕂) / 11520) • (b * a * b * a * b)‖ ≤ 160 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 160 _ s w20 hs_nn
+    simpa [show |((160 : ℤ) : ℝ)| = 160 from by push_cast; norm_num,
+           show ((160 : ℤ) : 𝕂) / 11520 = (160 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c21 : ‖((-60 : 𝕂) / 11520) • (b * a * b * b * a)‖ ≤ 60 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-60) _ s w21 hs_nn
+    simpa [show |((-60 : ℤ) : ℝ)| = 60 from by push_cast; norm_num,
+           show ((-60 : ℤ) : 𝕂) / 11520 = (-60 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c22 : ‖((-50 : 𝕂) / 11520) • (b * b * a * a * a)‖ ≤ 50 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-50) _ s w22 hs_nn
+    simpa [show |((-50 : ℤ) : ℝ)| = 50 from by push_cast; norm_num,
+           show ((-50 : ℤ) : 𝕂) / 11520 = (-50 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c23 : ‖((-40 : 𝕂) / 11520) • (b * b * a * a * b)‖ ≤ 40 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-40) _ s w23 hs_nn
+    simpa [show |((-40 : ℤ) : ℝ)| = 40 from by push_cast; norm_num,
+           show ((-40 : ℤ) : 𝕂) / 11520 = (-40 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c24 : ‖((-20 : 𝕂) / 11520) • (b * b * a * b * a)‖ ≤ 20 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 (-20) _ s w24 hs_nn
+    simpa [show |((-20 : ℤ) : ℝ)| = 20 from by push_cast; norm_num,
+           show ((-20 : ℤ) : 𝕂) / 11520 = (-20 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  have c25 : ‖((20 : 𝕂) / 11520) • (b * b * b * a * a)‖ ≤ 20 / 11520 * s ^ 5 := by
+    have := norm_correction_word_le_helper 𝕂 20 _ s w25 hs_nn
+    simpa [show |((20 : ℤ) : ℝ)| = 20 from by push_cast; norm_num,
+           show ((20 : ℤ) : 𝕂) / 11520 = (20 : 𝕂) / 11520 from by push_cast; ring]
+      using this
+  -- Triangle inequality on 25-term sum via abel rewrite + norm_add_le chain.
+  -- Refactor as explicit nested binary sum with set tactics, then linarith on ‖.‖ bounds.
+  unfold symmetric_bch_quintic_correction_poly
+  -- Set up named variables for each of the 25 terms.
+  set t1 := ((15 : 𝕂) / 11520) • (a * a * a * a * b)
+  set t2 := ((-60 : 𝕂) / 11520) • (a * a * a * b * a)
+  set t3 := ((-50 : 𝕂) / 11520) • (a * a * a * b * b)
+  set t4 := ((90 : 𝕂) / 11520) • (a * a * b * a * a)
+  set t5 := ((110 : 𝕂) / 11520) • (a * a * b * a * b)
+  set t6 := ((40 : 𝕂) / 11520) • (a * a * b * b * a)
+  set t7 := ((20 : 𝕂) / 11520) • (a * a * b * b * b)
+  set t8 := ((-60 : 𝕂) / 11520) • (a * b * a * a * a)
+  set t9 := ((-30 : 𝕂) / 11520) • (a * b * a * a * b)
+  set t10 := ((-160 : 𝕂) / 11520) • (a * b * a * b * a)
+  set t11 := ((-20 : 𝕂) / 11520) • (a * b * a * b * b)
+  set t12 := ((40 : 𝕂) / 11520) • (a * b * b * a * a)
+  set t13 := ((-60 : 𝕂) / 11520) • (a * b * b * a * b)
+  set t14 := ((40 : 𝕂) / 11520) • (a * b * b * b * a)
+  set t15 := ((15 : 𝕂) / 11520) • (b * a * a * a * a)
+  set t16 := ((20 : 𝕂) / 11520) • (b * a * a * a * b)
+  set t17 := ((-30 : 𝕂) / 11520) • (b * a * a * b * a)
+  set t18 := ((-40 : 𝕂) / 11520) • (b * a * a * b * b)
+  set t19 := ((110 : 𝕂) / 11520) • (b * a * b * a * a)
+  set t20 := ((160 : 𝕂) / 11520) • (b * a * b * a * b)
+  set t21 := ((-60 : 𝕂) / 11520) • (b * a * b * b * a)
+  set t22 := ((-50 : 𝕂) / 11520) • (b * b * a * a * a)
+  set t23 := ((-40 : 𝕂) / 11520) • (b * b * a * a * b)
+  set t24 := ((-20 : 𝕂) / 11520) • (b * b * a * b * a)
+  set t25 := ((20 : 𝕂) / 11520) • (b * b * b * a * a)
+  -- 24 triangle inequalities for the partial sums.
+  have h12 := norm_add_le t1 t2
+  have h123 := norm_add_le (t1 + t2) t3
+  have h1234 := norm_add_le (t1 + t2 + t3) t4
+  have h12345 := norm_add_le (t1 + t2 + t3 + t4) t5
+  have h123456 := norm_add_le (t1 + t2 + t3 + t4 + t5) t6
+  have h1234567 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6) t7
+  have h12345678 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7) t8
+  have h123456789 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8) t9
+  have h12_10 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9) t10
+  have h12_11 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10) t11
+  have h12_12 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11) t12
+  have h12_13 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12) t13
+  have h12_14 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13) t14
+  have h12_15 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14) t15
+  have h12_16 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15) t16
+  have h12_17 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16) t17
+  have h12_18 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16 + t17) t18
+  have h12_19 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16 + t17 +
+      t18) t19
+  have h12_20 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16 + t17 +
+      t18 + t19) t20
+  have h12_21 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16 + t17 +
+      t18 + t19 + t20) t21
+  have h12_22 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16 + t17 +
+      t18 + t19 + t20 + t21) t22
+  have h12_23 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16 + t17 +
+      t18 + t19 + t20 + t21 + t22) t23
+  have h12_24 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16 + t17 +
+      t18 + t19 + t20 + t21 + t22 + t23) t24
+  have h12_25 := norm_add_le
+    (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 + t13 + t14 + t15 + t16 + t17 +
+      t18 + t19 + t20 + t21 + t22 + t23 + t24) t25
+  -- linarith with all 25 c-bounds + 24 triangle inequalities.
+  linarith
+
 /-- **Alt-form decomposition of `symmetric_bch_quintic_poly`** (Tier-2 stepping
 stone, currently scoped axiom):
 
