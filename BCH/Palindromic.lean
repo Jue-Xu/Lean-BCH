@@ -758,6 +758,19 @@ lemma norm_three_factor_exp_product_sub_one_le (a b : 𝔸) :
   linarith
 
 include 𝕂 in
+/-- **Strict bound**: when `‖a‖ + ‖b‖ < log 2`, the 3-factor exp product
+satisfies `‖P − 1‖ < 1`. Direct from T2-F1 + `exp(log 2) = 2`. Used to
+ensure absolute convergence of `log(P) = log(1 + (P−1))` series. -/
+lemma norm_three_factor_exp_product_sub_one_lt_one (a b : 𝔸)
+    (h : ‖a‖ + ‖b‖ < Real.log 2) :
+    ‖exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1‖ < 1 := by
+  have hbound := norm_three_factor_exp_product_sub_one_le (𝕂 := 𝕂) a b
+  have hexp_lt : Real.exp (‖a‖ + ‖b‖) < 2 := by
+    calc Real.exp (‖a‖ + ‖b‖) < Real.exp (Real.log 2) := Real.exp_strictMono h
+      _ = 2 := Real.exp_log (by norm_num)
+  linarith
+
+include 𝕂 in
 /-- Merging of A-exponentials: `exp(α•A) · exp(β•A) = exp((α+β)•A)`
     since `[A, A] = 0`. -/
 lemma exp_smul_mul_exp_smul_self (A : 𝔸) (α β : 𝕂) :
