@@ -1,102 +1,138 @@
 # T2-F7e Session Prompt — Discharge Parent Tier-2 Axiom
 
-## Goal
+## Current State (after session 18)
 
-Prove **T2-F7e** (algebraic deg-5 identification of `polynomial_in_y` as
-`sym_E₅`) → discharges the parent Tier-2 axiom
-`symmetric_bch_quintic_sub_poly_axiom` via the existing
-`symmetric_bch_quintic_sub_poly_le_via_T2F7g` helper.
-
-## Current State (after session 17)
-
-- **0 sorries**, **3 axioms** (parent + alt-form stepping stone + axiom 3).
-- **15 working lemmas** in T2-F framework (see CLAUDE.md).
+- **0 sorries**, **2 axioms** (parent + axiom 3 — alt-form discharged session 18).
+- **16+ working lemmas** in T2-F framework + alt-form theorem.
 - **T2-F7g ⟺ parent axiom** Lean-proved (bidirectional equivalence,
   modulo small tail term).
-- The parent's discharge is reduced to proving **T2-F7g**:
-  ```
-  ‖polynomial_in_y(y) − (a+b) − sym_E₃ − sym_E₅‖ ≤ K · s⁷
-  ```
-  where `polynomial_in_y(y) = y − y²/2 + y³/3 − y⁴/4 + y⁵/5 − y⁶/6` and
-  `y = exp(½a)·exp(b)·exp(½a) − 1`.
+- **T2-B (alt-form) FULLY PROVED**: `symmetric_bch_quintic_poly_alt_form` in
+  `SymmetricQuintic.lean` — 3-line proof via `match_scalars <;> ring`.
 
-## Strategy (recommended)
+## Methodology breakthrough (session 18)
 
-### Option A: Algebraic identity via explicit polynomial expansion
+**`match_scalars <;> ring` for poly identities** with rational scalar
+coefficients in 𝕂, replacing ×LCM + comprehensive scalar pattern enumeration:
 
-Show that for `y = exp(½a)·exp(b)·exp(½a) − 1`, the polynomial-in-y
-expression equals `(a+b) + sym_E₃ + sym_E₅ + R₇⁺` where `R₇⁺` is
-deg-7+ and bounded by O(s⁷).
+```lean
+unfold <all definitions>
+simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+  smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+match_scalars <;> ring
+```
 
-**Sub-tasks** (T2-F7a-g):
-- T2-F7a: deg-1 part of polynomial_in_y = a+b (trivial: y_d1 = a+b)
-- T2-F7b: deg-2 part of polynomial_in_y = 0 (palindromic)
-- T2-F7c: deg-3 part = sym_E₃ (uses cubic alt-form)
-- T2-F7d: deg-4 part = 0 (palindromic)
-- T2-F7e: **deg-5 part = sym_E₅** (uses alt-form axiom T2-B)
-- T2-F7f: deg-6 part = 0 (palindromic)
-- T2-F7g: deg-7+ residual ≤ K · s⁷ (sums per-term contributions)
+The `← mul_assoc` is needed when expressions have multi-letter mul products
+(e.g. `(½a) * b * (½a)` vs `((½a) * b) * (½a)`).
 
-**Challenge**: "deg-k part" isn't a Lean primitive. Must express via
-explicit polynomial expansions of y, y², ..., y⁶ as polynomials in (a, b).
+Refactored proofs:
+- `symmetric_bch_cubic_poly_alt_form`: 28 → 5 lines
+- `symmetric_bch_quartic_identity`: 56 → 5 lines
+- `symmetric_bch_quintic_poly_alt_form` (new): 5 lines
 
-**Estimated effort**: ~500-1000 lines.
+## Goal (T2-F7e via Option B)
 
-### Option B: Extend cubic template `norm_symmetric_bch_cubic_sub_poly_le`
+Prove the parent Tier-2 axiom:
+```
+‖sym_bch_cubic - sym_E₃ - sym_E₅‖ ≤ 10⁹ · s⁷ for s < 1/4
+```
 
-The cubic template at `Basic.lean:5834-6614` (~800 lines) decomposes
-`sym_bch_cubic - sym_E₃` into 6 algebraic pieces, each O(s⁵). Extend
-to handle `sym_bch_cubic - sym_E₃ - sym_E₅` with 8-10 pieces, each O(s⁷).
+via extending the cubic template at `Basic.lean:5834` to deg-5 cancellation,
+using the sextic identity for deg-6 cancellation.
 
-**Key infrastructure needed**:
-- `symmetric_bch_quintic_poly_alt_form` (currently axiom T2-B): identifies
-  the deg-5 contributions as bqt(½a, b) + bqt(½a+b, ½a) + correction.
-- `symmetric_bch_sextic_identity`: deg-6 contributions sum to zero
-  (palindromic). Analog of `symmetric_bch_quartic_identity` (Basic.lean:5760).
+## Strategy: Extend the cubic template
 
-**Per-piece bounds**: each new term needs explicit O(s⁷) constant.
-The cubic template's `5×10⁶ + 5000 + ...` chain becomes a longer chain.
+The cubic template (`norm_symmetric_bch_cubic_sub_poly_le`, ~700 lines)
+uses the structural decomposition:
 
-**Estimated effort**: ~1000-1500 lines.
+```
+sym_bch_cubic - sym_E₃ = R₁ + R₂ + ½[R₁, a'] + ½[C₄(a',b), a']
+                       + (C₃(z,a') - C₃(a'+b, a') - C_d4)
+                       + (C₄(z,a') - C₄(a'+b, a'))
+```
 
-## Recommended starting point
+with `quartic_identity` cancelling the deg-4 contributions to get O(s⁵).
 
-1. **Discharge the alt-form axiom T2-B first** (~150-200 lines).
-   - Pure polynomial identity in (a, b).
-   - Comprehensive scalar enumeration (~71 patterns) + noncomm_ring.
-   - Pattern set is in `Lean-Trotter/scripts/discover_quintic_alt_form.py`.
-   - Session 17 attempted but failed due to simp matching issues; needs
-     goal-state inspection + targeted pattern fix.
+For T2-F7e, extend by one degree using:
 
-2. **Pursue Option B (extend cubic template)** using the discharged alt-form.
-   - Mirror the cubic template structure at `Basic.lean:5834`.
-   - New decomposition has ~7 terms (per session 17 analysis).
-   - Use `norm_bch_sextic_remainder_le` for inner/outer remainders
-     (gives O(s⁶), refined by sextic_identity to O(s⁷)).
+### Step 1: Extend inner/outer BCH to deg-5
+Define:
+```
+inner_R₆ := bch(a', b) - (a' + b) - ½[a', b] - C₃(a',b)
+          - C₄(a', b) - bqt(a', b)
+```
+(deg-6+ remainder after subtracting the explicit deg-5 contribution).
+Bound: `‖inner_R₆‖ ≤ K · s₁⁶` via `norm_bch_sextic_remainder_le`.
 
-## Useful framework lemmas (already proved in session 17)
+### Step 2: Sextic identity (CRITICAL — try `match_scalars <;> ring`)
+The sextic identity should state: the sum of all deg-6 contributions
+to `sym_bch_cubic - sym_E₃ - sym_E₅` equals zero (palindromic).
 
-- `BCH.bch_bch_half_eq_logOnePlus_strangBlock_sub_one` — bridge
-- `BCH.symmetric_bch_cubic_sub_polynomial_in_y_le` — combined framework
-- `BCH.symmetric_bch_quintic_sub_poly_le_via_T2F7g` — parent discharge
-  helper (takes T2-F7g witness K, returns parent bound K + tail)
+**Contributions to enumerate** (some transcendental, some polynomial):
+- `bch_sextic_term(a', b)` — leading deg-6 of inner BCH
+- `bch_sextic_term(a'+b, a')` — leading deg-6 of outer BCH at constant point
+- `½[bqt(a', b), a']` — deg-6
+- `(bqt(z, a') - bqt(a'+b, a'))` linear-in-w_d2 — deg-6
+- `(C₄(z, a') - C₄(a'+b, a'))` at deg-6 — linear-in-w_d2
+- `(C₃(z, a') - C₃(a'+b, a') - C_d4)` at deg-6
+- subtraction of `correction` (deg-5 only — no deg-6 contribution)
 
-Once T2-F7g is proved with `K = K' · s⁷`, apply this helper to discharge
-the parent.
+**Two approaches**:
+- **A**: Define `bch_sextic_term` explicitly, then formulate identity as
+  pure polynomial in {a, b}. Try `match_scalars <;> ring` (likely works).
+- **B**: Directly bound the deg-6 contributions WITHOUT a sextic identity,
+  using `norm_bch_septic_remainder_le` (would need new infrastructure).
+
+**Recommendation**: pursue **A** — derive sextic identity via CAS first,
+then use `match_scalars <;> ring`.
+
+### Step 3: Extended hdecomp
+Mirror `hdecomp` at `Basic.lean:5921`, but with sym_E₅ subtracted and the
+deg-5 contributions absorbed via the alt-form lemma:
+```
+sym_bch_cubic - sym_E₃ - sym_E₅ =
+  inner_R₆ + outer_R₆ + ½[bqt(a',b), a'] + ½[inner_R₆, a']
+  + (bqt(z, a') - bqt(a'+b, a'))
+  + (deg-5 perturbation terms - correction)  [≡ 0 by alt-form]
+  + (deg-6 cancellation via sextic identity)
+  + (deg-7+ residuals)
+```
+
+After cancellations, each remaining piece is O(s⁷).
+
+### Step 4: Per-piece O(s⁷) bounds
+Each piece needs an explicit constant. Estimated total: O(K·s⁷) for some
+large K (10⁸–10⁹).
+
+## Estimated effort
+
+- **Sextic identity** (if `match_scalars` works): ~50 lines for definition
+  of `bch_sextic_term` + 5 lines for the identity proof.
+- **Extended hdecomp**: ~150 lines.
+- **Per-piece bounds**: ~700 lines.
+- **Total**: ~900 lines (down from previous 1500 estimate, leveraging the
+  match_scalars methodology).
+
+## Useful framework lemmas
+
+- `BCH.symmetric_bch_quintic_poly_alt_form` — alt-form (NEW session 18, 5 lines)
+- `BCH.symmetric_bch_quintic_correction_poly` — the 25-term correction
+- `BCH.norm_symmetric_bch_quintic_correction_poly_le` — `‖correction‖ ≤ s⁵`
+- `BCH.norm_bch_sextic_remainder_le` — sextic BCH remainder bound
+- `BCH.symmetric_bch_quintic_sub_poly_le_via_T2F7g` — parent discharge helper
+- `BCH.symmetric_bch_quartic_identity` — deg-4 cancellation (now 5 lines)
 
 ## Key references
 
-- `BCH/Palindromic.lean` lines 730-1240: T2-F1 through T2-F-equiv lemmas.
-- `BCH/Basic.lean:5834` — cubic template (norm_symmetric_bch_cubic_sub_poly_le).
-- `BCH/Basic.lean:5760` — symmetric_bch_quartic_identity.
-- `BCH/Basic.lean:5708` — symmetric_bch_cubic_poly_alt_form.
-- `BCH/SymmetricQuintic.lean:1330` — alt-form axiom (T2-B).
+- `BCH/Basic.lean:5834` — cubic template (~700 lines).
+- `BCH/Basic.lean:5708` — `symmetric_bch_cubic_poly_alt_form` (now 5 lines).
+- `BCH/Basic.lean:5760` — `symmetric_bch_quartic_identity` (now 5 lines).
+- `BCH/SymmetricQuintic.lean:1599` — alt-form theorem (5 lines).
 - `Lean-Trotter/scripts/discover_quintic_alt_form.py` — CAS pipeline.
 
 ## Success criteria
 
 - Parent axiom `symmetric_bch_quintic_sub_poly_axiom` discharged.
-- Repository: 0 sorries, 2 axioms (alt-form + axiom 3, both stepping stones).
+- Repository: 0 sorries, 1 scoped axiom (just axiom 3).
 - All downstream theorems still build:
   `BCH.norm_symmetric_bch_quintic_sub_poly_le`,
   `BCH.norm_strangBlock_log_sub_quintic_target_le`.
