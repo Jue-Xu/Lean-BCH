@@ -1793,25 +1793,9 @@ theorem norm_symmetric_bch_cubic_poly_le_commutator (a b : 𝔸) :
     unfold symmetric_bch_cubic_poly
     -- Direct algebraic identity via hC_def and the smul/ring manipulations.
     rw [hC_def]
-    -- Goal: -((24:𝕂)⁻¹ • (a*(ab-ba) - (ab-ba)*a)) + (12:𝕂)⁻¹ • (b*(ba-ab) - (ba-ab)*b) =
-    --        -((24:𝕂)⁻¹ • (a*(ab-ba) - (ab-ba)*a)) - (12:𝕂)⁻¹ • (b*(ab-ba) - (ab-ba)*b)
-    -- The (b·_ - _·b) terms differ by a sign: ba-ab = -(ab-ba).
-    -- Clear smuls by injectivity-on-24 and injectivity-on-12 approach.
-    have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
-    have h3ne : (3 : 𝕂) ≠ 0 := by exact_mod_cast (show (3 : ℕ) ≠ 0 by norm_num)
-    have h12ne : (12 : 𝕂) ≠ 0 := by exact_mod_cast (show (12 : ℕ) ≠ 0 by norm_num)
-    have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
-    have hinj : Function.Injective ((24 : 𝕂) • · : 𝔸 → 𝔸) := by
-      intro x y hxy
-      have := congrArg ((24 : 𝕂)⁻¹ • ·) hxy
-      simp only [smul_smul, inv_mul_cancel₀ h24ne, one_smul] at this; exact this
-    apply hinj
     simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
-      mul_add, add_mul, mul_sub, sub_mul, mul_assoc,
-      inv_mul_cancel₀ h24ne,
-      show (24 : 𝕂) * (12 : 𝕂)⁻¹ = 2 from by norm_num,
-      one_smul]
-    noncomm_ring
+      mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+    match_scalars <;> ring
   rw [h_rewrite]
   -- Bound each scalar-smul'd commutator.
   have h24 : ‖((24 : 𝕂)⁻¹ : 𝕂)‖ = (1 / 24 : ℝ) := by

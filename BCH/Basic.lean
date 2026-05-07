@@ -4359,7 +4359,7 @@ private theorem I2_residual_decomp_eq (z P T₂ T₃ : 𝔸) :
     (P ^ 2 - T₂ ^ 2) * z + P ^ 3 := by
   noncomm_ring
 
-set_option maxHeartbeats 4000000000 in
+set_option maxHeartbeats 4000000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **I₁ residual decomposition** (pure algebraic identity in (ea, eb, a, b)):
 expresses `(I₁ in quartic_id form) - corr₁ - corr₁_5` as a sum of 7 deg-6+ terms.
@@ -4409,46 +4409,10 @@ private theorem I1_residual_decomp_eq (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*
     (2 : 𝕂)⁻¹ • (T₂ ^ 2 - P ^ 2 + T₂ * T₃ + T₃ * T₂) := by
   -- KEY: dsimp only unfolds the let-bindings (transparent reduction)
   dsimp only
-  rw [← sub_eq_zero]
-  -- Multiply by 720 to clear denominators (LCM)
-  have h720ne : (720 : 𝕂) ≠ 0 := by exact_mod_cast (show (720 : ℕ) ≠ 0 by norm_num)
-  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
-  have hinj : Function.Injective ((720 : 𝕂) • · : 𝔸 → 𝔸) := by
-    intro x₀ y₀ hxy; have := congrArg ((720 : 𝕂)⁻¹ • ·) hxy
-    simp only [smul_smul, inv_mul_cancel₀ h720ne, one_smul] at this; exact this
-  apply hinj; simp only [smul_zero]
-  simp only [pow_succ, pow_zero, one_mul]
-  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
-    mul_add, add_mul, mul_sub, sub_mul]
-  simp only [mul_assoc, mul_inv_cancel₀ h2ne, inv_mul_cancel₀ h2ne,
-    show (720 : 𝕂) * (2 : 𝕂)⁻¹ = 360 from by norm_num,
-    show (720 : 𝕂) * (3 : 𝕂)⁻¹ = 240 from by norm_num,
-    show (720 : 𝕂) * (4 : 𝕂)⁻¹ = 180 from by norm_num,
-    show (720 : 𝕂) * (6 : 𝕂)⁻¹ = 120 from by norm_num,
-    show (720 : 𝕂) * (12 : 𝕂)⁻¹ = 60 from by norm_num,
-    show (720 : 𝕂) * (24 : 𝕂)⁻¹ = 30 from by norm_num,
-    show (720 : 𝕂) * (60 : 𝕂)⁻¹ = 12 from by norm_num,
-    show (720 : 𝕂) * (120 : 𝕂)⁻¹ = 6 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 180 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 60 from by norm_num,
-    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 60 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (24 : 𝕂)⁻¹) = 15 from by norm_num,
-    show (720 : 𝕂) * ((24 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 15 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (4 : 𝕂)⁻¹) = 90 from by norm_num,
-    show (720 : 𝕂) * ((4 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 90 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (12 : 𝕂)⁻¹) = 30 from by norm_num,
-    show (720 : 𝕂) * ((12 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 30 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (60 : 𝕂)⁻¹) = 6 from by norm_num,
-    show (720 : 𝕂) * ((60 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * (120 : 𝕂)⁻¹) = 3 from by norm_num,
-    show (720 : 𝕂) * ((120 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 3 from by norm_num,
-    show (720 : 𝕂) * ((6 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 20 from by norm_num,
-    show (720 : 𝕂) * ((2 : 𝕂)⁻¹ * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹)) = 90 from by norm_num,
-    one_smul, mul_one]
-  simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
-  noncomm_ring
+  simp only [pow_succ, pow_zero, one_mul, smul_sub, smul_add, smul_neg, smul_smul,
+    mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
 
-set_option maxHeartbeats 800000000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **R algebraic identity** for the I₁ residual bound.
 Expresses `R = T₃ - E₁ - E₂ - Q + T₄` (the deg-5+ part of `-(E_i+Q) + T₃ + T₄`)
@@ -4473,28 +4437,9 @@ private theorem R_eq_neg_deg5_residual (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type
     -(G₁ + G₂ + a * F₂ + F₁ * b + E₁ * E₂ +
       (2 : 𝕂)⁻¹ • (E₁ * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * E₂)) := by
   dsimp only
-  rw [← sub_eq_zero]
-  have h24ne : (24 : 𝕂) ≠ 0 := by exact_mod_cast (show (24 : ℕ) ≠ 0 by norm_num)
-  have h2ne : (2 : 𝕂) ≠ 0 := two_ne_zero
-  have hinj : Function.Injective ((24 : 𝕂) • · : 𝔸 → 𝔸) := by
-    intro x₀ y₀ hxy; have := congrArg ((24 : 𝕂)⁻¹ • ·) hxy
-    simp only [smul_smul, inv_mul_cancel₀ h24ne, one_smul] at this; exact this
-  apply hinj; simp only [smul_zero]
-  simp only [pow_succ, pow_zero, one_mul]
-  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
-    mul_add, add_mul, mul_sub, sub_mul]
-  simp only [mul_assoc, mul_inv_cancel₀ h2ne, inv_mul_cancel₀ h2ne,
-    show (24 : 𝕂) * (2 : 𝕂)⁻¹ = 12 from by norm_num,
-    show (24 : 𝕂) * (3 : 𝕂)⁻¹ = 8 from by norm_num,
-    show (24 : 𝕂) * (4 : 𝕂)⁻¹ = 6 from by norm_num,
-    show (24 : 𝕂) * (6 : 𝕂)⁻¹ = 4 from by norm_num,
-    show (24 : 𝕂) * (24 : 𝕂)⁻¹ = 1 from mul_inv_cancel₀ h24ne,
-    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 6 from by norm_num,
-    show (24 : 𝕂) * ((2 : 𝕂)⁻¹ * (6 : 𝕂)⁻¹) = 2 from by norm_num,
-    show (24 : 𝕂) * ((6 : 𝕂)⁻¹ * (2 : 𝕂)⁻¹) = 2 from by norm_num,
-    one_smul, mul_one]
-  simp only [ofNat_smul_eq_nsmul (R := 𝕂)]
-  noncomm_ring
+  simp only [pow_succ, pow_zero, one_mul, smul_sub, smul_add, smul_neg, smul_smul,
+    mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
 
 /-- Norm bound `‖I₁ residual (RHS form)‖ ≤ 20·s⁶` from precomputed component bounds.
 This is the I₁ residual bound from precomputed individual norm bounds.
