@@ -177,39 +177,64 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
 2, 4, 6 vanish identically (palindromic symmetry); degree-7 residual has
 126 non-zero `{a,b}`-words.
 
-**Discharge plan** (~1 week of dedicated Lean work):
+### Decomposition into 5 sub-tasks (T2-A through T2-E)
 
-Extends the cubic template `norm_symmetric_bch_cubic_sub_poly_le` (line
-~5834 of `Basic.lean`, ~800 lines) by one degree higher. The cubic template's
-6-term decomposition becomes 8-10 terms, with each new term capturing a
-degree-5 correction:
+**Session 17 progress**:
+- ✅ T2-A: CAS `Lean-Trotter/scripts/discover_quintic_alt_form.py` discovers
+  the explicit alt-form decomposition (residual = 0). Outputs the combined
+  correction polynomial (25 terms, denom 11520).
+- ✅ T2-B: `BCH.symmetric_bch_quintic_correction_poly` defined. Alt-form
+  lemma added as scoped axiom `symmetric_bch_quintic_poly_alt_form_axiom`.
+  Tactical discharge needs ~150-200 lines of comprehensive scalar
+  enumeration following `symmetric_bch_quartic_identity` pattern.
 
-1. **R₁_sextic, R₂_sextic** — replace `norm_bch_quintic_remainder_le` with
-   the just-discharged `norm_bch_sextic_remainder_le` (Task #17b done).
-   Each gives O(s⁶) instead of O(s⁵), so R₁_sextic = R₁_quintic - C₅(a',b)
-   with ‖R₁_sextic‖ ≤ 100000·s₁⁶/(2-exp(s₁)).
-2. **Extract C₅(a',b), C₅(z,a')** — explicit degree-5 contributions from
-   inner/outer BCH expansions.
-3. **Identify the degree-5 part of each existing term** via CAS (run
-   `Lean-Trotter/scripts/compute_bch_prefactors.py` extended to degree 7).
-   The sum of these degree-5 parts must equal `symmetric_bch_quintic_poly`
-   (verified by CAS structurally).
-4. **Bound each term's residual** (term minus its degree-5 part) by O(s⁷).
+**Pending sub-tasks**:
 
-The CAS pipeline is the hardest bottleneck — it discovers the algebraic
-decomposition mechanically. Without it, the per-term degree-5 identification
-is intractable by hand.
+**T2-C**: `symmetric_bch_sextic_identity` — assert that the sum of degree-6
+contributions to `sym_bch_cubic - sym_E₃ - sym_E₅` equals zero (palindromic
+vanishing of even degrees). Mirrors `symmetric_bch_quartic_identity`
+(`Basic.lean:5760`). Requires either:
+- (a) Defining `bch_sextic_term` explicitly (~30+ term polynomial), OR
+- (b) Algebraic argument via palindromic structure (no explicit form).
 
-**Estimated proof size**: ~1000-1200 lines (extending the existing 800-line
-cubic template). Use `set_option maxHeartbeats 4000000000`.
+**T2-D**: Extended `hdecomp` for the quintic case. New decomposition has
+~7 terms:
+1. `R₁_sextic` (uses just-discharged `norm_bch_sextic_remainder_le`)
+2. `R₂_sextic`
+3. `½·[R₁_sextic, ½a]`
+4. `½·[bch_quintic_term(½a, b), ½a]` (NEW)
+5. `bch_quintic_term(z, ½a) - bch_quintic_term(½a+b, ½a)` (NEW)
+6. `(bch_cubic_term(z,½a) - bch_cubic_term(½a+b,½a)) - C_d4 - T₄`
+7. `(bch_quartic_term(z,½a) - bch_quartic_term(½a+b,½a)) - T₅`
 
-**Recommendation for next session**:
-- Run `compute_bch_prefactors.py` extended to degree 7; extract the 8-10
-  term decomposition.
-- Mirror the cubic template's structure (lines 5834-6614 of `Basic.lean`),
-  replacing `norm_bch_quintic_remainder_le` calls with `norm_bch_sextic_remainder_le`.
-- Per-term bounds: each new degree-5 cancellation term needs explicit O(s⁷)
-  bound (similar to the cubic template's 5×10⁶ + 5000 + ... constant chain).
+Algebraic identity provable via the alt-form (T2-B) + `abel`/`noncomm_ring`.
+
+**T2-E**: Per-term bounds. **Critical observation**: each piece in T2-D is
+genuinely O(s⁶), NOT O(s⁷). The deg-6 cancellation IS palindromic but
+happens across pieces (T2-C). To get O(s⁷):
+- Subtract the deg-6 part of each piece (these collectively form
+  `sextic_identity_sum = 0`).
+- Bound each piece's deg-7+ residual by O(s⁷).
+- Triangle inequality: `10⁹·s⁷` constant.
+
+Without bch_sextic_term explicit, the deg-6 extraction is hard. **Two
+strategies**:
+- (i) Define bch_sextic_term + norm_bch_septic_remainder_le (analog of
+  Tier-1 work from session 16; ~1500 lines new infrastructure).
+- (ii) Use a different bound: `K·s⁶` instead of `K·s⁷`. Downstream
+  consumers (`norm_strangBlock_log_sub_quintic_target_le`) would need to
+  be rewritten with the weaker bound. Requires checking that downstream
+  Suzuki bounds still hold.
+
+**Estimated proof size for full Tier-2 discharge**: ~2000-3000 lines.
+Strategy (ii) is faster (~1000 lines) but requires downstream API changes.
+
+**Recommendation for next session**: Either
+- (a) Discharge T2-B alt-form first (write the ~150-200 line comprehensive
+  scalar enumeration to remove `symmetric_bch_quintic_poly_alt_form_axiom`).
+- (b) Pursue T2-C/D/E directly assuming the alt-form, and accept the
+  O(s⁶) bound (strategy ii) for faster progress. Then retrofit O(s⁷)
+  with bch_sextic_term infrastructure when needed.
 
 ## Lean-Trotter interface (axioms 1–3)
 
