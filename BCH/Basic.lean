@@ -4778,6 +4778,38 @@ private theorem I2_residual_decomp_eq (z P T₂ T₃ : 𝔸) :
     (P ^ 2 - T₂ ^ 2) * z + P ^ 3 := by
   noncomm_ring
 
+/-- **I₂ septic residual decomposition**: extends `I2_residual_decomp_eq`
+by subtracting the deg-6 leading part `y3_6 = (3 T₄ terms) + (6 T₂·T₃
+permutations) + T₂³` to give a pure ring identity in `(z, P, T₂, T₃, T₄)`
+where each RHS term is deg-7+.
+
+Pairings:
+- `(3 T₄ terms)` extend the 3 weight-1 (P-T₂-T₃) terms into (P-T₂-T₃-T₄).
+- `(6 T₂·T₃ perms)` are absorbed into the 3 weight-2 (P²-T₂²) compound
+  forms, giving `z(P²-T₂²-T₂T₃-T₃T₂)`, `(PzP-T₂zT₂-T₂zT₃-T₃zT₂)`,
+  `(P²-T₂²-T₂T₃-T₃T₂)z`.
+- `T₂³` is absorbed into `P³`, giving `P³ - T₂³` (deg-7+ via telescoping).
+
+Each summand on the RHS is deg-7+ in the BCH context.
+Proof: `noncomm_ring` (pure ring identity, no scalar coefficients). -/
+private theorem I2_septic_residual_decomp_eq (z P T₂ T₃ T₄ : 𝔸) :
+    (z + P) ^ 3 - z ^ 3 -
+      (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2) -
+      (z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+        z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z) -
+      (z ^ 2 * T₄ + z * T₄ * z + T₄ * z ^ 2 +
+        z * T₂ * T₃ + z * T₃ * T₂ +
+        T₂ * z * T₃ + T₃ * z * T₂ +
+        T₂ * T₃ * z + T₃ * T₂ * z +
+        T₂ ^ 3) =
+    z ^ 2 * (P - T₂ - T₃ - T₄) + z * (P - T₂ - T₃ - T₄) * z +
+      (P - T₂ - T₃ - T₄) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) +
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂) +
+    (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) * z +
+    (P ^ 3 - T₂ ^ 3) := by
+  noncomm_ring
+
 set_option maxHeartbeats 4000000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **I₁ residual decomposition** (pure algebraic identity in (ea, eb, a, b)):
