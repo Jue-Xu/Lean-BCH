@@ -5451,6 +5451,121 @@ private theorem norm_PzP_sub_T2zT2_etc_le (z P T₂ T₃ : 𝔸) {s : ℝ} (hs_n
     mul_nonneg (pow_nonneg hs_nn 7) hs_nn,
     mul_nonneg (pow_nonneg hs_nn 7) (sq_nonneg s)]
 
+set_option maxHeartbeats 4000000 in
+/-- **Combined tricky bound** for the I1 septic residual.
+The sum of the three "tricky" pieces `(z·R+R·z) + T22 + T_extra`
+where T22 = T₂² - P² + T₂T₃ + T₃T₂ and T_extra = z·T₅ + T₂T₄ + T₃² + T₄T₂ + T₅z.
+Individually, each piece is deg-6, NOT deg-7 — but the SUM is deg-7+ via:
+- `R₅ = -T₅` (deg-5 cancellation): combining z·R+R·z with z·T₅+T₅z gives
+  z·(R+T₅) + (R+T₅)·z, which is deg-7+ via `‖R+T₅‖ ≤ 6·s⁶`.
+- Algebraic identity `P² = T₂² + (T₂T₃+T₃T₂) + (T₂T₄+T₃²+T₄T₂) + P²_deg≥7`:
+  the deg-≤6 contributions of T22 + T_extra cancel with the deg-≤6 of P²,
+  leaving -P²_deg≥7 which is deg-7+ via D₅ := P-T₂-T₃-T₄.
+
+Bound: ‖combined‖ ≤ 12·s⁷ (z·(R+T₅) part) + ~16·s⁷ (P²_deg≥7) ≤ 28·s⁷
+for `s ≤ 1/10`. -/
+private theorem norm_combined_tricky_le (z P R T₂ T₃ T₄ T₅ : 𝔸) {s : ℝ}
+    (hs_nn : 0 ≤ s) (hs_small : s ≤ 1 / 10)
+    (hz : ‖z‖ ≤ s) (hT₂ : ‖T₂‖ ≤ s ^ 2) (hT₃ : ‖T₃‖ ≤ s ^ 3)
+    (hT₄ : ‖T₄‖ ≤ s ^ 4)
+    (hRT5 : ‖R + T₅‖ ≤ 6 * s ^ 6)
+    (hD5 : ‖P - T₂ - T₃ - T₄‖ ≤ 6 * s ^ 5) :
+    ‖z * R + R * z + (T₂ ^ 2 - P ^ 2 + T₂ * T₃ + T₃ * T₂) +
+      (z * T₅ + T₂ * T₄ + T₃ * T₃ + T₄ * T₂ + T₅ * z)‖ ≤ 28 * s ^ 7 := by
+  -- Algebraic identity: combined = z·(R+T₅) + (R+T₅)·z - P²_deg≥7,
+  -- where P²_deg≥7 unfolds via D₅ = P-T₂-T₃-T₄.
+  have heq : z * R + R * z + (T₂ ^ 2 - P ^ 2 + T₂ * T₃ + T₃ * T₂) +
+      (z * T₅ + T₂ * T₄ + T₃ * T₃ + T₄ * T₂ + T₅ * z) =
+      z * (R + T₅) + (R + T₅) * z -
+      (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+        (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 +
+        T₃ * (P - T₂ - T₃ - T₄) + (P - T₂ - T₃ - T₄) * T₃ +
+        T₄ * (P - T₂ - T₃ - T₄) + (P - T₂ - T₃ - T₄) * T₄ +
+        (P - T₂ - T₃ - T₄) ^ 2) := by
+    noncomm_ring
+  rw [heq]
+  -- z·(R+T₅) and (R+T₅)·z bounds (each ≤ 6·s⁷).
+  have h_zRT5 : ‖z * (R + T₅)‖ ≤ s * (6 * s ^ 6) :=
+    (norm_mul_le _ _).trans (mul_le_mul hz hRT5 (norm_nonneg _) hs_nn)
+  have h_RT5z : ‖(R + T₅) * z‖ ≤ (6 * s ^ 6) * s :=
+    (norm_mul_le _ _).trans (mul_le_mul hRT5 hz (norm_nonneg _) (by positivity))
+  -- 10 components of P²_deg≥7
+  have h_T3T4 : ‖T₃ * T₄‖ ≤ s ^ 3 * s ^ 4 :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₃ hT₄ (norm_nonneg _) (by positivity))
+  have h_T4T3 : ‖T₄ * T₃‖ ≤ s ^ 4 * s ^ 3 :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₄ hT₃ (norm_nonneg _) (by positivity))
+  have h_T2D5 : ‖T₂ * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 2 * (6 * s ^ 5) :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₂ hD5 (norm_nonneg _) (by positivity))
+  have h_D5T2 : ‖(P - T₂ - T₃ - T₄) * T₂‖ ≤ (6 * s ^ 5) * s ^ 2 :=
+    (norm_mul_le _ _).trans (mul_le_mul hD5 hT₂ (norm_nonneg _) (by positivity))
+  have h_T4_2 : ‖T₄ ^ 2‖ ≤ s ^ 4 * s ^ 4 :=
+    calc _ ≤ ‖T₄‖ ^ 2 := norm_pow_le _ _
+      _ ≤ (s ^ 4) ^ 2 := pow_le_pow_left₀ (norm_nonneg _) hT₄ 2
+      _ = s ^ 4 * s ^ 4 := by ring
+  have h_T3D5 : ‖T₃ * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 3 * (6 * s ^ 5) :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₃ hD5 (norm_nonneg _) (by positivity))
+  have h_D5T3 : ‖(P - T₂ - T₃ - T₄) * T₃‖ ≤ (6 * s ^ 5) * s ^ 3 :=
+    (norm_mul_le _ _).trans (mul_le_mul hD5 hT₃ (norm_nonneg _) (by positivity))
+  have h_T4D5 : ‖T₄ * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 4 * (6 * s ^ 5) :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₄ hD5 (norm_nonneg _) (by positivity))
+  have h_D5T4 : ‖(P - T₂ - T₃ - T₄) * T₄‖ ≤ (6 * s ^ 5) * s ^ 4 :=
+    (norm_mul_le _ _).trans (mul_le_mul hD5 hT₄ (norm_nonneg _) (by positivity))
+  have h_D5_2 : ‖(P - T₂ - T₃ - T₄) ^ 2‖ ≤ (6 * s ^ 5) ^ 2 :=
+    calc _ ≤ ‖P - T₂ - T₃ - T₄‖ ^ 2 := norm_pow_le _ _
+      _ ≤ (6 * s ^ 5) ^ 2 := pow_le_pow_left₀ (norm_nonneg _) hD5 2
+  -- Triangle inequality: ‖A - B‖ ≤ ‖A‖ + ‖B‖.
+  have h_main := norm_sub_le (z * (R + T₅) + (R + T₅) * z)
+    (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) + (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 +
+     T₃ * (P - T₂ - T₃ - T₄) + (P - T₂ - T₃ - T₄) * T₃ +
+     T₄ * (P - T₂ - T₃ - T₄) + (P - T₂ - T₃ - T₄) * T₄ + (P - T₂ - T₃ - T₄) ^ 2)
+  -- A = z·(R+T₅) + (R+T₅)·z ≤ 12·s⁷
+  have hA := norm_add_le (z * (R + T₅)) ((R + T₅) * z)
+  -- B = sum of 10 terms ≤ ~16·s⁷ for s ≤ 1/10
+  have hB1 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 + T₃ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₃ + T₄ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₄) ((P - T₂ - T₃ - T₄) ^ 2)
+  have hB2 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 + T₃ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₃ + T₄ * (P - T₂ - T₃ - T₄))
+    ((P - T₂ - T₃ - T₄) * T₄)
+  have hB3 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 + T₃ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₃) (T₄ * (P - T₂ - T₃ - T₄))
+  have hB4 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 + T₃ * (P - T₂ - T₃ - T₄))
+    ((P - T₂ - T₃ - T₄) * T₃)
+  have hB5 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2) (T₃ * (P - T₂ - T₃ - T₄))
+  have hB6 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂) (T₄ ^ 2)
+  have hB7 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄))
+    ((P - T₂ - T₃ - T₄) * T₂)
+  have hB8 := norm_add_le (T₃ * T₄ + T₄ * T₃) (T₂ * (P - T₂ - T₃ - T₄))
+  have hB9 := norm_add_le (T₃ * T₄) (T₄ * T₃)
+  -- s⁸ ≤ s⁷/10, s⁹ ≤ s⁷/100, s¹⁰ ≤ s⁷/1000
+  have hs8 : s ^ 8 ≤ s ^ 7 / 10 := by
+    have h_eq : s ^ 8 = s ^ 7 * s := by ring
+    rw [h_eq]; nlinarith [pow_nonneg hs_nn 7]
+  have hs9 : s ^ 9 ≤ s ^ 7 / 100 := by
+    have h_eq : s ^ 9 = s ^ 7 * (s * s) := by ring
+    rw [h_eq]
+    have hs2 : s * s ≤ 1 / 100 := by nlinarith
+    nlinarith [pow_nonneg hs_nn 7]
+  have hs10 : s ^ 10 ≤ s ^ 7 / 1000 := by
+    have h_eq : s ^ 10 = s ^ 7 * (s * s * s) := by ring
+    rw [h_eq]
+    have hs3 : s * s * s ≤ 1 / 1000 := by nlinarith
+    nlinarith [pow_nonneg hs_nn 7, mul_nonneg hs_nn hs_nn,
+      mul_nonneg (mul_nonneg hs_nn hs_nn) hs_nn]
+  -- Combined sum:
+  -- A: 6·s⁷ + 6·s⁷ = 12·s⁷
+  -- B: s⁷ + s⁷ + 6·s⁷ + 6·s⁷ + s⁸ + 6·s⁸ + 6·s⁸ + 6·s⁹ + 6·s⁹ + 36·s¹⁰
+  --   = 14·s⁷ + 13·s⁸ + 12·s⁹ + 36·s¹⁰
+  --   ≤ 14·s⁷ + 1.3·s⁷ + 0.12·s⁷ + 0.036·s⁷ ≈ 15.5·s⁷ for s ≤ 1/10
+  -- Total: ≤ 27.5 → 28·s⁷
+  nlinarith [pow_nonneg hs_nn 7]
+
 /-- Norm bound for `‖P² - T₂²‖ ≤ 10·s⁵` via `P² - T₂² = (P-T₂)P + T₂(P-T₂)`. -/
 private theorem norm_P2_sub_T22_le (P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
     (hP : ‖P‖ ≤ s ^ 2) (hT₂ : ‖T₂‖ ≤ s ^ 2) (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3) :
