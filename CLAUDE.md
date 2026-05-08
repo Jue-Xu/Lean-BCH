@@ -271,6 +271,12 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
   (`norm_bch_septic_remainder_small_s_axiom`). The small-s axiom is a
   stepping stone (analog of the discharged session-16 sextic small-s
   axiom; can be discharged similarly using septic_pure_identity).
+- ✅ T2-F7e infrastructure step 5 (session 18, pow6 helper):
+  `BCH.pow6_sub_zpow6_telescope` (6-fold non-commutative telescoping)
+  + `BCH.norm_pow6_sub_zpow6_le` (`‖y⁶ - z⁶‖ ≤ 63·s⁷` for `‖y‖ ≤ 2s,
+  ‖z‖ ≤ s, ‖P‖ ≤ s²`). Building block analog of `pow5_sub_zpow5_telescope`
+  + `norm_pow5_sub_zpow5_le` for the future `norm_bch_septic_remainder_small_s_le`
+  (S₅ piece bound: `⅙·63·s⁷ ≈ 10.5·s⁷`).
 - ✅ T2-F1: `norm_three_factor_exp_product_sub_one_le` —
   `‖P-1‖ ≤ exp(s)-1` (Palindromic.lean).
 - ✅ T2-F2: `norm_three_factor_exp_product_sub_one_lt_one` —
