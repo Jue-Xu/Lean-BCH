@@ -5,7 +5,7 @@
 Branch: `main`. Repository is **0 sorries**.
 
 **Session 19 progress**: Phase A.1 (S₃' bound) + Phase A.2 (I1/I2 algebraic
-identities for the septic small-s case) complete.
+identities) + Phase A.4 (I2 wrapper input helpers complete).
 
 - Step 8: `y4_sub_z4_sub_y4_5_sub_y4_6_decomp` (16-term identity) +
   `norm_y4_sub_z4_sub_y4_5_sub_y4_6_le` (≤ 85·s⁷). The S₃' piece bound for
@@ -26,14 +26,29 @@ identities for the septic small-s case) complete.
   (≤ (3·K_PmT4 + 2·K_P2 + K_PzP + K_P3)·s⁷, parameterized over 4 inputs).
   Both wrappers combine precomputed bounds via triangle inequality.
 - Step 13: `norm_P3_sub_T23_le` (≤ 15·s⁷ via telescope). Concrete K_P3 = 15.
+- Step 14: `norm_P_sub_T2_sub_T3_sub_T4_le` (≤ 6·s⁵ via 7-term decomposition
+  G₁+G₂+a·F₂+F₁·b+E₁·E₂+½·E₁·b²+½·a²·E₂). Concrete K_PmT4 = 6 input for I2.
+  Algebraic identity proved via `linear_combination` from
+  `R_eq_neg_deg5_residual` (avoiding the failing standalone match_scalars
+  attempt: scalar mismatch in canonical form).
+- Step 15: `norm_PzP_sub_T2zT2_etc_le` (≤ 13·s⁷ via 6-term decomposition
+  using P=T₂+T₃+(P-T₂-T₃)). Concrete K_PzP = 13 input for I2.
+
+**I2 wrapper inputs all in place:** K_PmT4=6, K_P2=15 (from norm_T22_sub_P2_etc_le
+sign flip), K_PzP=13, K_P3=15. Total septic I2 RHS bound:
+(3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for s ≤ 1/10.
 
 Remaining for Phase A:
-- A new `norm_P_sub_T2_sub_T3_sub_T4_le` (analog of P-T₂-T₃ extended one
-  degree) — algebraic identity proven via match_scalars but final
-  triangle inequality fails linarith; needs alternative proof strategy.
-- Bounds for the I1 "tricky" pieces (z·R+R·z, T22, T_extra) — most involved.
-- Bounds for the I2 "PzP-T₂zT₂-T₂zT₃-T₃zT₂" piece.
+- I1 "tricky" pieces (z·R+R·z, T22, T_extra) — **fundamental issue**: the
+  individual pieces are deg-6, NOT deg-7. Cancellation only works combined.
+  Need a `norm_combined_tricky_le` lemma bounding the sum
+  `(z·R+R·z) + T22 + T_extra` directly, plus a redesign of the I1 wrapper
+  to take this combined bound. Key insight: `R + T₅` is deg-6+ (since R₅ = -T₅),
+  so `z·(R+T₅) + (R+T₅)·z` is deg-7+. The remaining T22 + T_extra cancels to
+  -P²_deg≥7 (also deg-7+ via T₃T₄, T₂·D_5, etc.). Estimated ~150 lines.
 - Final assembly (~150 lines, mirrors the session 16 sextic discharge).
+- **Bypass strategy** (per session prompt): keep the small-s septic axiom
+  in place and proceed to Phase B directly.
 
 **Axiom count: 3 scoped `private axiom`s + Lean's 3 standard.**
 - `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2 PARENT, in

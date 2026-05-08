@@ -1,15 +1,15 @@
 # T2-F7e Session Prompt — Discharge Parent Tier-2 Axiom
 
-## Current State (after session 19, S₃' bound + level-7 exp tail in place)
+## Current State (after session 19, all I2 wrapper inputs in place)
 
-- **0 sorries**, **3 scoped private axioms**:
+- **0 sorries**, **3 scoped private axioms** (unchanged):
   - `symmetric_bch_quintic_sub_poly_axiom` (parent Tier-2 — final target)
   - `norm_bch_septic_remainder_small_s_axiom` (session 18, stepping stone)
   - `suzuki5_log_product_septic_at_suzukiP_axiom` (axiom 3)
 - **T2-F7g ⟺ parent axiom** Lean-proved (bidirectional equivalence).
-- **23+ commits in session 18 + 2 commits in session 19**.
+- **23+ commits in session 18 + 8 commits in session 19**.
 
-## Session 19 progress (Phase A foundation + algebraic identities)
+## Session 19 progress (Phase A foundation + algebraic identities + I2 inputs)
 
 - Step 8 (Phase A.1): `y4_sub_z4_sub_y4_5_sub_y4_6_decomp` (16-term algebraic
   identity, `noncomm_ring`) + `norm_y4_sub_z4_sub_y4_5_sub_y4_6_le`
@@ -20,7 +20,8 @@
 - Step 10 (Phase A.2 — I1 algebraic): `I1_septic_residual_decomp_eq`.
   12-term algebraic identity extending `I1_residual_decomp_eq` by subtracting
   `corr₁_6 = ½·W6`. Proof via `match_scalars <;> ring`, `maxHeartbeats 8000000`.
-  All 12 RHS pieces are deg-7+.
+  All 12 RHS pieces are deg-7+ — **after combining the three "tricky"
+  smul'd terms with cancellation**.
 - Step 11 (Phase A.2 — I2 algebraic): `I2_septic_residual_decomp_eq`.
   Pure ring identity in `(z, P, T₂, T₃, T₄)` extending `I2_residual_decomp_eq`
   by subtracting `y3_6` (the deg-6 leading of `(z+P)³ - z³`). Proof via
@@ -31,10 +32,29 @@
   `(7 + (C₁+C₂+C₃)/2)·s⁷` (parameterized over 3 "tricky" piece bounds);
   the I2 wrapper bounds by `(3·K_PmT4 + 2·K_P2 + K_PzP + K_P3)·s⁷`
   (parameterized over 4 input bounds).
+
+  **Note on I1 wrapper**: Per individual-piece analysis, the I1 wrapper's
+  C₁, C₂, C₃ parameters cannot be satisfied as constants — each tricky piece
+  is naturally deg-6, not deg-7. Cancellation occurs only in the SUM
+  `(z·R+R·z) + T22 + T_extra`. The I1 wrapper needs redesign (to take a
+  single combined bound) before assembly.
 - Step 13 (Phase A.4 — P³-T₂³ helper): `norm_P3_sub_T23_le`. Bound
   `‖P³ - T₂³‖ ≤ 15·s⁷` via 3-fold telescoping
   `(P-T₂)·P² + T₂·(P-T₂)·P + T₂²·(P-T₂)`. Concrete value of K_P3 = 15
   for the I2 wrapper.
+- Step 14 (Phase A.4 — P-T₂-T₃-T₄ helper): `norm_P_sub_T2_sub_T3_sub_T4_le`.
+  Bound `‖P-T₂-T₃-T₄‖ ≤ 6·s⁵` via 7-term decomposition
+  `G₁+G₂+a·F₂+F₁·b+E₁·E₂+½·E₁·b²+½·a²·E₂`.
+  **Algebraic identity proved via `linear_combination` from
+  `R_eq_neg_deg5_residual`** (avoiding the failing standalone
+  `match_scalars <;> ring`: scalar mismatch in canonical form for the
+  E₁·E₂ deg-4 term in the opaque setting). Concrete K_PmT4 = 6 for I2.
+- Step 15 (Phase A.4 — PzP-T₂zT₂-... helper): `norm_PzP_sub_T2zT2_etc_le`.
+  Bound `‖PzP-T₂zT₂-T₂zT₃-T₃zT₂‖ ≤ 13·s⁷` for `s ≤ 1/10`. Decomposition
+  via `P = T₂ + T₃ + (P-T₂-T₃)` into 6 terms. Concrete K_PzP = 13 for I2.
+
+**I2 wrapper inputs now all available**: K_PmT4=6, K_P2=15, K_PzP=13, K_P3=15.
+Combined I2 RHS bound: (3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for `s ≤ 1/10`.
 
 ## Session 18 accomplishments
 
@@ -104,37 +124,30 @@ The proof structure (mirroring `norm_bch_sextic_remainder_small_s_le`):
    (steps 10, 11). Both `I1_septic_residual_decomp_eq` and
    `I2_septic_residual_decomp_eq` proved as pure algebraic identities.
 
-4. **Norm bounds for I1/I2 septic residual RHS** (S₁', S₂'): TODO.
-   The RHS of `I1_septic_residual_decomp_eq` has 9 cluster expressions:
-   - `I_a` (= H₁ - (720)⁻¹·a⁶) ← bound `≤ s⁷` via level-7 exp tail.
-   - `I_b` ← `≤ s⁷`.
-   - `a·H₂` ← `α·β⁶ ≤ s⁷`.
-   - `H₁·b` ← `α⁶·β ≤ s⁷`.
-   - `(1/6)·a³·F₂ + (1/6)·F₁·b³ + F₁·F₂` ← bounded individually (s⁷·O(1)).
-   - `(2)⁻¹·a²·G₂` ← `≤ s⁷/2`.
-   - `(2)⁻¹·G₁·b²` ← `≤ s⁷/2`.
-   - `(2)⁻¹·(z·R + R·z)` ← still bounded by 6·s⁶ in the existing bound;
-     to get s⁷, need either tighter `R+T₅` analysis or a different approach.
-   - `(2)⁻¹·(T₂² - P² + T₂T₃ + T₃T₂)` ← currently 7.5·s⁶; need refinement.
-   - `(2)⁻¹·(z·T₅ + T₂T₄ + T₃² + T₄T₂ + T₅z)` ← new: needs bounding.
+4. **Norm bounds for I1/I2 septic residual RHS** (S₁', S₂'): partially DONE.
 
-   For I2, RHS has 7 clusters. Several can use existing bounds:
-   - 3 weight-1 (P-T₂-T₃-T₄): need new helper for `‖P-T₂-T₃-T₄‖ ≤ K·s⁵`.
-   - 3 weight-2 compound (e.g., `z(P²-T₂²-T₂T₃-T₃T₂)`): existing
-     `norm_T22_sub_P2_etc_le` gives ‖T₂²-P²+T₂T₃+T₃T₂‖ ≤ 15·s⁶, so
-     `z·(...)` ≤ 15·s⁷. ✓
-   - `(P³ - T₂³)`: telescopes as `(P-T₂)·P² + T₂·(P-T₂)·P + T₂²·(P-T₂)`,
-     each ≤ 5s³·s⁴ = 5s⁷ (sum 15·s⁷).
+   **I2 inputs all done** (steps 12-15 of session 19):
+   - K_PmT4 = 6 from `norm_P_sub_T2_sub_T3_sub_T4_le` ✅
+   - K_P2 = 15 from existing `norm_T22_sub_P2_etc_le` (sign flip) ✅
+   - K_PzP = 13 from `norm_PzP_sub_T2zT2_etc_le` ✅
+   - K_P3 = 15 from `norm_P3_sub_T23_le` ✅
+   - I2 RHS bound: `(3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷` for s ≤ 1/10. ✅
 
-   Most challenging pieces:
-   - The `½·(z·R + R·z) + ½·(z·T₅ + ... + T₅·z)` cluster — these need
-     algebraic refactoring of `R + T₅` to expose deg-6+ structure for the
-     z-multiplications to give deg-7. Possibly via expressing `R + T₅` in
-     terms of higher exp tail variables (G_a, H_a) plus mixed terms.
-   - `‖P - T₂ - T₃ - T₄‖ ≤ K·s⁵`: a new helper analogous to existing
-     `norm_P_sub_T2_sub_T3_le` (extends one degree).
+   **I1 simple bounds** (still TODO; mostly inline calculations):
+   - `‖I_a‖ ≤ s⁷`, `‖I_b‖ ≤ s⁷`: compose level-7 exp tail with `pow_le_pow_left₀`.
+   - `‖a·H₂‖ ≤ α·β⁶ ≤ s⁷`, `‖H₁·b‖ ≤ α⁶·β ≤ s⁷`.
+   - `‖½·a²·G₂‖ ≤ s⁷/2`, `‖½·G₁·b²‖ ≤ s⁷/2`.
+   - `‖(1/6)·a³·F₂‖ ≤ s⁷/6`, `‖(1/6)·F₁·b³‖ ≤ s⁷/6`, `‖F₁·F₂‖ ≤ s⁸`.
 
-   Estimated ~200-300 lines.
+   **I1 tricky combined bound** (needs new infrastructure):
+   - Individual pieces (z·R+R·z, T22, T_extra) are deg-6, NOT deg-7.
+   - Cancellation only in the SUM `(z·R+R·z) + T22 + T_extra`.
+   - Need: `R_plus_T5_decomp_eq` (alg identity), `norm_R_plus_T5_le ≤ 6·s⁶`,
+     `norm_combined_tricky_le ≤ ~27·s⁷`.
+   - Plus: redesign `norm_I1_septic_residual_RHS_le` to take a single combined
+     bound parameter instead of three separate.
+
+   Estimated ~150 lines for the tricky combined bound.
 
 5. **Assembly into `norm_bch_septic_remainder_small_s_le`** (~150 lines):
    - Mirror `norm_bch_sextic_remainder_small_s_le` (line ~4957 in `Basic.lean`,
@@ -143,7 +156,7 @@ The proof structure (mirroring `norm_bch_sextic_remainder_small_s_le`):
    - Combine the 5 piece bounds via triangle inequality.
    - Plus pieceA bound (deg-7 log series tail).
 
-**Total remaining for Phase A**: ~350-450 lines (mostly task #4).
+**Total remaining for Phase A**: ~300 lines (split between I1 redesign + assembly).
 
 ### Phase B: Discharge the parent (extend cubic template)
 
@@ -187,37 +200,55 @@ The structure:
 
 ## Recommended starting point for next session
 
-Steps 8–11 of session 19 establish:
-- The S₃' bound (Phase A.1) — fully discharged.
-- Level-7 exp tail (foundation for I_a/I_b) — ready.
-- I1/I2 algebraic identities for the septic case — ready.
+**The I2 path is unblocked.** All four input bounds for `norm_I2_septic_residual_RHS_le`
+are now available (K_PmT4=6, K_P2=15, K_PzP=13, K_P3=15). The I2 wrapper
+gives a clean ≤ 76·s⁷ bound.
 
-**Next step: norm bounds for the I1/I2 septic RHS pieces.**
+**The I1 path requires a structural redesign.** The current
+`norm_I1_septic_residual_RHS_le` takes three separate parameters
+(C₁ for `‖z·R+R·z‖`, C₂ for `‖T22‖`, C₃ for `‖T_extra‖`), each of which
+is naturally a deg-6 quantity. The deg-7 cancellation only occurs in the
+**combined** sum `(z·R+R·z) + T22 + T_extra`.
 
-Quick wins (simple `norm_mul_le` chains):
-- `‖I_a‖ ≤ s⁷`, `‖I_b‖ ≤ s⁷`: compose level-7 exp tail with `pow_le_pow_left₀`.
-- `‖a·H₂‖ ≤ α·β⁶ ≤ s⁷`, `‖H₁·b‖ ≤ α⁶·β ≤ s⁷`.
-- `‖½·a²·G₂‖ ≤ s⁷/2`, `‖½·G₁·b²‖ ≤ s⁷/2`.
-- `‖(1/6)·a³·F₂‖ ≤ s⁷/6`, `‖(1/6)·F₁·b³‖ ≤ s⁷/6`, `‖F₁·F₂‖ ≤ s⁸ ≤ s⁷·s`.
-- `‖(P²-T₂²-T₂T₃-T₃T₂)·z‖ ≤ 15·s⁷` via `norm_T22_sub_P2_etc_le`.
-- `‖P³ - T₂³‖`: write as `(P-T₂)·P² + T₂·(P-T₂)·P + T₂²·(P-T₂)`. Each ≤ 5s⁷.
+### I1 redesign plan (~150-200 lines)
 
-Tricky pieces:
-- `‖½·(z·R + R·z) + ½·(z·T₅ + ... + T₅·z)‖`. Needs refactoring of `R+T₅`.
-  Specifically `R + T₅ = T₃ + T₄ + T₅ - E₁ - E₂ - Q`. Using
-  `E_i = T_3_a + T_4_a + T_5_a + H_a` (where T_k_a = a^k/k! is the pure-a
-  part of T_k, similar for b), get `R + T₅ = T_mixed_3+4+5 - H₁ - H₂ - Q`.
-  Each piece is deg-5+ in s; multiplying by z gives deg-6 leading. Hmm,
-  not directly deg-7. Need finer analysis (perhaps separate the `Q`
-  contribution carefully).
-- `‖P - T₂ - T₃ - T₄‖`: new helper analogous to `norm_P_sub_T2_sub_T3_le`.
-  Bound `≤ K·s⁵` for some constant K. Required for the 3 weight-1 pieces
-  in I2's RHS.
+1. **`R_plus_T5_decomp_eq`** (algebraic identity, opaque-ea/eb form):
+   `R + T₅ = -(H₁ + H₂ + a·G₂ + G₁·b + E₁·E₂ + ½·F₁·b² + ½·a²·F₂)`.
+   Analog of `R_eq_neg_deg5_residual` at one degree higher. Each RHS
+   term is deg-6+. Proof: `linear_combination` from existing identity, or
+   `match_scalars <;> ring` with appropriate simp set.
 
-**Bypass strategy** (if the tricky pieces are too hard): keep
-`norm_bch_septic_remainder_small_s_le` axiom-ized for now and focus on
-Phase B (parent discharge using `norm_bch_septic_remainder_le` as a black
-box). Phase A.3 can be revisited later — the public
+2. **`norm_R_plus_T5_le`** (≤ 6·s⁶ for `s ≤ 1/10`):
+   Triangle inequality on the 7 RHS terms of the new identity.
+
+3. **`norm_combined_tricky_le`** (≤ K·s⁷ for `s ≤ 1/10`):
+   ```
+   ‖(z·R+R·z) + T22 + T_extra‖ = ‖z·(R+T₅) + (R+T₅)·z - P²_deg≥7‖
+                              ≤ 12·s⁷ + ‖P²_deg≥7‖
+   ```
+   Where `P²_deg≥7` (= P² minus its deg≤6 contributions) bounds via
+   `T₃T₄ + T₄T₃ + T₂·D₅ + D₅·T₂ + T₄² + T₃·D₅ + D₅·T₃ + T₄·D₅ + D₅·T₄ + D₅²`,
+   each term deg-7+ (using `‖D₅‖ = ‖P-T₂-T₃-T₄‖ ≤ 6·s⁵`).
+   Total ≤ ~27·s⁷.
+
+4. **Redesign `norm_I1_septic_residual_RHS_le`** to take a single combined
+   bound `‖(z·R+R·z) + T22 + T_extra‖ ≤ C·s⁷` instead of three.
+
+### Final assembly (~150 lines)
+
+After the I1 redesign:
+1. Use `pieceB_septic_decomp` to split LHS into pieceA + 5 sub-pieces.
+2. Bound pieceA via deg-7 log series tail.
+3. Bound S₁' = (I₁ - corr₁ - corr₁_5 - corr₁_6) ≤ ~25·s⁷ via I1 wrapper.
+4. Bound S₂' = (I₂ - corr₂ - corr₂_5 - corr₂_6) ≤ 76·s⁷ via I2 wrapper.
+5. Bound S₃', S₄', S₅ via existing helpers.
+6. Combine via triangle inequality. Total ≈ 1000·s⁷ for `s ≤ 1/10`,
+   matching the small-s axiom statement.
+
+**Bypass strategy** (if Phase A is deferred): keep
+`norm_bch_septic_remainder_small_s_le` axiom-ized and focus on Phase B
+(parent discharge using `norm_bch_septic_remainder_le` as a black box).
+Phase A.3 can be revisited later — the public
 `norm_bch_septic_remainder_le` already exists with the small-s axiom
 dependency, so downstream work can proceed.
 
