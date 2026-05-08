@@ -4892,6 +4892,42 @@ private theorem R_eq_neg_deg5_residual (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type
     mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
   match_scalars <;> ring
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **R + T₅ algebraic decomposition**: extends `R_eq_neg_deg5_residual` by
+canceling the deg-5 leading R₅ = -T₅. Each RHS piece is deg-6+ in s.
+Foundation for the combined `(z·R+R·z) + T22 + T_extra` bound at deg-7+. -/
+private theorem R_plus_T5_eq_neg_deg6_residual (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (ea eb a b : 𝔸) :
+    let D₁ : 𝔸 := ea - 1 - a
+    let D₂ : 𝔸 := eb - 1 - b
+    let E₁ : 𝔸 := D₁ - (2 : 𝕂)⁻¹ • a ^ 2
+    let E₂ : 𝔸 := D₂ - (2 : 𝕂)⁻¹ • b ^ 2
+    let F₁ : 𝔸 := E₁ - (6 : 𝕂)⁻¹ • a ^ 3
+    let F₂ : 𝔸 := E₂ - (6 : 𝕂)⁻¹ • b ^ 3
+    let G₁ : 𝔸 := F₁ - (24 : 𝕂)⁻¹ • a ^ 4
+    let G₂ : 𝔸 := F₂ - (24 : 𝕂)⁻¹ • b ^ 4
+    let H₁ : 𝔸 := G₁ - (120 : 𝕂)⁻¹ • a ^ 5
+    let H₂ : 𝔸 := G₂ - (120 : 𝕂)⁻¹ • b ^ 5
+    let Q : 𝔸 := a * D₂ + D₁ * b + D₁ * D₂
+    let T₃ : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    let T₅ : 𝔸 := (120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5
+    T₃ - E₁ - E₂ - Q + T₄ + T₅ =
+    -(H₁ + H₂ + a * G₂ + G₁ * b + E₁ * E₂ +
+      (2 : 𝕂)⁻¹ • (F₁ * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * F₂)) := by
+  have hR := R_eq_neg_deg5_residual 𝕂 ea eb a b
+  dsimp only at hR ⊢
+  -- linear_combination leaves a residual where 12⁻¹ and 2⁻¹·6⁻¹ appear as
+  -- different scalar expressions; match_scalars + ring normalizes them.
+  linear_combination (norm := (simp only [pow_succ, pow_zero, one_mul,
+    smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]; match_scalars <;> ring)) hR
+
 set_option maxHeartbeats 8000000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **I₁ septic residual decomposition** (pure algebraic identity in (ea, eb, a, b)):
