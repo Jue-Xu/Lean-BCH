@@ -283,6 +283,22 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
   `BCH.norm_y5_sub_z5_sub_y5_6_le` (`‖y⁵ - z⁵ - y5_6‖ ≤ 51·s⁷`).
   Analog of `norm_y4_sub_z4_sub_y4_5_le` at one degree higher; needed for
   the S₄' piece of `pieceB_septic_decomp`.
+- ✅ T2-F7e infrastructure step 7 (session 18, **pieceB_septic_decomp**):
+  `BCH.pieceB_septic_decomp` — the CENTRAL algebraic decomposition for
+  the septic small-s case. Analog of `pieceB_sextic_decomp` at one degree
+  higher. States:
+  ```
+  pieceB''' = (I₁ - corr₁ - corr₁_5 - corr₁_6) +
+              (I₂ - corr₂ - corr₂_5 - corr₂_6) -
+              ¼(y⁴-z⁴-y4_5-y4_6) + ⅕(y⁵-z⁵-y5_6) - ⅙(y⁶-z⁶)
+  ```
+  Where corr₁_6 = ½·W6, corr₂_6 = ⅓·y3_6, y4_6/y5_6/y3_6 are the explicit
+  deg-6 contributions to y⁴/y⁵/y³.
+  **Proof: 5 lines** — `linear_combination (norm := module) hQPI + hSPI + hSeptic`.
+  Each piece on the RHS has deg-7+ structure.
+
+  This is the foundation for the future small-s septic discharge.
+  Remaining pieces: norm bounds for S₁', S₂', S₃' (S₄' and S₅ already done).
 - ✅ T2-F1: `norm_three_factor_exp_product_sub_one_le` —
   `‖P-1‖ ≤ exp(s)-1` (Palindromic.lean).
 - ✅ T2-F2: `norm_three_factor_exp_product_sub_one_lt_one` —
