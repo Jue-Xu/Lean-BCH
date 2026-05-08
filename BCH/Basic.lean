@@ -5328,6 +5328,35 @@ private theorem norm_P2_sub_T22_le (P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
   have hadd := norm_add_le ((P - T₂) * P) (T₂ * (P - T₂))
   nlinarith [pow_nonneg hs_nn 5]
 
+/-- Norm bound for `‖P³ - T₂³‖ ≤ 15·s⁷` via the 3-fold telescoping
+`P³ - T₂³ = (P-T₂)·P² + T₂·(P-T₂)·P + T₂²·(P-T₂)`. Each term ≤ 5·s³·s⁴ = 5·s⁷
+(or symmetric). Used in the I2 septic residual bound. -/
+private theorem norm_P3_sub_T23_le (P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hP : ‖P‖ ≤ s ^ 2) (hT₂ : ‖T₂‖ ≤ s ^ 2) (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3) :
+    ‖P ^ 3 - T₂ ^ 3‖ ≤ 15 * s ^ 7 := by
+  have heq : P ^ 3 - T₂ ^ 3 =
+      (P - T₂) * P ^ 2 + T₂ * (P - T₂) * P + T₂ ^ 2 * (P - T₂) := by noncomm_ring
+  rw [heq]
+  have ht1 : ‖(P - T₂) * P ^ 2‖ ≤ (5 * s ^ 3) * (s ^ 2) ^ 2 :=
+    calc _ ≤ ‖P - T₂‖ * ‖P ^ 2‖ := norm_mul_le _ _
+      _ ≤ ‖P - T₂‖ * ‖P‖ ^ 2 := by gcongr; exact norm_pow_le P 2
+      _ ≤ (5 * s ^ 3) * (s ^ 2) ^ 2 := mul_le_mul hPmT₂
+          (pow_le_pow_left₀ (norm_nonneg _) hP 2) (by positivity) (by positivity)
+  have ht2 : ‖T₂ * (P - T₂) * P‖ ≤ s ^ 2 * (5 * s ^ 3) * s ^ 2 :=
+    calc _ ≤ ‖T₂ * (P - T₂)‖ * ‖P‖ := norm_mul_le _ _
+      _ ≤ (‖T₂‖ * ‖P - T₂‖) * ‖P‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 2 * (5 * s ^ 3)) * s ^ 2 := by
+          apply mul_le_mul _ hP (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₂ hPmT₂ (norm_nonneg _) (by positivity)
+  have ht3 : ‖T₂ ^ 2 * (P - T₂)‖ ≤ (s ^ 2) ^ 2 * (5 * s ^ 3) :=
+    calc _ ≤ ‖T₂ ^ 2‖ * ‖P - T₂‖ := norm_mul_le _ _
+      _ ≤ ‖T₂‖ ^ 2 * ‖P - T₂‖ := by gcongr; exact norm_pow_le T₂ 2
+      _ ≤ (s ^ 2) ^ 2 * (5 * s ^ 3) := mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hT₂ 2)
+          hPmT₂ (norm_nonneg _) (by positivity)
+  have hadd1 := norm_add_le ((P - T₂) * P ^ 2 + T₂ * (P - T₂) * P) (T₂ ^ 2 * (P - T₂))
+  have hadd2 := norm_add_le ((P - T₂) * P ^ 2) (T₂ * (P - T₂) * P)
+  nlinarith [pow_nonneg hs_nn 7]
+
 set_option maxHeartbeats 4000000 in
 /-- Norm bound for `y⁴ - z⁴ - y4_5 - y4_6`: each of the 16 terms in the
 decomposition is deg-7+; total bound `≤ 85·s⁷`. Used in the small-s case
