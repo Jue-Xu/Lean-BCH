@@ -4997,6 +4997,93 @@ private theorem pieceB_sextic_decomp (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
   -- Try linear_combination with module as norm
   linear_combination (norm := module) hQPI + hSPI
 
+set_option maxHeartbeats 2048000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Algebraic decomposition of `pieceB'''` for the septic remainder small-s case.**
+
+Extends `pieceB_sextic_decomp` to one degree higher. States that pieceB'''
+(= pieceB'' - ⅙y⁶ - C₆) decomposes as:
+
+```
+pieceB''' = (I₁ - corr₁ - corr₁_5 - corr₁_6) + (I₂ - corr₂ - corr₂_5 - corr₂_6)
+           - ¼(y⁴ - z⁴ - y4_5 - y4_6) + ⅕(y⁵ - z⁵ - y5_6) - ⅙(y⁶ - z⁶)
+```
+
+where (in addition to the sextic case):
+- `corr₁_6 = ½·W6` (the deg-6 contribution to I₁ from septic_pure_identity)
+- `corr₂_6 = ⅓·y3_6` (the deg-6 contribution to ⅓(y³-z³) from septic_pure_identity)
+- `y4_6 = z²T₃ + zT₃z + T₃z² + T₃z³ + z²T₂² + zT₂zT₂ + zT₂²z + T₂z²T₂ + T₂zT₂z + T₂²z²`
+   (10 terms — the deg-6 contribution to y⁴ via (1,1,1,3) + (1,1,2,2) perms)
+- `y5_6 = z⁴T₂ + z³T₂z + z²T₂z² + zT₂z³ + T₂z⁴` (5 terms — (1,1,1,1,2) perms)
+- `W6 = 2·y_d6 - (y²)_d6` per septic_pure_identity definition
+
+Each piece on the RHS is deg-7+. Proof: `pieceB''' - RHS =
+(LHS_QPI deg-4) + (LHS_SPI deg-5) + (LHS_Septic deg-6) = 0+0+0 = 0`. -/
+private theorem pieceB_septic_decomp (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) :
+    let z : 𝔸 := a + b
+    let T₂ : 𝔸 := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+    let T₃_QPI : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (6 : 𝕂)⁻¹ • b ^ 3 +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * b)
+    let T₃_SPI : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    let T₅ : 𝔸 := (120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5
+    let W5 : 𝔸 := (60 : 𝕂)⁻¹ • a ^ 5 + (60 : 𝕂)⁻¹ • b ^ 5 +
+        (12 : 𝕂)⁻¹ • (a * b ^ 4) + (12 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (6 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) -
+        (z * T₄ + T₄ * z) - (T₂ * T₃_SPI + T₃_SPI * T₂)
+    let W6 : 𝔸 := (360 : 𝕂)⁻¹ • a ^ 6 + (60 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (24 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (18 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (60 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (360 : 𝕂)⁻¹ • b ^ 6 -
+        (z * T₅ + T₂ * T₄ + T₃_SPI * T₃_SPI + T₄ * T₂ + T₅ * z)
+    let y3_5 : 𝔸 := z ^ 2 * T₃_SPI + z * T₃_SPI * z + T₃_SPI * z ^ 2 +
+        z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z
+    let y3_6 : 𝔸 := z ^ 2 * T₄ + z * T₄ * z + T₄ * z ^ 2 +
+        z * T₂ * T₃_SPI + z * T₃_SPI * T₂ + T₂ * z * T₃_SPI +
+        T₂ * T₃_SPI * z + T₃_SPI * z * T₂ + T₃_SPI * T₂ * z + T₂ ^ 3
+    let y4_5 : 𝔸 := z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3
+    let y4_6 : 𝔸 := z ^ 3 * T₃_SPI + z ^ 2 * T₃_SPI * z + z * T₃_SPI * z ^ 2 + T₃_SPI * z ^ 3 +
+        z ^ 2 * T₂ ^ 2 + z * T₂ * z * T₂ + z * T₂ ^ 2 * z +
+        T₂ * z ^ 2 * T₂ + T₂ * z * T₂ * z + T₂ ^ 2 * z ^ 2
+    let y5_6 : 𝔸 := z ^ 4 * T₂ + z ^ 3 * T₂ * z + z ^ 2 * T₂ * z ^ 2 +
+        z * T₂ * z ^ 3 + T₂ * z ^ 4
+    let y : 𝔸 := exp a * exp b - 1
+    let corr₁ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+        (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+        (2 : 𝕂)⁻¹ • (z * T₃_QPI + T₃_QPI * z) - (2 : 𝕂)⁻¹ • T₂ ^ 2
+    let corr₂ : 𝔸 := (3 : 𝕂)⁻¹ • (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2)
+    let corr₁_5 : 𝔸 := (2 : 𝕂)⁻¹ • W5
+    let corr₂_5 : 𝔸 := (3 : 𝕂)⁻¹ • y3_5
+    let corr₁_6 : 𝔸 := (2 : 𝕂)⁻¹ • W6
+    let corr₂_6 : 𝔸 := (3 : 𝕂)⁻¹ • y3_6
+    -- pieceB''' (extends pieceB'' by -⅙y⁶ - C₆)
+    y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+      (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 + (5 : 𝕂)⁻¹ • y ^ 5 -
+      (6 : 𝕂)⁻¹ • y ^ 6 -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b =
+    -- RHS: 5 pieces
+    ((y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+        (3 : 𝕂)⁻¹ • z ^ 3 - bch_cubic_term 𝕂 a b) - corr₁ - corr₁_5 - corr₁_6) +
+    ((3 : 𝕂)⁻¹ • (y ^ 3 - z ^ 3) - corr₂ - corr₂_5 - corr₂_6) -
+    (4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4 - y4_5 - y4_6) +
+    (5 : 𝕂)⁻¹ • (y ^ 5 - z ^ 5 - y5_6) -
+    (6 : 𝕂)⁻¹ • (y ^ 6 - z ^ 6) := by
+  intro z T₂ T₃_QPI T₃_SPI T₄ T₅ W5 W6 y3_5 y3_6 y4_5 y4_6 y5_6 y
+    corr₁ corr₂ corr₁_5 corr₂_5 corr₁_6 corr₂_6
+  -- Use QPI + SPI + Septic
+  have hQPI := quintic_pure_identity 𝕂 a b
+  have hSPI := sextic_pure_identity 𝕂 a b
+  have hSeptic := septic_pure_identity 𝕂 a b
+  linear_combination (norm := module) hQPI + hSPI + hSeptic
+
 /-- Norm bound `‖P - T₂ - T₃‖ ≤ 5·s⁴` where P = exp(a)*exp(b)-1-(a+b),
 T₂ = ab+½a²+½b², T₃ = ⅙a³+½a²b+½ab²+⅙b³. Algebraic identity:
 `P - T₂ - T₃ = F₁ + F₂ + a·E₂ + E₁·b + D₁·D₂` where each piece has deg-4+
