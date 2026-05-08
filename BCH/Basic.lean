@@ -4860,6 +4860,85 @@ private theorem R_eq_neg_deg5_residual (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type
     mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
   match_scalars <;> ring
 
+set_option maxHeartbeats 8000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **I₁ septic residual decomposition** (pure algebraic identity in (ea, eb, a, b)):
+extends `I1_residual_decomp_eq` by subtracting `corr₁_6 = ½·W6`, expressing
+`(I₁ in quartic_id form) - corr₁ - corr₁_5 - corr₁_6` as 12 deg-7+ terms.
+
+The 7 monomial parts of `½·W6` pair with the deg-6 leading parts of the
+existing I1_residual_decomp_eq's RHS:
+- `(720)⁻¹·a⁶` from `½·W6` cancels `(720)⁻¹·a⁶` in `H₁`, leaving
+  `I_a := H₁ - (720)⁻¹·a⁶` (deg-7+, bounded by `α⁷` via level-7 exp tail).
+- `(120)⁻¹·a⁵·b ← G₁·b → H₁·b` (deg-7).
+- `(48)⁻¹·a⁴·b² ← ½·F₁·b² → ½·G₁·b²` (deg-7).
+- `(36)⁻¹·a³·b³ ← E₁·E₂ → (1/6)·a³·F₂ + (1/6)·F₁·b³ + F₁·F₂` (deg-7+).
+- `(48)⁻¹·a²·b⁴ ← ½·a²·F₂ → ½·a²·G₂` (deg-7).
+- `(120)⁻¹·a·b⁵ ← a·G₂ → a·H₂` (deg-7).
+- `(720)⁻¹·b⁶ ← H₂ → I_b := H₂ - (720)⁻¹·b⁶` (deg-7+).
+
+Plus: the non-monomial part of W6 (= `z·T₅ + T₂·T₄ + T₃² + T₄·T₂ + T₅·z`)
+gets added back as an extra cluster `(2)⁻¹·(z·T₅ + T₂·T₄ + T₃² + T₄·T₂ + T₅·z)`.
+
+Proof: `match_scalars <;> ring` (mirrors I1_residual_decomp_eq's pattern). -/
+private theorem I1_septic_residual_decomp_eq (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (ea eb a b : 𝔸) :
+    let D₁ : 𝔸 := ea - 1 - a
+    let D₂ : 𝔸 := eb - 1 - b
+    let E₁ : 𝔸 := D₁ - (2 : 𝕂)⁻¹ • a ^ 2
+    let E₂ : 𝔸 := D₂ - (2 : 𝕂)⁻¹ • b ^ 2
+    let F₁ : 𝔸 := E₁ - (6 : 𝕂)⁻¹ • a ^ 3
+    let F₂ : 𝔸 := E₂ - (6 : 𝕂)⁻¹ • b ^ 3
+    let G₁ : 𝔸 := F₁ - (24 : 𝕂)⁻¹ • a ^ 4
+    let G₂ : 𝔸 := F₂ - (24 : 𝕂)⁻¹ • b ^ 4
+    let H₁ : 𝔸 := G₁ - (120 : 𝕂)⁻¹ • a ^ 5
+    let H₂ : 𝔸 := G₂ - (120 : 𝕂)⁻¹ • b ^ 5
+    let I_a : 𝔸 := H₁ - (720 : 𝕂)⁻¹ • a ^ 6
+    let I_b : 𝔸 := H₂ - (720 : 𝕂)⁻¹ • b ^ 6
+    let P : 𝔸 := ea * eb - 1 - (a + b)
+    let z : 𝔸 := a + b
+    let Q : 𝔸 := a * D₂ + D₁ * b + D₁ * D₂
+    let T₂ : 𝔸 := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+    let T₃ : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    let T₅ : 𝔸 := (120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5
+    let W5 : 𝔸 := (60 : 𝕂)⁻¹ • a ^ 5 + (60 : 𝕂)⁻¹ • b ^ 5 +
+        (12 : 𝕂)⁻¹ • (a * b ^ 4) + (12 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (6 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) -
+        (z * T₄ + T₄ * z) - (T₂ * T₃ + T₃ * T₂)
+    let W6 : 𝔸 := (360 : 𝕂)⁻¹ • a ^ 6 + (60 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (24 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (18 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (60 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (360 : 𝕂)⁻¹ • b ^ 6 -
+        (z * T₅ + T₂ * T₄ + T₃ * T₃ + T₄ * T₂ + T₅ * z)
+    let R : 𝔸 := T₃ - E₁ - E₂ - Q + T₄
+    -- LHS: I₁ (quartic_identity form) - corr₁ - corr₁_5 - corr₁_6
+    (F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+        (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) -
+        (2 : 𝕂)⁻¹ • P ^ 2) -
+      ((24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+        (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+        (2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) - (2 : 𝕂)⁻¹ • T₂ ^ 2) -
+      (2 : 𝕂)⁻¹ • W5 -
+      (2 : 𝕂)⁻¹ • W6 =
+    -- RHS: 12 deg-7+ terms (combined into 9 cluster expressions)
+    I_a + I_b + a * H₂ + H₁ * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + F₁ * F₂) +
+    (2 : 𝕂)⁻¹ • (a ^ 2 * G₂) + (2 : 𝕂)⁻¹ • (G₁ * b ^ 2) +
+    (2 : 𝕂)⁻¹ • (z * R + R * z) +
+    (2 : 𝕂)⁻¹ • (T₂ ^ 2 - P ^ 2 + T₂ * T₃ + T₃ * T₂) +
+    (2 : 𝕂)⁻¹ • (z * T₅ + T₂ * T₄ + T₃ * T₃ + T₄ * T₂ + T₅ * z) := by
+  dsimp only
+  simp only [pow_succ, pow_zero, one_mul, smul_sub, smul_add, smul_neg, smul_smul,
+    mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
+
 /-- Norm bound `‖I₁ residual (RHS form)‖ ≤ 20·s⁶` from precomputed component bounds.
 This is the I₁ residual bound from precomputed individual norm bounds.
 Combined with I1_residual_decomp_eq (commit 2fccfa8), gives
