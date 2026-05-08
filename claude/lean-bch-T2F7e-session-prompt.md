@@ -75,6 +75,9 @@
   Result bound: (7 + C/2)·s⁷. Combined with step 18 (C=28):
   I1 RHS ≤ 21·s⁷ for s ≤ 1/10. Proof uses `abel` re-association
   + `← smul_add` factoring.
+- Step 20 (Phase A.4 — T₄/T₅ standalone helpers): `norm_T4_le` and
+  `norm_T5_le`. Factor out inline bound calculations for future assembly.
+  ‖T₄(a,b)‖ ≤ s⁴, ‖T₅(a,b)‖ ≤ s⁵. ~166 lines.
 
 **I2 wrapper inputs now all available**: K_PmT4=6, K_P2=15, K_PzP=13, K_P3=15.
 Combined I2 RHS bound: (3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for `s ≤ 1/10`.
