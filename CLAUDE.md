@@ -4,14 +4,27 @@
 
 Branch: `main`. Repository is **0 sorries**.
 
-**Session 19 progress**: Phase A.1 of small-s septic discharge complete.
+**Session 19 progress**: Phase A.1 (S₃' bound) + Phase A.2 (I1/I2 algebraic
+identities for the septic small-s case) complete.
+
 - Step 8: `y4_sub_z4_sub_y4_5_sub_y4_6_decomp` (16-term identity) +
   `norm_y4_sub_z4_sub_y4_5_sub_y4_6_le` (≤ 85·s⁷). The S₃' piece bound for
   `pieceB_septic_decomp`. Uses compound `(y²-z²)·P²` and `z·(P²-T₂²)·z`
   forms (via existing `norm_pow2_sub_zpow2_le` and `norm_P2_sub_T22_le`).
 - Step 9: Level-7 exp tail lemmas — `norm_exp_sub_one_sub_sub_sub_sub_sub_sub_le`
   (noncomm) + `real_exp_seventh_order_le_septic` (real, ≤ s⁷ for s < 3/4).
-  Foundation for the H_a → I_a refinement in Phase A.3 (I1/I2 with corr*_6).
+  Foundation for the H_a → I_a refinement.
+- Step 10: `I1_septic_residual_decomp_eq` (12-term identity, extends
+  `I1_residual_decomp_eq` by subtracting `corr₁_6 = ½·W6`). Pairs the 7
+  monomial parts of `½·W6` with the deg-6 leading parts of the existing
+  RHS (H₁ → I_a, G₁·b → H₁·b, etc.). Proof: `match_scalars <;> ring`.
+- Step 11: `I2_septic_residual_decomp_eq` (pure ring identity in
+  {z, P, T₂, T₃, T₄}, extends `I2_residual_decomp_eq` by subtracting `y3_6`).
+  Proof: `noncomm_ring`.
+
+Remaining for Phase A: norm bounds for the I1/I2 septic RHS clusters
+(~200-300 lines), then assembly into `norm_bch_septic_remainder_small_s_le`
+(~150 lines, mirrors the session 16 sextic discharge).
 
 **Axiom count: 3 scoped `private axiom`s + Lean's 3 standard.**
 - `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2 PARENT, in
