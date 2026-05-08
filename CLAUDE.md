@@ -33,19 +33,30 @@ identities) + Phase A.4 (I2 wrapper input helpers complete).
   attempt: scalar mismatch in canonical form).
 - Step 15: `norm_PzP_sub_T2zT2_etc_le` (≤ 13·s⁷ via 6-term decomposition
   using P=T₂+T₃+(P-T₂-T₃)). Concrete K_PzP = 13 input for I2.
+- Step 16: `R_plus_T5_eq_neg_deg6_residual` — algebraic identity
+  `T₃ - E₁ - E₂ - Q + T₄ + T₅ = -(H₁+H₂+a·G₂+G₁·b+E₁·E₂+½·F₁·b²+½·a²·F₂)`.
+  Each RHS piece is deg-6+ in s. The deg-5 cancellation `R₅ = -T₅` exposed
+  algebraically. Foundation for the future combined tricky bound.
+  Proof: `linear_combination` from `R_eq_neg_deg5_residual` with
+  `match_scalars + ring` for scalar normalization (12⁻¹ vs 2⁻¹·6⁻¹).
+- Step 17: `norm_R_plus_T5_residual_sum_le` (≤ 6·s⁶ via 7 component bounds).
+  Analog of `norm_R_residual_sum_le` at one degree higher. All inputs
+  uniformly at deg-6 (no small-s constraint needed).
 
 **I2 wrapper inputs all in place:** K_PmT4=6, K_P2=15 (from norm_T22_sub_P2_etc_le
 sign flip), K_PzP=13, K_P3=15. Total septic I2 RHS bound:
 (3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for s ≤ 1/10.
 
+**I1 redesign foundation in place:** R+T₅ algebraic identity (step 16) +
+norm bound (step 17) ready for use in the future combined tricky bound.
+
 Remaining for Phase A:
-- I1 "tricky" pieces (z·R+R·z, T22, T_extra) — **fundamental issue**: the
-  individual pieces are deg-6, NOT deg-7. Cancellation only works combined.
-  Need a `norm_combined_tricky_le` lemma bounding the sum
-  `(z·R+R·z) + T22 + T_extra` directly, plus a redesign of the I1 wrapper
-  to take this combined bound. Key insight: `R + T₅` is deg-6+ (since R₅ = -T₅),
-  so `z·(R+T₅) + (R+T₅)·z` is deg-7+. The remaining T22 + T_extra cancels to
-  -P²_deg≥7 (also deg-7+ via T₃T₄, T₂·D_5, etc.). Estimated ~150 lines.
+- **Combined tricky bound** `‖(z·R+R·z) + T22 + T_extra‖ ≤ 27·s⁷`:
+  Identity (z·R+R·z) + T22 + T_extra = z·(R+T₅) + (R+T₅)·z - P²_deg≥7,
+  where P²_deg≥7 = T₃T₄ + T₄T₃ + T₂·D₅ + D₅·T₂ + T₄² + T₃·D₅ + D₅·T₃ +
+  T₄·D₅ + D₅·T₄ + D₅² (using D₅ = P-T₂-T₃-T₄ ≤ 6·s⁵). Estimated ~80 lines.
+- **I1 wrapper redesign** to take a single combined bound parameter
+  instead of 3 (C₁, C₂, C₃) — ~50 lines.
 - Final assembly (~150 lines, mirrors the session 16 sextic discharge).
 - **Bypass strategy** (per session prompt): keep the small-s septic axiom
   in place and proceed to Phase B directly.

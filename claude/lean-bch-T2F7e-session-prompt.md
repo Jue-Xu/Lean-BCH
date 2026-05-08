@@ -52,9 +52,22 @@
 - Step 15 (Phase A.4 — PzP-T₂zT₂-... helper): `norm_PzP_sub_T2zT2_etc_le`.
   Bound `‖PzP-T₂zT₂-T₂zT₃-T₃zT₂‖ ≤ 13·s⁷` for `s ≤ 1/10`. Decomposition
   via `P = T₂ + T₃ + (P-T₂-T₃)` into 6 terms. Concrete K_PzP = 13 for I2.
+- Step 16 (Phase A.4 — R+T₅ algebraic): `R_plus_T5_eq_neg_deg6_residual`.
+  Identity `T₃ - E₁ - E₂ - Q + T₄ + T₅ = -(H₁+H₂+a·G₂+G₁·b+E₁·E₂+½·F₁·b²+½·a²·F₂)`.
+  Each RHS piece is deg-6+ — exposes `R₅ = -T₅` deg-5 cancellation
+  algebraically. Proof via `linear_combination` from `R_eq_neg_deg5_residual`
+  with `match_scalars + ring` for scalar normalization.
+- Step 17 (Phase A.4 — R+T₅ norm bound): `norm_R_plus_T5_residual_sum_le`.
+  Analog of `norm_R_residual_sum_le` at one degree higher: `≤ 6·s⁶`.
+  All 7 inputs uniformly deg-6, no small-s constraint needed.
+  Combined with step 16: `‖R + T₅‖ ≤ 6·s⁶`.
 
 **I2 wrapper inputs now all available**: K_PmT4=6, K_P2=15, K_PzP=13, K_P3=15.
 Combined I2 RHS bound: (3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for `s ≤ 1/10`.
+
+**I1 redesign foundation in place**: Steps 16-17 give the R+T₅ identity +
+norm bound, the key building blocks for the future combined tricky bound
+`‖(z·R+R·z) + T22 + T_extra‖ ≤ ~27·s⁷`.
 
 ## Session 18 accomplishments
 
@@ -210,29 +223,29 @@ gives a clean ≤ 76·s⁷ bound.
 is naturally a deg-6 quantity. The deg-7 cancellation only occurs in the
 **combined** sum `(z·R+R·z) + T22 + T_extra`.
 
-### I1 redesign plan (~150-200 lines)
+### I1 redesign plan (~100 lines remaining)
 
-1. **`R_plus_T5_decomp_eq`** (algebraic identity, opaque-ea/eb form):
-   `R + T₅ = -(H₁ + H₂ + a·G₂ + G₁·b + E₁·E₂ + ½·F₁·b² + ½·a²·F₂)`.
-   Analog of `R_eq_neg_deg5_residual` at one degree higher. Each RHS
-   term is deg-6+. Proof: `linear_combination` from existing identity, or
-   `match_scalars <;> ring` with appropriate simp set.
+1. **`R_plus_T5_eq_neg_deg6_residual`** (algebraic identity): ✅ **DONE step 16**.
 
-2. **`norm_R_plus_T5_le`** (≤ 6·s⁶ for `s ≤ 1/10`):
-   Triangle inequality on the 7 RHS terms of the new identity.
+2. **`norm_R_plus_T5_residual_sum_le`** (≤ 6·s⁶): ✅ **DONE step 17**.
+   Combined with step 16: `‖R + T₅‖ ≤ 6·s⁶` (no small-s constraint).
 
-3. **`norm_combined_tricky_le`** (≤ K·s⁷ for `s ≤ 1/10`):
+3. **`norm_combined_tricky_le`** (≤ K·s⁷ for `s ≤ 1/10`) — TODO ~80 lines:
    ```
    ‖(z·R+R·z) + T22 + T_extra‖ = ‖z·(R+T₅) + (R+T₅)·z - P²_deg≥7‖
                               ≤ 12·s⁷ + ‖P²_deg≥7‖
    ```
-   Where `P²_deg≥7` (= P² minus its deg≤6 contributions) bounds via
-   `T₃T₄ + T₄T₃ + T₂·D₅ + D₅·T₂ + T₄² + T₃·D₅ + D₅·T₃ + T₄·D₅ + D₅·T₄ + D₅²`,
-   each term deg-7+ (using `‖D₅‖ = ‖P-T₂-T₃-T₄‖ ≤ 6·s⁵`).
-   Total ≤ ~27·s⁷.
+   Where `P²_deg≥7 = T₃T₄ + T₄T₃ + T₂·D₅ + D₅·T₂ + T₄² + T₃·D₅ + D₅·T₃
+   + T₄·D₅ + D₅·T₄ + D₅²` (using D₅ = P-T₂-T₃-T₄, ‖D₅‖ ≤ 6·s⁵).
+   Naive bounds: 2·(2/3) + 2·6 + (4/9)·s + 2·6·s + 2·4·s² + 36·s³ ≈ 13.3 + 14·s
+   → for `s ≤ 1/10`: ≈ 14.7 ≤ 15·s⁷. Total: 12 + 15 = 27·s⁷.
+   Steps:
+   - Algebraic identity via `noncomm_ring` after substituting P=T₂+T₃+T₄+D₅.
+   - 10 individual `norm_mul_le` chains (T₃T₄, T₂·D₅, T₄², D₅², etc.).
+   - Triangle inequality: 9 `norm_add_le` applications.
 
 4. **Redesign `norm_I1_septic_residual_RHS_le`** to take a single combined
-   bound `‖(z·R+R·z) + T22 + T_extra‖ ≤ C·s⁷` instead of three.
+   bound `‖(z·R+R·z) + T22 + T_extra‖ ≤ C·s⁷` instead of three (~50 lines).
 
 ### Final assembly (~150 lines)
 
