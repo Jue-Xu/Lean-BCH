@@ -5035,6 +5035,188 @@ private theorem norm_I1_residual_RHS_le (a b z H₁ H₂ G₁ G₂ F₁ F₂ E�
   -- Sum: 1+1+1+1 + (1+½+½) + 6 + 7.5 = 19.5 ≤ 20
   linarith [pow_nonneg hs_nn 6]
 
+/-- Norm bound for the RHS of `I1_septic_residual_decomp_eq`.
+
+Given precomputed bounds for the 9 "easy" pieces (each ≤ s⁷) and 3
+parameterized bounds for the "tricky" pieces (z·R+R·z ≤ C₁·s⁷,
+T22 ≤ C₂·s⁷, T_extra ≤ C₃·s⁷), bounds the RHS by `(7 + (C₁+C₂+C₃)/2)·s⁷`.
+
+Per-term contributions (in units of s⁷):
+- 4 outer terms (I_a + I_b + a·H₂ + H₁·b) → 4·s⁷.
+- Inner cluster `(1/6)·a³F₂ + (1/6)·F₁b³ + F₁F₂` → (1/6 + 1/6 + 1) = 4/3·s⁷.
+- Two `(1/2)•` smul'd terms → 1/2 + 1/2 = 1·s⁷.
+- Three "tricky" smul'd terms → (C₁ + C₂ + C₃)/2·s⁷.
+- Total: 4 + 4/3 + 1 + (C₁+C₂+C₃)/2 = 19/3 + (C₁+C₂+C₃)/2 ≤ 7 + (C₁+C₂+C₃)/2. -/
+private theorem norm_I1_septic_residual_RHS_le (a b z I_a I_b H₁ H₂ F₁ F₂ G₁ G₂ R T22
+    T_extra : 𝔸)
+    {s C₁ C₂ C₃ : ℝ} (hs_nn : 0 ≤ s)
+    (hC₁_nn : 0 ≤ C₁) (hC₂_nn : 0 ≤ C₂) (hC₃_nn : 0 ≤ C₃)
+    (hI_a_le : ‖I_a‖ ≤ s ^ 7) (hI_b_le : ‖I_b‖ ≤ s ^ 7)
+    (h_aH₂_le : ‖a * H₂‖ ≤ s ^ 7) (h_H₁b_le : ‖H₁ * b‖ ≤ s ^ 7)
+    (h_a3F₂_le : ‖a ^ 3 * F₂‖ ≤ s ^ 7)
+    (h_F₁b3_le : ‖F₁ * b ^ 3‖ ≤ s ^ 7)
+    (h_F₁F₂_le : ‖F₁ * F₂‖ ≤ s ^ 7)
+    (h_a2G₂_le : ‖a ^ 2 * G₂‖ ≤ s ^ 7)
+    (h_G₁b2_le : ‖G₁ * b ^ 2‖ ≤ s ^ 7)
+    (h_zRpRz_le : ‖z * R + R * z‖ ≤ C₁ * s ^ 7)
+    (h_T22_le : ‖T22‖ ≤ C₂ * s ^ 7)
+    (h_T_extra_le : ‖T_extra‖ ≤ C₃ * s ^ 7) :
+    ‖I_a + I_b + a * H₂ + H₁ * b +
+      ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + F₁ * F₂) +
+      (2 : 𝕂)⁻¹ • (a ^ 2 * G₂) + (2 : 𝕂)⁻¹ • (G₁ * b ^ 2) +
+      (2 : 𝕂)⁻¹ • (z * R + R * z) +
+      (2 : 𝕂)⁻¹ • T22 +
+      (2 : 𝕂)⁻¹ • T_extra‖ ≤ (7 + (C₁ + C₂ + C₃) / 2) * s ^ 7 := by
+  have h2eq : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h6eq : ‖(6 : 𝕂)⁻¹‖ = (6 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  -- Smul-prefixed bounds.
+  have h_a3F2_smul : ‖(6 : 𝕂)⁻¹ • (a ^ 3 * F₂)‖ ≤ s ^ 7 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖a ^ 3 * F₂‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_a3F₂_le (by norm_num)
+      _ = s ^ 7 / 6 := by ring
+  have h_F1b3_smul : ‖(6 : 𝕂)⁻¹ • (F₁ * b ^ 3)‖ ≤ s ^ 7 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖F₁ * b ^ 3‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_F₁b3_le (by norm_num)
+      _ = s ^ 7 / 6 := by ring
+  have h_a2G2_smul : ‖(2 : 𝕂)⁻¹ • (a ^ 2 * G₂)‖ ≤ s ^ 7 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a ^ 2 * G₂‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_a2G₂_le (by norm_num)
+      _ = s ^ 7 / 2 := by ring
+  have h_G1b2_smul : ‖(2 : 𝕂)⁻¹ • (G₁ * b ^ 2)‖ ≤ s ^ 7 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖G₁ * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_G₁b2_le (by norm_num)
+      _ = s ^ 7 / 2 := by ring
+  have h_zRpRz_smul : ‖(2 : 𝕂)⁻¹ • (z * R + R * z)‖ ≤ C₁ * s ^ 7 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖z * R + R * z‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * (C₁ * s ^ 7) := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_zRpRz_le (by norm_num)
+      _ = C₁ * s ^ 7 / 2 := by ring
+  have h_T22_smul : ‖(2 : 𝕂)⁻¹ • T22‖ ≤ C₂ * s ^ 7 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖T22‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * (C₂ * s ^ 7) := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_T22_le (by norm_num)
+      _ = C₂ * s ^ 7 / 2 := by ring
+  have h_Textra_smul : ‖(2 : 𝕂)⁻¹ • T_extra‖ ≤ C₃ * s ^ 7 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖T_extra‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * (C₃ * s ^ 7) := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_T_extra_le (by norm_num)
+      _ = C₃ * s ^ 7 / 2 := by ring
+  -- Inner 3-term cluster: (1/6)·a³F₂ + (1/6)·F₁b³ + F₁F₂ ≤ s⁷/6 + s⁷/6 + s⁷ = (4/3)·s⁷.
+  have h_inner : ‖(6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + F₁ * F₂‖ ≤
+      s ^ 7 / 6 + s ^ 7 / 6 + s ^ 7 := by
+    have hi1 := norm_add_le ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3)) (F₁ * F₂)
+    have hi2 := norm_add_le ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂)) ((6 : 𝕂)⁻¹ • (F₁ * b ^ 3))
+    linarith
+  -- Triangle inequality on 8 outer pieces: I_a + I_b + a·H₂ + H₁·b + inner +
+  -- (½·a²G₂) + (½·G₁b²) + (½·zRpRz) + (½·T22) + (½·T_extra) ← actually 10 outer pieces.
+  -- Outer chain: 9 norm_add_le applications.
+  have ha1 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + F₁ * F₂) +
+    (2 : 𝕂)⁻¹ • (a ^ 2 * G₂) + (2 : 𝕂)⁻¹ • (G₁ * b ^ 2) +
+    (2 : 𝕂)⁻¹ • (z * R + R * z) +
+    (2 : 𝕂)⁻¹ • T22) ((2 : 𝕂)⁻¹ • T_extra)
+  have ha2 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + F₁ * F₂) +
+    (2 : 𝕂)⁻¹ • (a ^ 2 * G₂) + (2 : 𝕂)⁻¹ • (G₁ * b ^ 2) +
+    (2 : 𝕂)⁻¹ • (z * R + R * z)) ((2 : 𝕂)⁻¹ • T22)
+  have ha3 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + F₁ * F₂) +
+    (2 : 𝕂)⁻¹ • (a ^ 2 * G₂) + (2 : 𝕂)⁻¹ • (G₁ * b ^ 2))
+    ((2 : 𝕂)⁻¹ • (z * R + R * z))
+  have ha4 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + F₁ * F₂) +
+    (2 : 𝕂)⁻¹ • (a ^ 2 * G₂)) ((2 : 𝕂)⁻¹ • (G₁ * b ^ 2))
+  have ha5 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + F₁ * F₂))
+    ((2 : 𝕂)⁻¹ • (a ^ 2 * G₂))
+  have ha6 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b)
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂) + (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + F₁ * F₂)
+  have ha7 := norm_add_le (I_a + I_b + a * H₂) (H₁ * b)
+  have ha8 := norm_add_le (I_a + I_b) (a * H₂)
+  have ha9 := norm_add_le I_a I_b
+  -- Sum: 1+1+1+1+(4/3)+(1/2)+(1/2)+(C₁+C₂+C₃)/2 = 19/3 + (C₁+C₂+C₃)/2 ≤ 7 + (C₁+C₂+C₃)/2.
+  nlinarith [pow_nonneg hs_nn 7]
+
+/-- Norm bound for the RHS of `I2_septic_residual_decomp_eq`.
+
+Given precomputed bounds for the 4 input pieces (with parameterized constants
+K_PmT4, K_P2, K_PzP, K_P3), bounds the RHS by `(3·K_PmT4 + 2·K_P2 + K_PzP + K_P3)·s⁷`.
+
+Per-term contributions:
+- 3 weight-1 (P-T₂-T₃-T₄) middle terms: each ≤ K_PmT4·s⁷.
+- 2 compound `z·(P²-T₂²-T₂T₃-T₃T₂)`-style terms: each ≤ K_P2·s⁷.
+- 1 sandwich `PzP-T₂zT₂-T₂zT₃-T₃zT₂` term: ≤ K_PzP·s⁷.
+- 1 (P³ - T₂³) term: ≤ K_P3·s⁷.
+
+The user supplies the parameterized bounds; this wrapper combines via
+triangle inequality. -/
+private theorem norm_I2_septic_residual_RHS_le (z P T₂ T₃ T₄ : 𝔸)
+    {s K_PmT4 K_P2 K_PzP K_P3 : ℝ} (hs_nn : 0 ≤ s)
+    (hK_PmT4_nn : 0 ≤ K_PmT4) (hK_P2_nn : 0 ≤ K_P2)
+    (hK_PzP_nn : 0 ≤ K_PzP) (hK_P3_nn : 0 ≤ K_P3)
+    (hz : ‖z‖ ≤ s)
+    (hPmT4_le : ‖P - T₂ - T₃ - T₄‖ ≤ K_PmT4 * s ^ 5)
+    (hP2_etc_le : ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂‖ ≤ K_P2 * s ^ 6)
+    (hPzP_etc_le :
+        ‖P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂‖ ≤ K_PzP * s ^ 7)
+    (hP3_le : ‖P ^ 3 - T₂ ^ 3‖ ≤ K_P3 * s ^ 7) :
+    ‖z ^ 2 * (P - T₂ - T₃ - T₄) + z * (P - T₂ - T₃ - T₄) * z +
+      (P - T₂ - T₃ - T₄) * z ^ 2 +
+      z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) +
+      (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂) +
+      (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) * z +
+      (P ^ 3 - T₂ ^ 3)‖ ≤
+      (3 * K_PmT4 + 2 * K_P2 + K_PzP + K_P3) * s ^ 7 := by
+  -- Bound each of the 7 outer terms.
+  have h1 : ‖z ^ 2 * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 2 * (K_PmT4 * s ^ 5) :=
+    calc _ ≤ ‖z ^ 2‖ * ‖P - T₂ - T₃ - T₄‖ := norm_mul_le _ _
+      _ ≤ ‖z‖ ^ 2 * ‖P - T₂ - T₃ - T₄‖ := by gcongr; exact norm_pow_le z 2
+      _ ≤ s ^ 2 * (K_PmT4 * s ^ 5) := mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hz 2)
+          hPmT4_le (norm_nonneg _) (by positivity)
+  have h2 : ‖z * (P - T₂ - T₃ - T₄) * z‖ ≤ s * (K_PmT4 * s ^ 5) * s :=
+    calc _ ≤ ‖z * (P - T₂ - T₃ - T₄)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖z‖ * ‖P - T₂ - T₃ - T₄‖) * ‖z‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s * (K_PmT4 * s ^ 5)) * s := by
+          apply mul_le_mul _ hz (norm_nonneg _) (by positivity)
+          exact mul_le_mul hz hPmT4_le (norm_nonneg _) (by positivity)
+  have h3 : ‖(P - T₂ - T₃ - T₄) * z ^ 2‖ ≤ (K_PmT4 * s ^ 5) * s ^ 2 :=
+    calc _ ≤ ‖P - T₂ - T₃ - T₄‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ ‖P - T₂ - T₃ - T₄‖ * ‖z‖ ^ 2 := by gcongr; exact norm_pow_le z 2
+      _ ≤ (K_PmT4 * s ^ 5) * s ^ 2 := mul_le_mul hPmT4_le
+          (pow_le_pow_left₀ (norm_nonneg _) hz 2) (by positivity) (by positivity)
+  have h4 : ‖z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂)‖ ≤ s * (K_P2 * s ^ 6) :=
+    calc _ ≤ ‖z‖ * ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂‖ := norm_mul_le _ _
+      _ ≤ s * (K_P2 * s ^ 6) := mul_le_mul hz hP2_etc_le (norm_nonneg _) (by positivity)
+  have h6 : ‖(P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) * z‖ ≤ (K_P2 * s ^ 6) * s :=
+    calc _ ≤ ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (K_P2 * s ^ 6) * s := mul_le_mul hP2_etc_le hz (norm_nonneg _) (by positivity)
+  -- Sum 7 terms via triangle inequality (6 norm_add_le).
+  have ha1 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄) + z * (P - T₂ - T₃ - T₄) * z +
+    (P - T₂ - T₃ - T₄) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) +
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂) +
+    (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) * z) (P ^ 3 - T₂ ^ 3)
+  have ha2 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄) + z * (P - T₂ - T₃ - T₄) * z +
+    (P - T₂ - T₃ - T₄) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) +
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂))
+    ((P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) * z)
+  have ha3 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄) + z * (P - T₂ - T₃ - T₄) * z +
+    (P - T₂ - T₃ - T₄) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂))
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂)
+  have ha4 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄) + z * (P - T₂ - T₃ - T₄) * z +
+    (P - T₂ - T₃ - T₄) * z ^ 2) (z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂))
+  have ha5 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄) + z * (P - T₂ - T₃ - T₄) * z)
+    ((P - T₂ - T₃ - T₄) * z ^ 2)
+  have ha6 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄)) (z * (P - T₂ - T₃ - T₄) * z)
+  -- Sum: 3·K_PmT4 + 2·K_P2 + K_PzP + K_P3 (in units of s⁷).
+  nlinarith [pow_nonneg hs_nn 7]
+
 /-- Norm bound `‖T₂² - P² + T₂T₃ + T₃T₂‖ ≤ 15·s⁶`. Decomposition uses
 `P² - T₂² - T₂T₃ - T₃T₂ = (P-T₂-T₃)·P + T₂·(P-T₂-T₃) + T₃·(P-T₂)`. -/
 private theorem norm_T22_sub_P2_etc_le (P T₂ T₃ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
