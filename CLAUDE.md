@@ -56,7 +56,12 @@ identities) + Phase A.4 (I2 wrapper input helpers complete).
   - `norm_T4_le`: `‖T₄(a,b)‖ ≤ s⁴` (sum of |coefs| = 16/24 = 2/3).
   - `norm_T5_le`: `‖T₅(a,b)‖ ≤ s⁵` (sum of |coefs| = 32/120 = 4/15).
   Factor out the inline T₄/T₅ bound calculations needed for the future
-  small-s septic assembly, saving ~120 lines.
+  small-s septic assembly, saving ~120 lines. Note: T₂ and T₃ helpers
+  cannot be standalone with `α ≤ s, β ≤ s` since their |coef| sums are
+  `> 1`; they remain inline in the assembly using `s = α + β`.
+- Step 21: `real_exp_sub_one_pow7_le_small`. Helper bounding
+  `(Real.exp s - 1)^7 ≤ 2·s^7` for `s ≤ 1/10`. Analog of inline `hexp6`
+  in the sextic discharge. Saves ~10 lines in the future pieceA bound.
 
 **I2 wrapper inputs all in place:** K_PmT4=6, K_P2=15, K_PzP=13, K_P3=15.
 Total septic I2 RHS bound: (3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for s ≤ 1/10.

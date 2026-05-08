@@ -77,7 +77,11 @@
   + `← smul_add` factoring.
 - Step 20 (Phase A.4 — T₄/T₅ standalone helpers): `norm_T4_le` and
   `norm_T5_le`. Factor out inline bound calculations for future assembly.
-  ‖T₄(a,b)‖ ≤ s⁴, ‖T₅(a,b)‖ ≤ s⁵. ~166 lines.
+  ‖T₄(a,b)‖ ≤ s⁴, ‖T₅(a,b)‖ ≤ s⁵. ~166 lines. T₂ and T₃ remain inline
+  (sum of |coefs| > 1, so need `s = α + β` not `α ≤ s, β ≤ s`).
+- Step 21 (Phase A.4 — exp pow7 helper): `real_exp_sub_one_pow7_le_small`.
+  `(Real.exp s - 1)^7 ≤ 2·s^7` for `s ≤ 1/10`. Saves ~10 lines in the
+  future pieceA bound.
 
 **I2 wrapper inputs now all available**: K_PmT4=6, K_P2=15, K_PzP=13, K_P3=15.
 Combined I2 RHS bound: (3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for `s ≤ 1/10`.
