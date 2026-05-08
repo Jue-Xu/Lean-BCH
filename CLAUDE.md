@@ -42,22 +42,36 @@ identities) + Phase A.4 (I2 wrapper input helpers complete).
 - Step 17: `norm_R_plus_T5_residual_sum_le` (≤ 6·s⁶ via 7 component bounds).
   Analog of `norm_R_residual_sum_le` at one degree higher. All inputs
   uniformly at deg-6 (no small-s constraint needed).
+- Step 18: `norm_combined_tricky_le` (≤ 28·s⁷ for s ≤ 1/10). The
+  combined bound for `(z·R+R·z) + T22 + T_extra`. Algebraic identity
+  reduces to `z·(R+T₅) + (R+T₅)·z - P²_deg≥7`, where P²_deg≥7 is the
+  10-term decomposition `T₃T₄ + T₄T₃ + T₂·D₅ + D₅·T₂ + T₄² + T₃·D₅ + D₅·T₃ + T₄·D₅ + D₅·T₄ + D₅²`
+  using D₅ = P-T₂-T₃-T₄ (≤ 6·s⁵). Maxheartbeats 4M for nlinarith.
+- Step 19: I1 wrapper redesign — `norm_I1_septic_residual_RHS_le` now
+  takes a single combined parameter `‖z·R+R·z+T22+T_extra‖ ≤ C·s⁷`
+  instead of 3 (which were unsatisfiable as constants). Result bound:
+  (7 + C/2)·s⁷. With C=28 from step 18: I1 RHS ≤ 21·s⁷.
+  Proof uses `abel` re-association + `← smul_add` factoring.
 
-**I2 wrapper inputs all in place:** K_PmT4=6, K_P2=15 (from norm_T22_sub_P2_etc_le
-sign flip), K_PzP=13, K_P3=15. Total septic I2 RHS bound:
-(3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for s ≤ 1/10.
+**I2 wrapper inputs all in place:** K_PmT4=6, K_P2=15, K_PzP=13, K_P3=15.
+Total septic I2 RHS bound: (3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for s ≤ 1/10.
 
-**I1 redesign foundation in place:** R+T₅ algebraic identity (step 16) +
-norm bound (step 17) ready for use in the future combined tricky bound.
+**I1 wrapper now satisfiable:** With C = 28 from `norm_combined_tricky_le`,
+I1 RHS ≤ 21·s⁷.
+
+**`pieceB_septic_decomp` piece bounds:**
+- S₁' (I₁) ≤ 21·s⁷
+- S₂' (I₂) ≤ 76·s⁷
+- S₃' (¼·(y⁴-z⁴-y4_5-y4_6)) ≤ 22·s⁷
+- S₄' (⅕·(y⁵-z⁵-y5_6)) ≤ 11·s⁷
+- S₅ (⅙·(y⁶-z⁶)) ≤ 11·s⁷
+- Total pieceB''' ≤ ~141·s⁷
 
 Remaining for Phase A:
-- **Combined tricky bound** `‖(z·R+R·z) + T22 + T_extra‖ ≤ 27·s⁷`:
-  Identity (z·R+R·z) + T22 + T_extra = z·(R+T₅) + (R+T₅)·z - P²_deg≥7,
-  where P²_deg≥7 = T₃T₄ + T₄T₃ + T₂·D₅ + D₅·T₂ + T₄² + T₃·D₅ + D₅·T₃ +
-  T₄·D₅ + D₅·T₄ + D₅² (using D₅ = P-T₂-T₃-T₄ ≤ 6·s⁵). Estimated ~80 lines.
-- **I1 wrapper redesign** to take a single combined bound parameter
-  instead of 3 (C₁, C₂, C₃) — ~50 lines.
-- Final assembly (~150 lines, mirrors the session 16 sextic discharge).
+- **Final assembly** for `norm_bch_septic_remainder_small_s_le`:
+  ~500+ lines mirroring the session-16 sextic discharge. Uses
+  `pieceB_septic_decomp` + the per-piece bounds above + pieceA bound
+  (deg-7 log series tail). Total bound ~1000·s⁷/(2-exp(s)) for s < 1/10.
 - **Bypass strategy** (per session prompt): keep the small-s septic axiom
   in place and proceed to Phase B directly.
 

@@ -61,13 +61,34 @@
   Analog of `norm_R_residual_sum_le` at one degree higher: `≤ 6·s⁶`.
   All 7 inputs uniformly deg-6, no small-s constraint needed.
   Combined with step 16: `‖R + T₅‖ ≤ 6·s⁶`.
+- Step 18 (Phase A.4 — combined tricky bound): `norm_combined_tricky_le`.
+  `‖(z·R+R·z) + T22 + T_extra‖ ≤ 28·s⁷` for `s ≤ 1/10`. Algebraic identity
+  reduces the LHS to `z·(R+T₅) + (R+T₅)·z - P²_deg≥7` via `noncomm_ring`
+  after substituting `P = T₂+T₃+T₄+D₅`. Then 12 component bounds
+  (2 from R+T₅ part, 10 from P²_deg≥7) + nlinarith with auxiliary
+  `s⁸ ≤ s⁷/10`, `s⁹ ≤ s⁷/100`, `s¹⁰ ≤ s⁷/1000` (using s ≤ 1/10).
+  Maxheartbeats 4M.
+- Step 19 (Phase A.4 — I1 wrapper redesign): `norm_I1_septic_residual_RHS_le`
+  rewritten to take a single combined parameter
+  `‖z·R+R·z+T22+T_extra‖ ≤ C·s⁷` instead of 3 separate parameters
+  (C₁, C₂, C₃ — which were individually unsatisfiable as constants).
+  Result bound: (7 + C/2)·s⁷. Combined with step 18 (C=28):
+  I1 RHS ≤ 21·s⁷ for s ≤ 1/10. Proof uses `abel` re-association
+  + `← smul_add` factoring.
 
 **I2 wrapper inputs now all available**: K_PmT4=6, K_P2=15, K_PzP=13, K_P3=15.
 Combined I2 RHS bound: (3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for `s ≤ 1/10`.
 
-**I1 redesign foundation in place**: Steps 16-17 give the R+T₅ identity +
-norm bound, the key building blocks for the future combined tricky bound
-`‖(z·R+R·z) + T22 + T_extra‖ ≤ ~27·s⁷`.
+**I1 wrapper now satisfiable**: with C = 28 from `norm_combined_tricky_le`,
+I1 RHS ≤ 21·s⁷.
+
+**All pieceB_septic_decomp piece bounds available**:
+- S₁' (I₁) ≤ 21·s⁷ ✅
+- S₂' (I₂) ≤ 76·s⁷ ✅
+- S₃' (¼·(y⁴-z⁴-y4_5-y4_6)) ≤ ¼·85·s⁷ ≈ 22·s⁷ ✅
+- S₄' (⅕·(y⁵-z⁵-y5_6)) ≤ ⅕·51·s⁷ ≈ 11·s⁷ ✅
+- S₅ (⅙·(y⁶-z⁶)) ≤ ⅙·63·s⁷ ≈ 11·s⁷ ✅
+- Total pieceB''' ≤ ~141·s⁷.
 
 ## Session 18 accomplishments
 
@@ -223,40 +244,26 @@ gives a clean ≤ 76·s⁷ bound.
 is naturally a deg-6 quantity. The deg-7 cancellation only occurs in the
 **combined** sum `(z·R+R·z) + T22 + T_extra`.
 
-### I1 redesign plan (~100 lines remaining)
+### I1 redesign plan — ALL DONE ✅
 
-1. **`R_plus_T5_eq_neg_deg6_residual`** (algebraic identity): ✅ **DONE step 16**.
+1. **`R_plus_T5_eq_neg_deg6_residual`** (algebraic identity): ✅ DONE step 16.
+2. **`norm_R_plus_T5_residual_sum_le`** (≤ 6·s⁶): ✅ DONE step 17.
+3. **`norm_combined_tricky_le`** (≤ 28·s⁷): ✅ DONE step 18.
+4. **`norm_I1_septic_residual_RHS_le` redesign**: ✅ DONE step 19.
 
-2. **`norm_R_plus_T5_residual_sum_le`** (≤ 6·s⁶): ✅ **DONE step 17**.
-   Combined with step 16: `‖R + T₅‖ ≤ 6·s⁶` (no small-s constraint).
+### Final assembly (~500 lines, mirror of session-16 sextic discharge)
 
-3. **`norm_combined_tricky_le`** (≤ K·s⁷ for `s ≤ 1/10`) — TODO ~80 lines:
-   ```
-   ‖(z·R+R·z) + T22 + T_extra‖ = ‖z·(R+T₅) + (R+T₅)·z - P²_deg≥7‖
-                              ≤ 12·s⁷ + ‖P²_deg≥7‖
-   ```
-   Where `P²_deg≥7 = T₃T₄ + T₄T₃ + T₂·D₅ + D₅·T₂ + T₄² + T₃·D₅ + D₅·T₃
-   + T₄·D₅ + D₅·T₄ + D₅²` (using D₅ = P-T₂-T₃-T₄, ‖D₅‖ ≤ 6·s⁵).
-   Naive bounds: 2·(2/3) + 2·6 + (4/9)·s + 2·6·s + 2·4·s² + 36·s³ ≈ 13.3 + 14·s
-   → for `s ≤ 1/10`: ≈ 14.7 ≤ 15·s⁷. Total: 12 + 15 = 27·s⁷.
-   Steps:
-   - Algebraic identity via `noncomm_ring` after substituting P=T₂+T₃+T₄+D₅.
-   - 10 individual `norm_mul_le` chains (T₃T₄, T₂·D₅, T₄², D₅², etc.).
-   - Triangle inequality: 9 `norm_add_le` applications.
-
-4. **Redesign `norm_I1_septic_residual_RHS_le`** to take a single combined
-   bound `‖(z·R+R·z) + T22 + T_extra‖ ≤ C·s⁷` instead of three (~50 lines).
-
-### Final assembly (~150 lines)
-
-After the I1 redesign:
+After the I1 redesign (step 19):
 1. Use `pieceB_septic_decomp` to split LHS into pieceA + 5 sub-pieces.
-2. Bound pieceA via deg-7 log series tail.
-3. Bound S₁' = (I₁ - corr₁ - corr₁_5 - corr₁_6) ≤ ~25·s⁷ via I1 wrapper.
-4. Bound S₂' = (I₂ - corr₂ - corr₂_5 - corr₂_6) ≤ 76·s⁷ via I2 wrapper.
+2. Bound pieceA via deg-7 log series tail (`norm_logOnePlus_sub_sub_sub_sub_sub_sub_le`).
+3. Bound S₁' (I₁) ≤ 21·s⁷ via I1 wrapper (step 19) + combined tricky (step 18).
+4. Bound S₂' (I₂) ≤ 76·s⁷ via I2 wrapper.
 5. Bound S₃', S₄', S₅ via existing helpers.
-6. Combine via triangle inequality. Total ≈ 1000·s⁷ for `s ≤ 1/10`,
-   matching the small-s axiom statement.
+6. Combine via triangle inequality. Total pieceB''' ≤ ~141·s⁷, plus pieceA.
+   Net ~1000·s⁷/(2-exp(s)) for `s ≤ 1/10`, matching the small-s axiom.
+
+The structure mirrors `norm_bch_sextic_remainder_small_s_le` (line ~6338,
+~580 lines), extended one degree higher.
 
 **Bypass strategy** (if Phase A is deferred): keep
 `norm_bch_septic_remainder_small_s_le` axiom-ized and focus on Phase B
