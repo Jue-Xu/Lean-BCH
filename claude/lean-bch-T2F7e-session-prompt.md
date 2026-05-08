@@ -25,6 +25,16 @@
   Pure ring identity in `(z, P, T₂, T₃, T₄)` extending `I2_residual_decomp_eq`
   by subtracting `y3_6` (the deg-6 leading of `(z+P)³ - z³`). Proof via
   `noncomm_ring`. All 7 RHS pieces are deg-7+.
+- Step 12 (Phase A.4 — RHS bound wrappers): `norm_I1_septic_residual_RHS_le`
+  and `norm_I2_septic_residual_RHS_le`. Both take precomputed bounds and
+  combine via triangle inequality. The I1 wrapper bounds by
+  `(7 + (C₁+C₂+C₃)/2)·s⁷` (parameterized over 3 "tricky" piece bounds);
+  the I2 wrapper bounds by `(3·K_PmT4 + 2·K_P2 + K_PzP + K_P3)·s⁷`
+  (parameterized over 4 input bounds).
+- Step 13 (Phase A.4 — P³-T₂³ helper): `norm_P3_sub_T23_le`. Bound
+  `‖P³ - T₂³‖ ≤ 15·s⁷` via 3-fold telescoping
+  `(P-T₂)·P² + T₂·(P-T₂)·P + T₂²·(P-T₂)`. Concrete value of K_P3 = 15
+  for the I2 wrapper.
 
 ## Session 18 accomplishments
 

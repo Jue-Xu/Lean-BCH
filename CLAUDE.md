@@ -21,10 +21,19 @@ identities for the septic small-s case) complete.
 - Step 11: `I2_septic_residual_decomp_eq` (pure ring identity in
   {z, P, T₂, T₃, T₄}, extends `I2_residual_decomp_eq` by subtracting `y3_6`).
   Proof: `noncomm_ring`.
+- Step 12: `norm_I1_septic_residual_RHS_le` (≤ (7 + (C₁+C₂+C₃)/2)·s⁷,
+  parameterized over 3 "tricky" bounds) + `norm_I2_septic_residual_RHS_le`
+  (≤ (3·K_PmT4 + 2·K_P2 + K_PzP + K_P3)·s⁷, parameterized over 4 inputs).
+  Both wrappers combine precomputed bounds via triangle inequality.
+- Step 13: `norm_P3_sub_T23_le` (≤ 15·s⁷ via telescope). Concrete K_P3 = 15.
 
-Remaining for Phase A: norm bounds for the I1/I2 septic RHS clusters
-(~200-300 lines), then assembly into `norm_bch_septic_remainder_small_s_le`
-(~150 lines, mirrors the session 16 sextic discharge).
+Remaining for Phase A:
+- A new `norm_P_sub_T2_sub_T3_sub_T4_le` (analog of P-T₂-T₃ extended one
+  degree) — algebraic identity proven via match_scalars but final
+  triangle inequality fails linarith; needs alternative proof strategy.
+- Bounds for the I1 "tricky" pieces (z·R+R·z, T22, T_extra) — most involved.
+- Bounds for the I2 "PzP-T₂zT₂-T₂zT₃-T₃zT₂" piece.
+- Final assembly (~150 lines, mirrors the session 16 sextic discharge).
 
 **Axiom count: 3 scoped `private axiom`s + Lean's 3 standard.**
 - `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2 PARENT, in
