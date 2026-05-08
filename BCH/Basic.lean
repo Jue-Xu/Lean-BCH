@@ -2772,6 +2772,32 @@ private lemma real_exp_seventh_order_le_septic {s : ℝ} (hs : 0 ≤ s) (hs1 : s
         rw [div_le_iff₀ (by nlinarith : (0 : ℝ) < 5040 * (1 - s))]
         nlinarith [sq_nonneg s, pow_nonneg hs 7]
 
+/-- For `0 ≤ s ≤ 1/10`, `(Real.exp s - 1)^7 ≤ 2 · s^7`. Used in the small-s
+septic remainder assembly. Analog of the inline `hexp6` calculation for the
+sextic case, extended one degree. -/
+private lemma real_exp_sub_one_pow7_le_small {s : ℝ} (hs_nn : 0 ≤ s)
+    (hs_small : s ≤ 1 / 10) :
+    (Real.exp s - 1) ^ 7 ≤ 2 * s ^ 7 := by
+  have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
+  have hs_lt1 : s < 1 := by linarith
+  have hEs2 : Real.exp s - 1 - s ≤ s ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖s‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hs_nn]; linarith)
+    have hEs_nn : 0 ≤ Real.exp s - 1 - s := by
+      linarith [Real.quadratic_le_exp_of_nonneg hs_nn, sq_nonneg s]
+    rwa [Real.norm_eq_abs, abs_of_nonneg hEs_nn,
+         Real.norm_eq_abs, abs_of_nonneg hs_nn] at h
+  calc (Real.exp s - 1) ^ 7 ≤ (s + s ^ 2) ^ 7 :=
+        pow_le_pow_left₀ hE1_nn (by linarith) 7
+    _ = s ^ 7 * (1 + s) ^ 7 := by ring
+    _ ≤ s ^ 7 * 2 := by
+        apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs_nn 7)
+        have h1 : (1 + s) ^ 7 ≤ (1 + 1/10) ^ 7 :=
+          pow_le_pow_left₀ (by linarith) (by linarith) 7
+        have h2 : (1 + 1/10 : ℝ) ^ 7 ≤ 2 := by norm_num
+        linarith
+    _ = 2 * s ^ 7 := by ring
+
 set_option maxHeartbeats 32000000 in
 include 𝕂 in
 /-- **Fourth-order BCH**: `bch(a,b) = (a+b) + ½[a,b] + bch_cubic_term(a,b) + O(s⁴)`.
