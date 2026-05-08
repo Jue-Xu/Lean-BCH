@@ -277,6 +277,12 @@ CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
   ‖z‖ ≤ s, ‖P‖ ≤ s²`). Building block analog of `pow5_sub_zpow5_telescope`
   + `norm_pow5_sub_zpow5_le` for the future `norm_bch_septic_remainder_small_s_le`
   (S₅ piece bound: `⅙·63·s⁷ ≈ 10.5·s⁷`).
+- ✅ T2-F7e infrastructure step 6 (session 18, pow4 + y5 helpers):
+  `BCH.norm_pow4_sub_zpow4_le` (`‖y⁴ - z⁴‖ ≤ 15·s⁵`),
+  `BCH.y5_sub_z5_sub_y5_6_decomp` (algebraic identity, 9 deg-7+ terms),
+  `BCH.norm_y5_sub_z5_sub_y5_6_le` (`‖y⁵ - z⁵ - y5_6‖ ≤ 51·s⁷`).
+  Analog of `norm_y4_sub_z4_sub_y4_5_le` at one degree higher; needed for
+  the S₄' piece of `pieceB_septic_decomp`.
 - ✅ T2-F1: `norm_three_factor_exp_product_sub_one_le` —
   `‖P-1‖ ≤ exp(s)-1` (Palindromic.lean).
 - ✅ T2-F2: `norm_three_factor_exp_product_sub_one_lt_one` —
