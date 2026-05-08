@@ -6306,6 +6306,172 @@ private theorem norm_P_sub_T2_sub_T3_sub_T4_le (a b : 𝔸) {s : ℝ} (hs_nn : 0
   have ha6 := norm_add_le G₁ G₂
   linarith [pow_nonneg hs_nn 5, pow_nonneg hs_nn 6]
 
+/-- Norm bound `‖T₄‖ ≤ s⁴` where T₄ = (1/24)·a⁴ + (1/6)·a³b + (1/4)·a²b² +
+(1/6)·ab³ + (1/24)·b⁴ is the deg-4 contribution of `exp(a)·exp(b)-1`.
+Sum of |coefficients| = 16/24 = 2/3 ≤ 1, so ‖T₄‖ ≤ (2/3)·s⁴ ≤ s⁴. -/
+private theorem norm_T4_le (a b : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hα_le : ‖a‖ ≤ s) (hβ_le : ‖b‖ ≤ s) :
+    ‖(24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+      (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+      (24 : 𝕂)⁻¹ • b ^ 4‖ ≤ s ^ 4 := by
+  set α := ‖a‖
+  set β := ‖b‖
+  have hα_nn : (0 : ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0 : ℝ) ≤ β := norm_nonneg b
+  have h4eq : ‖(4 : 𝕂)⁻¹‖ = (4 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h6eq : ‖(6 : 𝕂)⁻¹‖ = (6 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h24eq : ‖(24 : 𝕂)⁻¹‖ = (24 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have hT1 : ‖(24:𝕂)⁻¹ • a ^ 4‖ ≤ α ^ 4 / 24 := by
+    calc _ ≤ ‖(24:𝕂)⁻¹‖ * ‖a ^ 4‖ := norm_smul_le _ _
+      _ ≤ (24:ℝ)⁻¹ * α ^ 4 := by
+          rw [h24eq]; exact mul_le_mul_of_nonneg_left (norm_pow_le _ _) (by norm_num)
+      _ = α ^ 4 / 24 := by ring
+  have hT2 : ‖(6:𝕂)⁻¹ • (a ^ 3 * b)‖ ≤ α ^ 3 * β / 6 :=
+    calc _ ≤ ‖(6:𝕂)⁻¹‖ * ‖a ^ 3 * b‖ := norm_smul_le _ _
+      _ ≤ (6:ℝ)⁻¹ * (α ^ 3 * β) := by
+          rw [h6eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) le_rfl hβ_nn
+              (by positivity))) (by norm_num)
+      _ = α ^ 3 * β / 6 := by ring
+  have hT3 : ‖(4:𝕂)⁻¹ • (a ^ 2 * b ^ 2)‖ ≤ α ^ 2 * β ^ 2 / 4 :=
+    calc _ ≤ ‖(4:𝕂)⁻¹‖ * ‖a ^ 2 * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (4:ℝ)⁻¹ * (α ^ 2 * β ^ 2) := by
+          rw [h4eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) (norm_pow_le _ _)
+              (norm_nonneg _) (by positivity))) (by norm_num)
+      _ = α ^ 2 * β ^ 2 / 4 := by ring
+  have hT4 : ‖(6:𝕂)⁻¹ • (a * b ^ 3)‖ ≤ α * β ^ 3 / 6 :=
+    calc _ ≤ ‖(6:𝕂)⁻¹‖ * ‖a * b ^ 3‖ := norm_smul_le _ _
+      _ ≤ (6:ℝ)⁻¹ * (α * β ^ 3) := by
+          rw [h6eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul le_rfl (norm_pow_le _ _)
+              (by positivity) hα_nn)) (by norm_num)
+      _ = α * β ^ 3 / 6 := by ring
+  have hT5 : ‖(24:𝕂)⁻¹ • b ^ 4‖ ≤ β ^ 4 / 24 :=
+    calc _ ≤ ‖(24:𝕂)⁻¹‖ * ‖b ^ 4‖ := norm_smul_le _ _
+      _ ≤ (24:ℝ)⁻¹ * β ^ 4 := by
+          rw [h24eq]; exact mul_le_mul_of_nonneg_left (norm_pow_le _ _) (by norm_num)
+      _ = β ^ 4 / 24 := by ring
+  have ha1 := norm_add_le ((24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+    (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3)) ((24 : 𝕂)⁻¹ • b ^ 4)
+  have ha2 := norm_add_le ((24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+    (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2)) ((6 : 𝕂)⁻¹ • (a * b ^ 3))
+  have ha3 := norm_add_le ((24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b))
+    ((4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2))
+  have ha4 := norm_add_le ((24 : 𝕂)⁻¹ • a ^ 4) ((6 : 𝕂)⁻¹ • (a ^ 3 * b))
+  -- α^k·β^(4-k) ≤ s^4 for each k = 0, 1, 2, 3, 4.
+  have ha4s : α ^ 4 ≤ s ^ 4 := pow_le_pow_left₀ hα_nn hα_le 4
+  have hb4s : β ^ 4 ≤ s ^ 4 := pow_le_pow_left₀ hβ_nn hβ_le 4
+  have ha3bs : α ^ 3 * β ≤ s ^ 4 := by
+    calc α ^ 3 * β ≤ s ^ 3 * s := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3) hβ_le
+          hβ_nn (by positivity)
+      _ = s ^ 4 := by ring
+  have ha2b2s : α ^ 2 * β ^ 2 ≤ s ^ 4 := by
+    calc α ^ 2 * β ^ 2 ≤ s ^ 2 * s ^ 2 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+          (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
+      _ = s ^ 4 := by ring
+  have hab3s : α * β ^ 3 ≤ s ^ 4 := by
+    calc α * β ^ 3 ≤ s * s ^ 3 := mul_le_mul hα_le (pow_le_pow_left₀ hβ_nn hβ_le 3)
+          (by positivity) hs_nn
+      _ = s ^ 4 := by ring
+  -- Sum: α⁴/24 + α³β/6 + α²β²/4 + αβ³/6 + β⁴/24 ≤ s⁴·(1/24+1/6+1/4+1/6+1/24) = (2/3)·s⁴ ≤ s⁴.
+  nlinarith [pow_nonneg hs_nn 4]
+
+/-- Norm bound `‖T₅‖ ≤ s⁵` where T₅ = (1/120)·a⁵ + (1/24)·a⁴b + (1/12)·a³b² +
+(1/12)·a²b³ + (1/24)·ab⁴ + (1/120)·b⁵ is the deg-5 contribution of
+`exp(a)·exp(b)-1`. Sum of |coefficients| = 32/120 = 4/15 ≤ 1, so
+‖T₅‖ ≤ (4/15)·s⁵ ≤ s⁵. -/
+private theorem norm_T5_le (a b : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hα_le : ‖a‖ ≤ s) (hβ_le : ‖b‖ ≤ s) :
+    ‖(120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+      (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+      (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5‖ ≤ s ^ 5 := by
+  set α := ‖a‖
+  set β := ‖b‖
+  have hα_nn : (0 : ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0 : ℝ) ≤ β := norm_nonneg b
+  have h12eq : ‖(12 : 𝕂)⁻¹‖ = (12 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h24eq : ‖(24 : 𝕂)⁻¹‖ = (24 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h120eq : ‖(120 : 𝕂)⁻¹‖ = (120 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have hT1 : ‖(120:𝕂)⁻¹ • a ^ 5‖ ≤ α ^ 5 / 120 :=
+    calc _ ≤ ‖(120:𝕂)⁻¹‖ * ‖a ^ 5‖ := norm_smul_le _ _
+      _ ≤ (120:ℝ)⁻¹ * α ^ 5 := by
+          rw [h120eq]; exact mul_le_mul_of_nonneg_left (norm_pow_le _ _) (by norm_num)
+      _ = α ^ 5 / 120 := by ring
+  have hT2 : ‖(24:𝕂)⁻¹ • (a ^ 4 * b)‖ ≤ α ^ 4 * β / 24 :=
+    calc _ ≤ ‖(24:𝕂)⁻¹‖ * ‖a ^ 4 * b‖ := norm_smul_le _ _
+      _ ≤ (24:ℝ)⁻¹ * (α ^ 4 * β) := by
+          rw [h24eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) le_rfl hβ_nn
+              (by positivity))) (by norm_num)
+      _ = α ^ 4 * β / 24 := by ring
+  have hT3 : ‖(12:𝕂)⁻¹ • (a ^ 3 * b ^ 2)‖ ≤ α ^ 3 * β ^ 2 / 12 :=
+    calc _ ≤ ‖(12:𝕂)⁻¹‖ * ‖a ^ 3 * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (12:ℝ)⁻¹ * (α ^ 3 * β ^ 2) := by
+          rw [h12eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) (norm_pow_le _ _)
+              (norm_nonneg _) (by positivity))) (by norm_num)
+      _ = α ^ 3 * β ^ 2 / 12 := by ring
+  have hT4 : ‖(12:𝕂)⁻¹ • (a ^ 2 * b ^ 3)‖ ≤ α ^ 2 * β ^ 3 / 12 :=
+    calc _ ≤ ‖(12:𝕂)⁻¹‖ * ‖a ^ 2 * b ^ 3‖ := norm_smul_le _ _
+      _ ≤ (12:ℝ)⁻¹ * (α ^ 2 * β ^ 3) := by
+          rw [h12eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) (norm_pow_le _ _)
+              (norm_nonneg _) (by positivity))) (by norm_num)
+      _ = α ^ 2 * β ^ 3 / 12 := by ring
+  have hT5 : ‖(24:𝕂)⁻¹ • (a * b ^ 4)‖ ≤ α * β ^ 4 / 24 :=
+    calc _ ≤ ‖(24:𝕂)⁻¹‖ * ‖a * b ^ 4‖ := norm_smul_le _ _
+      _ ≤ (24:ℝ)⁻¹ * (α * β ^ 4) := by
+          rw [h24eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul le_rfl (norm_pow_le _ _)
+              (by positivity) hα_nn)) (by norm_num)
+      _ = α * β ^ 4 / 24 := by ring
+  have hT6 : ‖(120:𝕂)⁻¹ • b ^ 5‖ ≤ β ^ 5 / 120 :=
+    calc _ ≤ ‖(120:𝕂)⁻¹‖ * ‖b ^ 5‖ := norm_smul_le _ _
+      _ ≤ (120:ℝ)⁻¹ * β ^ 5 := by
+          rw [h120eq]; exact mul_le_mul_of_nonneg_left (norm_pow_le _ _) (by norm_num)
+      _ = β ^ 5 / 120 := by ring
+  have ha1 := norm_add_le ((120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+    (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+    (24 : 𝕂)⁻¹ • (a * b ^ 4)) ((120 : 𝕂)⁻¹ • b ^ 5)
+  have ha2 := norm_add_le ((120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+    (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3))
+    ((24 : 𝕂)⁻¹ • (a * b ^ 4))
+  have ha3 := norm_add_le ((120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+    (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2)) ((12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3))
+  have ha4 := norm_add_le ((120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b))
+    ((12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2))
+  have ha5 := norm_add_le ((120 : 𝕂)⁻¹ • a ^ 5) ((24 : 𝕂)⁻¹ • (a ^ 4 * b))
+  -- α^k·β^(5-k) ≤ s^5.
+  have ha5s : α ^ 5 ≤ s ^ 5 := pow_le_pow_left₀ hα_nn hα_le 5
+  have hb5s : β ^ 5 ≤ s ^ 5 := pow_le_pow_left₀ hβ_nn hβ_le 5
+  have ha4bs : α ^ 4 * β ≤ s ^ 5 := by
+    calc α ^ 4 * β ≤ s ^ 4 * s := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 4) hβ_le
+          hβ_nn (by positivity)
+      _ = s ^ 5 := by ring
+  have ha3b2s : α ^ 3 * β ^ 2 ≤ s ^ 5 := by
+    calc α ^ 3 * β ^ 2 ≤ s ^ 3 * s ^ 2 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3)
+          (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
+      _ = s ^ 5 := by ring
+  have ha2b3s : α ^ 2 * β ^ 3 ≤ s ^ 5 := by
+    calc α ^ 2 * β ^ 3 ≤ s ^ 2 * s ^ 3 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+          (pow_le_pow_left₀ hβ_nn hβ_le 3) (by positivity) (by positivity)
+      _ = s ^ 5 := by ring
+  have hab4s : α * β ^ 4 ≤ s ^ 5 := by
+    calc α * β ^ 4 ≤ s * s ^ 4 := mul_le_mul hα_le (pow_le_pow_left₀ hβ_nn hβ_le 4)
+          (by positivity) hs_nn
+      _ = s ^ 5 := by ring
+  -- Sum: α⁵/120 + α⁴β/24 + α³β²/12 + α²β³/12 + αβ⁴/24 + β⁵/120 ≤ s⁵·(1/120+1/24+1/12+1/12+1/24+1/120)
+  --       = s⁵·(1+5+10+10+5+1)/120 = 32/120·s⁵ = (4/15)·s⁵ ≤ s⁵.
+  nlinarith [pow_nonneg hs_nn 5]
+
 /-! ### Sixth-order BCH remainder bound
 
 The public theorem `norm_bch_sextic_remainder_le` extends
