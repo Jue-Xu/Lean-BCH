@@ -5313,6 +5313,72 @@ private theorem norm_PzP_sub_T2zT2_le (z P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤
   -- Total: 5s⁶ + 5s⁶ + 25s⁷ ≤ 5 + 5 + 25·(1/10)·s⁶ = 12.5s⁶ ≤ 13s⁶
   nlinarith [pow_nonneg hs_nn 6, pow_nonneg hs_nn 7]
 
+/-- Norm bound for `‖PzP - T₂zT₂ - T₂zT₃ - T₃zT₂‖ ≤ 13·s⁷` for small s
+(`s ≤ 1/10`). Decomposes via `P = T₂ + T₃ + (P-T₂-T₃)` into 6 terms.
+The "I2 sandwich" piece for the septic residual; provides K_PzP = 13. -/
+private theorem norm_PzP_sub_T2zT2_etc_le (z P T₂ T₃ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hs_small : s ≤ 1 / 10) (hz : ‖z‖ ≤ s) (hT₂ : ‖T₂‖ ≤ s ^ 2)
+    (hT₃ : ‖T₃‖ ≤ s ^ 3)
+    (hPmT₂mT₃ : ‖P - T₂ - T₃‖ ≤ 5 * s ^ 4) :
+    ‖P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂‖ ≤ 13 * s ^ 7 := by
+  have heq : P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ =
+      T₂ * z * (P - T₂ - T₃) + T₃ * z * T₃ + T₃ * z * (P - T₂ - T₃) +
+      (P - T₂ - T₃) * z * T₂ + (P - T₂ - T₃) * z * T₃ +
+      (P - T₂ - T₃) * z * (P - T₂ - T₃) := by
+    have hP : P = T₂ + T₃ + (P - T₂ - T₃) := by abel
+    rw [hP]; noncomm_ring
+  rw [heq]
+  have h1 : ‖T₂ * z * (P - T₂ - T₃)‖ ≤ s ^ 2 * s * (5 * s ^ 4) :=
+    calc _ ≤ ‖T₂ * z‖ * ‖P - T₂ - T₃‖ := norm_mul_le _ _
+      _ ≤ (‖T₂‖ * ‖z‖) * ‖P - T₂ - T₃‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 2 * s) * (5 * s ^ 4) := by
+          apply mul_le_mul _ hPmT₂mT₃ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₂ hz (norm_nonneg _) (by positivity)
+  have h2 : ‖T₃ * z * T₃‖ ≤ s ^ 3 * s * s ^ 3 :=
+    calc _ ≤ ‖T₃ * z‖ * ‖T₃‖ := norm_mul_le _ _
+      _ ≤ (‖T₃‖ * ‖z‖) * ‖T₃‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 3 * s) * s ^ 3 := by
+          apply mul_le_mul _ hT₃ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₃ hz (norm_nonneg _) (by positivity)
+  have h3 : ‖T₃ * z * (P - T₂ - T₃)‖ ≤ s ^ 3 * s * (5 * s ^ 4) :=
+    calc _ ≤ ‖T₃ * z‖ * ‖P - T₂ - T₃‖ := norm_mul_le _ _
+      _ ≤ (‖T₃‖ * ‖z‖) * ‖P - T₂ - T₃‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 3 * s) * (5 * s ^ 4) := by
+          apply mul_le_mul _ hPmT₂mT₃ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₃ hz (norm_nonneg _) (by positivity)
+  have h4 : ‖(P - T₂ - T₃) * z * T₂‖ ≤ (5 * s ^ 4) * s * s ^ 2 :=
+    calc _ ≤ ‖(P - T₂ - T₃) * z‖ * ‖T₂‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃‖ * ‖z‖) * ‖T₂‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((5 * s ^ 4) * s) * s ^ 2 := by
+          apply mul_le_mul _ hT₂ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hPmT₂mT₃ hz (norm_nonneg _) (by positivity)
+  have h5 : ‖(P - T₂ - T₃) * z * T₃‖ ≤ (5 * s ^ 4) * s * s ^ 3 :=
+    calc _ ≤ ‖(P - T₂ - T₃) * z‖ * ‖T₃‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃‖ * ‖z‖) * ‖T₃‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((5 * s ^ 4) * s) * s ^ 3 := by
+          apply mul_le_mul _ hT₃ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hPmT₂mT₃ hz (norm_nonneg _) (by positivity)
+  have h6 : ‖(P - T₂ - T₃) * z * (P - T₂ - T₃)‖ ≤ (5 * s ^ 4) * s * (5 * s ^ 4) :=
+    calc _ ≤ ‖(P - T₂ - T₃) * z‖ * ‖P - T₂ - T₃‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃‖ * ‖z‖) * ‖P - T₂ - T₃‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((5 * s ^ 4) * s) * (5 * s ^ 4) := by
+          apply mul_le_mul _ hPmT₂mT₃ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hPmT₂mT₃ hz (norm_nonneg _) (by positivity)
+  -- Triangle inequality (5 norm_add_le's chained left-to-right)
+  have ha1 := norm_add_le (T₂ * z * (P - T₂ - T₃) + T₃ * z * T₃ + T₃ * z * (P - T₂ - T₃) +
+    (P - T₂ - T₃) * z * T₂ + (P - T₂ - T₃) * z * T₃) ((P - T₂ - T₃) * z * (P - T₂ - T₃))
+  have ha2 := norm_add_le (T₂ * z * (P - T₂ - T₃) + T₃ * z * T₃ + T₃ * z * (P - T₂ - T₃) +
+    (P - T₂ - T₃) * z * T₂) ((P - T₂ - T₃) * z * T₃)
+  have ha3 := norm_add_le (T₂ * z * (P - T₂ - T₃) + T₃ * z * T₃ + T₃ * z * (P - T₂ - T₃))
+    ((P - T₂ - T₃) * z * T₂)
+  have ha4 := norm_add_le (T₂ * z * (P - T₂ - T₃) + T₃ * z * T₃) (T₃ * z * (P - T₂ - T₃))
+  have ha5 := norm_add_le (T₂ * z * (P - T₂ - T₃)) (T₃ * z * T₃)
+  -- Sum of bounds: 5s⁷ + s⁷ + 5s⁸ + 5s⁷ + 5s⁸ + 25s⁹ = 11s⁷ + 10s⁸ + 25s⁹.
+  -- For s ≤ 1/10: ≤ 11s⁷ + 1·s⁷ + 0.25·s⁷ = 12.25·s⁷ ≤ 13·s⁷.
+  nlinarith [pow_nonneg hs_nn 7, pow_nonneg hs_nn 8, pow_nonneg hs_nn 9,
+    mul_nonneg (pow_nonneg hs_nn 7) hs_nn,
+    mul_nonneg (pow_nonneg hs_nn 7) (sq_nonneg s)]
+
 /-- Norm bound for `‖P² - T₂²‖ ≤ 10·s⁵` via `P² - T₂² = (P-T₂)P + T₂(P-T₂)`. -/
 private theorem norm_P2_sub_T22_le (P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
     (hP : ‖P‖ ≤ s ^ 2) (hT₂ : ‖T₂‖ ≤ s ^ 2) (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3) :
