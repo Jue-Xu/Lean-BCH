@@ -1610,6 +1610,588 @@ private theorem symmetric_bch_quintic_poly_alt_form
     mul_add, add_mul]
   match_scalars <;> ring
 
+/-- **Sub-lemma D (T2-F7e Phase B)**: ½·[C₄(a',b), a'] equals an explicit
+7-monomial polynomial in {a, b}, where a' = ½a.
+
+CAS-derived: denominator 2304. -/
+private theorem half_C4_bracket_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) =
+      (-6 / 2304 : 𝕂) • (a * a * a * b * b) +
+      (12 / 2304 : 𝕂) • (a * a * b * a * b) +
+      (6 / 2304 : 𝕂) • (a * a * b * b * a) +
+      (-24 / 2304 : 𝕂) • (a * b * a * b * a) +
+      (6 / 2304 : 𝕂) • (a * b * b * a * a) +
+      (12 / 2304 : 𝕂) • (b * a * b * a * a) +
+      (-6 / 2304 : 𝕂) • (b * b * a * a * a) := by
+  intro a'
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl]
+  unfold bch_quartic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+-- **Sub-lemma A (T2-F7e Phase B)**: ΔC₃_lin(V₃, x, a') equals an explicit
+-- 20-monomial polynomial in {a, b}, where V₃ = C₃(a',b), x = a'+b, a' = ½a.
+-- CAS-derived: denominator 2304.
+set_option maxHeartbeats 16000000 in
+private theorem deltaC3_lin_V3_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    (12 : 𝕂)⁻¹ • (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) +
+    (12 : 𝕂)⁻¹ • (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) +
+    (12 : 𝕂)⁻¹ • (a' * (a' * V₃ - V₃ * a') - (a' * V₃ - V₃ * a') * a') =
+      (2 / 2304 : 𝕂) • (a * a * a * b * b) +
+      (-8 / 2304 : 𝕂) • (a * a * b * a * b) +
+      (2 / 2304 : 𝕂) • (a * a * b * b * a) +
+      (4 / 2304 : 𝕂) • (a * a * b * b * b) +
+      (12 / 2304 : 𝕂) • (a * b * a * a * b) +
+      (-8 / 2304 : 𝕂) • (a * b * a * b * a) +
+      (-4 / 2304 : 𝕂) • (a * b * a * b * b) +
+      (2 / 2304 : 𝕂) • (a * b * b * a * a) +
+      (-12 / 2304 : 𝕂) • (a * b * b * a * b) +
+      (8 / 2304 : 𝕂) • (a * b * b * b * a) +
+      (-8 / 2304 : 𝕂) • (b * a * a * a * b) +
+      (12 / 2304 : 𝕂) • (b * a * a * b * a) +
+      (-8 / 2304 : 𝕂) • (b * a * a * b * b) +
+      (-8 / 2304 : 𝕂) • (b * a * b * a * a) +
+      (32 / 2304 : 𝕂) • (b * a * b * a * b) +
+      (-12 / 2304 : 𝕂) • (b * a * b * b * a) +
+      (2 / 2304 : 𝕂) • (b * b * a * a * a) +
+      (-8 / 2304 : 𝕂) • (b * b * a * a * b) +
+      (-4 / 2304 : 𝕂) • (b * b * a * b * a) +
+      (4 / 2304 : 𝕂) • (b * b * b * a * a) := by
+  intro a' V₃ x
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₃ = bch_cubic_term 𝕂 a' b from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl]
+  unfold bch_cubic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+/-- **Sub-lemma C (T2-F7e Phase B)**: ΔC₄_lin(V₂, x, a') equals an explicit
+12-monomial polynomial in {a, b}, where V₂ = ½·[a',b], x = a'+b, a' = ½a.
+
+CAS-derived: denominator 2304. -/
+private theorem deltaC4_lin_V2_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let x : 𝔸 := a' + b
+    (0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) -
+                     (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) * a') -
+    (24 : 𝕂)⁻¹ • (a' * (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) -
+                     (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) * a') =
+      (3 / 2304 : 𝕂) • (a * a * a * a * b) +
+      (-12 / 2304 : 𝕂) • (a * a * a * b * a) +
+      (-6 / 2304 : 𝕂) • (a * a * a * b * b) +
+      (18 / 2304 : 𝕂) • (a * a * b * a * a) +
+      (12 / 2304 : 𝕂) • (a * a * b * a * b) +
+      (6 / 2304 : 𝕂) • (a * a * b * b * a) +
+      (-12 / 2304 : 𝕂) • (a * b * a * a * a) +
+      (-24 / 2304 : 𝕂) • (a * b * a * b * a) +
+      (6 / 2304 : 𝕂) • (a * b * b * a * a) +
+      (3 / 2304 : 𝕂) • (b * a * a * a * a) +
+      (12 / 2304 : 𝕂) • (b * a * b * a * a) +
+      (-6 / 2304 : 𝕂) • (b * b * a * a * a) := by
+  intro a' V₂ x
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl]
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+/-- **Sub-lemma B (T2-F7e Phase B)**: ΔC₃_quad(V₂, x, a') equals an explicit
+8-monomial polynomial in {a, b}, where V₂ = ½·[a',b], a' = ½a.
+
+CAS-derived (`verify_t2f7e_deg5_cancellation.py`): denominator 2304. -/
+private theorem deltaC3_quad_V2_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    (12 : 𝕂)⁻¹ • (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) =
+      (6 / 2304 : 𝕂) • (a * a * b * a * b) +
+      (-6 / 2304 : 𝕂) • (a * a * b * b * a) +
+      (-18 / 2304 : 𝕂) • (a * b * a * a * b) +
+      (24 / 2304 : 𝕂) • (a * b * a * b * a) +
+      (-6 / 2304 : 𝕂) • (a * b * b * a * a) +
+      (12 / 2304 : 𝕂) • (b * a * a * a * b) +
+      (-18 / 2304 : 𝕂) • (b * a * a * b * a) +
+      (6 / 2304 : 𝕂) • (b * a * b * a * a) := by
+  intro a' V₂
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl]
+  simp only [smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
+
+/-- **Deg-5 cancellation pure identity** (T2-F7e Phase B, stepping-stone axiom).
+
+For the parent discharge of the τ⁵ symmetric-BCH bridge, the deg-5 piece group
+in the extended hdecomp `T₅ + T₆ + ½·[C₄(a',b), a'] − correction` has its
+deg-5 part cancel as an algebraic identity in `𝕂⟨a, b⟩`.
+
+Specifically, with `a' := ½a`, `V₂ := ½·[a',b]`, `V₃ := C₃(a',b)`, `x := a'+b`:
+
+  ΔC₃_lin(V₃, x, a') + ΔC₃_quad(V₂, x, a')           -- = (deg-5 of T₅)
++ ΔC₄_lin(V₂, x, a')                                  -- = (deg-5 of T₆)
++ ½·(C₄(a', b)·a' − a'·C₄(a', b))                    -- = ½·[C₄(a',b), a']
+= symmetric_bch_quintic_correction_poly 𝕂 a b        -- = correction(a, b)
+
+Where the perturbation operators expand as:
+- `ΔC₃_lin(V, x, y)`  = (1/12)·([V,[x,y]] + [x,[V,y]] + [y,[y,V]])
+- `ΔC₃_quad(V, x, y)` = (1/12)·[V,[V,y]]
+- `ΔC₄_lin(V, x, y)`  = -(1/24)·([y,[x,[V,y]]] + [y,[V,[x,y]]])
+
+**CAS-verified** at `Lean-Trotter/scripts/verify_t2f7e_deg5_cancellation.py`:
+both sides reduce to the same 25-monomial polynomial in {a, b}-words with
+rational coefficients (denominator 11520).
+
+**Status (session 21, 2026-05-09)**: discharged via 4 CAS-derived sub-lemmas
+(`deltaC3_lin_V3_eq`, `deltaC3_quad_V2_eq`, `deltaC4_lin_V2_eq`, `half_C4_bracket_eq`)
+each of which proves a piece equals an explicit polynomial in {a,b}
+(with common denominator 2304). The combined identity follows by polynomial
+arithmetic.
+
+Connection to T2-B alt-form: from
+  sym_E₅ = bqt(a',b) + bqt(a'+b, a') + correction
+combined with the deg-5 expansion of `bch(z, a')` (z = bch(a', b)),
+one derives `correction = ½·[C₄(a',b), a'] + (deg-5 of T₅) + (deg-5 of T₆)`,
+where the deg-5 of T₅, T₆ are computed via Taylor expansion of C₃, C₄
+around the static point `(a'+b, a')` in the perturbation `W = z - (a'+b)`. -/
+private theorem symmetric_bch_quintic_deg5_cancellation_pure_identity
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    -- ΔC₃_lin(V₃, x, a') = (1/12)·([V₃,[x,a']] + [x,[V₃,a']] + [a',[a',V₃]])
+    ((12 : 𝕂)⁻¹ • (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) +
+     (12 : 𝕂)⁻¹ • (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) +
+     (12 : 𝕂)⁻¹ • (a' * (a' * V₃ - V₃ * a') - (a' * V₃ - V₃ * a') * a')) +
+    -- ΔC₃_quad(V₂, x, a') = (1/12)·[V₂,[V₂,a']]
+    ((12 : 𝕂)⁻¹ • (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂)) +
+    -- ΔC₄_lin(V₂, x, a') = -(1/24)·([a',[x,[V₂,a']]] + [a',[V₂,[x,a']]])
+    ((0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) -
+                              (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) -
+                              (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) * a')) +
+    -- ½·[C₄(a', b), a']
+    ((2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b)) =
+    symmetric_bch_quintic_correction_poly 𝕂 a b := by
+  intro a' V₂ V₃ x
+  rw [deltaC3_lin_V3_eq (𝕂 := 𝕂) a b,
+      deltaC3_quad_V2_eq (𝕂 := 𝕂) a b,
+      deltaC4_lin_V2_eq (𝕂 := 𝕂) a b,
+      half_C4_bracket_eq (𝕂 := 𝕂) a b]
+  unfold symmetric_bch_quintic_correction_poly
+  match_scalars <;> ring
+
+/-! ### T2-F7e Phase C: deg-6 cancellation pure identity
+
+The deg-6 contributions to `sym_bch_cubic - sym_E₃ - sym_E₅` (zero by
+palindromic vanishing of even degrees in the 3-factor product) split into
+6 pieces that sum to zero algebraically.
+
+Pieces (with `a' := ½a`, `V₂ := ½·[a',b]`, `V₃ := C₃(a',b)`, `V₄ := C₄(a',b)`,
+`x := a'+b`):
+1. (deg-6 of T₅) = ΔC₃_lin(V₄, x, a') + (1/12)·([V₂,[V₃,a']] + [V₃,[V₂,a']]).
+2. (deg-6 of T₆) = ΔC₄_lin(V₃, x, a') + ΔC₄_quad(V₂, x, a').
+3. ½·[C₅(a',b), a'] (purely deg-6).
+4. C₆(a',b) = bch_sextic_term(a',b) (purely deg-6).
+5. C₆(a'+b, a') = bch_sextic_term(a'+b, a') (purely deg-6).
+6. (deg-6 of (C₅(z,a') − C₅(a'+b,a'))) = ΔC₅_lin(V₂, x, a') (no clean
+   commutator form; explicit 36-monomial polynomial).
+
+CAS-verified at `Lean-Trotter/scripts/verify_t2f7e_deg6_cancellation.py`:
+all 6 pieces have common denominator 46080; sum across all monomials = 0.
+-/
+
+-- **Sub-lemma (T2-F7e Phase C, piece 3)**: ½·[C₅(½a, b), ½a] equals an
+-- explicit 38-monomial polynomial in {a, b}. CAS-derived: denominator 46080.
+set_option maxHeartbeats 16000000 in
+private theorem half_C5_bracket_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
+                  ((2 : 𝕂)⁻¹ • a) * bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) =
+      (1 / 46080 : 𝕂) • (a * a * a * a * a * b) +
+      (-5 / 46080 : 𝕂) • (a * a * a * a * b * a) +
+      (-8 / 46080 : 𝕂) • (a * a * a * a * b * b) +
+      (10 / 46080 : 𝕂) • (a * a * a * b * a * a) +
+      (12 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+      (20 / 46080 : 𝕂) • (a * a * a * b * b * a) +
+      (-16 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+      (-10 / 46080 : 𝕂) • (a * a * b * a * a * a) +
+      (12 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+      (-60 / 46080 : 𝕂) • (a * a * b * a * b * a) +
+      (24 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+      (24 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+      (8 / 46080 : 𝕂) • (a * a * b * b * b * b) +
+      (5 / 46080 : 𝕂) • (a * b * a * a * a * a) +
+      (-8 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+      (24 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+      (60 / 46080 : 𝕂) • (a * b * a * b * a * a) +
+      (-96 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+      (-32 / 46080 : 𝕂) • (a * b * a * b * b * b) +
+      (-20 / 46080 : 𝕂) • (a * b * b * a * a * a) +
+      (24 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+      (48 / 46080 : 𝕂) • (a * b * b * a * b * b) +
+      (-32 / 46080 : 𝕂) • (a * b * b * b * a * b) +
+      (-1 / 46080 : 𝕂) • (b * a * a * a * a * a) +
+      (8 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+      (-12 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+      (-24 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+      (-12 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+      (96 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+      (-24 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+      (32 / 46080 : 𝕂) • (b * a * b * b * b * a) +
+      (8 / 46080 : 𝕂) • (b * b * a * a * a * a) +
+      (-24 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+      (-24 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+      (-48 / 46080 : 𝕂) • (b * b * a * b * b * a) +
+      (16 / 46080 : 𝕂) • (b * b * b * a * a * a) +
+      (32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
+      (-8 / 46080 : 𝕂) • (b * b * b * b * a * a) := by
+  unfold bch_quintic_term bch_quintic_group_1 bch_quintic_group_4
+    bch_quintic_group_6 bch_quintic_group_24
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+-- **Sub-lemma (T2-F7e Phase C, piece 5)**: bch_sextic_term(½a + b, ½a) equals
+-- an explicit 42-monomial polynomial in {a, b}. CAS-derived: denominator 46080.
+set_option maxHeartbeats 16000000 in
+private theorem C6_static_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    bch_sextic_term 𝕂 (a' + b) a' =
+      (-6 / 46080 : 𝕂) • (a * a * a * a * a * b) +
+      (30 / 46080 : 𝕂) • (a * a * a * a * b * a) +
+      (24 / 46080 : 𝕂) • (a * a * a * a * b * b) +
+      (-60 / 46080 : 𝕂) • (a * a * a * b * a * a) +
+      (-66 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+      (-30 / 46080 : 𝕂) • (a * a * a * b * b * a) +
+      (-28 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+      (60 / 46080 : 𝕂) • (a * a * b * a * a * a) +
+      (54 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+      (90 / 46080 : 𝕂) • (a * a * b * a * b * a) +
+      (52 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+      (12 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+      (20 / 46080 : 𝕂) • (a * a * b * b * b * a) +
+      (8 / 46080 : 𝕂) • (a * a * b * b * b * b) +
+      (-30 / 46080 : 𝕂) • (a * b * a * a * a * a) +
+      (-36 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+      (32 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+      (-90 / 46080 : 𝕂) • (a * b * a * b * a * a) +
+      (-128 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+      (-40 / 46080 : 𝕂) • (a * b * a * b * b * a) +
+      (-32 / 46080 : 𝕂) • (a * b * a * b * b * b) +
+      (30 / 46080 : 𝕂) • (a * b * b * a * a * a) +
+      (32 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+      (40 / 46080 : 𝕂) • (a * b * b * a * b * a) +
+      (48 / 46080 : 𝕂) • (a * b * b * a * b * b) +
+      (-20 / 46080 : 𝕂) • (a * b * b * b * a * a) +
+      (-32 / 46080 : 𝕂) • (a * b * b * b * a * b) +
+      (6 / 46080 : 𝕂) • (b * a * a * a * a * a) +
+      (36 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+      (-54 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+      (-32 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+      (66 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+      (128 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+      (-12 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+      (32 / 46080 : 𝕂) • (b * a * b * b * b * a) +
+      (-24 / 46080 : 𝕂) • (b * b * a * a * a * a) +
+      (-32 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+      (-52 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+      (-48 / 46080 : 𝕂) • (b * b * a * b * b * a) +
+      (28 / 46080 : 𝕂) • (b * b * b * a * a * a) +
+      (32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
+      (-8 / 46080 : 𝕂) • (b * b * b * b * a * a) := by
+  intro a'
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl]
+  unfold bch_sextic_term
+  simp only [smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
+
+-- **Sub-lemma (T2-F7e Phase C, piece 4)**: bch_sextic_term(½a, b) equals an
+-- explicit 28-monomial polynomial in {a, b}. CAS-derived: denominator 46080.
+private theorem C6_inner_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    bch_sextic_term 𝕂 a' b =
+      (-2 / 46080 : 𝕂) • (a * a * a * a * b * b) +
+      (8 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+      (16 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+      (-12 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+      (-24 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+      (-24 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+      (-8 / 46080 : 𝕂) • (a * a * b * b * b * b) +
+      (8 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+      (-24 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+      (96 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+      (32 / 46080 : 𝕂) • (a * b * a * b * b * b) +
+      (-24 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+      (-48 / 46080 : 𝕂) • (a * b * b * a * b * b) +
+      (32 / 46080 : 𝕂) • (a * b * b * b * a * b) +
+      (-8 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+      (12 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+      (24 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+      (-8 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+      (-96 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+      (24 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+      (-32 / 46080 : 𝕂) • (b * a * b * b * b * a) +
+      (2 / 46080 : 𝕂) • (b * b * a * a * a * a) +
+      (24 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+      (24 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+      (48 / 46080 : 𝕂) • (b * b * a * b * b * a) +
+      (-16 / 46080 : 𝕂) • (b * b * b * a * a * a) +
+      (-32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
+      (8 / 46080 : 𝕂) • (b * b * b * b * a * a) := by
+  intro a'
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl]
+  unfold bch_sextic_term
+  simp only [smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
+
+-- **Sub-lemma (T2-F7e Phase C, piece 2)**: (deg-6 of T₆) operator form equals
+-- an explicit 32-monomial polynomial. T₆ = C₄(z, a') − C₄(a'+b, a'); the deg-6
+-- contribution is ΔC₄_lin(V₃, x, a') + ΔC₄_quad(V₂, x, a').
+-- CAS-derived: denominator 46080.
+set_option maxHeartbeats 16000000 in
+private theorem T6_d6_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    (0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) -
+                             (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) * a') -
+              (24 : 𝕂)⁻¹ • (a' * (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) -
+                             (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) * a') -
+              (24 : 𝕂)⁻¹ • (a' * (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) -
+                             (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) * a') =
+      (5 / 46080 : 𝕂) • (a * a * a * a * a * b) +
+      (-25 / 46080 : 𝕂) • (a * a * a * a * b * a) +
+      (50 / 46080 : 𝕂) • (a * a * a * b * a * a) +
+      (-10 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+      (10 / 46080 : 𝕂) • (a * a * a * b * b * a) +
+      (-20 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+      (-50 / 46080 : 𝕂) • (a * a * b * a * a * a) +
+      (30 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+      (-30 / 46080 : 𝕂) • (a * a * b * a * b * a) +
+      (20 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+      (60 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+      (-20 / 46080 : 𝕂) • (a * a * b * b * b * a) +
+      (25 / 46080 : 𝕂) • (a * b * a * a * a * a) +
+      (-20 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+      (40 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+      (30 / 46080 : 𝕂) • (a * b * a * b * a * a) +
+      (-160 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+      (40 / 46080 : 𝕂) • (a * b * a * b * b * a) +
+      (-10 / 46080 : 𝕂) • (a * b * b * a * a * a) +
+      (40 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+      (-40 / 46080 : 𝕂) • (a * b * b * a * b * a) +
+      (20 / 46080 : 𝕂) • (a * b * b * b * a * a) +
+      (-5 / 46080 : 𝕂) • (b * a * a * a * a * a) +
+      (20 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+      (-30 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+      (-40 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+      (10 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+      (160 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+      (-60 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+      (-40 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+      (-20 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+      (20 / 46080 : 𝕂) • (b * b * b * a * a * a) := by
+  intro a' V₂ V₃ x
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show V₃ = (bch_cubic_term 𝕂 a' b : 𝔸) from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl]
+  unfold bch_cubic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+-- **Sub-lemma (T2-F7e Phase C, piece 1)**: (deg-6 of T₅) operator form equals
+-- an explicit 26-monomial polynomial. T₅ = C₃(z, a') − C₃(a'+b, a') +
+-- (1/96)·[b, [a, [a, b]]]; the deg-6 contribution is
+-- ΔC₃_lin(V₄, x, a') + (1/12)·([V₂, [V₃, a']] + [V₃, [V₂, a']]).
+-- CAS-derived: denominator 46080.
+set_option maxHeartbeats 32000000 in
+private theorem T5_d6_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    (12 : 𝕂)⁻¹ • (V₄ * (x * a' - a' * x) - (x * a' - a' * x) * V₄ +
+                   x * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * x +
+                   a' * (a' * V₄ - V₄ * a') - (a' * V₄ - V₄ * a') * a') +
+    (12 : 𝕂)⁻¹ • (V₂ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₂ +
+                   V₃ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₃) =
+      (10 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+      (-10 / 46080 : 𝕂) • (a * a * a * b * b * a) +
+      (20 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+      (-30 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+      (30 / 46080 : 𝕂) • (a * a * b * a * b * a) +
+      (-20 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+      (-60 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+      (20 / 46080 : 𝕂) • (a * a * b * b * b * a) +
+      (20 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+      (-40 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+      (-30 / 46080 : 𝕂) • (a * b * a * b * a * a) +
+      (160 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+      (-40 / 46080 : 𝕂) • (a * b * a * b * b * a) +
+      (10 / 46080 : 𝕂) • (a * b * b * a * a * a) +
+      (-40 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+      (40 / 46080 : 𝕂) • (a * b * b * a * b * a) +
+      (-20 / 46080 : 𝕂) • (a * b * b * b * a * a) +
+      (-20 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+      (30 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+      (40 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+      (-10 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+      (-160 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+      (60 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+      (40 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+      (20 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+      (-20 / 46080 : 𝕂) • (b * b * b * a * a * a) := by
+  intro a' V₂ V₃ V₄ x
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show V₃ = (bch_cubic_term 𝕂 a' b : 𝔸) from rfl,
+             show V₄ = (bch_quartic_term 𝕂 a' b : 𝔸) from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl]
+  unfold bch_cubic_term bch_quartic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+-- **Deg-6 cancellation pure identity** (T2-F7e Phase C, palindromic vanishing).
+--
+-- For the parent discharge of the τ⁵ symmetric-BCH bridge, the deg-6 piece group
+-- in the extended hdecomp `(T₅ + T₆) + ½·[C₅(a',b), a'] + C₆(a',b) + C₆(a'+b, a')
+-- + ΔC₅_lin(V₂, x, a')` has its deg-6 part cancel as an algebraic identity
+-- in `𝕂⟨a, b⟩` — the RHS is **zero**, reflecting the palindromic vanishing of
+-- the deg-6 part of `log(exp(½a)·exp(b)·exp(½a))`.
+--
+-- Six pieces (with `a' := ½a`, `V₂ := ½·[a',b]`, `V₃ := C₃(a',b)`,
+-- `V₄ := C₄(a',b) = bch_quartic_term(a',b)`, `x := a'+b`):
+--   1. (deg-6 of T₅) = ΔC₃_lin(V₄, x, a') + (1/12)·([V₂,[V₃,a']] + [V₃,[V₂,a']])
+--   2. (deg-6 of T₆) = ΔC₄_lin(V₃, x, a') + ΔC₄_quad(V₂, x, a')
+--   3. ½·[C₅(a',b), a'] (purely deg-6)
+--   4. C₆(a',b) = bch_sextic_term(a',b) (purely deg-6)
+--   5. C₆(a'+b, a') = bch_sextic_term(a'+b, a') (purely deg-6)
+--   6. ΔC₅_lin(V₂, x, a') (deg-6 of `C₅(z, a') − C₅(a'+b, a')`; no clean
+--      commutator form — explicit 36-monomial polynomial)
+--
+-- CAS-verified at `Lean-Trotter/scripts/verify_t2f7e_deg6_cancellation.py`:
+-- the six pieces have common denominator 46080 and sum to zero across all
+-- monomials.
+set_option maxHeartbeats 16000000 in
+private theorem symmetric_bch_quintic_deg6_cancellation_pure_identity
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    -- (deg-6 of T₅): ΔC₃_lin(V₄, x, a') + (1/12)·([V₂,[V₃,a']] + [V₃,[V₂,a']])
+    ((12 : 𝕂)⁻¹ • (V₄ * (x * a' - a' * x) - (x * a' - a' * x) * V₄ +
+                    x * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * x +
+                    a' * (a' * V₄ - V₄ * a') - (a' * V₄ - V₄ * a') * a') +
+     (12 : 𝕂)⁻¹ • (V₂ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₂ +
+                    V₃ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₃)) +
+    -- (deg-6 of T₆): ΔC₄_lin(V₃, x, a') + ΔC₄_quad(V₂, x, a')
+    ((0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) -
+                              (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) * a') -
+               (24 : 𝕂)⁻¹ • (a' * (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) -
+                              (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) * a') -
+               (24 : 𝕂)⁻¹ • (a' * (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) -
+                              (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) * a')) +
+    -- ½·[C₅(a',b), a']
+    ((2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b)) +
+    -- C₆(a', b)
+    bch_sextic_term 𝕂 a' b +
+    -- C₆(a'+b, a')
+    bch_sextic_term 𝕂 (a' + b) a' +
+    -- ΔC₅_lin(V₂, x, a') as explicit 36-monomial polynomial (denom 46080)
+    ((-14 / 46080 : 𝕂) • (a * a * a * a * b * b) +
+     (46 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+     (10 / 46080 : 𝕂) • (a * a * a * b * b * a) +
+     (28 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+     (-54 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+     (-30 / 46080 : 𝕂) • (a * a * b * a * b * a) +
+     (-52 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+     (-12 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+     (-20 / 46080 : 𝕂) • (a * a * b * b * b * a) +
+     (-8 / 46080 : 𝕂) • (a * a * b * b * b * b) +
+     (36 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+     (-32 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+     (30 / 46080 : 𝕂) • (a * b * a * b * a * a) +
+     (128 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+     (40 / 46080 : 𝕂) • (a * b * a * b * b * a) +
+     (32 / 46080 : 𝕂) • (a * b * a * b * b * b) +
+     (-10 / 46080 : 𝕂) • (a * b * b * a * a * a) +
+     (-32 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+     (-40 / 46080 : 𝕂) • (a * b * b * a * b * a) +
+     (-48 / 46080 : 𝕂) • (a * b * b * a * b * b) +
+     (20 / 46080 : 𝕂) • (a * b * b * b * a * a) +
+     (32 / 46080 : 𝕂) • (a * b * b * b * a * b) +
+     (-36 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+     (54 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+     (32 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+     (-46 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+     (-128 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+     (12 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+     (-32 / 46080 : 𝕂) • (b * a * b * b * b * a) +
+     (14 / 46080 : 𝕂) • (b * b * a * a * a * a) +
+     (32 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+     (52 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+     (48 / 46080 : 𝕂) • (b * b * a * b * b * a) +
+     (-28 / 46080 : 𝕂) • (b * b * b * a * a * a) +
+     (-32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
+     (8 / 46080 : 𝕂) • (b * b * b * b * a * a)) = (0 : 𝔸) := by
+  intro a' V₂ V₃ V₄ x
+  rw [T5_d6_eq (𝕂 := 𝕂) a b,
+      T6_d6_eq (𝕂 := 𝕂) a b,
+      half_C5_bracket_eq (𝕂 := 𝕂) a b,
+      C6_inner_eq (𝕂 := 𝕂) a b,
+      C6_static_eq (𝕂 := 𝕂) a b]
+  match_scalars <;> ring
+
 end SymmetricQuinticAltForm
 
 /-!

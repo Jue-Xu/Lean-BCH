@@ -1,8 +1,121 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 20, 2026-05-09)
+## Status (session 21, 2026-05-10)
 
-Branch: `main`. Repository is **0 sorries**.
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**
+(unchanged from session 19; both the Phase B stepping-stone (deg-5) and the
+Phase C deg-6 cancellation algebraic identities are fully proved at the
+end of session 21 — no new axioms).
+
+**Session 21 step 11 (Phase C of T2-F7e discharge, complete)**:
+deg-6 cancellation algebraic identity. CAS verified at
+`Lean-Trotter/scripts/verify_t2f7e_deg6_cancellation.py`; Lean theorem
+`symmetric_bch_quintic_deg6_cancellation_pure_identity` in
+`SymmetricQuintic.lean`.
+
+The theorem states (with `a' := ½a`, `V₂ := ½·[a',b]`, `V₃ := C₃(a',b)`,
+`V₄ := C₄(a',b) = bch_quartic_term(a',b)`, `x := a'+b`):
+  (deg-6 of T₅) + (deg-6 of T₆) + ½·[C₅(a',b), a']
+  + bch_sextic_term(a', b) + bch_sextic_term(a'+b, a')
+  + (deg-6 of [C₅(z, a') − C₅(a'+b, a')])  =  0
+
+reflecting palindromic vanishing of even degrees in
+`log(exp(½a)·exp(b)·exp(½a))`.
+
+**Discharge approach** (5 sub-lemmas + 1 inline polynomial + combine, ~470 lines):
+- `T5_d6_eq` (piece 1): 26-monomial polynomial form for
+  `ΔC₃_lin(V₄, x, a') + (1/12)·([V₂,[V₃,a']] + [V₃,[V₂,a']])`.
+  Heartbeats: 32M (V₄ = bch_quartic_term unfolds heavily).
+- `T6_d6_eq` (piece 2): 32-monomial form for
+  `ΔC₄_lin(V₃, x, a') + ΔC₄_quad(V₂, x, a')`. Heartbeats: 16M.
+- `half_C5_bracket_eq` (piece 3): 38-monomial form for
+  `½·[bch_quintic_term(a/2, b), a/2]`. Heartbeats: 16M. Required full
+  simp set including `neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+  sub_neg_eq_add` to handle bch_quintic_term's leading negation.
+- `C6_inner_eq` (piece 4): 28-monomial form for `bch_sextic_term(a/2, b)`.
+- `C6_static_eq` (piece 5): 42-monomial form for `bch_sextic_term(a/2 + b, a/2)`.
+- Piece 6 (`ΔC₅_lin(V₂, x, a')`, no clean commutator form): inlined as
+  36-monomial polynomial directly in the combine theorem.
+- Combine: `rw [T5_d6_eq, T6_d6_eq, half_C5_bracket_eq, C6_inner_eq,
+  C6_static_eq] ; match_scalars <;> ring`.
+
+All 6 pieces share common denominator 46080.
+
+**Lean-tactic lessons added in step 11**:
+- `bch_quintic_term` has TWO leading negations (`-bch_quintic_group_1` AND
+  `- (6:𝕂) • bch_quintic_group_6`); both require the full negation simp
+  set (`neg_mul, mul_neg, neg_neg, neg_smul, smul_neg, sub_neg_eq_add`)
+  for `match_scalars <;> ring` to canonicalize. Without these, residues
+  like `1/2880 = 0`, `1/11520 = 1/9216` appear.
+- Doc comments `/-- ... -/` cannot be placed BETWEEN `set_option ... in`
+  and `theorem`; the `in` interrupts attachment. Use regular `--` comments
+  for private theorem documentation when `set_option` is needed.
+
+**Session 21 steps 9–10 (Phase B of T2-F7e discharge, complete)**:
+deg-5 cancellation algebraic identity. CAS verified at
+`Lean-Trotter/scripts/verify_t2f7e_deg5_cancellation.py`; Lean theorem
+`symmetric_bch_quintic_deg5_cancellation_pure_identity` in
+`SymmetricQuintic.lean`.
+
+The theorem states (with `a' := ½a`, `V₂ := ½·[a',b]`, `V₃ := C₃(a',b)`,
+`x := a'+b`):
+  ΔC₃_lin(V₃, x, a') + ΔC₃_quad(V₂, x, a') + ΔC₄_lin(V₂, x, a')
+  + ½·[C₄(a', b), a'] = correction(a, b)
+
+**Discharge approach** (4 sub-lemmas + combine, ~250 lines total):
+- `deltaC3_lin_V3_eq` (sub-lemma A): 20-monomial polynomial form for ΔC₃_lin(V₃).
+- `deltaC3_quad_V2_eq` (sub-lemma B): 8-monomial form for ΔC₃_quad(V₂).
+- `deltaC4_lin_V2_eq` (sub-lemma C): 12-monomial form for ΔC₄_lin(V₂).
+- `half_C4_bracket_eq` (sub-lemma D): 7-monomial form for ½·[C₄(a',b), a'].
+- Each sub-lemma proves piece = explicit polynomial via
+  `simp only [show let-name = ... from rfl] ; (unfold bch_*_term ;)
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg, smul_sub, ...] ;
+  match_scalars <;> ring`. Common denominator across all 4: 2304.
+- Combine: `rw [hA, hB, hC, hD] ; unfold correction_poly ; match_scalars <;> ring`.
+
+**Key Lean-tactic lessons** (added to feedback memory):
+1. For sub-lemmas with `unfold bch_*_term` introducing negation: must include
+   `neg_mul, mul_neg, neg_neg` in the simp set (not just `neg_smul, smul_neg`).
+2. For lemmas where the LHS starts with `-(...)` after a `let`-block: parser
+   chokes; use `(0 : 𝔸) - X - Y` form instead.
+3. Direct monolithic `match_scalars <;> ring` on a 7-summand identity with
+   nested `(2:𝕂)⁻¹` smul factors fails (residues like `5/1152 = 11/1152`,
+   `1/4 = 0`); splitting into per-ΔC sub-lemmas fixes this.
+4. After applying sub-lemma rewrites, must `unfold correction_poly` before
+   `match_scalars <;> ring` (otherwise `0 = 1` residue).
+
+**Session 21 steps 1-8 (Phase A of T2-F7e discharge)** (~211 lines in `Basic.lean`,
+inserted after the cubic template at line 11229): two private helper
+lemmas packaging the inner+outer septic remainder bounds for the eventual
+parent discharge.
+
+- `BCH.norm_bch_inner_septic_remainder_le`: bound on
+  `‖bch(½a, b) − ((½a+b) + ½[½a,b] + C₃ + C₄ + C₅ + C₆)‖ ≤ 1.5·10⁶ · s⁷`
+  for `s = ‖a‖+‖b‖ < 1/4`. ~58 lines. Direct from
+  `norm_bch_septic_remainder_le` at `(½a, b)` with `s₁ ≤ s` and
+  `2 − exp(s₁) ≥ 11/16`.
+- `BCH.norm_bch_outer_septic_remainder_le`: bound on
+  `‖bch(z, ½a) − ((z+½a) + ½[z,½a] + C₃ + C₄ + C₅ + C₆)(z, ½a)‖ ≤
+  1.2·10¹⁰ · s⁷` where `z := bch(½a, b)`. ~129 lines. Mirrors the
+  cubic-template scaffolding for s₂ := ‖z‖+‖½a‖: establishes
+  `‖z‖ ≤ (23/11)·s`, `s₂ ≤ (57/22)·s`, `s₂ ≤ 57/88`, `2 − exp(s₂) ≥ 1/12`
+  (via `Real.exp_bound'`), then applies `norm_bch_septic_remainder_le` at
+  `(z, ½a)`. The constant absorbs `1000010·(57/22)^7·12 ≈ 9.4·10⁹` with
+  margin (uses `(57/22)^7 ≤ 784` numerical step).
+
+Maxheartbeats: 800K (inner) and 1.6M (outer signature elaboration +
+nlinarith with `(57/22)^7` numerical step).
+
+**Next session priority**: Phase D of the discharge — extended hdecomp for
+`sym_bch_cubic - sym_E₃ - sym_E₅`. Express this as ~11 pieces, each of
+which can be norm-bounded by `K · s⁷` using existing infrastructure
+(Lipschitz bounds for `bch_cubic_term` / `bch_quintic_term` /
+`bch_sextic_term`, septic remainder bounds for inner/outer Phase A,
+Phase B+C deg-5/deg-6 cancellation identities for the algebraic chunks).
+Estimated ~150 lines.
+
+After Phase D: Phase E (per-piece norm bounds + triangle assembly +
+axiom replacement). Estimated ~500 lines.
 
 **Session 20 steps 2-6** (~870 lines in `Basic.lean`): Lipschitz bounds for
 `bch_cubic_term` and `bch_quintic_term` in their first argument. These are
@@ -37,12 +150,6 @@ with K = 492/1440 = 41/120. Heartbeat 16M for whnf processing of the
 O(M^(k-1) · ‖z−x‖) bounds. With z=(a'+b)+W (‖W‖=O(s²)): give O(s⁴),
 O(s⁶), O(s⁷) bounds respectively on the C-difference pieces of the
 extended hdecomp.
-
-**Next session priority**: Phase A of the discharge — inner+outer septic
-remainders (`bch(½a, b) − through_deg6` and `bch(z, ½a) − through_deg6`)
-with norm bounds via `norm_bch_septic_remainder_le`, plus the s₂ ≤ K·s
-bound (extracted from cubic template). Estimated ~200 lines. After
-Phase A, Phase B (deg-5 cancellation algebraic identity) follows.
 
 **Session 20 step 1**: Detailed analysis of T2-F7e parent discharge (extending
 the cubic template from `Basic.lean:8601`). Produced
@@ -150,11 +257,15 @@ I1 RHS ≤ 21·s⁷.
   before triangle inequality). hS2_inner_eq's y3_6 ordering re-aligned to
   match pieceB's (T₂zT₃ + T₂T₃z + T₃zT₂ + T₃T₂z), proved via `noncomm_ring`.
 
-**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (was 3 before
-session 19 step 22).
+**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (unchanged from
+session 19 final).
 - `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2 PARENT, in
   `SymmetricQuintic.lean`. Discharge requires T2-F7e (cubic template
-  extension to deg-5 cancellation), ~1000 lines remaining.
+  extension to deg-5+6 cancellation). Phase A complete (inner/outer septic
+  remainder helpers, session 21 steps 1-8). Phase B complete (deg-5
+  cancellation pure identity, session 21 steps 9-10). Phase C complete
+  (deg-6 cancellation pure identity, session 21 step 11). Phases D, E
+  remaining (~500 lines).
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
 

@@ -11228,6 +11228,217 @@ theorem norm_symmetric_bch_cubic_sub_poly_le (a b : 𝔸) (hab : ‖a‖ + ‖b�
     _ ≤ 10000000 * s ^ 5 := by nlinarith [pow_nonneg hs_nn 5]
 
 
+/-! ### Phase A scaffolding for the τ⁵ symmetric-BCH discharge (T2-F7e)
+
+The two private lemmas below mirror the cubic template's R₁/R₂ setup at one
+degree higher, packaging `norm_bch_septic_remainder_le` together with the
+standard `s₁ ≤ s` and `s₂ := ‖z‖ + ‖a'‖ ≤ (57/22)·s` bounds (where
+`a' := ½a`, `z := bch(a', b)`).
+
+They are reused by the eventual `norm_symmetric_bch_quintic_sub_poly_le`
+proof (replacing the parent Tier-2 axiom in `SymmetricQuintic.lean`).
+-/
+
+set_option maxHeartbeats 800000 in
+include 𝕂 in
+/-- **Inner BCH septic remainder bound** (T2-F7e Phase A): the inner-BCH leg of
+the symmetric BCH composition `bch(bch(½a, b), ½a)`, after subtracting the
+explicit through-deg-6 expansion at `(½a, b)`, satisfies an `O(s⁷)` bound for
+`s = ‖a‖ + ‖b‖ < 1/4`.
+
+Direct application of `norm_bch_septic_remainder_le` to `(½a, b)` plus the
+standard `s₁ := ‖½a‖ + ‖b‖ ≤ s` and `2 - exp(s₁) ≥ 11/16` (from `s₁ ≤ 1/4`).
+The bound constant `1500000` is chosen to absorb `1000010·(16/11) ≈ 1454560`
+with small margin. -/
+private theorem norm_bch_inner_septic_remainder_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b - ((2 : 𝕂)⁻¹ • a + b) -
+      (2 : 𝕂)⁻¹ • ((2 : 𝕂)⁻¹ • a * b - b * ((2 : 𝕂)⁻¹ • a)) -
+      bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+      bch_quartic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+      bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+      bch_sextic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b‖ ≤
+      1500000 * (‖a‖ + ‖b‖) ^ 7 := by
+  set a' : 𝔸 := (2 : 𝕂)⁻¹ • a with ha'_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set s₁ := ‖a'‖ + ‖b‖ with hs₁_def
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ ‖a‖ / 2 := by
+    calc ‖a'‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  have hs_nn : 0 ≤ s := by positivity
+  have hs_lt : s < 1 / 4 := hab
+  have hs₁_le : s₁ ≤ s := by
+    show ‖a'‖ + ‖b‖ ≤ ‖a‖ + ‖b‖; linarith [ha'_le, norm_nonneg a]
+  have hs₁_nn : 0 ≤ s₁ := by positivity
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
+      (by norm_num : (1:ℝ)/4 < 5/6)]
+  have hs₁_lt_log2 : s₁ < Real.log 2 := by linarith
+  have hexp_s₁_lt : Real.exp s₁ < 2 := by
+    calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs₁_lt_log2
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom₁ : 0 < 2 - Real.exp s₁ := by linarith
+  have hexp_le : Real.exp s₁ ≤ 1 + s₁ + s₁ ^ 2 := by
+    nlinarith [real_exp_third_order_le_cube hs₁_nn (by linarith : s₁ < 5/6)]
+  have hdenom_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp s₁ := by nlinarith
+  -- Apply norm_bch_septic_remainder_le at (a', b).
+  have hR_sept_le :
+      ‖bch (𝕂 := 𝕂) a' b - (a' + b) - (2 : 𝕂)⁻¹ • (a' * b - b * a') -
+        bch_cubic_term 𝕂 a' b - bch_quartic_term 𝕂 a' b -
+        bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b‖ ≤
+        1000010 * s₁ ^ 7 / (2 - Real.exp s₁) :=
+    norm_bch_septic_remainder_le (𝕂 := 𝕂) a' b hs₁_lt_log2
+  -- Convert to s⁷ bound.
+  have hX_s7 : 1000010 * s₁ ^ 7 / (2 - Real.exp s₁) ≤ 1500000 * s ^ 7 := by
+    rw [div_le_iff₀ hdenom₁]
+    have hs_pow : s₁ ^ 7 ≤ s ^ 7 := pow_le_pow_left₀ hs₁_nn hs₁_le 7
+    have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+    nlinarith [hdenom_lb, hs_pow, hs7_nn]
+  linarith
+
+set_option maxHeartbeats 1600000 in
+include 𝕂 in
+/-- **Outer BCH septic remainder bound** (T2-F7e Phase A): the outer-BCH leg of
+the symmetric BCH composition `bch(z, ½a)` where `z := bch(½a, b)`, after
+subtracting the explicit through-deg-6 expansion at `(z, ½a)`, satisfies an
+`O(s⁷)` bound for `s = ‖a‖ + ‖b‖ < 1/4`.
+
+Uses the standard outer-radius bound `s₂ := ‖z‖ + ‖½a‖ ≤ (57/22)·s` (from
+`‖z‖ ≤ (23/11)·s`) together with `s₂ ≤ 57/88` and `2 - exp(57/88) ≥ 1/12`
+(via `Real.exp_bound'`). The bound constant `12000000000 = 1.2·10¹⁰` is
+chosen to absorb `1000010·(57/22)^7·12 ≈ 9.41·10⁹` with comfortable margin. -/
+private theorem norm_bch_outer_septic_remainder_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+      (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b + (2 : 𝕂)⁻¹ • a) -
+      (2 : 𝕂)⁻¹ • (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
+                   ((2 : 𝕂)⁻¹ • a) * bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) -
+      bch_cubic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+      bch_quartic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+      bch_quintic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+      bch_sextic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a)‖ ≤
+      12000000000 * (‖a‖ + ‖b‖) ^ 7 := by
+  set a' : 𝔸 := (2 : 𝕂)⁻¹ • a with ha'_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set s₁ := ‖a'‖ + ‖b‖ with hs₁_def
+  set z := bch (𝕂 := 𝕂) a' b with hz_def
+  -- Standard scaffolding (mirrors cubic template).
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ ‖a‖ / 2 := by
+    calc ‖a'‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  have ha'_le_s : ‖a'‖ ≤ s := by
+    calc ‖a'‖ ≤ ‖a‖ / 2 := ha'_le
+      _ ≤ ‖a‖ := by linarith [norm_nonneg a]
+      _ ≤ s := le_add_of_nonneg_right (norm_nonneg b)
+  have ha'_s : ‖a'‖ ≤ s / 2 := by
+    calc ‖a'‖ ≤ ‖a‖ / 2 := ha'_le
+      _ ≤ s / 2 := by linarith [norm_nonneg b]
+  have hs_nn : 0 ≤ s := by positivity
+  have hs_lt : s < 1 / 4 := hab
+  have hs1 : s < 1 := by linarith
+  have hs₁_le : s₁ ≤ s := by
+    show ‖a'‖ + ‖b‖ ≤ ‖a‖ + ‖b‖; linarith [ha'_le, norm_nonneg a]
+  have hs₁_nn : 0 ≤ s₁ := by positivity
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
+      (by norm_num : (1:ℝ)/4 < 5/6)]
+  have hs₁_lt_log2 : s₁ < Real.log 2 := by linarith
+  have hexp_s₁_lt : Real.exp s₁ < 2 := by
+    calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs₁_lt_log2
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom₁ : 0 < 2 - Real.exp s₁ := by linarith
+  have hexp_le : Real.exp s₁ ≤ 1 + s₁ + s₁ ^ 2 := by
+    nlinarith [real_exp_third_order_le_cube hs₁_nn (by linarith : s₁ < 5/6)]
+  have hdenom_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp s₁ := by nlinarith
+  have hquad_bound : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 3 / 11 := by
+    rw [div_le_div_iff₀ hdenom₁ (by norm_num : (0:ℝ) < 11)]
+    nlinarith [sq_nonneg s₁, sq_nonneg (1/4 - s₁)]
+  have hW_le : ‖z - (a' + b)‖ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    rw [hz_def]; exact norm_bch_sub_add_le (𝕂 := 𝕂) a' b hs₁_lt_log2
+  have hz_le : ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    calc ‖z‖ = ‖(z - (a' + b)) + (a' + b)‖ := by congr 1; abel
+      _ ≤ ‖z - (a' + b)‖ + ‖a' + b‖ := norm_add_le _ _
+      _ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) + s₁ := by
+          have hsum : ‖a' + b‖ ≤ s₁ := norm_add_le _ _
+          linarith
+      _ = s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by ring
+  have hln2_611 : (6 : ℝ) / 11 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 6/11)
+      (by norm_num : (6:ℝ)/11 < 5/6)]
+  have hs₂_lt_log2 : ‖z‖ + ‖a'‖ < Real.log 2 := by
+    calc ‖z‖ + ‖a'‖ ≤ (s₁ + 3 / 11) + ‖a'‖ := by linarith [hz_le, hquad_bound]
+      _ ≤ s + 3 / 11 := by linarith [ha'_le_s]
+      _ < 1/4 + 3 / 11 := by linarith
+      _ = 23 / 44 := by norm_num
+      _ < 6 / 11 := by norm_num
+      _ < Real.log 2 := hln2_611
+  -- s₂ ≤ 57/22 · s, the key tightness bound.
+  have hz_mult : ‖z‖ ≤ 23/11 * s := by
+    have h1 : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 12 * s / 11 := by
+      rw [div_le_iff₀ hdenom₁]
+      nlinarith [hdenom_lb, hs₁_nn, sq_nonneg s₁, hs₁_le, hs_nn,
+        mul_nonneg hs₁_nn hs_nn, hab]
+    calc ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := hz_le
+      _ ≤ s + 12 * s / 11 := by linarith
+      _ = 23/11 * s := by ring
+  have hs₂_mult : ‖z‖ + ‖a'‖ ≤ 57/22 * s := by
+    calc ‖z‖ + ‖a'‖ ≤ 23/11 * s + s/2 := by linarith [hz_mult, ha'_s]
+      _ = 57/22 * s := by ring
+  have hs₂_le_const : ‖z‖ + ‖a'‖ ≤ 57 / 88 := by
+    calc ‖z‖ + ‖a'‖ ≤ 57/22 * s := hs₂_mult
+      _ ≤ 57/22 * (1/4) := by
+          have h_step : s ≤ 1/4 := by linarith
+          have h_pos : (0:ℝ) ≤ 57/22 := by norm_num
+          nlinarith
+      _ = 57 / 88 := by ring
+  have hdenom₂_pos : 0 < 2 - Real.exp (‖z‖ + ‖a'‖) := by
+    have hexp2_lt : Real.exp (‖z‖ + ‖a'‖) < 2 := by
+      calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs₂_lt_log2
+        _ = 2 := Real.exp_log (by norm_num)
+    linarith
+  -- Tight denom bound via Real.exp_bound' (6th-order Taylor): exp(57/88) ≤ 23/12.
+  have hexp_57 : Real.exp (57/88) ≤ 23 / 12 := by
+    have h := Real.exp_bound' (show (0:ℝ) ≤ 57/88 by norm_num)
+      (show (57:ℝ)/88 ≤ 1 by norm_num) (show 0 < 6 by norm_num)
+    simp only [Finset.sum_range_succ, Finset.sum_range_zero, Nat.factorial,
+      pow_zero, pow_succ, zero_add] at h
+    nlinarith [h, sq_nonneg ((57:ℝ)/88)]
+  have hexp_s₂_le : Real.exp (‖z‖ + ‖a'‖) ≤ Real.exp (57/88) :=
+    Real.exp_monotone hs₂_le_const
+  have hdenom₂_lb : (1 : ℝ) / 12 ≤ 2 - Real.exp (‖z‖ + ‖a'‖) := by
+    linarith [hexp_s₂_le, hexp_57]
+  -- Apply norm_bch_septic_remainder_le at (z, a').
+  have hR_sept :
+      ‖bch (𝕂 := 𝕂) z a' - (z + a') - (2 : 𝕂)⁻¹ • (z * a' - a' * z) -
+        bch_cubic_term 𝕂 z a' - bch_quartic_term 𝕂 z a' -
+        bch_quintic_term 𝕂 z a' - bch_sextic_term 𝕂 z a'‖ ≤
+        1000010 * (‖z‖ + ‖a'‖) ^ 7 / (2 - Real.exp (‖z‖ + ‖a'‖)) :=
+    norm_bch_septic_remainder_le (𝕂 := 𝕂) z a' hs₂_lt_log2
+  -- Convert to s⁷.
+  -- Numerical: (57/22)^7 ≈ 783.7 ≤ 784. So (‖z‖+‖a'‖)^7 ≤ 784·s^7.
+  -- Combined with 1/(2-exp s₂) ≤ 12: 1000010·784·12 ≈ 9.41·10⁹ ≤ 1.2·10¹⁰.
+  have h_pow_57 : (‖z‖ + ‖a'‖) ^ 7 ≤ 784 * s ^ 7 := by
+    have h1 : (‖z‖ + ‖a'‖) ^ 7 ≤ (57/22 * s) ^ 7 :=
+      pow_le_pow_left₀ (by positivity) hs₂_mult 7
+    have h2 : (57/22 * s) ^ 7 = (57/22 : ℝ) ^ 7 * s ^ 7 := by ring
+    have h3 : ((57 : ℝ) / 22) ^ 7 ≤ 784 := by norm_num
+    have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+    calc (‖z‖ + ‖a'‖) ^ 7 ≤ (57/22 * s) ^ 7 := h1
+      _ = ((57 : ℝ) / 22) ^ 7 * s ^ 7 := h2
+      _ ≤ 784 * s ^ 7 := by nlinarith [h3, hs7_nn]
+  have hX_s7 : 1000010 * (‖z‖ + ‖a'‖) ^ 7 / (2 - Real.exp (‖z‖ + ‖a'‖)) ≤
+              12000000000 * s ^ 7 := by
+    rw [div_le_iff₀ hdenom₂_pos]
+    have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+    nlinarith [hdenom₂_lb, h_pow_57, hs7_nn]
+  linarith
+
+
 include 𝕂 in
 /-- **Quintic remainder for symmetric BCH**: `E₃(c·a, c·b) - c³·E₃(a,b)` is `O(|c|³·s⁵)`.
 
