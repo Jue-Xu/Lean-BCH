@@ -3084,6 +3084,163 @@ theorem norm_bch_sextic_term_le (a b : 𝔸) :
   -- Sum of |numerators|/1440 = 164/1440 ≈ 0.1139 ≤ 1.
   linarith
 
+/-! #### Lipschitz bounds for `bch_sextic_term` per-word — sample (Phase A.2 of T2-F7e)
+
+Per-word Lipschitz bounds: for each 6-letter word `w` in `bch_sextic_term`,
+`‖w(z, y) − w(x, y)‖ ≤ k_w · M⁵ · ‖z−x‖` where `M = ‖z‖+‖x‖+‖y‖` and
+`k_w` = number of a-positions in w. This sample contains the 4 words with
+|coef|=1, demonstrating the technique that scales to all 28 words. -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Lipschitz bound for word #1 (a·a·a·a·b·b, 4 a-positions, |coef|=1). -/
+private lemma bch_sextic_word01_diff_le (z x y : 𝔸) :
+    ‖z * z * z * z * y * y - x * x * x * x * y * y‖ ≤
+      4 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * z * z * z * y * y - x * x * x * x * y * y =
+      (z - x) * z * z * z * y * y + x * (z - x) * z * z * y * y +
+      x * x * (z - x) * z * y * y + x * x * x * (z - x) * y * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 : ‖(z - x) * z * z * z * y * y‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖z - x‖ * ‖z‖ * ‖z‖ * ‖z‖ * ‖y‖ * ‖y‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ d * M * M * M * M * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  have h2 : ‖x * (z - x) * z * z * y * y‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖x‖ * ‖z - x‖ * ‖z‖ * ‖z‖ * ‖y‖ * ‖y‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * d * M * M * M * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  have h3 : ‖x * x * (z - x) * z * y * y‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖x‖ * ‖x‖ * ‖z - x‖ * ‖z‖ * ‖y‖ * ‖y‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * M * d * M * M * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  have h4 : ‖x * x * x * (z - x) * y * y‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖x‖ * ‖x‖ * ‖x‖ * ‖z - x‖ * ‖y‖ * ‖y‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * M * M * d * M * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  set s1 : 𝔸 := (z - x) * z * z * z * y * y
+  set s2 : 𝔸 := x * (z - x) * z * z * y * y
+  set s3 : 𝔸 := x * x * (z - x) * z * y * y
+  set s4 : 𝔸 := x * x * x * (z - x) * y * y
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Lipschitz bound for word #7 (a·a·b·b·b·b, 2 a-positions, |coef|=1). -/
+private lemma bch_sextic_word07_diff_le (z x y : 𝔸) :
+    ‖z * z * y * y * y * y - x * x * y * y * y * y‖ ≤
+      2 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * z * y * y * y * y - x * x * y * y * y * y =
+      (z - x) * z * y * y * y * y + x * (z - x) * y * y * y * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 : ‖(z - x) * z * y * y * y * y‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖z - x‖ * ‖z‖ * ‖y‖ * ‖y‖ * ‖y‖ * ‖y‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ d * M * M * M * M * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  have h2 : ‖x * (z - x) * y * y * y * y‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖x‖ * ‖z - x‖ * ‖y‖ * ‖y‖ * ‖y‖ * ‖y‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * d * M * M * M * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  set s1 : 𝔸 := (z - x) * z * y * y * y * y
+  set s2 : 𝔸 := x * (z - x) * y * y * y * y
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Lipschitz bound for word #22 (b·b·a·a·a·a, 4 a-positions, |coef|=1). -/
+private lemma bch_sextic_word22_diff_le (z x y : 𝔸) :
+    ‖y * y * z * z * z * z - y * y * x * x * x * x‖ ≤
+      4 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * y * z * z * z * z - y * y * x * x * x * x =
+      y * y * (z - x) * z * z * z + y * y * x * (z - x) * z * z +
+      y * y * x * x * (z - x) * z + y * y * x * x * x * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 : ‖y * y * (z - x) * z * z * z‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖y‖ * ‖y‖ * ‖z - x‖ * ‖z‖ * ‖z‖ * ‖z‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * M * d * M * M * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  have h2 : ‖y * y * x * (z - x) * z * z‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖y‖ * ‖y‖ * ‖x‖ * ‖z - x‖ * ‖z‖ * ‖z‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * M * M * d * M * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  have h3 : ‖y * y * x * x * (z - x) * z‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖y‖ * ‖y‖ * ‖x‖ * ‖x‖ * ‖z - x‖ * ‖z‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * M * M * M * d * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  have h4 : ‖y * y * x * x * x * (z - x)‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖y‖ * ‖y‖ * ‖x‖ * ‖x‖ * ‖x‖ * ‖z - x‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * M * M * M * M * d := by gcongr
+      _ = M ^ 5 * d := by ring
+  set s1 : 𝔸 := y * y * (z - x) * z * z * z
+  set s2 : 𝔸 := y * y * x * (z - x) * z * z
+  set s3 : 𝔸 := y * y * x * x * (z - x) * z
+  set s4 : 𝔸 := y * y * x * x * x * (z - x)
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Lipschitz bound for word #28 (b·b·b·b·a·a, 2 a-positions, |coef|=1). -/
+private lemma bch_sextic_word28_diff_le (z x y : 𝔸) :
+    ‖y * y * y * y * z * z - y * y * y * y * x * x‖ ≤
+      2 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * y * y * y * z * z - y * y * y * y * x * x =
+      y * y * y * y * (z - x) * z + y * y * y * y * x * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 : ‖y * y * y * y * (z - x) * z‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖y‖ * ‖y‖ * ‖y‖ * ‖y‖ * ‖z - x‖ * ‖z‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * M * M * M * d * M := by gcongr
+      _ = M ^ 5 * d := by ring
+  have h2 : ‖y * y * y * y * x * (z - x)‖ ≤ M ^ 5 * d := by
+    calc _ ≤ ‖y‖ * ‖y‖ * ‖y‖ * ‖y‖ * ‖x‖ * ‖z - x‖ := norm_6prod_le _ _ _ _ _ _
+      _ ≤ M * M * M * M * M * d := by gcongr
+      _ = M ^ 5 * d := by ring
+  set s1 : 𝔸 := y * y * y * y * (z - x) * z
+  set s2 : 𝔸 := y * y * y * y * x * (z - x)
+  have a1 := norm_add_le s1 s2
+  linarith
+
 /-! ### Quartic algebraic identity for BCH -/
 
 set_option maxHeartbeats 64000000 in
