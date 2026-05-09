@@ -1,11 +1,16 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 19, 2026-05-08)
+## Status (session 19, 2026-05-09)
 
 Branch: `main`. Repository is **0 sorries**.
 
+**Session 19 final**: T2-F7e Phase A complete. The septic remainder small-s
+axiom is fully discharged (~700 lines added in `Basic.lean`), reducing the
+total axiom count from 3 to **2 scoped `private axiom`s**.
+
 **Session 19 progress**: Phase A.1 (S₃' bound) + Phase A.2 (I1/I2 algebraic
-identities) + Phase A.4 (I2 wrapper input helpers complete).
+identities) + Phase A.4 (I2 wrapper input helpers complete) + Phase A.5
+(septic small-s discharge).
 
 - Step 8: `y4_sub_z4_sub_y4_5_sub_y4_6_decomp` (16-term identity) +
   `norm_y4_sub_z4_sub_y4_5_sub_y4_6_le` (≤ 85·s⁷). The S₃' piece bound for
@@ -69,32 +74,33 @@ Total septic I2 RHS bound: (3·6 + 2·15 + 13 + 15)·s⁷ = 76·s⁷ for s ≤ 1
 **I1 wrapper now satisfiable:** With C = 28 from `norm_combined_tricky_le`,
 I1 RHS ≤ 21·s⁷.
 
-**`pieceB_septic_decomp` piece bounds:**
-- S₁' (I₁) ≤ 21·s⁷
-- S₂' (I₂) ≤ 76·s⁷
-- S₃' (¼·(y⁴-z⁴-y4_5-y4_6)) ≤ 22·s⁷
-- S₄' (⅕·(y⁵-z⁵-y5_6)) ≤ 11·s⁷
-- S₅ (⅙·(y⁶-z⁶)) ≤ 11·s⁷
-- Total pieceB''' ≤ ~141·s⁷
+**`pieceB_septic_decomp` piece bounds (used in step 22 discharge):**
+- S₁' (I₁) ≤ 21·s⁷ (via I1 wrapper + combined tricky C=28: (7 + C/2)·s⁷)
+- S₂' (I₂ inner) ≤ 76·s⁷; after ⅓ scaling ≤ 26·s⁷
+- S₃' (y⁴ inner) ≤ 85·s⁷; after ¼ scaling ≤ 22·s⁷
+- S₄' (y⁵ inner) ≤ 51·s⁷; after ⅕ scaling ≤ 11·s⁷
+- S₅ (y⁶ inner) ≤ 63·s⁷; after ⅙ scaling ≤ 11·s⁷
+- **Total pieceB''' ≤ 91·s⁷**; with pieceA ≤ 2·s⁷/(2-exp(s)),
+  combined gives ≤ 93·s⁷/(2-exp(s)) ≤ 1000·s⁷/(2-exp(s)).
 
-Remaining for Phase A:
-- **Final assembly** for `norm_bch_septic_remainder_small_s_le`:
-  ~500+ lines mirroring the session-16 sextic discharge. Uses
-  `pieceB_septic_decomp` + the per-piece bounds above + pieceA bound
-  (deg-7 log series tail). Total bound ~1000·s⁷/(2-exp(s)) for s < 1/10.
-- **Bypass strategy** (per session prompt): keep the small-s septic axiom
-  in place and proceed to Phase B directly.
+- **Step 22 (session 19): `norm_bch_septic_remainder_small_s_le`** — fully
+  discharged (~700 lines, mirrors the session-16 sextic discharge structure).
+  `set_option maxHeartbeats 32000000`. Key tactic insight: pieceB_septic_decomp
+  unfolds let-bindings on rewrite, so hS_i_le hypotheses must be unfolded to
+  match (`simp only [hy_def, hz_def, hT₂_def, ...] at hS1_le ... hS5_le`
+  before triangle inequality). hS2_inner_eq's y3_6 ordering re-aligned to
+  match pieceB's (T₂zT₃ + T₂T₃z + T₃zT₂ + T₃T₂z), proved via `noncomm_ring`.
 
-**Axiom count: 3 scoped `private axiom`s + Lean's 3 standard.**
+**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (was 3 before
+session 19 step 22).
 - `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2 PARENT, in
   `SymmetricQuintic.lean`. Discharge requires T2-F7e (cubic template
   extension to deg-5 cancellation), ~1000 lines remaining.
-- `BCH.norm_bch_septic_remainder_small_s_axiom` — NEW session 18, stepping
-  stone for the parent discharge. The 2-factor BCH septic remainder bound
-  at small s (s < 1/10). Discharge plan mirrors the session-16 discharge
-  of `norm_bch_sextic_remainder_small_s_le` (~580 lines).
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
+
+(`BCH.norm_bch_septic_remainder_small_s_axiom` was discharged in step 22
+and is now the public theorem `norm_bch_septic_remainder_small_s_le`.)
 
 **Session 18 highlights (`match_scalars <;> ring` methodology)**:
 A simple 3-line tactic sequence replaces 150+ line scalar pattern enumerations:
@@ -497,12 +503,15 @@ The alt-form discharge (T2-B) is now in place to support step 4
    Currently `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` (Lean-BCH side).
 
 **Key public theorems on this branch** (depend only on Lean's 3 standard +
-B1.c Tier-2 axiom):
+B1.c Tier-2 axiom + `suzuki5_log_product_septic_at_suzukiP_axiom`):
 - `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le` (P1 headline).
 - `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` (P1 bridge corollary).
 - `BCH.suzuki5_log_product_quintic_tight_at_suzukiP` (P2 bridge).
-- `BCH.norm_bch_sextic_remainder_le` (Tier-1 of B1.c, NEW session 16; depends
-  also on small-s sextic axiom).
+- `BCH.norm_bch_sextic_remainder_le` (Tier-1 of B1.c, fully proven
+  session 16).
+- `BCH.norm_bch_septic_remainder_le` (T2-F7e infra step 4, **fully proven**
+  session 19; no longer depends on a small-s axiom — `Basic.lean` has 0
+  remaining axioms).
 
 ## Earlier core results
 
