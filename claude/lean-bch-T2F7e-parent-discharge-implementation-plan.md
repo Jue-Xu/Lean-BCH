@@ -146,12 +146,24 @@ Estimated total: ~1000-1500 lines.
 
 ## Recommended session breakdown
 
-- **Session 1**: Phase A — set up the `set` chain (a', s₁, z, s₂, R₁_sept, R₂_sept), prove the inner+outer septic bounds + s₂ bounds. ~200 lines.
-- **Session 2**: Phase B — formulate and prove the deg-5 cancellation identity via `match_scalars <;> ring`. ~150 lines (mostly the identity statement).
-- **Session 3**: Phase C — formulate and prove the deg-6 cancellation identity. ~200 lines.
-- **Session 4**: Phase D — extended hdecomp proof, combining identities. ~150 lines.
-- **Session 5**: Phase E — per-piece norm bounds + triangle assembly + axiom replacement. ~300 lines.
-- **Session 6** (buffer): Heartbeat tuning, refactor, doc updates. ~100 lines.
+- **Session 0** (DONE, session 20 step 2): Lipschitz bound for `bch_cubic_term`
+  in its first argument: `‖C₃(z,y) − C₃(x,y)‖ ≤ M² · ‖z−x‖` where
+  `M = ‖z‖+‖x‖+‖y‖`. ~150 lines. Prototype for higher-degree analogs.
+- **Session 1**: Lipschitz bound for `bch_quintic_term` (`‖C₅(z,y) − C₅(x,y)‖
+  ≤ M⁴ · ‖z−x‖`) and `bch_sextic_term` (`‖C₆(z,y) − C₆(x,y)‖ ≤ M⁵ · ‖z−x‖`).
+  These bound the C-difference pieces in the extended hdecomp. ~600-800 lines
+  total (4 groups for C₅: 30 words; ~28 words for C₆ — each needs telescoping).
+- **Session 2**: Phase A — set up the `set` chain (a', s₁, z, s₂, R₁_sept,
+  R₂_sept), prove the inner+outer septic bounds + s₂ bounds. ~200 lines.
+- **Session 3**: Phase B — formulate and prove the deg-5 cancellation identity
+  via `match_scalars <;> ring`. ~150 lines (mostly the identity statement).
+- **Session 4**: Phase C — formulate and prove the deg-6 cancellation
+  identity. ~200 lines.
+- **Session 5**: Phase D — extended hdecomp proof, combining identities.
+  ~150 lines.
+- **Session 6**: Phase E — per-piece norm bounds + triangle assembly + axiom
+  replacement. ~300 lines.
+- **Session 7** (buffer): Heartbeat tuning, refactor, doc updates. ~100 lines.
 
 ## CAS support needed
 
