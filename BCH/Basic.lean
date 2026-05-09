@@ -2037,6 +2037,123 @@ theorem norm_bch_quintic_term_le (a b : 𝔸) :
     _ ≤ (1 / 720) * (176 * s ^ 5) := by rw [h720]; gcongr
     _ ≤ s ^ 5 := by nlinarith [hs5_nn]
 
+/-! #### Lipschitz-style bounds for `bch_quintic_group_1` (Phase A.1 of T2-F7e)
+
+The Lipschitz-style bound `‖C₅(z, y) − C₅(x, y)‖ ≤ M⁴ · ‖z − x‖` (where
+`M = ‖z‖+‖x‖+‖y‖`) is needed for the parent T2-F7e discharge. This file
+contains the per-group precursors; the full `bch_quintic_term` bound combines
+all 4 groups via triangle inequality with the appropriate `(720)⁻¹`-scalar
+factors.
+
+Each group's diff telescopes per-word: a word `w(z, y)` with k z-positions has
+diff `w(z, y) − w(x, y) = Σⱼ [product]·(z−x)·[product]`, with k summands.
+Each summand has 4 letters from `{x, z, y}` (each ≤ M) and one (z−x) factor
+(of norm `‖z − x‖`), giving a per-summand bound of `M⁴ · ‖z − x‖`. -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Lipschitz bound for `bch_quintic_group_1` in its first argument**:
+`‖group_1(z, y) − group_1(x, y)‖ ≤ 10 · (‖z‖+‖x‖+‖y‖)⁴ · ‖z − x‖`.
+
+`bch_quintic_group_1 = a·a·a·a·b + a·b·b·b·b + b·a·a·a·a + b·b·b·b·a` has 4
+words with a-position counts `{4, 1, 4, 1}`, summing to 10 telescoping
+summands. Each summand has the form `[product]·(z−x)·[product]` with the
+products totaling 4 letters from `{x, z, y}`; bounded by M⁴·‖z−x‖. -/
+theorem norm_bch_quintic_group_1_diff_le (z x y : 𝔸) :
+    ‖bch_quintic_group_1 z y - bch_quintic_group_1 x y‖ ≤
+      10 * (‖z‖ + ‖x‖ + ‖y‖) ^ 4 * ‖z - x‖ := by
+  -- Step 1: Telescoping algebraic identity
+  have htel : bch_quintic_group_1 z y - bch_quintic_group_1 x y =
+      (z - x) * z * z * z * y + x * (z - x) * z * z * y +
+      x * x * (z - x) * z * y + x * x * x * (z - x) * y +
+      (z - x) * y * y * y * y +
+      y * (z - x) * z * z * z + y * x * (z - x) * z * z +
+      y * x * x * (z - x) * z + y * x * x * x * (z - x) +
+      y * y * y * y * (z - x) := by
+    unfold bch_quintic_group_1
+    noncomm_ring
+  rw [htel]
+  -- Step 2: Setup
+  set M := ‖z‖ + ‖x‖ + ‖y‖ with hM_def
+  set d := ‖z - x‖ with hd_def
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  -- Step 3: 5-product norm helper
+  have h5prod : ∀ A B C D E : 𝔸,
+      ‖A * B * C * D * E‖ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ :=
+    fun A B C D E => by
+      calc ‖A * B * C * D * E‖
+          ≤ ‖A * B * C * D‖ * ‖E‖ := norm_mul_le _ _
+        _ ≤ ‖A * B * C‖ * ‖D‖ * ‖E‖ := by gcongr; exact norm_mul_le _ _
+        _ ≤ ‖A * B‖ * ‖C‖ * ‖D‖ * ‖E‖ := by gcongr; exact norm_mul_le _ _
+        _ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ := by gcongr; exact norm_mul_le _ _
+  -- Step 4: Each summand ≤ M⁴·d
+  have h1 : ‖(z - x) * z * z * z * y‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖z - x‖ * ‖z‖ * ‖z‖ * ‖z‖ * ‖y‖ := h5prod _ _ _ _ _
+      _ ≤ d * M * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h2 : ‖x * (z - x) * z * z * y‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖x‖ * ‖z - x‖ * ‖z‖ * ‖z‖ * ‖y‖ := h5prod _ _ _ _ _
+      _ ≤ M * d * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h3 : ‖x * x * (z - x) * z * y‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖x‖ * ‖x‖ * ‖z - x‖ * ‖z‖ * ‖y‖ := h5prod _ _ _ _ _
+      _ ≤ M * M * d * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h4 : ‖x * x * x * (z - x) * y‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖x‖ * ‖x‖ * ‖x‖ * ‖z - x‖ * ‖y‖ := h5prod _ _ _ _ _
+      _ ≤ M * M * M * d * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h5 : ‖(z - x) * y * y * y * y‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖z - x‖ * ‖y‖ * ‖y‖ * ‖y‖ * ‖y‖ := h5prod _ _ _ _ _
+      _ ≤ d * M * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h6 : ‖y * (z - x) * z * z * z‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖y‖ * ‖z - x‖ * ‖z‖ * ‖z‖ * ‖z‖ := h5prod _ _ _ _ _
+      _ ≤ M * d * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h7 : ‖y * x * (z - x) * z * z‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖y‖ * ‖x‖ * ‖z - x‖ * ‖z‖ * ‖z‖ := h5prod _ _ _ _ _
+      _ ≤ M * M * d * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h8 : ‖y * x * x * (z - x) * z‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖y‖ * ‖x‖ * ‖x‖ * ‖z - x‖ * ‖z‖ := h5prod _ _ _ _ _
+      _ ≤ M * M * M * d * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h9 : ‖y * x * x * x * (z - x)‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖y‖ * ‖x‖ * ‖x‖ * ‖x‖ * ‖z - x‖ := h5prod _ _ _ _ _
+      _ ≤ M * M * M * M * d := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h10 : ‖y * y * y * y * (z - x)‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖y‖ * ‖y‖ * ‖y‖ * ‖y‖ * ‖z - x‖ := h5prod _ _ _ _ _
+      _ ≤ M * M * M * M * d := by gcongr
+      _ = M ^ 4 * d := by ring
+  -- Step 5: 9-step triangle inequality on the 10-term sum (use `set` for clarity)
+  set s1 : 𝔸 := (z - x) * z * z * z * y with hs1
+  set s2 : 𝔸 := x * (z - x) * z * z * y with hs2
+  set s3 : 𝔸 := x * x * (z - x) * z * y with hs3
+  set s4 : 𝔸 := x * x * x * (z - x) * y with hs4
+  set s5 : 𝔸 := (z - x) * y * y * y * y with hs5
+  set s6 : 𝔸 := y * (z - x) * z * z * z with hs6
+  set s7 : 𝔸 := y * x * (z - x) * z * z with hs7
+  set s8 : 𝔸 := y * x * x * (z - x) * z with hs8
+  set s9 : 𝔸 := y * x * x * x * (z - x) with hs9
+  set s10 : 𝔸 := y * y * y * y * (z - x) with hs10
+  have a9 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9) s10
+  have a8 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8) s9
+  have a7 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6 + s7) s8
+  have a6 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6) s7
+  have a5 := norm_add_le (s1 + s2 + s3 + s4 + s5) s6
+  have a4 := norm_add_le (s1 + s2 + s3 + s4) s5
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
 /-! ### `bch_sextic_term` — the τ⁶ coefficient of `bch(a, b)`
 
 Explicit 28-term polynomial in {a, b}, derived via the CAS pipeline at
