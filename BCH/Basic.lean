@@ -2165,6 +2165,19 @@ private lemma norm_5prod_le (A B C D E : 𝔸) :
     _ ≤ ‖A * B‖ * ‖C‖ * ‖D‖ * ‖E‖ := by gcongr; exact norm_mul_le _ _
     _ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ := by gcongr; exact norm_mul_le _ _
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **6-product norm helper**: `‖A·B·C·D·E·F‖ ≤ ‖A‖·‖B‖·‖C‖·‖D‖·‖E‖·‖F‖`.
+Factored out for use in the future `bch_sextic_term`-related diff bounds
+(per-word Lipschitz lemmas needed for the parent T2-F7e discharge). -/
+private lemma norm_6prod_le (A B C D E F : 𝔸) :
+    ‖A * B * C * D * E * F‖ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ := by
+  calc ‖A * B * C * D * E * F‖
+      ≤ ‖A * B * C * D * E‖ * ‖F‖ := norm_mul_le _ _
+    _ ≤ ‖A * B * C * D‖ * ‖E‖ * ‖F‖ := by gcongr; exact norm_mul_le _ _
+    _ ≤ ‖A * B * C‖ * ‖D‖ * ‖E‖ * ‖F‖ := by gcongr; exact norm_mul_le _ _
+    _ ≤ ‖A * B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ := by gcongr; exact norm_mul_le _ _
+    _ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ := by gcongr; exact norm_mul_le _ _
+
 set_option maxHeartbeats 800000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **Lipschitz bound for `bch_quintic_group_4` in its first argument**:
