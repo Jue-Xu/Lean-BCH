@@ -3241,6 +3241,997 @@ private lemma bch_sextic_word28_diff_le (z x y : 𝔸) :
   have a1 := norm_add_le s1 s2
   linarith
 
+/-! #### Position helpers for `bch_sextic_term` per-word diffs -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- 6-product norm bound when (z-x) is at position 1 and other 5 factors ≤ M. -/
+private lemma norm_6prod_pos1_le (z x y A B C D E : 𝔸)
+    (hA : ‖A‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hB : ‖B‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hC : ‖C‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hD : ‖D‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hE : ‖E‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) :
+    ‖(z - x) * A * B * C * D * E‖ ≤ (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  calc _ ≤ ‖z - x‖ * ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ := norm_6prod_le _ _ _ _ _ _
+    _ ≤ d * M * M * M * M * M := by gcongr
+    _ = M ^ 5 * d := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma norm_6prod_pos2_le (z x y A B C D E : 𝔸)
+    (hA : ‖A‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hB : ‖B‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hC : ‖C‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hD : ‖D‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hE : ‖E‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) :
+    ‖A * (z - x) * B * C * D * E‖ ≤ (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  calc _ ≤ ‖A‖ * ‖z - x‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ := norm_6prod_le _ _ _ _ _ _
+    _ ≤ M * d * M * M * M * M := by gcongr
+    _ = M ^ 5 * d := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma norm_6prod_pos3_le (z x y A B C D E : 𝔸)
+    (hA : ‖A‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hB : ‖B‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hC : ‖C‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hD : ‖D‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hE : ‖E‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) :
+    ‖A * B * (z - x) * C * D * E‖ ≤ (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  calc _ ≤ ‖A‖ * ‖B‖ * ‖z - x‖ * ‖C‖ * ‖D‖ * ‖E‖ := norm_6prod_le _ _ _ _ _ _
+    _ ≤ M * M * d * M * M * M := by gcongr
+    _ = M ^ 5 * d := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma norm_6prod_pos4_le (z x y A B C D E : 𝔸)
+    (hA : ‖A‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hB : ‖B‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hC : ‖C‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hD : ‖D‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hE : ‖E‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) :
+    ‖A * B * C * (z - x) * D * E‖ ≤ (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  calc _ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖z - x‖ * ‖D‖ * ‖E‖ := norm_6prod_le _ _ _ _ _ _
+    _ ≤ M * M * M * d * M * M := by gcongr
+    _ = M ^ 5 * d := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma norm_6prod_pos5_le (z x y A B C D E : 𝔸)
+    (hA : ‖A‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hB : ‖B‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hC : ‖C‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hD : ‖D‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hE : ‖E‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) :
+    ‖A * B * C * D * (z - x) * E‖ ≤ (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  calc _ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖z - x‖ * ‖E‖ := norm_6prod_le _ _ _ _ _ _
+    _ ≤ M * M * M * M * d * M := by gcongr
+    _ = M ^ 5 * d := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma norm_6prod_pos6_le (z x y A B C D E : 𝔸)
+    (hA : ‖A‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hB : ‖B‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hC : ‖C‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) (hD : ‖D‖ ≤ ‖z‖ + ‖x‖ + ‖y‖)
+    (hE : ‖E‖ ≤ ‖z‖ + ‖x‖ + ‖y‖) :
+    ‖A * B * C * D * E * (z - x)‖ ≤ (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  set d := ‖z - x‖
+  calc _ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖z - x‖ := norm_6prod_le _ _ _ _ _ _
+    _ ≤ M * M * M * M * M * d := by gcongr
+    _ = M ^ 5 * d := by ring
+
+/-! #### Remaining bch_sextic per-word diff bounds (24 of 28 words).
+
+Each follows the same template: telescope identity (`noncomm_ring`) +
+position-helper applications + (k-1)-step triangle inequality. -/
+
+set_option maxHeartbeats 400000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #2 (a·a·a·b·a·b, 4 a-positions). -/
+private lemma bch_sextic_word02_diff_le (z x y : 𝔸) :
+    ‖z * z * z * y * z * y - x * x * x * y * x * y‖ ≤
+      4 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * z * z * y * z * y - x * x * x * y * x * y =
+      (z - x) * z * z * y * z * y + x * (z - x) * z * y * z * y +
+      x * x * (z - x) * y * z * y + x * x * x * y * (z - x) * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y z z y z y hz_le hz_le hy_le hz_le hy_le
+  have h2 := norm_6prod_pos2_le z x y x z y z y hx_le hz_le hy_le hz_le hy_le
+  have h3 := norm_6prod_pos3_le z x y x x y z y hx_le hx_le hy_le hz_le hy_le
+  have h5 := norm_6prod_pos5_le z x y x x x y y hx_le hx_le hx_le hy_le hy_le
+  set s1 : 𝔸 := (z - x) * z * z * y * z * y
+  set s2 : 𝔸 := x * (z - x) * z * y * z * y
+  set s3 : 𝔸 := x * x * (z - x) * y * z * y
+  set s4 : 𝔸 := x * x * x * y * (z - x) * y
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #3 (a·a·a·b·b·b, 3 a-positions). -/
+private lemma bch_sextic_word03_diff_le (z x y : 𝔸) :
+    ‖z * z * z * y * y * y - x * x * x * y * y * y‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * z * z * y * y * y - x * x * x * y * y * y =
+      (z - x) * z * z * y * y * y + x * (z - x) * z * y * y * y +
+      x * x * (z - x) * y * y * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y z z y y y hz_le hz_le hy_le hy_le hy_le
+  have h2 := norm_6prod_pos2_le z x y x z y y y hx_le hz_le hy_le hy_le hy_le
+  have h3 := norm_6prod_pos3_le z x y x x y y y hx_le hx_le hy_le hy_le hy_le
+  set s1 : 𝔸 := (z - x) * z * z * y * y * y
+  set s2 : 𝔸 := x * (z - x) * z * y * y * y
+  set s3 : 𝔸 := x * x * (z - x) * y * y * y
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #4 (a·a·b·a·a·b, 4 a-positions). -/
+private lemma bch_sextic_word04_diff_le (z x y : 𝔸) :
+    ‖z * z * y * z * z * y - x * x * y * x * x * y‖ ≤
+      4 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * z * y * z * z * y - x * x * y * x * x * y =
+      (z - x) * z * y * z * z * y + x * (z - x) * y * z * z * y +
+      x * x * y * (z - x) * z * y + x * x * y * x * (z - x) * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y z y z z y hz_le hy_le hz_le hz_le hy_le
+  have h2 := norm_6prod_pos2_le z x y x y z z y hx_le hy_le hz_le hz_le hy_le
+  have h4 := norm_6prod_pos4_le z x y x x y z y hx_le hx_le hy_le hz_le hy_le
+  have h5 := norm_6prod_pos5_le z x y x x y x y hx_le hx_le hy_le hx_le hy_le
+  set s1 : 𝔸 := (z - x) * z * y * z * z * y
+  set s2 : 𝔸 := x * (z - x) * y * z * z * y
+  set s3 : 𝔸 := x * x * y * (z - x) * z * y
+  set s4 : 𝔸 := x * x * y * x * (z - x) * y
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #5 (a·a·b·a·b·b, 3 a-positions). -/
+private lemma bch_sextic_word05_diff_le (z x y : 𝔸) :
+    ‖z * z * y * z * y * y - x * x * y * x * y * y‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * z * y * z * y * y - x * x * y * x * y * y =
+      (z - x) * z * y * z * y * y + x * (z - x) * y * z * y * y +
+      x * x * y * (z - x) * y * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y z y z y y hz_le hy_le hz_le hy_le hy_le
+  have h2 := norm_6prod_pos2_le z x y x y z y y hx_le hy_le hz_le hy_le hy_le
+  have h4 := norm_6prod_pos4_le z x y x x y y y hx_le hx_le hy_le hy_le hy_le
+  set s1 : 𝔸 := (z - x) * z * y * z * y * y
+  set s2 : 𝔸 := x * (z - x) * y * z * y * y
+  set s3 : 𝔸 := x * x * y * (z - x) * y * y
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #6 (a·a·b·b·a·b, 3 a-positions). -/
+private lemma bch_sextic_word06_diff_le (z x y : 𝔸) :
+    ‖z * z * y * y * z * y - x * x * y * y * x * y‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * z * y * y * z * y - x * x * y * y * x * y =
+      (z - x) * z * y * y * z * y + x * (z - x) * y * y * z * y +
+      x * x * y * y * (z - x) * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y z y y z y hz_le hy_le hy_le hz_le hy_le
+  have h2 := norm_6prod_pos2_le z x y x y y z y hx_le hy_le hy_le hz_le hy_le
+  have h5 := norm_6prod_pos5_le z x y x x y y y hx_le hx_le hy_le hy_le hy_le
+  set s1 : 𝔸 := (z - x) * z * y * y * z * y
+  set s2 : 𝔸 := x * (z - x) * y * y * z * y
+  set s3 : 𝔸 := x * x * y * y * (z - x) * y
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #8 (a·b·a·a·a·b, 4 a-positions). -/
+private lemma bch_sextic_word08_diff_le (z x y : 𝔸) :
+    ‖z * y * z * z * z * y - x * y * x * x * x * y‖ ≤
+      4 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * y * z * z * z * y - x * y * x * x * x * y =
+      (z - x) * y * z * z * z * y + x * y * (z - x) * z * z * y +
+      x * y * x * (z - x) * z * y + x * y * x * x * (z - x) * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y y z z z y hy_le hz_le hz_le hz_le hy_le
+  have h3 := norm_6prod_pos3_le z x y x y z z y hx_le hy_le hz_le hz_le hy_le
+  have h4 := norm_6prod_pos4_le z x y x y x z y hx_le hy_le hx_le hz_le hy_le
+  have h5 := norm_6prod_pos5_le z x y x y x x y hx_le hy_le hx_le hx_le hy_le
+  set s1 : 𝔸 := (z - x) * y * z * z * z * y
+  set s2 : 𝔸 := x * y * (z - x) * z * z * y
+  set s3 : 𝔸 := x * y * x * (z - x) * z * y
+  set s4 : 𝔸 := x * y * x * x * (z - x) * y
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #9 (a·b·a·a·b·b, 3 a-positions). -/
+private lemma bch_sextic_word09_diff_le (z x y : 𝔸) :
+    ‖z * y * z * z * y * y - x * y * x * x * y * y‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * y * z * z * y * y - x * y * x * x * y * y =
+      (z - x) * y * z * z * y * y + x * y * (z - x) * z * y * y +
+      x * y * x * (z - x) * y * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y y z z y y hy_le hz_le hz_le hy_le hy_le
+  have h3 := norm_6prod_pos3_le z x y x y z y y hx_le hy_le hz_le hy_le hy_le
+  have h4 := norm_6prod_pos4_le z x y x y x y y hx_le hy_le hx_le hy_le hy_le
+  set s1 : 𝔸 := (z - x) * y * z * z * y * y
+  set s2 : 𝔸 := x * y * (z - x) * z * y * y
+  set s3 : 𝔸 := x * y * x * (z - x) * y * y
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #10 (a·b·a·b·a·b, 3 a-positions). -/
+private lemma bch_sextic_word10_diff_le (z x y : 𝔸) :
+    ‖z * y * z * y * z * y - x * y * x * y * x * y‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * y * z * y * z * y - x * y * x * y * x * y =
+      (z - x) * y * z * y * z * y + x * y * (z - x) * y * z * y +
+      x * y * x * y * (z - x) * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y y z y z y hy_le hz_le hy_le hz_le hy_le
+  have h3 := norm_6prod_pos3_le z x y x y y z y hx_le hy_le hy_le hz_le hy_le
+  have h5 := norm_6prod_pos5_le z x y x y x y y hx_le hy_le hx_le hy_le hy_le
+  set s1 : 𝔸 := (z - x) * y * z * y * z * y
+  set s2 : 𝔸 := x * y * (z - x) * y * z * y
+  set s3 : 𝔸 := x * y * x * y * (z - x) * y
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #11 (a·b·a·b·b·b, 2 a-positions). -/
+private lemma bch_sextic_word11_diff_le (z x y : 𝔸) :
+    ‖z * y * z * y * y * y - x * y * x * y * y * y‖ ≤
+      2 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * y * z * y * y * y - x * y * x * y * y * y =
+      (z - x) * y * z * y * y * y + x * y * (z - x) * y * y * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y y z y y y hy_le hz_le hy_le hy_le hy_le
+  have h3 := norm_6prod_pos3_le z x y x y y y y hx_le hy_le hy_le hy_le hy_le
+  set s1 : 𝔸 := (z - x) * y * z * y * y * y
+  set s2 : 𝔸 := x * y * (z - x) * y * y * y
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #12 (a·b·b·a·a·b, 3 a-positions). -/
+private lemma bch_sextic_word12_diff_le (z x y : 𝔸) :
+    ‖z * y * y * z * z * y - x * y * y * x * x * y‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * y * y * z * z * y - x * y * y * x * x * y =
+      (z - x) * y * y * z * z * y + x * y * y * (z - x) * z * y +
+      x * y * y * x * (z - x) * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y y y z z y hy_le hy_le hz_le hz_le hy_le
+  have h4 := norm_6prod_pos4_le z x y x y y z y hx_le hy_le hy_le hz_le hy_le
+  have h5 := norm_6prod_pos5_le z x y x y y x y hx_le hy_le hy_le hx_le hy_le
+  set s1 : 𝔸 := (z - x) * y * y * z * z * y
+  set s2 : 𝔸 := x * y * y * (z - x) * z * y
+  set s3 : 𝔸 := x * y * y * x * (z - x) * y
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #13 (a·b·b·a·b·b, 2 a-positions). -/
+private lemma bch_sextic_word13_diff_le (z x y : 𝔸) :
+    ‖z * y * y * z * y * y - x * y * y * x * y * y‖ ≤
+      2 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * y * y * z * y * y - x * y * y * x * y * y =
+      (z - x) * y * y * z * y * y + x * y * y * (z - x) * y * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y y y z y y hy_le hy_le hz_le hy_le hy_le
+  have h4 := norm_6prod_pos4_le z x y x y y y y hx_le hy_le hy_le hy_le hy_le
+  set s1 : 𝔸 := (z - x) * y * y * z * y * y
+  set s2 : 𝔸 := x * y * y * (z - x) * y * y
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #14 (a·b·b·b·a·b, 2 a-positions). -/
+private lemma bch_sextic_word14_diff_le (z x y : 𝔸) :
+    ‖z * y * y * y * z * y - x * y * y * y * x * y‖ ≤
+      2 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : z * y * y * y * z * y - x * y * y * y * x * y =
+      (z - x) * y * y * y * z * y + x * y * y * y * (z - x) * y := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 := norm_6prod_pos1_le z x y y y y z y hy_le hy_le hy_le hz_le hy_le
+  have h5 := norm_6prod_pos5_le z x y x y y y y hx_le hy_le hy_le hy_le hy_le
+  set s1 : 𝔸 := (z - x) * y * y * y * z * y
+  set s2 : 𝔸 := x * y * y * y * (z - x) * y
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #15 (b·a·a·a·b·a, 4 a-positions). -/
+private lemma bch_sextic_word15_diff_le (z x y : 𝔸) :
+    ‖y * z * z * z * y * z - y * x * x * x * y * x‖ ≤
+      4 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * z * z * z * y * z - y * x * x * x * y * x =
+      y * (z - x) * z * z * y * z + y * x * (z - x) * z * y * z +
+      y * x * x * (z - x) * y * z + y * x * x * x * y * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h2 := norm_6prod_pos2_le z x y y z z y z hy_le hz_le hz_le hy_le hz_le
+  have h3 := norm_6prod_pos3_le z x y y x z y z hy_le hx_le hz_le hy_le hz_le
+  have h4 := norm_6prod_pos4_le z x y y x x y z hy_le hx_le hx_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y x x x y hy_le hx_le hx_le hx_le hy_le
+  set s1 : 𝔸 := y * (z - x) * z * z * y * z
+  set s2 : 𝔸 := y * x * (z - x) * z * y * z
+  set s3 : 𝔸 := y * x * x * (z - x) * y * z
+  set s4 : 𝔸 := y * x * x * x * y * (z - x)
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #16 (b·a·a·b·a·a, 4 a-positions). -/
+private lemma bch_sextic_word16_diff_le (z x y : 𝔸) :
+    ‖y * z * z * y * z * z - y * x * x * y * x * x‖ ≤
+      4 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * z * z * y * z * z - y * x * x * y * x * x =
+      y * (z - x) * z * y * z * z + y * x * (z - x) * y * z * z +
+      y * x * x * y * (z - x) * z + y * x * x * y * x * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h2 := norm_6prod_pos2_le z x y y z y z z hy_le hz_le hy_le hz_le hz_le
+  have h3 := norm_6prod_pos3_le z x y y x y z z hy_le hx_le hy_le hz_le hz_le
+  have h5 := norm_6prod_pos5_le z x y y x x y z hy_le hx_le hx_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y x x y x hy_le hx_le hx_le hy_le hx_le
+  set s1 : 𝔸 := y * (z - x) * z * y * z * z
+  set s2 : 𝔸 := y * x * (z - x) * y * z * z
+  set s3 : 𝔸 := y * x * x * y * (z - x) * z
+  set s4 : 𝔸 := y * x * x * y * x * (z - x)
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #17 (b·a·a·b·b·a, 3 a-positions). -/
+private lemma bch_sextic_word17_diff_le (z x y : 𝔸) :
+    ‖y * z * z * y * y * z - y * x * x * y * y * x‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * z * z * y * y * z - y * x * x * y * y * x =
+      y * (z - x) * z * y * y * z + y * x * (z - x) * y * y * z +
+      y * x * x * y * y * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h2 := norm_6prod_pos2_le z x y y z y y z hy_le hz_le hy_le hy_le hz_le
+  have h3 := norm_6prod_pos3_le z x y y x y y z hy_le hx_le hy_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y x x y y hy_le hx_le hx_le hy_le hy_le
+  set s1 : 𝔸 := y * (z - x) * z * y * y * z
+  set s2 : 𝔸 := y * x * (z - x) * y * y * z
+  set s3 : 𝔸 := y * x * x * y * y * (z - x)
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #18 (b·a·b·a·a·a, 4 a-positions). -/
+private lemma bch_sextic_word18_diff_le (z x y : 𝔸) :
+    ‖y * z * y * z * z * z - y * x * y * x * x * x‖ ≤
+      4 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * z * y * z * z * z - y * x * y * x * x * x =
+      y * (z - x) * y * z * z * z + y * x * y * (z - x) * z * z +
+      y * x * y * x * (z - x) * z + y * x * y * x * x * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h2 := norm_6prod_pos2_le z x y y y z z z hy_le hy_le hz_le hz_le hz_le
+  have h4 := norm_6prod_pos4_le z x y y x y z z hy_le hx_le hy_le hz_le hz_le
+  have h5 := norm_6prod_pos5_le z x y y x y x z hy_le hx_le hy_le hx_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y x y x x hy_le hx_le hy_le hx_le hx_le
+  set s1 : 𝔸 := y * (z - x) * y * z * z * z
+  set s2 : 𝔸 := y * x * y * (z - x) * z * z
+  set s3 : 𝔸 := y * x * y * x * (z - x) * z
+  set s4 : 𝔸 := y * x * y * x * x * (z - x)
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #19 (b·a·b·a·b·a, 3 a-positions, |coef|=24). -/
+private lemma bch_sextic_word19_diff_le (z x y : 𝔸) :
+    ‖y * z * y * z * y * z - y * x * y * x * y * x‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * z * y * z * y * z - y * x * y * x * y * x =
+      y * (z - x) * y * z * y * z + y * x * y * (z - x) * y * z +
+      y * x * y * x * y * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h2 := norm_6prod_pos2_le z x y y y z y z hy_le hy_le hz_le hy_le hz_le
+  have h4 := norm_6prod_pos4_le z x y y x y y z hy_le hx_le hy_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y x y x y hy_le hx_le hy_le hx_le hy_le
+  set s1 : 𝔸 := y * (z - x) * y * z * y * z
+  set s2 : 𝔸 := y * x * y * (z - x) * y * z
+  set s3 : 𝔸 := y * x * y * x * y * (z - x)
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #20 (b·a·b·b·a·a, 3 a-positions). -/
+private lemma bch_sextic_word20_diff_le (z x y : 𝔸) :
+    ‖y * z * y * y * z * z - y * x * y * y * x * x‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * z * y * y * z * z - y * x * y * y * x * x =
+      y * (z - x) * y * y * z * z + y * x * y * y * (z - x) * z +
+      y * x * y * y * x * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h2 := norm_6prod_pos2_le z x y y y y z z hy_le hy_le hy_le hz_le hz_le
+  have h5 := norm_6prod_pos5_le z x y y x y y z hy_le hx_le hy_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y x y y x hy_le hx_le hy_le hy_le hx_le
+  set s1 : 𝔸 := y * (z - x) * y * y * z * z
+  set s2 : 𝔸 := y * x * y * y * (z - x) * z
+  set s3 : 𝔸 := y * x * y * y * x * (z - x)
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #21 (b·a·b·b·b·a, 2 a-positions). -/
+private lemma bch_sextic_word21_diff_le (z x y : 𝔸) :
+    ‖y * z * y * y * y * z - y * x * y * y * y * x‖ ≤
+      2 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * z * y * y * y * z - y * x * y * y * y * x =
+      y * (z - x) * y * y * y * z + y * x * y * y * y * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h2 := norm_6prod_pos2_le z x y y y y y z hy_le hy_le hy_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y x y y y hy_le hx_le hy_le hy_le hy_le
+  set s1 : 𝔸 := y * (z - x) * y * y * y * z
+  set s2 : 𝔸 := y * x * y * y * y * (z - x)
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #23 (b·b·a·a·b·a, 3 a-positions). -/
+private lemma bch_sextic_word23_diff_le (z x y : 𝔸) :
+    ‖y * y * z * z * y * z - y * y * x * x * y * x‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * y * z * z * y * z - y * y * x * x * y * x =
+      y * y * (z - x) * z * y * z + y * y * x * (z - x) * y * z +
+      y * y * x * x * y * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h3 := norm_6prod_pos3_le z x y y y z y z hy_le hy_le hz_le hy_le hz_le
+  have h4 := norm_6prod_pos4_le z x y y y x y z hy_le hy_le hx_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y y x x y hy_le hy_le hx_le hx_le hy_le
+  set s1 : 𝔸 := y * y * (z - x) * z * y * z
+  set s2 : 𝔸 := y * y * x * (z - x) * y * z
+  set s3 : 𝔸 := y * y * x * x * y * (z - x)
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #24 (b·b·a·b·a·a, 3 a-positions). -/
+private lemma bch_sextic_word24_diff_le (z x y : 𝔸) :
+    ‖y * y * z * y * z * z - y * y * x * y * x * x‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * y * z * y * z * z - y * y * x * y * x * x =
+      y * y * (z - x) * y * z * z + y * y * x * y * (z - x) * z +
+      y * y * x * y * x * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h3 := norm_6prod_pos3_le z x y y y y z z hy_le hy_le hy_le hz_le hz_le
+  have h5 := norm_6prod_pos5_le z x y y y x y z hy_le hy_le hx_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y y x y x hy_le hy_le hx_le hy_le hx_le
+  set s1 : 𝔸 := y * y * (z - x) * y * z * z
+  set s2 : 𝔸 := y * y * x * y * (z - x) * z
+  set s3 : 𝔸 := y * y * x * y * x * (z - x)
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #25 (b·b·a·b·b·a, 2 a-positions). -/
+private lemma bch_sextic_word25_diff_le (z x y : 𝔸) :
+    ‖y * y * z * y * y * z - y * y * x * y * y * x‖ ≤
+      2 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * y * z * y * y * z - y * y * x * y * y * x =
+      y * y * (z - x) * y * y * z + y * y * x * y * y * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h3 := norm_6prod_pos3_le z x y y y y y z hy_le hy_le hy_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y y x y y hy_le hy_le hx_le hy_le hy_le
+  set s1 : 𝔸 := y * y * (z - x) * y * y * z
+  set s2 : 𝔸 := y * y * x * y * y * (z - x)
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #26 (b·b·b·a·a·a, 3 a-positions). -/
+private lemma bch_sextic_word26_diff_le (z x y : 𝔸) :
+    ‖y * y * y * z * z * z - y * y * y * x * x * x‖ ≤
+      3 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * y * y * z * z * z - y * y * y * x * x * x =
+      y * y * y * (z - x) * z * z + y * y * y * x * (z - x) * z +
+      y * y * y * x * x * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h4 := norm_6prod_pos4_le z x y y y y z z hy_le hy_le hy_le hz_le hz_le
+  have h5 := norm_6prod_pos5_le z x y y y y x z hy_le hy_le hy_le hx_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y y y x x hy_le hy_le hy_le hx_le hx_le
+  set s1 : 𝔸 := y * y * y * (z - x) * z * z
+  set s2 : 𝔸 := y * y * y * x * (z - x) * z
+  set s3 : 𝔸 := y * y * y * x * x * (z - x)
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- Word #27 (b·b·b·a·b·a, 2 a-positions). -/
+private lemma bch_sextic_word27_diff_le (z x y : 𝔸) :
+    ‖y * y * y * z * y * z - y * y * y * x * y * x‖ ≤
+      2 * (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  have htel : y * y * y * z * y * z - y * y * y * x * y * x =
+      y * y * y * (z - x) * y * z + y * y * y * x * y * (z - x) := by
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h4 := norm_6prod_pos4_le z x y y y y y z hy_le hy_le hy_le hy_le hz_le
+  have h6 := norm_6prod_pos6_le z x y y y y x y hy_le hy_le hy_le hx_le hy_le
+  set s1 : 𝔸 := y * y * y * (z - x) * y * z
+  set s2 : 𝔸 := y * y * y * x * y * (z - x)
+  have a1 := norm_add_le s1 s2
+  linarith
+
+set_option maxHeartbeats 16000000 in
+include 𝕂 in
+/-- **Lipschitz bound for `bch_sextic_term` in its first argument**:
+`‖C₆(z, y) − C₆(x, y)‖ ≤ (‖z‖+‖x‖+‖y‖)⁵ · ‖z − x‖`.
+
+Combines all 28 per-word Lipschitz bounds with the (1/1440) scalar factors
+weighted by |coefficient|:
+`K = (Σ |coef_i| · k_i) / 1440 = 492/1440 = 41/120 < 1`.
+
+This is the analog of `norm_bch_quintic_term_diff_le` at degree 6; with
+`z = (a'+b) + W` and `‖W‖ = O(s²)`, gives O(s⁷) bound on
+`‖C₆(z, y) − C₆(a'+b, y)‖`. This is the key piece for the parent
+T2-F7e discharge: it bounds the deg-6 outer C₆ residual in the extended
+hdecomp, completing the "obviously O(s⁷)" piece group. -/
+theorem norm_bch_sextic_term_diff_le (z x y : 𝔸) :
+    ‖bch_sextic_term 𝕂 z y - bch_sextic_term 𝕂 x y‖ ≤
+      (‖z‖ + ‖x‖ + ‖y‖) ^ 5 * ‖z - x‖ := by
+  set M := ‖z‖ + ‖x‖ + ‖y‖ with hM_def
+  set d := ‖z - x‖ with hd_def
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hM_nn : 0 ≤ M := by positivity
+  have hM5_nn : (0 : ℝ) ≤ M ^ 5 := pow_nonneg hM_nn 5
+  -- Per-word bounds.
+  have w01 := bch_sextic_word01_diff_le z x y
+  have w02 := bch_sextic_word02_diff_le z x y
+  have w03 := bch_sextic_word03_diff_le z x y
+  have w04 := bch_sextic_word04_diff_le z x y
+  have w05 := bch_sextic_word05_diff_le z x y
+  have w06 := bch_sextic_word06_diff_le z x y
+  have w07 := bch_sextic_word07_diff_le z x y
+  have w08 := bch_sextic_word08_diff_le z x y
+  have w09 := bch_sextic_word09_diff_le z x y
+  have w10 := bch_sextic_word10_diff_le z x y
+  have w11 := bch_sextic_word11_diff_le z x y
+  have w12 := bch_sextic_word12_diff_le z x y
+  have w13 := bch_sextic_word13_diff_le z x y
+  have w14 := bch_sextic_word14_diff_le z x y
+  have w15 := bch_sextic_word15_diff_le z x y
+  have w16 := bch_sextic_word16_diff_le z x y
+  have w17 := bch_sextic_word17_diff_le z x y
+  have w18 := bch_sextic_word18_diff_le z x y
+  have w19 := bch_sextic_word19_diff_le z x y
+  have w20 := bch_sextic_word20_diff_le z x y
+  have w21 := bch_sextic_word21_diff_le z x y
+  have w22 := bch_sextic_word22_diff_le z x y
+  have w23 := bch_sextic_word23_diff_le z x y
+  have w24 := bch_sextic_word24_diff_le z x y
+  have w25 := bch_sextic_word25_diff_le z x y
+  have w26 := bch_sextic_word26_diff_le z x y
+  have w27 := bch_sextic_word27_diff_le z x y
+  have w28 := bch_sextic_word28_diff_le z x y
+  -- bch_sextic_term diff = Σ (coef_i / 1440) • (word_i(z, y) − word_i(x, y))
+  -- For each i, ‖(coef_i / 1440) • (word_i diff)‖ ≤ |coef_i|/1440 · k_i · M⁵ · d.
+  -- Sum: 492/1440 · M⁵ · d ≤ M⁵ · d.
+  -- Reduce by direct triangle inequality + scaled-word bounds.
+  -- First, scaled per-word bounds (each scaled by |coef_i|/1440)
+  -- Norm of 1440 in 𝕂.
+  have h1440_norm : ‖(1440 : 𝕂)‖ = 1440 := by
+    rw [show ((1440 : 𝕂)) = ((1440 : ℕ) : 𝕂) from by norm_cast, RCLike.norm_natCast]
+    norm_num
+  -- Generic helper: c'/1440 · k · M⁵ · d bound for a scaled word diff
+  -- where c' is a non-negative real (= |coef_i|).
+  have hscaled : ∀ (c' k : ℝ) (cK : 𝕂) (Δ : 𝔸)
+      (hc_norm : ‖cK‖ = c' / 1440) (hΔ : ‖Δ‖ ≤ k * M ^ 5 * d)
+      (hc'_nn : 0 ≤ c') (hk_nn : 0 ≤ k),
+      ‖cK • Δ‖ ≤ (c' * k / 1440) * (M ^ 5 * d) := by
+    intro c' k cK Δ hc_norm hΔ hc'_nn hk_nn
+    calc ‖cK • Δ‖ ≤ ‖cK‖ * ‖Δ‖ := norm_smul_le _ _
+      _ = (c' / 1440) * ‖Δ‖ := by rw [hc_norm]
+      _ ≤ (c' / 1440) * (k * M ^ 5 * d) := by
+          apply mul_le_mul_of_nonneg_left hΔ
+          positivity
+      _ = (c' * k / 1440) * (M ^ 5 * d) := by ring
+  -- Apply hscaled to each of the 28 scaled per-word bounds.
+  -- |coef_i|: 1, 4, 4, 6, 6, 6, 1, 4, 6, 24, 4, 6, 6, 4, 4, 6, 6, 4, 24, 6, 4, 1, 6, 6, 6, 4, 4, 1
+  -- k_i: 4, 4, 3, 4, 3, 3, 2, 4, 3, 3, 2, 3, 2, 2, 4, 4, 3, 4, 3, 3, 2, 4, 3, 3, 2, 3, 2, 2
+  -- |coef|·k: 4, 16, 12, 24, 18, 18, 2, 16, 18, 72, 8, 18, 12, 8, 16, 24, 18, 16, 72, 18, 8, 4, 18, 18, 12, 12, 8, 2
+  -- Sum = 492.
+  have hc01 : ‖((-1 : 𝕂) / 1440)‖ = 1 / 1440 := by
+    rw [show ((-1 : 𝕂) / 1440) = -((1 : 𝕂) / 1440) from by ring, norm_neg,
+      norm_div, norm_one, h1440_norm]
+  have hc02 : ‖((4 : 𝕂) / 1440)‖ = 4 / 1440 := by
+    rw [norm_div, h1440_norm, RCLike.norm_ofNat]
+  have hc04 : ‖((-6 : 𝕂) / 1440)‖ = 6 / 1440 := by
+    rw [show ((-6 : 𝕂) / 1440) = -((6 : 𝕂) / 1440) from by ring, norm_neg,
+      norm_div, h1440_norm, RCLike.norm_ofNat]
+  have hc10 : ‖((24 : 𝕂) / 1440)‖ = 24 / 1440 := by
+    rw [norm_div, h1440_norm, RCLike.norm_ofNat]
+  have hc15 : ‖((-4 : 𝕂) / 1440)‖ = 4 / 1440 := by
+    rw [show ((-4 : 𝕂) / 1440) = -((4 : 𝕂) / 1440) from by ring, norm_neg,
+      norm_div, h1440_norm, RCLike.norm_ofNat]
+  have hc16 : ‖((6 : 𝕂) / 1440)‖ = 6 / 1440 := by
+    rw [norm_div, h1440_norm, RCLike.norm_ofNat]
+  have hc19 : ‖((-24 : 𝕂) / 1440)‖ = 24 / 1440 := by
+    rw [show ((-24 : 𝕂) / 1440) = -((24 : 𝕂) / 1440) from by ring, norm_neg,
+      norm_div, h1440_norm, RCLike.norm_ofNat]
+  have hc22 : ‖((1 : 𝕂) / 1440)‖ = 1 / 1440 := by
+    rw [norm_div, norm_one, h1440_norm]
+  -- Scaled per-word bounds
+  have hs01 : ‖((-1 : 𝕂) / 1440) • (z*z*z*z*y*y - x*x*x*x*y*y)‖ ≤ (4 / 1440) * (M^5 * d) := by
+    have := hscaled 1 4 _ _ hc01 w01 (by norm_num) (by norm_num); linarith
+  have hs02 : ‖((4 : 𝕂) / 1440) • (z*z*z*y*z*y - x*x*x*y*x*y)‖ ≤ (16 / 1440) * (M^5 * d) := by
+    have := hscaled 4 4 _ _ hc02 w02 (by norm_num) (by norm_num); linarith
+  have hs03 : ‖((4 : 𝕂) / 1440) • (z*z*z*y*y*y - x*x*x*y*y*y)‖ ≤ (12 / 1440) * (M^5 * d) := by
+    have := hscaled 4 3 _ _ hc02 w03 (by norm_num) (by norm_num); linarith
+  have hs04 : ‖((-6 : 𝕂) / 1440) • (z*z*y*z*z*y - x*x*y*x*x*y)‖ ≤ (24 / 1440) * (M^5 * d) := by
+    have := hscaled 6 4 _ _ hc04 w04 (by norm_num) (by norm_num); linarith
+  have hs05 : ‖((-6 : 𝕂) / 1440) • (z*z*y*z*y*y - x*x*y*x*y*y)‖ ≤ (18 / 1440) * (M^5 * d) := by
+    have := hscaled 6 3 _ _ hc04 w05 (by norm_num) (by norm_num); linarith
+  have hs06 : ‖((-6 : 𝕂) / 1440) • (z*z*y*y*z*y - x*x*y*y*x*y)‖ ≤ (18 / 1440) * (M^5 * d) := by
+    have := hscaled 6 3 _ _ hc04 w06 (by norm_num) (by norm_num); linarith
+  have hs07 : ‖((-1 : 𝕂) / 1440) • (z*z*y*y*y*y - x*x*y*y*y*y)‖ ≤ (2 / 1440) * (M^5 * d) := by
+    have := hscaled 1 2 _ _ hc01 w07 (by norm_num) (by norm_num); linarith
+  have hs08 : ‖((4 : 𝕂) / 1440) • (z*y*z*z*z*y - x*y*x*x*x*y)‖ ≤ (16 / 1440) * (M^5 * d) := by
+    have := hscaled 4 4 _ _ hc02 w08 (by norm_num) (by norm_num); linarith
+  have hs09 : ‖((-6 : 𝕂) / 1440) • (z*y*z*z*y*y - x*y*x*x*y*y)‖ ≤ (18 / 1440) * (M^5 * d) := by
+    have := hscaled 6 3 _ _ hc04 w09 (by norm_num) (by norm_num); linarith
+  have hs10 : ‖((24 : 𝕂) / 1440) • (z*y*z*y*z*y - x*y*x*y*x*y)‖ ≤ (72 / 1440) * (M^5 * d) := by
+    have := hscaled 24 3 _ _ hc10 w10 (by norm_num) (by norm_num); linarith
+  have hs11 : ‖((4 : 𝕂) / 1440) • (z*y*z*y*y*y - x*y*x*y*y*y)‖ ≤ (8 / 1440) * (M^5 * d) := by
+    have := hscaled 4 2 _ _ hc02 w11 (by norm_num) (by norm_num); linarith
+  have hs12 : ‖((-6 : 𝕂) / 1440) • (z*y*y*z*z*y - x*y*y*x*x*y)‖ ≤ (18 / 1440) * (M^5 * d) := by
+    have := hscaled 6 3 _ _ hc04 w12 (by norm_num) (by norm_num); linarith
+  have hs13 : ‖((-6 : 𝕂) / 1440) • (z*y*y*z*y*y - x*y*y*x*y*y)‖ ≤ (12 / 1440) * (M^5 * d) := by
+    have := hscaled 6 2 _ _ hc04 w13 (by norm_num) (by norm_num); linarith
+  have hs14 : ‖((4 : 𝕂) / 1440) • (z*y*y*y*z*y - x*y*y*y*x*y)‖ ≤ (8 / 1440) * (M^5 * d) := by
+    have := hscaled 4 2 _ _ hc02 w14 (by norm_num) (by norm_num); linarith
+  have hs15 : ‖((-4 : 𝕂) / 1440) • (y*z*z*z*y*z - y*x*x*x*y*x)‖ ≤ (16 / 1440) * (M^5 * d) := by
+    have := hscaled 4 4 _ _ hc15 w15 (by norm_num) (by norm_num); linarith
+  have hs16 : ‖((6 : 𝕂) / 1440) • (y*z*z*y*z*z - y*x*x*y*x*x)‖ ≤ (24 / 1440) * (M^5 * d) := by
+    have := hscaled 6 4 _ _ hc16 w16 (by norm_num) (by norm_num); linarith
+  have hs17 : ‖((6 : 𝕂) / 1440) • (y*z*z*y*y*z - y*x*x*y*y*x)‖ ≤ (18 / 1440) * (M^5 * d) := by
+    have := hscaled 6 3 _ _ hc16 w17 (by norm_num) (by norm_num); linarith
+  have hs18 : ‖((-4 : 𝕂) / 1440) • (y*z*y*z*z*z - y*x*y*x*x*x)‖ ≤ (16 / 1440) * (M^5 * d) := by
+    have := hscaled 4 4 _ _ hc15 w18 (by norm_num) (by norm_num); linarith
+  have hs19 : ‖((-24 : 𝕂) / 1440) • (y*z*y*z*y*z - y*x*y*x*y*x)‖ ≤ (72 / 1440) * (M^5 * d) := by
+    have := hscaled 24 3 _ _ hc19 w19 (by norm_num) (by norm_num); linarith
+  have hs20 : ‖((6 : 𝕂) / 1440) • (y*z*y*y*z*z - y*x*y*y*x*x)‖ ≤ (18 / 1440) * (M^5 * d) := by
+    have := hscaled 6 3 _ _ hc16 w20 (by norm_num) (by norm_num); linarith
+  have hs21 : ‖((-4 : 𝕂) / 1440) • (y*z*y*y*y*z - y*x*y*y*y*x)‖ ≤ (8 / 1440) * (M^5 * d) := by
+    have := hscaled 4 2 _ _ hc15 w21 (by norm_num) (by norm_num); linarith
+  have hs22 : ‖((1 : 𝕂) / 1440) • (y*y*z*z*z*z - y*y*x*x*x*x)‖ ≤ (4 / 1440) * (M^5 * d) := by
+    have := hscaled 1 4 _ _ hc22 w22 (by norm_num) (by norm_num); linarith
+  have hs23 : ‖((6 : 𝕂) / 1440) • (y*y*z*z*y*z - y*y*x*x*y*x)‖ ≤ (18 / 1440) * (M^5 * d) := by
+    have := hscaled 6 3 _ _ hc16 w23 (by norm_num) (by norm_num); linarith
+  have hs24 : ‖((6 : 𝕂) / 1440) • (y*y*z*y*z*z - y*y*x*y*x*x)‖ ≤ (18 / 1440) * (M^5 * d) := by
+    have := hscaled 6 3 _ _ hc16 w24 (by norm_num) (by norm_num); linarith
+  have hs25 : ‖((6 : 𝕂) / 1440) • (y*y*z*y*y*z - y*y*x*y*y*x)‖ ≤ (12 / 1440) * (M^5 * d) := by
+    have := hscaled 6 2 _ _ hc16 w25 (by norm_num) (by norm_num); linarith
+  have hs26 : ‖((-4 : 𝕂) / 1440) • (y*y*y*z*z*z - y*y*y*x*x*x)‖ ≤ (12 / 1440) * (M^5 * d) := by
+    have := hscaled 4 3 _ _ hc15 w26 (by norm_num) (by norm_num); linarith
+  have hs27 : ‖((-4 : 𝕂) / 1440) • (y*y*y*z*y*z - y*y*y*x*y*x)‖ ≤ (8 / 1440) * (M^5 * d) := by
+    have := hscaled 4 2 _ _ hc15 w27 (by norm_num) (by norm_num); linarith
+  have hs28 : ‖((1 : 𝕂) / 1440) • (y*y*y*y*z*z - y*y*y*y*x*x)‖ ≤ (2 / 1440) * (M^5 * d) := by
+    have := hscaled 1 2 _ _ hc22 w28 (by norm_num) (by norm_num); linarith
+  -- Algebraic identity: bch_sextic_term diff = sum of 28 scaled per-word diffs.
+  have hsplit : bch_sextic_term 𝕂 z y - bch_sextic_term 𝕂 x y =
+        ((-1 : 𝕂) / 1440) • (z*z*z*z*y*y - x*x*x*x*y*y)
+      + ((4 : 𝕂) / 1440) • (z*z*z*y*z*y - x*x*x*y*x*y)
+      + ((4 : 𝕂) / 1440) • (z*z*z*y*y*y - x*x*x*y*y*y)
+      + ((-6 : 𝕂) / 1440) • (z*z*y*z*z*y - x*x*y*x*x*y)
+      + ((-6 : 𝕂) / 1440) • (z*z*y*z*y*y - x*x*y*x*y*y)
+      + ((-6 : 𝕂) / 1440) • (z*z*y*y*z*y - x*x*y*y*x*y)
+      + ((-1 : 𝕂) / 1440) • (z*z*y*y*y*y - x*x*y*y*y*y)
+      + ((4 : 𝕂) / 1440) • (z*y*z*z*z*y - x*y*x*x*x*y)
+      + ((-6 : 𝕂) / 1440) • (z*y*z*z*y*y - x*y*x*x*y*y)
+      + ((24 : 𝕂) / 1440) • (z*y*z*y*z*y - x*y*x*y*x*y)
+      + ((4 : 𝕂) / 1440) • (z*y*z*y*y*y - x*y*x*y*y*y)
+      + ((-6 : 𝕂) / 1440) • (z*y*y*z*z*y - x*y*y*x*x*y)
+      + ((-6 : 𝕂) / 1440) • (z*y*y*z*y*y - x*y*y*x*y*y)
+      + ((4 : 𝕂) / 1440) • (z*y*y*y*z*y - x*y*y*y*x*y)
+      + ((-4 : 𝕂) / 1440) • (y*z*z*z*y*z - y*x*x*x*y*x)
+      + ((6 : 𝕂) / 1440) • (y*z*z*y*z*z - y*x*x*y*x*x)
+      + ((6 : 𝕂) / 1440) • (y*z*z*y*y*z - y*x*x*y*y*x)
+      + ((-4 : 𝕂) / 1440) • (y*z*y*z*z*z - y*x*y*x*x*x)
+      + ((-24 : 𝕂) / 1440) • (y*z*y*z*y*z - y*x*y*x*y*x)
+      + ((6 : 𝕂) / 1440) • (y*z*y*y*z*z - y*x*y*y*x*x)
+      + ((-4 : 𝕂) / 1440) • (y*z*y*y*y*z - y*x*y*y*y*x)
+      + ((1 : 𝕂) / 1440) • (y*y*z*z*z*z - y*y*x*x*x*x)
+      + ((6 : 𝕂) / 1440) • (y*y*z*z*y*z - y*y*x*x*y*x)
+      + ((6 : 𝕂) / 1440) • (y*y*z*y*z*z - y*y*x*y*x*x)
+      + ((6 : 𝕂) / 1440) • (y*y*z*y*y*z - y*y*x*y*y*x)
+      + ((-4 : 𝕂) / 1440) • (y*y*y*z*z*z - y*y*y*x*x*x)
+      + ((-4 : 𝕂) / 1440) • (y*y*y*z*y*z - y*y*y*x*y*x)
+      + ((1 : 𝕂) / 1440) • (y*y*y*y*z*z - y*y*y*y*x*x) := by
+    unfold bch_sextic_term
+    simp only [smul_sub]
+    abel
+  rw [hsplit]
+  -- Triangle inequality on the 28-term sum.
+  set t01 : 𝔸 := ((-1 : 𝕂) / 1440) • (z*z*z*z*y*y - x*x*x*x*y*y)
+  set t02 : 𝔸 := ((4 : 𝕂) / 1440) • (z*z*z*y*z*y - x*x*x*y*x*y)
+  set t03 : 𝔸 := ((4 : 𝕂) / 1440) • (z*z*z*y*y*y - x*x*x*y*y*y)
+  set t04 : 𝔸 := ((-6 : 𝕂) / 1440) • (z*z*y*z*z*y - x*x*y*x*x*y)
+  set t05 : 𝔸 := ((-6 : 𝕂) / 1440) • (z*z*y*z*y*y - x*x*y*x*y*y)
+  set t06 : 𝔸 := ((-6 : 𝕂) / 1440) • (z*z*y*y*z*y - x*x*y*y*x*y)
+  set t07 : 𝔸 := ((-1 : 𝕂) / 1440) • (z*z*y*y*y*y - x*x*y*y*y*y)
+  set t08 : 𝔸 := ((4 : 𝕂) / 1440) • (z*y*z*z*z*y - x*y*x*x*x*y)
+  set t09 : 𝔸 := ((-6 : 𝕂) / 1440) • (z*y*z*z*y*y - x*y*x*x*y*y)
+  set t10 : 𝔸 := ((24 : 𝕂) / 1440) • (z*y*z*y*z*y - x*y*x*y*x*y)
+  set t11 : 𝔸 := ((4 : 𝕂) / 1440) • (z*y*z*y*y*y - x*y*x*y*y*y)
+  set t12 : 𝔸 := ((-6 : 𝕂) / 1440) • (z*y*y*z*z*y - x*y*y*x*x*y)
+  set t13 : 𝔸 := ((-6 : 𝕂) / 1440) • (z*y*y*z*y*y - x*y*y*x*y*y)
+  set t14 : 𝔸 := ((4 : 𝕂) / 1440) • (z*y*y*y*z*y - x*y*y*y*x*y)
+  set t15 : 𝔸 := ((-4 : 𝕂) / 1440) • (y*z*z*z*y*z - y*x*x*x*y*x)
+  set t16 : 𝔸 := ((6 : 𝕂) / 1440) • (y*z*z*y*z*z - y*x*x*y*x*x)
+  set t17 : 𝔸 := ((6 : 𝕂) / 1440) • (y*z*z*y*y*z - y*x*x*y*y*x)
+  set t18 : 𝔸 := ((-4 : 𝕂) / 1440) • (y*z*y*z*z*z - y*x*y*x*x*x)
+  set t19 : 𝔸 := ((-24 : 𝕂) / 1440) • (y*z*y*z*y*z - y*x*y*x*y*x)
+  set t20 : 𝔸 := ((6 : 𝕂) / 1440) • (y*z*y*y*z*z - y*x*y*y*x*x)
+  set t21 : 𝔸 := ((-4 : 𝕂) / 1440) • (y*z*y*y*y*z - y*x*y*y*y*x)
+  set t22 : 𝔸 := ((1 : 𝕂) / 1440) • (y*y*z*z*z*z - y*y*x*x*x*x)
+  set t23 : 𝔸 := ((6 : 𝕂) / 1440) • (y*y*z*z*y*z - y*y*x*x*y*x)
+  set t24 : 𝔸 := ((6 : 𝕂) / 1440) • (y*y*z*y*z*z - y*y*x*y*x*x)
+  set t25 : 𝔸 := ((6 : 𝕂) / 1440) • (y*y*z*y*y*z - y*y*x*y*y*x)
+  set t26 : 𝔸 := ((-4 : 𝕂) / 1440) • (y*y*y*z*z*z - y*y*y*x*x*x)
+  set t27 : 𝔸 := ((-4 : 𝕂) / 1440) • (y*y*y*z*y*z - y*y*y*x*y*x)
+  set t28 : 𝔸 := ((1 : 𝕂) / 1440) • (y*y*y*y*z*z - y*y*y*y*x*x)
+  have a27 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26 + t27) t28
+  have a26 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26) t27
+  have a25 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25) t26
+  have a24 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24) t25
+  have a23 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23) t24
+  have a22 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22) t23
+  have a21 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21) t22
+  have a20 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20) t21
+  have a19 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19) t20
+  have a18 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18) t19
+  have a17 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17) t18
+  have a16 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16) t17
+  have a15 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15) t16
+  have a14 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14) t15
+  have a13 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13) t14
+  have a12 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12) t13
+  have a11 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11) t12
+  have a10 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10) t11
+  have a09 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09) t10
+  have a08 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08) t09
+  have a07 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07) t08
+  have a06 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06) t07
+  have a05 := norm_add_le (t01 + t02 + t03 + t04 + t05) t06
+  have a04 := norm_add_le (t01 + t02 + t03 + t04) t05
+  have a03 := norm_add_le (t01 + t02 + t03) t04
+  have a02 := norm_add_le (t01 + t02) t03
+  have a01 := norm_add_le t01 t02
+  -- 492/1440 ≤ 1, so the total bound is M^5 * d.
+  nlinarith [hM5_nn, hd_nn, mul_nonneg hM5_nn hd_nn]
+
 /-! ### Quartic algebraic identity for BCH -/
 
 set_option maxHeartbeats 64000000 in
