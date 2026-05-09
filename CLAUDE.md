@@ -24,12 +24,25 @@ needed for the "obviously O(s⁷)" piece group of the extended hdecomp.
   M⁴ · ‖z − x‖`. With z = (a'+b)+W (‖W‖ = O(s²)): gives O(s⁶) bound,
   the deg-6+ residual estimate needed in the extended hdecomp.
 
-**Next session priority**: `bch_sextic_term` Lipschitz bound
-(`‖C₆(z, y) − C₆(x, y)‖ ≤ M⁵ · ‖z − x‖`). bch_sextic_term has 28 6-letter
-words (no group decomposition); estimated ~1500-2000 lines. With z=(a'+b)+W:
-gives O(s⁷) bound — the OBVIOUSLY O(s⁷) piece group's last missing piece.
-After this, Phase A of the discharge (inner+outer septic remainders + s₂
-bounds setup) can begin.
+**Session 20 step 7-8** (~1150 lines): `bch_sextic_term` Lipschitz bound
+complete. 28 per-word lemmas (`bch_sextic_word01_diff_le` through
+`bch_sextic_word28_diff_le`) + 6 position helpers (`norm_6prod_pos1_le`
+through `norm_6prod_pos6_le`) + combined `norm_bch_sextic_term_diff_le`:
+  `‖C₆(z, y) − C₆(x, y)‖ ≤ M⁵ · ‖z − x‖`
+with K = 492/1440 = 41/120. Heartbeat 16M for whnf processing of the
+28-summand `hsplit` identity.
+
+**Lipschitz infrastructure complete**: `norm_bch_cubic_term_diff_le`,
+`norm_bch_quintic_term_diff_le`, `norm_bch_sextic_term_diff_le` — all
+O(M^(k-1) · ‖z−x‖) bounds. With z=(a'+b)+W (‖W‖=O(s²)): give O(s⁴),
+O(s⁶), O(s⁷) bounds respectively on the C-difference pieces of the
+extended hdecomp.
+
+**Next session priority**: Phase A of the discharge — inner+outer septic
+remainders (`bch(½a, b) − through_deg6` and `bch(z, ½a) − through_deg6`)
+with norm bounds via `norm_bch_septic_remainder_le`, plus the s₂ ≤ K·s
+bound (extracted from cubic template). Estimated ~200 lines. After
+Phase A, Phase B (deg-5 cancellation algebraic identity) follows.
 
 **Session 20 step 1**: Detailed analysis of T2-F7e parent discharge (extending
 the cubic template from `Basic.lean:8601`). Produced
