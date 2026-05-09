@@ -4,14 +4,32 @@
 
 Branch: `main`. Repository is **0 sorries**.
 
-**Session 20 step 2**: Added `BCH.norm_bch_cubic_term_diff_le` (Lipschitz
-bound for `bch_cubic_term` in its first argument):
-`‖C₃(z, y) − C₃(x, y)‖ ≤ (‖z‖+‖x‖+‖y‖)² · ‖z − x‖`. Proof via 12-summand
-telescoping (`match_scalars <;> ring`) + per-summand `‖A·B·C‖ ≤ ‖A‖·‖B‖·‖C‖`
-+ 11-step triangle inequality. ~150 lines in `Basic.lean`. This is the
-prototype for the analogous `bch_quintic_term`/`bch_sextic_term` Lipschitz
-bounds — key infrastructure for the parent T2-F7e discharge (gives
-O(s⁶)/O(s⁷) bounds on the W-substitution residuals).
+**Session 20 steps 2-6** (~870 lines in `Basic.lean`): Lipschitz bounds for
+`bch_cubic_term` and `bch_quintic_term` in their first argument. These are
+key infrastructure for the parent T2-F7e discharge — they provide the
+O(s⁴)/O(s⁶) bounds on `‖C_k(z, y) − C_k(x, y)‖` when `‖z − x‖ = O(s²)`,
+needed for the "obviously O(s⁷)" piece group of the extended hdecomp.
+
+- `BCH.norm_bch_cubic_term_diff_le`: `‖C₃(z, y) − C₃(x, y)‖ ≤
+  M² · ‖z − x‖` (M = ‖z‖+‖x‖+‖y‖). 12-summand telescoping + 11-step
+  triangle. ~150 lines.
+- `BCH.norm_bch_quintic_group_1_diff_le` (4 words, 10 summands, 117 lines).
+- `BCH.norm_bch_quintic_group_4_diff_le` (10 words, 25 summands, 188 lines;
+  uses new shared `norm_5prod_le` helper).
+- `BCH.norm_bch_quintic_group_6_diff_le` (14 words, 35 summands, 270 lines;
+  heartbeat 1.6M for the noncomm_ring telescope identity).
+- `BCH.norm_bch_quintic_group_24_diff_le` (2 words, 5 summands, 60 lines).
+- `BCH.norm_bch_quintic_term_diff_le` (combines all 4 groups via
+  algebraic identity + triangle, ~80 lines): `‖C₅(z, y) − C₅(x, y)‖ ≤
+  M⁴ · ‖z − x‖`. With z = (a'+b)+W (‖W‖ = O(s²)): gives O(s⁶) bound,
+  the deg-6+ residual estimate needed in the extended hdecomp.
+
+**Next session priority**: `bch_sextic_term` Lipschitz bound
+(`‖C₆(z, y) − C₆(x, y)‖ ≤ M⁵ · ‖z − x‖`). bch_sextic_term has 28 6-letter
+words (no group decomposition); estimated ~1500-2000 lines. With z=(a'+b)+W:
+gives O(s⁷) bound — the OBVIOUSLY O(s⁷) piece group's last missing piece.
+After this, Phase A of the discharge (inner+outer septic remainders + s₂
+bounds setup) can begin.
 
 **Session 20 step 1**: Detailed analysis of T2-F7e parent discharge (extending
 the cubic template from `Basic.lean:8601`). Produced
