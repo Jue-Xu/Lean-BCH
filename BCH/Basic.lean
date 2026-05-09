@@ -2342,6 +2342,290 @@ theorem norm_bch_quintic_group_4_diff_le (z x y : 𝔸) :
   have a1  := norm_add_le t1 t2
   linarith
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Lipschitz bound for `bch_quintic_group_24` in its first argument**:
+`‖group_24(z, y) − group_24(x, y)‖ ≤ 5 · (‖z‖+‖x‖+‖y‖)⁴ · ‖z − x‖`.
+
+`bch_quintic_group_24 = a·b·a·b·a + b·a·b·a·b` has 2 words with a-position
+counts `{3, 2}`, summing to 5 telescoping summands. -/
+theorem norm_bch_quintic_group_24_diff_le (z x y : 𝔸) :
+    ‖bch_quintic_group_24 z y - bch_quintic_group_24 x y‖ ≤
+      5 * (‖z‖ + ‖x‖ + ‖y‖) ^ 4 * ‖z - x‖ := by
+  have htel : bch_quintic_group_24 z y - bch_quintic_group_24 x y =
+      -- word 1: z·y·z·y·z (3 summands)
+      (z - x) * y * z * y * z + x * y * (z - x) * y * z + x * y * x * y * (z - x) +
+      -- word 2: y·z·y·z·y (2 summands)
+      y * (z - x) * y * z * y + y * x * y * (z - x) * y := by
+    unfold bch_quintic_group_24
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖ with hM_def
+  set d := ‖z - x‖ with hd_def
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have h1 : ‖(z - x) * y * z * y * z‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖z - x‖ * ‖y‖ * ‖z‖ * ‖y‖ * ‖z‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ d * M * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h2 : ‖x * y * (z - x) * y * z‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖x‖ * ‖y‖ * ‖z - x‖ * ‖y‖ * ‖z‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * d * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h3 : ‖x * y * x * y * (z - x)‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖x‖ * ‖y‖ * ‖x‖ * ‖y‖ * ‖z - x‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * M * M * d := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h4 : ‖y * (z - x) * y * z * y‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖y‖ * ‖z - x‖ * ‖y‖ * ‖z‖ * ‖y‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * d * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have h5 : ‖y * x * y * (z - x) * y‖ ≤ M ^ 4 * d := by
+    calc _ ≤ ‖y‖ * ‖x‖ * ‖y‖ * ‖z - x‖ * ‖y‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * M * d * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  set s1 : 𝔸 := (z - x) * y * z * y * z
+  set s2 : 𝔸 := x * y * (z - x) * y * z
+  set s3 : 𝔸 := x * y * x * y * (z - x)
+  set s4 : 𝔸 := y * (z - x) * y * z * y
+  set s5 : 𝔸 := y * x * y * (z - x) * y
+  have a4 := norm_add_le (s1 + s2 + s3 + s4) s5
+  have a3 := norm_add_le (s1 + s2 + s3) s4
+  have a2 := norm_add_le (s1 + s2) s3
+  have a1 := norm_add_le s1 s2
+  linarith
+
+set_option maxHeartbeats 1600000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Lipschitz bound for `bch_quintic_group_6` in its first argument**:
+`‖group_6(z, y) − group_6(x, y)‖ ≤ 35 · (‖z‖+‖x‖+‖y‖)⁴ · ‖z − x‖`.
+
+`bch_quintic_group_6` has 14 words; the a-position counts are
+`{4, 3, 3, 3, 2, 3, 2, 3, 2, 3, 2, 2, 2, 1}`, summing to 35 telescoping
+summands. -/
+theorem norm_bch_quintic_group_6_diff_le (z x y : 𝔸) :
+    ‖bch_quintic_group_6 z y - bch_quintic_group_6 x y‖ ≤
+      35 * (‖z‖ + ‖x‖ + ‖y‖) ^ 4 * ‖z - x‖ := by
+  have htel : bch_quintic_group_6 z y - bch_quintic_group_6 x y =
+      -- word 1: a·a·b·a·a → z·z·y·z·z (a-pos {1,2,4,5}, 4 summands)
+      (z - x) * z * y * z * z + x * (z - x) * y * z * z +
+      x * x * y * (z - x) * z + x * x * y * x * (z - x) +
+      -- word 2: a·a·b·a·b → z·z·y·z·y (a-pos {1,2,4}, 3 summands)
+      (z - x) * z * y * z * y + x * (z - x) * y * z * y +
+      x * x * y * (z - x) * y +
+      -- word 3: a·a·b·b·a → z·z·y·y·z (a-pos {1,2,5}, 3 summands)
+      (z - x) * z * y * y * z + x * (z - x) * y * y * z +
+      x * x * y * y * (z - x) +
+      -- word 4: a·b·a·a·b → z·y·z·z·y (a-pos {1,3,4}, 3 summands)
+      (z - x) * y * z * z * y + x * y * (z - x) * z * y +
+      x * y * x * (z - x) * y +
+      -- word 5: a·b·a·b·b → z·y·z·y·y (a-pos {1,3}, 2 summands)
+      (z - x) * y * z * y * y + x * y * (z - x) * y * y +
+      -- word 6: a·b·b·a·a → z·y·y·z·z (a-pos {1,4,5}, 3 summands)
+      (z - x) * y * y * z * z + x * y * y * (z - x) * z +
+      x * y * y * x * (z - x) +
+      -- word 7: a·b·b·a·b → z·y·y·z·y (a-pos {1,4}, 2 summands)
+      (z - x) * y * y * z * y + x * y * y * (z - x) * y +
+      -- word 8: b·a·a·b·a → y·z·z·y·z (a-pos {2,3,5}, 3 summands)
+      y * (z - x) * z * y * z + y * x * (z - x) * y * z +
+      y * x * x * y * (z - x) +
+      -- word 9: b·a·a·b·b → y·z·z·y·y (a-pos {2,3}, 2 summands)
+      y * (z - x) * z * y * y + y * x * (z - x) * y * y +
+      -- word 10: b·a·b·a·a → y·z·y·z·z (a-pos {2,4,5}, 3 summands)
+      y * (z - x) * y * z * z + y * x * y * (z - x) * z +
+      y * x * y * x * (z - x) +
+      -- word 11: b·a·b·b·a → y·z·y·y·z (a-pos {2,5}, 2 summands)
+      y * (z - x) * y * y * z + y * x * y * y * (z - x) +
+      -- word 12: b·b·a·a·b → y·y·z·z·y (a-pos {3,4}, 2 summands)
+      y * y * (z - x) * z * y + y * y * x * (z - x) * y +
+      -- word 13: b·b·a·b·a → y·y·z·y·z (a-pos {3,5}, 2 summands)
+      y * y * (z - x) * y * z + y * y * x * y * (z - x) +
+      -- word 14: b·b·a·b·b → y·y·z·y·y (a-pos {3}, 1 summand)
+      y * y * (z - x) * y * y := by
+    unfold bch_quintic_group_6
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖ with hM_def
+  set d := ‖z - x‖ with hd_def
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  -- Position-specific helpers (same as in group_4)
+  have hL1 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖(z - x) * a * b * c * d'‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖z - x‖ * ‖a‖ * ‖b‖ * ‖c‖ * ‖d'‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ d * M * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have hL2 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖a * (z - x) * b * c * d'‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖a‖ * ‖z - x‖ * ‖b‖ * ‖c‖ * ‖d'‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * d * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have hL3 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖a * b * (z - x) * c * d'‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖a‖ * ‖b‖ * ‖z - x‖ * ‖c‖ * ‖d'‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * d * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have hL4 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖a * b * c * (z - x) * d'‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖a‖ * ‖b‖ * ‖c‖ * ‖z - x‖ * ‖d'‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * M * d * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have hL5 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖a * b * c * d' * (z - x)‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖a‖ * ‖b‖ * ‖c‖ * ‖d'‖ * ‖z - x‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * M * M * d := by gcongr
+      _ = M ^ 4 * d := by ring
+  -- Apply per-summand bounds. 35 summands.
+  have h01 := hL1 z y z z hz_le hy_le hz_le hz_le
+  have h02 := hL2 x y z z hx_le hy_le hz_le hz_le
+  have h03 := hL4 x x y z hx_le hx_le hy_le hz_le
+  have h04 := hL5 x x y x hx_le hx_le hy_le hx_le
+  have h05 := hL1 z y z y hz_le hy_le hz_le hy_le
+  have h06 := hL2 x y z y hx_le hy_le hz_le hy_le
+  have h07 := hL4 x x y y hx_le hx_le hy_le hy_le
+  have h08 := hL1 z y y z hz_le hy_le hy_le hz_le
+  have h09 := hL2 x y y z hx_le hy_le hy_le hz_le
+  have h10 := hL5 x x y y hx_le hx_le hy_le hy_le
+  have h11 := hL1 y z z y hy_le hz_le hz_le hy_le
+  have h12 := hL3 x y z y hx_le hy_le hz_le hy_le
+  have h13 := hL4 x y x y hx_le hy_le hx_le hy_le
+  have h14 := hL1 y z y y hy_le hz_le hy_le hy_le
+  have h15 := hL3 x y y y hx_le hy_le hy_le hy_le
+  have h16 := hL1 y y z z hy_le hy_le hz_le hz_le
+  have h17 := hL4 x y y z hx_le hy_le hy_le hz_le
+  have h18 := hL5 x y y x hx_le hy_le hy_le hx_le
+  have h19 := hL1 y y z y hy_le hy_le hz_le hy_le
+  have h20 := hL4 x y y y hx_le hy_le hy_le hy_le
+  have h21 := hL2 y z y z hy_le hz_le hy_le hz_le
+  have h22 := hL3 y x y z hy_le hx_le hy_le hz_le
+  have h23 := hL5 y x x y hy_le hx_le hx_le hy_le
+  have h24 := hL2 y z y y hy_le hz_le hy_le hy_le
+  have h25 := hL3 y x y y hy_le hx_le hy_le hy_le
+  have h26 := hL2 y y z z hy_le hy_le hz_le hz_le
+  have h27 := hL4 y x y z hy_le hx_le hy_le hz_le
+  have h28 := hL5 y x y x hy_le hx_le hy_le hx_le
+  have h29 := hL2 y y y z hy_le hy_le hy_le hz_le
+  have h30 := hL5 y x y y hy_le hx_le hy_le hy_le
+  have h31 := hL3 y y z y hy_le hy_le hz_le hy_le
+  have h32 := hL4 y y x y hy_le hy_le hx_le hy_le
+  have h33 := hL3 y y y z hy_le hy_le hy_le hz_le
+  have h34 := hL5 y y x y hy_le hy_le hx_le hy_le
+  have h35 := hL3 y y y y hy_le hy_le hy_le hy_le
+  -- Triangle inequality on the 35-term sum
+  set t01 : 𝔸 := (z - x) * z * y * z * z
+  set t02 : 𝔸 := x * (z - x) * y * z * z
+  set t03 : 𝔸 := x * x * y * (z - x) * z
+  set t04 : 𝔸 := x * x * y * x * (z - x)
+  set t05 : 𝔸 := (z - x) * z * y * z * y
+  set t06 : 𝔸 := x * (z - x) * y * z * y
+  set t07 : 𝔸 := x * x * y * (z - x) * y
+  set t08 : 𝔸 := (z - x) * z * y * y * z
+  set t09 : 𝔸 := x * (z - x) * y * y * z
+  set t10 : 𝔸 := x * x * y * y * (z - x)
+  set t11 : 𝔸 := (z - x) * y * z * z * y
+  set t12 : 𝔸 := x * y * (z - x) * z * y
+  set t13 : 𝔸 := x * y * x * (z - x) * y
+  set t14 : 𝔸 := (z - x) * y * z * y * y
+  set t15 : 𝔸 := x * y * (z - x) * y * y
+  set t16 : 𝔸 := (z - x) * y * y * z * z
+  set t17 : 𝔸 := x * y * y * (z - x) * z
+  set t18 : 𝔸 := x * y * y * x * (z - x)
+  set t19 : 𝔸 := (z - x) * y * y * z * y
+  set t20 : 𝔸 := x * y * y * (z - x) * y
+  set t21 : 𝔸 := y * (z - x) * z * y * z
+  set t22 : 𝔸 := y * x * (z - x) * y * z
+  set t23 : 𝔸 := y * x * x * y * (z - x)
+  set t24 : 𝔸 := y * (z - x) * z * y * y
+  set t25 : 𝔸 := y * x * (z - x) * y * y
+  set t26 : 𝔸 := y * (z - x) * y * z * z
+  set t27 : 𝔸 := y * x * y * (z - x) * z
+  set t28 : 𝔸 := y * x * y * x * (z - x)
+  set t29 : 𝔸 := y * (z - x) * y * y * z
+  set t30 : 𝔸 := y * x * y * y * (z - x)
+  set t31 : 𝔸 := y * y * (z - x) * z * y
+  set t32 : 𝔸 := y * y * x * (z - x) * y
+  set t33 : 𝔸 := y * y * (z - x) * y * z
+  set t34 : 𝔸 := y * y * x * y * (z - x)
+  set t35 : 𝔸 := y * y * (z - x) * y * y
+  -- 34 norm_add_le applications
+  have a34 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26 + t27 + t28 + t29 + t30 + t31 + t32 + t33 + t34) t35
+  have a33 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26 + t27 + t28 + t29 + t30 + t31 + t32 + t33) t34
+  have a32 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26 + t27 + t28 + t29 + t30 + t31 + t32) t33
+  have a31 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26 + t27 + t28 + t29 + t30 + t31) t32
+  have a30 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26 + t27 + t28 + t29 + t30) t31
+  have a29 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26 + t27 + t28 + t29) t30
+  have a28 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26 + t27 + t28) t29
+  have a27 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26 + t27) t28
+  have a26 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25 + t26) t27
+  have a25 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24 +
+    t25) t26
+  have a24 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24) t25
+  have a23 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23) t24
+  have a22 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22) t23
+  have a21 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21) t22
+  have a20 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20) t21
+  have a19 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19) t20
+  have a18 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18) t19
+  have a17 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17) t18
+  have a16 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16) t17
+  have a15 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14 + t15) t16
+  have a14 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13 + t14) t15
+  have a13 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12 + t13) t14
+  have a12 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 +
+    t11 + t12) t13
+  have a11 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10 + t11) t12
+  have a10 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09 + t10) t11
+  have a09 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08 + t09) t10
+  have a08 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07 + t08) t09
+  have a07 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06 + t07) t08
+  have a06 := norm_add_le (t01 + t02 + t03 + t04 + t05 + t06) t07
+  have a05 := norm_add_le (t01 + t02 + t03 + t04 + t05) t06
+  have a04 := norm_add_le (t01 + t02 + t03 + t04) t05
+  have a03 := norm_add_le (t01 + t02 + t03) t04
+  have a02 := norm_add_le (t01 + t02) t03
+  have a01 := norm_add_le t01 t02
+  linarith
+
 /-! ### `bch_sextic_term` — the τ⁶ coefficient of `bch(a, b)`
 
 Explicit 28-term polynomial in {a, b}, derived via the CAS pipeline at
