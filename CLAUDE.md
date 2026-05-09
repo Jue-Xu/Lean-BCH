@@ -4,7 +4,16 @@
 
 Branch: `main`. Repository is **0 sorries**.
 
-**Session 20**: Detailed analysis of T2-F7e parent discharge (extending
+**Session 20 step 2**: Added `BCH.norm_bch_cubic_term_diff_le` (Lipschitz
+bound for `bch_cubic_term` in its first argument):
+`‖C₃(z, y) − C₃(x, y)‖ ≤ (‖z‖+‖x‖+‖y‖)² · ‖z − x‖`. Proof via 12-summand
+telescoping (`match_scalars <;> ring`) + per-summand `‖A·B·C‖ ≤ ‖A‖·‖B‖·‖C‖`
++ 11-step triangle inequality. ~150 lines in `Basic.lean`. This is the
+prototype for the analogous `bch_quintic_term`/`bch_sextic_term` Lipschitz
+bounds — key infrastructure for the parent T2-F7e discharge (gives
+O(s⁶)/O(s⁷) bounds on the W-substitution residuals).
+
+**Session 20 step 1**: Detailed analysis of T2-F7e parent discharge (extending
 the cubic template from `Basic.lean:8601`). Produced
 `claude/lean-bch-T2F7e-parent-discharge-implementation-plan.md` with:
 - Complete derivation of the **extended hdecomp** (11 pieces) for

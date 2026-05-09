@@ -1480,6 +1480,156 @@ theorem norm_bch_cubic_term_le (a b : 𝔸) :
     _ ≤ 4 * ‖a‖ ^ 2 * ‖b‖ + 4 * ‖a‖ * ‖b‖ ^ 2 := by gcongr
     _ ≤ s ^ 3 := by nlinarith [sq_nonneg (‖a‖ - ‖b‖)]
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Lipschitz-style bound for `bch_cubic_term` in its first argument**:
+`‖C₃(z, y) - C₃(x, y)‖ ≤ (‖z‖+‖x‖+‖y‖)² · ‖z - x‖`.
+
+The diff telescopes into 12 summands (counting multiplicities; 9 distinct
+patterns), each of the form `[product] · (z-x) · [product]` with the products
+totaling 2 letters from `{z, x, y}`. Each summand has norm ≤ M²·‖z-x‖
+(M = ‖z‖+‖x‖+‖y‖), giving 12·M²·‖z-x‖ in total; the (1/12)·smul scaling
+trims this to exactly M²·‖z-x‖.
+
+Use case (T2-F7e parent discharge model): when `z = (a'+b) + W` with
+`‖W‖ = O(s²)` and `‖a'+b‖, ‖y‖ = O(s)`, gives `‖C₃(z, y) - C₃(a'+b, y)‖
+≤ K · s² · s² = K · s⁴`. The analog for `bch_quintic_term` and
+`bch_sextic_term` (gives O(s⁶) and O(s⁷) bounds respectively) provides the
+key residual estimates for the parent T2-F7e discharge. -/
+theorem norm_bch_cubic_term_diff_le (z x y : 𝔸) :
+    ‖bch_cubic_term 𝕂 z y - bch_cubic_term 𝕂 x y‖ ≤
+      (‖z‖ + ‖x‖ + ‖y‖) ^ 2 * ‖z - x‖ := by
+  -- Step 1: Telescoping algebraic identity. Each (z-x) factor is exposed.
+  have htel : bch_cubic_term 𝕂 z y - bch_cubic_term 𝕂 x y =
+      (12 : 𝕂)⁻¹ • (
+          z * (z - x) * y + (z - x) * x * y
+        - z * y * (z - x) - z * y * (z - x)
+        - (z - x) * y * x - (z - x) * y * x
+        + y * z * (z - x) + y * (z - x) * x
+        + y * y * (z - x)
+        - y * (z - x) * y - y * (z - x) * y
+        + (z - x) * y * y) := by
+    unfold bch_cubic_term
+    simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+      smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+    match_scalars <;> ring
+  rw [htel]
+  -- Step 2: Setup
+  set M := ‖z‖ + ‖x‖ + ‖y‖ with hM_def
+  set d := ‖z - x‖ with hd_def
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  -- Helper: triple product norm bound
+  have htriple : ∀ A B C : 𝔸, ‖A * B * C‖ ≤ ‖A‖ * ‖B‖ * ‖C‖ := fun A B C => by
+    calc ‖A * B * C‖ ≤ ‖A * B‖ * ‖C‖ := norm_mul_le _ _
+      _ ≤ ‖A‖ * ‖B‖ * ‖C‖ := by gcongr; exact norm_mul_le _ _
+  -- Step 3: Each summand ≤ M²·d
+  have h1 : ‖z * (z - x) * y‖ ≤ M ^ 2 * d := by
+    calc _ ≤ ‖z‖ * ‖z - x‖ * ‖y‖ := htriple _ _ _
+      _ ≤ M * d * M := by gcongr
+      _ = M ^ 2 * d := by ring
+  have h2 : ‖(z - x) * x * y‖ ≤ M ^ 2 * d := by
+    calc _ ≤ ‖z - x‖ * ‖x‖ * ‖y‖ := htriple _ _ _
+      _ ≤ d * M * M := by gcongr
+      _ = M ^ 2 * d := by ring
+  have h3 : ‖z * y * (z - x)‖ ≤ M ^ 2 * d := by
+    calc _ ≤ ‖z‖ * ‖y‖ * ‖z - x‖ := htriple _ _ _
+      _ ≤ M * M * d := by gcongr
+      _ = M ^ 2 * d := by ring
+  have h4 : ‖(z - x) * y * x‖ ≤ M ^ 2 * d := by
+    calc _ ≤ ‖z - x‖ * ‖y‖ * ‖x‖ := htriple _ _ _
+      _ ≤ d * M * M := by gcongr
+      _ = M ^ 2 * d := by ring
+  have h5 : ‖y * z * (z - x)‖ ≤ M ^ 2 * d := by
+    calc _ ≤ ‖y‖ * ‖z‖ * ‖z - x‖ := htriple _ _ _
+      _ ≤ M * M * d := by gcongr
+      _ = M ^ 2 * d := by ring
+  have h6 : ‖y * (z - x) * x‖ ≤ M ^ 2 * d := by
+    calc _ ≤ ‖y‖ * ‖z - x‖ * ‖x‖ := htriple _ _ _
+      _ ≤ M * d * M := by gcongr
+      _ = M ^ 2 * d := by ring
+  have h7 : ‖y * y * (z - x)‖ ≤ M ^ 2 * d := by
+    calc _ ≤ ‖y‖ * ‖y‖ * ‖z - x‖ := htriple _ _ _
+      _ ≤ M * M * d := by gcongr
+      _ = M ^ 2 * d := by ring
+  have h8 : ‖y * (z - x) * y‖ ≤ M ^ 2 * d := by
+    calc _ ≤ ‖y‖ * ‖z - x‖ * ‖y‖ := htriple _ _ _
+      _ ≤ M * d * M := by gcongr
+      _ = M ^ 2 * d := by ring
+  have h9 : ‖(z - x) * y * y‖ ≤ M ^ 2 * d := by
+    calc _ ≤ ‖z - x‖ * ‖y‖ * ‖y‖ := htriple _ _ _
+      _ ≤ d * M * M := by gcongr
+      _ = M ^ 2 * d := by ring
+  -- Step 4: Triangle inequality on the 12-term sum
+  set S : 𝔸 :=
+        z * (z - x) * y + (z - x) * x * y
+      - z * y * (z - x) - z * y * (z - x)
+      - (z - x) * y * x - (z - x) * y * x
+      + y * z * (z - x) + y * (z - x) * x
+      + y * y * (z - x)
+      - y * (z - x) * y - y * (z - x) * y
+      + (z - x) * y * y with hS_def
+  -- Rewrite S as a sum of 12 explicit terms (each with sign), bound by 12·M²·d
+  have hS_eq : S = z * (z - x) * y + (z - x) * x * y +
+        -(z * y * (z - x)) + -(z * y * (z - x)) +
+        -((z - x) * y * x) + -((z - x) * y * x) +
+        y * z * (z - x) + y * (z - x) * x +
+        y * y * (z - x) +
+        -(y * (z - x) * y) + -(y * (z - x) * y) +
+        (z - x) * y * y := by rw [hS_def]; abel
+  have hS_le : ‖S‖ ≤ 12 * (M ^ 2 * d) := by
+    rw [hS_eq]
+    -- Set abbreviations for the 12 summands to keep linarith hypotheses small.
+    set s1 : 𝔸 := z * (z - x) * y with hs1
+    set s2 : 𝔸 := (z - x) * x * y with hs2
+    set s3 : 𝔸 := -(z * y * (z - x)) with hs3
+    set s4 : 𝔸 := -(z * y * (z - x)) with hs4
+    set s5 : 𝔸 := -((z - x) * y * x) with hs5
+    set s6 : 𝔸 := -((z - x) * y * x) with hs6
+    set s7 : 𝔸 := y * z * (z - x) with hs7
+    set s8 : 𝔸 := y * (z - x) * x with hs8
+    set s9 : 𝔸 := y * y * (z - x) with hs9
+    set s10 : 𝔸 := -(y * (z - x) * y) with hs10
+    set s11 : 𝔸 := -(y * (z - x) * y) with hs11
+    set s12 : 𝔸 := (z - x) * y * y with hs12
+    have a11 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9 + s10 + s11) s12
+    have a10 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9 + s10) s11
+    have a9 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9) s10
+    have a8 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8) s9
+    have a7 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6 + s7) s8
+    have a6 := norm_add_le (s1 + s2 + s3 + s4 + s5 + s6) s7
+    have a5 := norm_add_le (s1 + s2 + s3 + s4 + s5) s6
+    have a4 := norm_add_le (s1 + s2 + s3 + s4) s5
+    have a3 := norm_add_le (s1 + s2 + s3) s4
+    have a2 := norm_add_le (s1 + s2) s3
+    have a1 := norm_add_le s1 s2
+    -- Norms of the negated summands equal norms of unnegated; bound each by M²·d.
+    have hs1_le : ‖s1‖ ≤ M ^ 2 * d := h1
+    have hs2_le : ‖s2‖ ≤ M ^ 2 * d := h2
+    have hs3_le : ‖s3‖ ≤ M ^ 2 * d := by rw [hs3, norm_neg]; exact h3
+    have hs4_le : ‖s4‖ ≤ M ^ 2 * d := by rw [hs4, norm_neg]; exact h3
+    have hs5_le : ‖s5‖ ≤ M ^ 2 * d := by rw [hs5, norm_neg]; exact h4
+    have hs6_le : ‖s6‖ ≤ M ^ 2 * d := by rw [hs6, norm_neg]; exact h4
+    have hs7_le : ‖s7‖ ≤ M ^ 2 * d := h5
+    have hs8_le : ‖s8‖ ≤ M ^ 2 * d := h6
+    have hs9_le : ‖s9‖ ≤ M ^ 2 * d := h7
+    have hs10_le : ‖s10‖ ≤ M ^ 2 * d := by rw [hs10, norm_neg]; exact h8
+    have hs11_le : ‖s11‖ ≤ M ^ 2 * d := by rw [hs11, norm_neg]; exact h8
+    have hs12_le : ‖s12‖ ≤ M ^ 2 * d := h9
+    linarith
+  -- Step 5: Combine smul bound + sum bound
+  have h12_inv : ‖(12 : 𝕂)⁻¹‖ = (12 : ℝ)⁻¹ := by
+    rw [norm_inv, RCLike.norm_ofNat]
+  calc ‖(12 : 𝕂)⁻¹ • S‖ ≤ ‖(12 : 𝕂)⁻¹‖ * ‖S‖ := norm_smul_le _ _
+    _ = (12 : ℝ)⁻¹ * ‖S‖ := by rw [h12_inv]
+    _ ≤ (12 : ℝ)⁻¹ * (12 * (M ^ 2 * d)) := by
+        apply mul_le_mul_of_nonneg_left hS_le (by norm_num)
+    _ = M ^ 2 * d := by ring
+
 /-- The degree-4 BCH term: `-(1/24)⁅b,⁅a,⁅a,b⁆⁆⁆`.
 
 This is the quartic correction in the BCH expansion:
