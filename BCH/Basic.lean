@@ -2154,6 +2154,194 @@ theorem norm_bch_quintic_group_1_diff_le (z x y : 𝔸) :
   have a1 := norm_add_le s1 s2
   linarith
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **5-product norm helper**: `‖A·B·C·D·E‖ ≤ ‖A‖·‖B‖·‖C‖·‖D‖·‖E‖`.
+Factored out for use in the `bch_quintic_group_*_diff_le` lemmas. -/
+private lemma norm_5prod_le (A B C D E : 𝔸) :
+    ‖A * B * C * D * E‖ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ := by
+  calc ‖A * B * C * D * E‖
+      ≤ ‖A * B * C * D‖ * ‖E‖ := norm_mul_le _ _
+    _ ≤ ‖A * B * C‖ * ‖D‖ * ‖E‖ := by gcongr; exact norm_mul_le _ _
+    _ ≤ ‖A * B‖ * ‖C‖ * ‖D‖ * ‖E‖ := by gcongr; exact norm_mul_le _ _
+    _ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ := by gcongr; exact norm_mul_le _ _
+
+set_option maxHeartbeats 800000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Lipschitz bound for `bch_quintic_group_4` in its first argument**:
+`‖group_4(z, y) − group_4(x, y)‖ ≤ 25 · (‖z‖+‖x‖+‖y‖)⁴ · ‖z − x‖`.
+
+`bch_quintic_group_4` has 10 words; the a-position counts are
+`{4, 3, 2, 4, 2, 3, 1, 3, 2, 1}`, summing to 25 telescoping summands.
+Proof structure mirrors `norm_bch_quintic_group_1_diff_le`: telescoping
+identity (`noncomm_ring`) + per-summand 5-product norm bound + 24-step
+triangle inequality. -/
+theorem norm_bch_quintic_group_4_diff_le (z x y : 𝔸) :
+    ‖bch_quintic_group_4 z y - bch_quintic_group_4 x y‖ ≤
+      25 * (‖z‖ + ‖x‖ + ‖y‖) ^ 4 * ‖z - x‖ := by
+  have htel : bch_quintic_group_4 z y - bch_quintic_group_4 x y =
+      -- word 1: z·z·z·y·z (4 summands)
+      (z - x) * z * z * y * z + x * (z - x) * z * y * z +
+      x * x * (z - x) * y * z + x * x * x * y * (z - x) +
+      -- word 2: z·z·z·y·y (3 summands)
+      (z - x) * z * z * y * y + x * (z - x) * z * y * y +
+      x * x * (z - x) * y * y +
+      -- word 3: z·z·y·y·y (2 summands)
+      (z - x) * z * y * y * y + x * (z - x) * y * y * y +
+      -- word 4: z·y·z·z·z (4 summands)
+      (z - x) * y * z * z * z + x * y * (z - x) * z * z +
+      x * y * x * (z - x) * z + x * y * x * x * (z - x) +
+      -- word 5: z·y·y·y·z (2 summands)
+      (z - x) * y * y * y * z + x * y * y * y * (z - x) +
+      -- word 6: y·z·z·z·y (3 summands)
+      y * (z - x) * z * z * y + y * x * (z - x) * z * y +
+      y * x * x * (z - x) * y +
+      -- word 7: y·z·y·y·y (1 summand)
+      y * (z - x) * y * y * y +
+      -- word 8: y·y·z·z·z (3 summands)
+      y * y * (z - x) * z * z + y * y * x * (z - x) * z +
+      y * y * x * x * (z - x) +
+      -- word 9: y·y·y·z·z (2 summands)
+      y * y * y * (z - x) * z + y * y * y * x * (z - x) +
+      -- word 10: y·y·y·z·y (1 summand)
+      y * y * y * (z - x) * y := by
+    unfold bch_quintic_group_4
+    noncomm_ring
+  rw [htel]
+  set M := ‖z‖ + ‖x‖ + ‖y‖ with hM_def
+  set d := ‖z - x‖ with hd_def
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  -- Per-summand bounds. Each is M⁴·d via norm_5prod_le.
+  -- We inline a single helper macro-ish pattern.
+  have hM4d : ∀ (a₁ a₂ a₃ a₄ a₅ : 𝔸),
+      ‖a₁‖ ≤ M → ‖a₂‖ ≤ M → ‖a₃‖ ≤ M → ‖a₄‖ ≤ M → ‖a₅‖ ≤ M →
+      ‖a₁ * a₂ * a₃ * a₄ * a₅‖ ≤ M ^ 5 := fun a₁ a₂ a₃ a₄ a₅ h₁ h₂ h₃ h₄ h₅ => by
+    calc _ ≤ ‖a₁‖ * ‖a₂‖ * ‖a₃‖ * ‖a₄‖ * ‖a₅‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * M * M * M := by gcongr
+      _ = M ^ 5 := by ring
+  -- Key lemma: any 5-product with one (z-x) and four ≤M factors is ≤ M⁴·d.
+  -- Cases: (z-x) at position 1, 2, 3, 4, or 5.
+  have hL1 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖(z - x) * a * b * c * d'‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖z - x‖ * ‖a‖ * ‖b‖ * ‖c‖ * ‖d'‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ d * M * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have hL2 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖a * (z - x) * b * c * d'‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖a‖ * ‖z - x‖ * ‖b‖ * ‖c‖ * ‖d'‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * d * M * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have hL3 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖a * b * (z - x) * c * d'‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖a‖ * ‖b‖ * ‖z - x‖ * ‖c‖ * ‖d'‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * d * M * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have hL4 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖a * b * c * (z - x) * d'‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖a‖ * ‖b‖ * ‖c‖ * ‖z - x‖ * ‖d'‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * M * d * M := by gcongr
+      _ = M ^ 4 * d := by ring
+  have hL5 : ∀ a b c d' : 𝔸, ‖a‖ ≤ M → ‖b‖ ≤ M → ‖c‖ ≤ M → ‖d'‖ ≤ M →
+      ‖a * b * c * d' * (z - x)‖ ≤ M ^ 4 * d := fun a b c d' ha hb hc hd' => by
+    calc _ ≤ ‖a‖ * ‖b‖ * ‖c‖ * ‖d'‖ * ‖z - x‖ := norm_5prod_le _ _ _ _ _
+      _ ≤ M * M * M * M * d := by gcongr
+      _ = M ^ 4 * d := by ring
+  -- Apply per-summand bounds. 25 summands.
+  have h1  := hL1 z z y z hz_le hz_le hy_le hz_le
+  have h2  := hL2 x z y z hx_le hz_le hy_le hz_le
+  have h3  := hL3 x x y z hx_le hx_le hy_le hz_le
+  have h4  := hL5 x x x y hx_le hx_le hx_le hy_le
+  have h5  := hL1 z z y y hz_le hz_le hy_le hy_le
+  have h6  := hL2 x z y y hx_le hz_le hy_le hy_le
+  have h7  := hL3 x x y y hx_le hx_le hy_le hy_le
+  have h8  := hL1 z y y y hz_le hy_le hy_le hy_le
+  have h9  := hL2 x y y y hx_le hy_le hy_le hy_le
+  have h10 := hL1 y z z z hy_le hz_le hz_le hz_le
+  have h11 := hL3 x y z z hx_le hy_le hz_le hz_le
+  have h12 := hL4 x y x z hx_le hy_le hx_le hz_le
+  have h13 := hL5 x y x x hx_le hy_le hx_le hx_le
+  have h14 := hL1 y y y z hy_le hy_le hy_le hz_le
+  have h15 := hL5 x y y y hx_le hy_le hy_le hy_le
+  have h16 := hL2 y z z y hy_le hz_le hz_le hy_le
+  have h17 := hL3 y x z y hy_le hx_le hz_le hy_le
+  have h18 := hL4 y x x y hy_le hx_le hx_le hy_le
+  have h19 := hL2 y y y y hy_le hy_le hy_le hy_le
+  have h20 := hL3 y y z z hy_le hy_le hz_le hz_le
+  have h21 := hL4 y y x z hy_le hy_le hx_le hz_le
+  have h22 := hL5 y y x x hy_le hy_le hx_le hx_le
+  have h23 := hL4 y y y z hy_le hy_le hy_le hz_le
+  have h24 := hL5 y y y x hy_le hy_le hy_le hx_le
+  have h25 := hL4 y y y y hy_le hy_le hy_le hy_le
+  -- Triangle inequality on the 25-term sum
+  set t1  : 𝔸 := (z - x) * z * z * y * z
+  set t2  : 𝔸 := x * (z - x) * z * y * z
+  set t3  : 𝔸 := x * x * (z - x) * y * z
+  set t4  : 𝔸 := x * x * x * y * (z - x)
+  set t5  : 𝔸 := (z - x) * z * z * y * y
+  set t6  : 𝔸 := x * (z - x) * z * y * y
+  set t7  : 𝔸 := x * x * (z - x) * y * y
+  set t8  : 𝔸 := (z - x) * z * y * y * y
+  set t9  : 𝔸 := x * (z - x) * y * y * y
+  set t10 : 𝔸 := (z - x) * y * z * z * z
+  set t11 : 𝔸 := x * y * (z - x) * z * z
+  set t12 : 𝔸 := x * y * x * (z - x) * z
+  set t13 : 𝔸 := x * y * x * x * (z - x)
+  set t14 : 𝔸 := (z - x) * y * y * y * z
+  set t15 : 𝔸 := x * y * y * y * (z - x)
+  set t16 : 𝔸 := y * (z - x) * z * z * y
+  set t17 : 𝔸 := y * x * (z - x) * z * y
+  set t18 : 𝔸 := y * x * x * (z - x) * y
+  set t19 : 𝔸 := y * (z - x) * y * y * y
+  set t20 : 𝔸 := y * y * (z - x) * z * z
+  set t21 : 𝔸 := y * y * x * (z - x) * z
+  set t22 : 𝔸 := y * y * x * x * (z - x)
+  set t23 : 𝔸 := y * y * y * (z - x) * z
+  set t24 : 𝔸 := y * y * y * x * (z - x)
+  set t25 : 𝔸 := y * y * y * (z - x) * y
+  -- 24 norm_add_le applications
+  have a24 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23 + t24) t25
+  have a23 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 + t23) t24
+  have a22 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22) t23
+  have a21 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21) t22
+  have a20 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20) t21
+  have a19 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15 + t16 + t17 + t18 + t19) t20
+  have a18 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15 + t16 + t17 + t18) t19
+  have a17 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15 + t16 + t17) t18
+  have a16 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15 + t16) t17
+  have a15 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14 + t15) t16
+  have a14 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13 + t14) t15
+  have a13 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12 +
+    t13) t14
+  have a12 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11 + t12) t13
+  have a11 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 + t11) t12
+  have a10 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10) t11
+  have a9  := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9) t10
+  have a8  := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8) t9
+  have a7  := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7) t8
+  have a6  := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6) t7
+  have a5  := norm_add_le (t1 + t2 + t3 + t4 + t5) t6
+  have a4  := norm_add_le (t1 + t2 + t3 + t4) t5
+  have a3  := norm_add_le (t1 + t2 + t3) t4
+  have a2  := norm_add_le (t1 + t2) t3
+  have a1  := norm_add_le t1 t2
+  linarith
+
 /-! ### `bch_sextic_term` — the τ⁶ coefficient of `bch(a, b)`
 
 Explicit 28-term polynomial in {a, b}, derived via the CAS pipeline at
