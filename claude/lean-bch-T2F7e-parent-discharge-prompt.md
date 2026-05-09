@@ -6,6 +6,38 @@
 > needed (deg-5 + deg-6 cancellations), and per-piece bound estimates
 > produced in session 20.
 
+## Session 20 progress (2026-05-09)
+
+**Lipschitz infrastructure complete** (~2034 lines added in `BCH/Basic.lean`):
+- `norm_bch_cubic_term_diff_le`: `‖C₃(z, y) − C₃(x, y)‖ ≤ M² · ‖z − x‖`
+- `norm_bch_quintic_term_diff_le`: `‖C₅(z, y) − C₅(x, y)‖ ≤ M⁴ · ‖z − x‖`
+  (built from 4 per-group bounds: group_1, group_4, group_6, group_24)
+- `norm_bch_sextic_term_diff_le`: `‖C₆(z, y) − C₆(x, y)‖ ≤ M⁵ · ‖z − x‖`
+  (built from 28 per-word bounds + 6 position helpers; needs heartbeat 16M
+  for whnf processing of the 28-summand identity)
+
+These bound the C-difference pieces of the extended hdecomp. With
+`z = (a'+b)+W` (‖W‖=O(s²)): give O(s⁴), O(s⁶), O(s⁷) bounds respectively.
+
+## Next-session work (Phase A + B)
+
+**Phase A** (~200 lines, in main theorem body):
+- Setup chain: `a' := (1/2)·a`, `s := ‖a‖+‖b‖`, `s₁ := ‖a'‖+‖b‖`,
+  `z := bch(a', b)`, `s₂ := ‖z‖+‖a'‖`.
+- Bounds: `s₁ ≤ s`, `s₂ ≤ (57/22)·s` (from cubic template).
+- Inner septic: `R₁_sept := bch(a',b) − through_deg6(a', b)`, with
+  `‖R₁_sept‖ ≤ K · s₁⁷ / (2 − exp s₁)` via `norm_bch_septic_remainder_le`.
+- Outer septic: `R₂_sept := bch(z, a') − through_deg6(z, a')`, with
+  `‖R₂_sept‖ ≤ K · s₂⁷ / (2 − exp s₂)` via `norm_bch_septic_remainder_le`.
+
+**Phase B** (~150 lines, requires CAS support):
+- Deg-5 cancellation algebraic identity:
+  `½[C₄(a',b), a'] + (deg-5 of T₅) + (deg-5 of T₆) − correction(a, b) = 0`
+- The "(deg-5 of T_k)" pieces are explicit polynomials in (a, b) that
+  must be CAS-computed (e.g. via extending `discover_quintic_alt_form.py`
+  to the deg-5 Taylor coefficient of `(C_k((a'+b)+W, a') − C_k(a'+b, a'))`).
+- Once polynomial form known: prove via `match_scalars <;> ring`.
+
 ## Current state (after session 19, 2026-05-09)
 
 - **0 sorries**, **2 scoped private axioms** (was 3 — one discharged):
