@@ -1,5 +1,11 @@
 # Lean-BCH Next Session — Discharge T2-F7e Parent Axiom
 
+> **Detailed implementation plan**: see
+> `claude/lean-bch-T2F7e-parent-discharge-implementation-plan.md` for the
+> full extended hdecomp derivation (11 pieces), the 2 algebraic identities
+> needed (deg-5 + deg-6 cancellations), and per-piece bound estimates
+> produced in session 20.
+
 ## Current state (after session 19, 2026-05-09)
 
 - **0 sorries**, **2 scoped private axioms** (was 3 — one discharged):

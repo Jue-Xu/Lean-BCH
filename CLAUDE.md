@@ -1,8 +1,27 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 19, 2026-05-09)
+## Status (session 20, 2026-05-09)
 
 Branch: `main`. Repository is **0 sorries**.
+
+**Session 20**: Detailed analysis of T2-F7e parent discharge (extending
+the cubic template from `Basic.lean:8601`). Produced
+`claude/lean-bch-T2F7e-parent-discharge-implementation-plan.md` with:
+- Complete derivation of the **extended hdecomp** (11 pieces) for
+  `sym_bch_cubic - sym_E₃ - sym_E₅`.
+- Concrete formulation of the 2 algebraic identities needed:
+  - **Deg-5 cancellation**: `½[C₄(a',b),a'] + (deg-5 of T₅,T₆) − correction = 0`
+  - **Deg-6 cancellation** (palindromic): `½[C₅(a',b),a'] + C₆(a',b)
+    + C₆(a'+b,a') + (deg-6 of T₅,T₆,C₅-diff) = 0`
+- Per-piece norm-bound estimates (all within 10⁵ × s⁷ budget; well under
+  the 10⁹ axiom constant).
+- Recommended 6-session breakdown (~1000–1500 lines total, mirrors
+  the cubic template's 700-line structure but at one degree higher).
+
+The discharge requires CAS support to compute the explicit deg-7+
+residual polynomials in (a, b) for the algebraic identities; a future
+session will set up this CAS pipeline (similar to the existing
+`Lean-Trotter/scripts/discover_quintic_alt_form.py`).
 
 **Session 19 final**: T2-F7e Phase A complete. The septic remainder small-s
 axiom is fully discharged (~700 lines added in `Basic.lean`), reducing the
