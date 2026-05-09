@@ -2626,6 +2626,86 @@ theorem norm_bch_quintic_group_6_diff_le (z x y : 𝔸) :
   have a01 := norm_add_le t01 t02
   linarith
 
+include 𝕂 in
+/-- **Lipschitz bound for `bch_quintic_term` in its first argument**:
+`‖C₅(z, y) − C₅(x, y)‖ ≤ (‖z‖+‖x‖+‖y‖)⁴ · ‖z − x‖`.
+
+Combines the 4 per-group Lipschitz bounds with the (720)⁻¹ scalar factor:
+`(10 + 4·25 + 6·35 + 24·5)/720 = 440/720 = 11/18 < 1`.
+
+This is the analog of `norm_bch_cubic_term_diff_le` at degree 5; both are
+key infrastructure for the parent T2-F7e discharge. With `z = (a'+b) + W`
+(where ‖W‖ = O(s²)), this gives `‖C₅(z, y) − C₅(a'+b, y)‖ ≤ K · s² · M⁴ ≤
+K · s⁶`, the deg-6+ residual estimate needed in the extended hdecomp. -/
+theorem norm_bch_quintic_term_diff_le (z x y : 𝔸) :
+    ‖bch_quintic_term 𝕂 z y - bch_quintic_term 𝕂 x y‖ ≤
+      (‖z‖ + ‖x‖ + ‖y‖) ^ 4 * ‖z - x‖ := by
+  set M := ‖z‖ + ‖x‖ + ‖y‖ with hM_def
+  set d := ‖z - x‖ with hd_def
+  have hd_nn : 0 ≤ d := norm_nonneg _
+  have hM_nn : 0 ≤ M := by positivity
+  have hM4_nn : (0 : ℝ) ≤ M ^ 4 := pow_nonneg hM_nn 4
+  -- Per-group bounds.
+  have hg1 := norm_bch_quintic_group_1_diff_le z x y
+  have hg4 := norm_bch_quintic_group_4_diff_le z x y
+  have hg6 := norm_bch_quintic_group_6_diff_le z x y
+  have hg24 := norm_bch_quintic_group_24_diff_le z x y
+  -- Identity: bch_quintic_term diff = (720)⁻¹ • (per-group diffs combo).
+  have htel : bch_quintic_term 𝕂 z y - bch_quintic_term 𝕂 x y =
+      (720 : 𝕂)⁻¹ • (
+        -(bch_quintic_group_1 z y - bch_quintic_group_1 x y)
+        + (4 : 𝕂) • (bch_quintic_group_4 z y - bch_quintic_group_4 x y)
+        - (6 : 𝕂) • (bch_quintic_group_6 z y - bch_quintic_group_6 x y)
+        + (24 : 𝕂) • (bch_quintic_group_24 z y - bch_quintic_group_24 x y)) := by
+    unfold bch_quintic_term
+    simp only [smul_sub, smul_add, smul_neg]
+    abel
+  rw [htel]
+  -- Norm bound on the smul'd expression.
+  set d1 : 𝔸 := bch_quintic_group_1 z y - bch_quintic_group_1 x y
+  set d4 : 𝔸 := bch_quintic_group_4 z y - bch_quintic_group_4 x y
+  set d6 : 𝔸 := bch_quintic_group_6 z y - bch_quintic_group_6 x y
+  set d24 : 𝔸 := bch_quintic_group_24 z y - bch_quintic_group_24 x y
+  -- Bounds on the smul'd diffs
+  have h_neg_d1 : ‖-d1‖ ≤ 10 * M ^ 4 * d := by
+    rw [norm_neg]; exact hg1
+  have h_4_d4 : ‖((4 : 𝕂)) • d4‖ ≤ 100 * M ^ 4 * d := by
+    calc ‖((4 : 𝕂)) • d4‖ ≤ ‖((4 : 𝕂))‖ * ‖d4‖ := norm_smul_le _ _
+      _ = 4 * ‖d4‖ := by rw [RCLike.norm_ofNat]
+      _ ≤ 4 * (25 * M ^ 4 * d) := by gcongr
+      _ = 100 * M ^ 4 * d := by ring
+  have h_6_d6 : ‖((6 : 𝕂)) • d6‖ ≤ 210 * M ^ 4 * d := by
+    calc ‖((6 : 𝕂)) • d6‖ ≤ ‖((6 : 𝕂))‖ * ‖d6‖ := norm_smul_le _ _
+      _ = 6 * ‖d6‖ := by rw [RCLike.norm_ofNat]
+      _ ≤ 6 * (35 * M ^ 4 * d) := by gcongr
+      _ = 210 * M ^ 4 * d := by ring
+  have h_24_d24 : ‖((24 : 𝕂)) • d24‖ ≤ 120 * M ^ 4 * d := by
+    calc ‖((24 : 𝕂)) • d24‖ ≤ ‖((24 : 𝕂))‖ * ‖d24‖ := norm_smul_le _ _
+      _ = 24 * ‖d24‖ := by rw [RCLike.norm_ofNat]
+      _ ≤ 24 * (5 * M ^ 4 * d) := by gcongr
+      _ = 120 * M ^ 4 * d := by ring
+  -- Triangle inequality for the 4-term sum
+  set S : 𝔸 := -d1 + (4 : 𝕂) • d4 - (6 : 𝕂) • d6 + (24 : 𝕂) • d24 with hS_def
+  have hS_eq : S = -d1 + (4 : 𝕂) • d4 + (-((6 : 𝕂) • d6)) + (24 : 𝕂) • d24 := by
+    rw [hS_def]; abel
+  have hS_le : ‖S‖ ≤ 440 * M ^ 4 * d := by
+    rw [hS_eq]
+    have a3 := norm_add_le (-d1 + (4 : 𝕂) • d4 + (-((6 : 𝕂) • d6))) ((24 : 𝕂) • d24)
+    have a2 := norm_add_le (-d1 + (4 : 𝕂) • d4) (-((6 : 𝕂) • d6))
+    have a1 := norm_add_le (-d1) ((4 : 𝕂) • d4)
+    have h_neg : ‖-((6 : 𝕂) • d6)‖ = ‖((6 : 𝕂) • d6)‖ := norm_neg _
+    rw [h_neg] at a2
+    linarith
+  -- Final smul bound
+  have h720 : ‖((720 : 𝕂)⁻¹)‖ = 1 / 720 := by
+    rw [norm_inv, RCLike.norm_ofNat]; norm_num
+  calc ‖((720 : 𝕂)⁻¹) • S‖
+      ≤ ‖((720 : 𝕂)⁻¹)‖ * ‖S‖ := norm_smul_le _ _
+    _ = (1 / 720) * ‖S‖ := by rw [h720]
+    _ ≤ (1 / 720) * (440 * M ^ 4 * d) := by
+        apply mul_le_mul_of_nonneg_left hS_le (by norm_num)
+    _ ≤ M ^ 4 * d := by nlinarith [hM4_nn, hd_nn]
+
 /-! ### `bch_sextic_term` — the τ⁶ coefficient of `bch(a, b)`
 
 Explicit 28-term polynomial in {a, b}, derived via the CAS pipeline at
