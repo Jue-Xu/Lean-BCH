@@ -600,7 +600,7 @@ private lemma real_exp_third_order_le_div {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 1)
 
 /-- For `0 ≤ s` with `s < 5/6`, the third-order Taylor remainder satisfies
 `exp(s)-1-s-s²/2 ≤ s³`. -/
-private lemma real_exp_third_order_le_cube {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 5 / 6) :
+lemma real_exp_third_order_le_cube {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 5 / 6) :
     Real.exp s - 1 - s - s ^ 2 / 2 ≤ s ^ 3 := by
   have hs_lt1 : s < 1 := by linarith
   calc Real.exp s - 1 - s - s ^ 2 / 2

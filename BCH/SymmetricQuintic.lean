@@ -2589,9 +2589,9 @@ private theorem group_CD_eq_three_residuals
   show _ = _
   simp only [show ((2 : 𝕂)⁻¹ • a : 𝔸) = a' from rfl] at hB hC
   -- hB and hC should now match our let-bindings (a', V₂, V₃, V₄ identifications).
-  -- The identity is: LHS - RHS = (LHS_B - correction_poly) + (LHS_C - 0)
-  -- = (LHS_B - correction_poly) + LHS_C, both of which are 0 by hypothesis.
-  linear_combination (norm := abel) -hB + hC
+  -- The identity is: GOAL_LHS - GOAL_RHS = (LHS_B - RHS_B) + (LHS_C - RHS_C)
+  -- = (LHS_B - correction_poly) + (LHS_C - 0), both 0 by hB and hC.
+  linear_combination (norm := abel) hB + hC
 
 /-- **Helper (½-smul commutator bound)**: `‖(2:𝕂)⁻¹ • (X*Y - Y*X)‖ ≤ ‖X‖·‖Y‖`.
 Used in Phase E.1 to bound `½·[R₁_sept, a']` and `½·[C₆(a',b), a']`. -/
@@ -2611,35 +2611,13 @@ private lemma norm_half_smul_bracket_le {𝕂 : Type*} [RCLike 𝕂]
         mul_le_mul_of_nonneg_left hcomm (by norm_num)
     _ = ‖X‖ * ‖Y‖ := by ring
 
+-- Quintic Taylor bridge for the 3-factor symmetric BCH:
+-- ‖symmetric_bch_cubic(a,b) − symmetric_bch_cubic_poly(a,b)
+--   − symmetric_bch_quintic_poly(a,b)‖ ≤ 2·10¹⁰ · (‖a‖+‖b‖)⁷ for ‖a‖+‖b‖<1/4.
+-- Proof: 13-piece extended hdecomp (Phase D), bounding via Phase A septic
+-- remainders, Phase E.1 inline (Group A bracket + Group B C₆ pieces), and the
+-- Group C+D sub-axiom (Phase E.2 stepping-stone). Total ≤ 1.21·10¹⁰·s⁷ ≤ 2·10¹⁰·s⁷.
 include 𝕂 in
-/-- **Quintic Taylor bridge for the 3-factor symmetric BCH**:
-
-    ‖symmetric_bch_cubic(a,b) − symmetric_bch_cubic_poly(a,b)
-        − symmetric_bch_quintic_poly(a,b)‖ ≤ 2·10¹⁰ · (‖a‖+‖b‖)⁷
-
-for `‖a‖+‖b‖ < 1/4`. Extends `norm_symmetric_bch_cubic_sub_poly_le`
-(`Basic.lean`) by one degree higher, factoring out the τ⁵ coefficient
-along with the τ³ coefficient.
-
-**Proof**: applies `symmetric_bch_quintic_extended_hdecomp` (Phase D) to
-decompose `sym_bch_cubic - sym_E₃ - sym_E₅` into 13 sub-pieces:
-- Group A (3 pieces): `R₁_sept`, `R₂_sept`, `½·[R₁_sept, a']` — bounded by
-  Phase A inner/outer septic remainders + half-bracket helper.
-- Group B (2 pieces): `½·[C₆(a',b), a']`, `C₆(z,a') - C₆(a'+b,a')` —
-  bounded inline using `bch_sextic_term` norm bounds + Lipschitz.
-- Group C+D (8 pieces): combined bound via `symmetric_bch_quintic_group_CD_axiom`
-  (the Phase E.2 stepping-stone, awaiting full discharge per CLAUDE.md plan).
-
-The 13 piece bounds combine via triangle inequality:
-- ‖R₁_sept‖ ≤ 1.5·10⁶·s⁷, ‖R₂_sept‖ ≤ 1.2·10¹⁰·s⁷, ‖½·[R₁_sept,a']‖ ≤ 1.875·10⁵·s⁷
-- ‖½·[C₆,a']‖ ≤ s⁷/2, ‖C₆ diff‖ ≤ 5400·s⁷
-- ‖Group C+D‖ ≤ 10⁸·s⁷
-- Total: ≤ 1.21·10¹⁰·s⁷ ≤ 2·10¹⁰·s⁷ ✓
-
-**Status**: now proven from `symmetric_bch_quintic_group_CD_axiom`
-(stepping-stone for Phase E.2). The public signature is stable so downstream
-work (B1.d's `strangBlock_log` wrapper, B2's symbolic 5-factor composition,
-Lean-Trotter's `bch_w4Deriv_quintic_level2`) depends only on this theorem. -/
 set_option maxHeartbeats 1600000 in
 theorem norm_symmetric_bch_quintic_sub_poly_le (a b : 𝔸)
     (hab : ‖a‖ + ‖b‖ < 1 / 4) :
@@ -2685,19 +2663,15 @@ theorem norm_symmetric_bch_quintic_sub_poly_le (a b : 𝔸)
   -- TERM 1: ‖R₁_sept‖ ≤ 1.5·10⁶·s⁷ (Phase A inner)
   have hR1_le : ‖R₁_sept‖ ≤ 1500000 * s ^ 7 := by
     have h := norm_bch_inner_septic_remainder_le (𝕂 := 𝕂) a b hab
-    show ‖R₁_sept‖ ≤ _
     rw [hR1_sept_def]
-    show ‖z - _ - _ - _ - _ - _ - _‖ ≤ _
-    -- The Phase A statement is in the form with explicit (2⁻¹•a) substituted, which
-    -- by definition equals a'. Same for z = bch a' b. Convert.
+    -- a' := 2⁻¹•a and z := bch a' b are let-bindings; definitionally equal
+    -- to the explicit forms in the Phase A statement. `convert` closes via rfl.
     convert h using 2
-    rw [hz_def]
   -- TERM 2: ‖R₂_sept‖ ≤ 1.2·10¹⁰·s⁷ (Phase A outer)
   have hR2_le : ‖R₂_sept‖ ≤ 12000000000 * s ^ 7 := by
     have h := norm_bch_outer_septic_remainder_le (𝕂 := 𝕂) a b hab
     rw [hR2_sept_def]
     convert h using 2
-    rw [hz_def]
   -- TERM 3: ‖½·(R₁_sept·a' - a'·R₁_sept)‖ ≤ ‖R₁_sept‖·‖a'‖ ≤ 1.875·10⁵·s⁷
   -- Using ‖R₁_sept‖ ≤ 1.5·10⁶·s⁷ and ‖a'‖ ≤ s/2 ≤ 1/8.
   have hT3 : ‖(2 : 𝕂)⁻¹ • (R₁_sept * a' - a' * R₁_sept)‖ ≤ 187500 * s ^ 7 := by
@@ -2775,18 +2749,18 @@ theorem norm_symmetric_bch_quintic_sub_poly_le (a b : 𝔸)
               5500 * s ^ 7 := by
     have h := norm_bch_sextic_term_diff_le (𝕂 := 𝕂) z (a' + b) a'
     -- h: ‖.‖ ≤ (‖z‖+‖a'+b‖+‖a'‖)^5 · ‖z-(a'+b)‖
-    -- Bound: (45/11·s)^5 · (48/11·s²) = (45/11)^5·(48/11) · s^7 ≈ 184·(48/11) ≈ 803.
-    -- Use 5500 with margin.
+    -- Bound: (45/11·s)^5 · (48/11·s²) = (45/11)^5·(48/11)·s^7
+    --      ≤ 1146·(48/11)·s^7 ≈ 5001·s^7 < 5500·s^7.
     have hM_pow_le : (‖z‖ + ‖a' + b‖ + ‖a'‖) ^ 5 ≤ (45/11 * s) ^ 5 :=
       pow_le_pow_left₀ hM_nn hM_le 5
     have hM_pow_eq : (45/11 * s) ^ 5 = (45/11 : ℝ) ^ 5 * s ^ 5 := by ring
-    have h_45_5 : ((45 : ℝ) / 11) ^ 5 ≤ 184 := by norm_num
+    have h_45_5 : ((45 : ℝ) / 11) ^ 5 ≤ 1146 := by norm_num
     have hs5_nn : (0 : ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
     calc _ ≤ (‖z‖ + ‖a' + b‖ + ‖a'‖) ^ 5 * ‖z - (a' + b)‖ := h
       _ ≤ (45/11 * s) ^ 5 * (48/11 * s ^ 2) := by
           apply mul_le_mul hM_pow_le hW_s2 (norm_nonneg _) (by positivity)
       _ = (45/11 : ℝ) ^ 5 * s ^ 5 * (48/11 * s ^ 2) := by rw [hM_pow_eq]
-      _ ≤ 184 * s ^ 5 * (48/11 * s ^ 2) := by
+      _ ≤ 1146 * s ^ 5 * (48/11 * s ^ 2) := by
           apply mul_le_mul_of_nonneg_right _ (by positivity)
           exact mul_le_mul_of_nonneg_right h_45_5 hs5_nn
       _ ≤ 5500 * s ^ 7 := by nlinarith [hs7_nn]
@@ -2795,48 +2769,57 @@ theorem norm_symmetric_bch_quintic_sub_poly_le (a b : 𝔸)
   simp only [show ((2 : 𝕂)⁻¹ • a : 𝔸) = a' from rfl,
              show bch (𝕂 := 𝕂) a' b = z from rfl,
              ← hDC_a_def] at hCD
-  -- TRIANGLE INEQUALITY: sum the 5 piece bounds + Group C+D bound.
-  -- Layout (matching the hdecomp's RHS structure):
-  -- T₁ = R₁_sept                                                (Group A piece 1)
-  -- T₂ = R₂_sept                                                (Group A piece 2)
-  -- T₃ = ½·[R₁_sept, a']                                        (Group A piece 3)
-  -- T₄ = ½·[C₆(a',b), a']                                       (Group B piece 1)
-  -- T₅ = C₆(z,a') - C₆(a'+b,a')                                 (Group B piece 2)
-  -- T_CD = sum of Group C (4 pieces) + Group D (4 pieces)        (sub-axiom)
+  -- Names for the 5 individual pieces (Group A 3 + Group B 2) and the cd-sum.
   set T₁ := R₁_sept with hT₁
   set T₂ := R₂_sept with hT₂
   set T₃ : 𝔸 := (2 : 𝕂)⁻¹ • (R₁_sept * a' - a' * R₁_sept) with hT₃
   set T₄ : 𝔸 := (2 : 𝕂)⁻¹ • (bch_sextic_term 𝕂 a' b * a' -
                               a' * bch_sextic_term 𝕂 a' b) with hT₄
   set T₅ : 𝔸 := bch_sextic_term 𝕂 z a' - bch_sextic_term 𝕂 (a' + b) a' with hT₅
-  set T_CD : 𝔸 :=
-    -- Group C
-    (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
-      -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
-    (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
-    (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
-    -symmetric_bch_quintic_correction_poly 𝕂 a b +
-    -- Group D
-    (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
-    bch_sextic_term 𝕂 a' b +
-    bch_sextic_term 𝕂 (a' + b) a' +
-    (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a') with hT_CD
-  -- Match the RHS of hdecomp to T₁ + T₂ + T₃ + T₄ + T₅ + T_CD.
-  show ‖T₁ + T₂ + T₃ + T₄ + T₅ + T_CD‖ ≤ _
-  -- Triangle inequality.
-  have hsum_le : ‖T₁ + T₂ + T₃ + T₄ + T₅ + T_CD‖ ≤
-      ‖T₁‖ + ‖T₂‖ + ‖T₃‖ + ‖T₄‖ + ‖T₅‖ + ‖T_CD‖ := by
-    have a5 := norm_add_le (T₁ + T₂ + T₃ + T₄ + T₅) T_CD
+  -- The 8 cd pieces (Group C 4 + Group D 4) appear in the goal in the same form
+  -- as in hCD's LHS. We re-associate the 13-piece sum to (T₁..T₅) + (cd-sum).
+  set CD_SUM : 𝔸 :=
+      (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+        -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+      (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
+      (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+      -symmetric_bch_quintic_correction_poly 𝕂 a b +
+      (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
+      bch_sextic_term 𝕂 a' b +
+      bch_sextic_term 𝕂 (a' + b) a' +
+      (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a') with hCD_SUM
+  -- hCD now bounds CD_SUM via its definition.
+  have hCD_le : ‖CD_SUM‖ ≤ 100000000 * s ^ 7 := by rw [hCD_SUM]; exact hCD
+  -- Re-associate the 13-piece goal sum as (T₁..T₅) + CD_SUM.
+  -- The cd pieces in the goal are still in unfolded form (set didn't fold the sum).
+  have hreorg :
+      T₁ + T₂ + T₃ + T₄ + T₅ +
+      (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+        -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+      (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
+      (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+      -symmetric_bch_quintic_correction_poly 𝕂 a b +
+      (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
+      bch_sextic_term 𝕂 a' b +
+      bch_sextic_term 𝕂 (a' + b) a' +
+      (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a')
+      = (T₁ + T₂ + T₃ + T₄ + T₅) + CD_SUM := by
+    rw [hCD_SUM]; abel
+  rw [hreorg]
+  -- Triangle: ‖(T₁+T₂+T₃+T₄+T₅) + CD_SUM‖ ≤ ‖T₁‖+...+‖T₅‖+‖CD_SUM‖
+  have hsum_le : ‖(T₁ + T₂ + T₃ + T₄ + T₅) + CD_SUM‖ ≤
+      ‖T₁‖ + ‖T₂‖ + ‖T₃‖ + ‖T₄‖ + ‖T₅‖ + ‖CD_SUM‖ := by
+    have a5 := norm_add_le (T₁ + T₂ + T₃ + T₄ + T₅) CD_SUM
     have a4 := norm_add_le (T₁ + T₂ + T₃ + T₄) T₅
     have a3 := norm_add_le (T₁ + T₂ + T₃) T₄
     have a2 := norm_add_le (T₁ + T₂) T₃
     have a1 := norm_add_le T₁ T₂
     linarith
-  calc ‖T₁ + T₂ + T₃ + T₄ + T₅ + T_CD‖
-      ≤ ‖T₁‖ + ‖T₂‖ + ‖T₃‖ + ‖T₄‖ + ‖T₅‖ + ‖T_CD‖ := hsum_le
+  calc ‖(T₁ + T₂ + T₃ + T₄ + T₅) + CD_SUM‖
+      ≤ ‖T₁‖ + ‖T₂‖ + ‖T₃‖ + ‖T₄‖ + ‖T₅‖ + ‖CD_SUM‖ := hsum_le
     _ ≤ 1500000 * s ^ 7 + 12000000000 * s ^ 7 + 187500 * s ^ 7 +
         s ^ 7 + 5500 * s ^ 7 + 100000000 * s ^ 7 := by
-          linarith [hR1_le, hR2_le, hT3, hT4, hT5, hCD]
+          linarith [hR1_le, hR2_le, hT3, hT4, hT5, hCD_le]
     _ = 12101693001 * s ^ 7 := by ring
     _ ≤ 20000000000 * s ^ 7 := by nlinarith [hs7_nn]
 
