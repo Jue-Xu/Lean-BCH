@@ -62,6 +62,29 @@ d40ce65 (Phase E.2 step 1). Fixed:
 Net: build clean, 0 sorries, 2 scoped private axioms (parent Group C+D
 sub-axiom + Suzuki5 septic axiom). HEAD now compiles.
 
+**Session 22 step 5 (Phase E.2 step 2b, complete)**: norm bound on R_T5_sept
+proved. Adds `BCH.norm_R_T5_sept_le`:
+
+```
+‖R_T5_sept‖ ≤ 7·10⁶·s⁷  (for s = ‖a‖+‖b‖ < 1/4)
+```
+
+Bounds:
+- ‖(1/12)·L_C3(a'+b, WHigh, a')‖ ≤ 225,000·s⁷ (12·max(‖a'+b‖,‖a'‖)²·‖WHigh‖
+  with max ≤ 3s/2, ‖WHigh‖ ≤ 100,000·s⁵).
+- ‖(1/12)·Q_residual‖ ≤ 6,004,167·s⁷ (dominated by Q(WRestSept, WRestSept)
+  with ‖WRestSept‖ ≤ 6000·s³).
+
+Total ≤ 6,229,167·s⁷ < 7,000,000·s⁷ ✓.
+
+Foundation helpers added in `SymmetricQuintic.lean`:
+- `BCH.norm_triple_le_aux`: `‖X*Y*Z‖ ≤ ‖X‖·‖Y‖·‖Z‖`.
+- `BCH.norm_Q_form_le_aux`: 4-term Q-bilinear bracket bound.
+
+Key lesson: `linarith` failed in the final triangle inequality step
+(expression-matching approach); replaced with `add_le_add hL_final hQ_final`
+which uses direct unification.
+
 **Session 22 step 4 (Phase E.2 step 2a, complete)**: R_T5_sept algebraic
 decomposition proved. Adds `BCH.R_T5_sept_decomp_eq`:
 
@@ -92,16 +115,15 @@ closes the polynomial identity (with V₃, V₄, V₅, V₆, R₁_sept kept as
 atoms; V₂ unfolded for the cubic-identity cancellation with
 (96)⁻¹·(b·DC_a - DC_a·b)). 64M heartbeats, ~140 lines.
 
-**Next session priority**: Phase E.2 steps 2b, 3, 4 — norm bound the 3
-residuals:
-- 2b. `norm_R_T5_sept_le` (~150 lines): use `R_T5_sept_decomp_eq` +
-  triangle inequality + per-piece norm bounds.
-- 3. R_T6_sept analog (~300 lines): need `bch_quartic_term_LQ_decomp` (new),
-  then similar decomposition + bound.
-- 4. C5_diff_residual (~200 lines): norm_bch_quintic_term_diff_le +
-  Lipschitz on V₂.
-
-Then Phase E.2 step 5: assemble triangle + replace sub-axiom (~50 lines).
+**Next session priority**: Phase E.2 steps 3, 4, 5:
+- 3. R_T6_sept analog (~600 lines: algebraic identity + norm bound):
+  needs `bch_quartic_term_LQ_decomp` (new foundation lemma analogous to
+  `bch_cubic_term_LQ_decomp`), then similar decomposition + bound.
+  Estimated bound: ‖R_T6_sept‖ ≤ ~10⁷·s⁷.
+- 4. C5_diff_residual (~200 lines): use existing `norm_bch_quintic_term_diff_le`
+  + Lipschitz on V₂. Estimated bound: ‖C5_diff_residual‖ ≤ ~10⁴·s⁷.
+- 5. Triangle inequality + replace `symmetric_bch_quintic_group_CD_axiom`
+  with proven theorem (~50 lines). Bound: K_T5 + K_T6 + K_C5diff ≤ 10⁸·s⁷.
 
 **Phase E.2 plan** (algebraic decomposition + per-residual bounds):
 
