@@ -1,11 +1,73 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 21, 2026-05-10)
+## Status (session 22, 2026-05-10)
 
-Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**
-(unchanged from session 19; both the Phase B stepping-stone (deg-5) and the
-Phase C deg-6 cancellation algebraic identities are fully proved at the
-end of session 21 — no new axioms).
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**.
+Net axiom count unchanged from session 21 (still 2), but the parent T2-F7e
+axiom has been REPLACED with a smaller, more focused **Group C+D
+sub-axiom** (10⁸·s⁷ stepping-stone) — a major narrowing of the remaining
+discharge work.
+
+**Session 22 (Phase E.1 of T2-F7e discharge, complete)**: parent axiom
+discharged modulo the Group C+D sub-axiom. The parent theorem
+`norm_symmetric_bch_quintic_sub_poly_le` now uses:
+- Phase A inner septic remainder bound (R₁_sept ≤ 1.5·10⁶·s⁷)
+- Phase A outer septic remainder bound (R₂_sept ≤ 1.2·10¹⁰·s⁷)
+- Phase E.1 inline bounds (5 easy pieces):
+  * ‖½·[R₁_sept, a']‖ ≤ 1.875·10⁵·s⁷
+  * ‖½·[C₆(a',b), a']‖ ≤ s⁷
+  * ‖C₆(z,a') - C₆(a'+b,a')‖ ≤ 5500·s⁷ (via `norm_bch_sextic_term_diff_le`)
+- Group C+D sub-axiom (10⁸·s⁷ stepping-stone for Phase E.2)
+- Phase D's `symmetric_bch_quintic_extended_hdecomp` for the 13-piece
+  decomposition + triangle inequality through it
+
+**Constant change**: parent theorem bound `10⁹·s⁷` → `2·10¹⁰·s⁷`. The
+original `10⁹` was incompatible with Phase A's `1.2·10¹⁰` outer bound.
+Updated 21 sites in `Palindromic.lean` and 23 in `Suzuki5Quintic.lean`.
+
+**`norm_bch_inner_septic_remainder_le` and `norm_bch_outer_septic_remainder_le`**
+made public (removed `private`) so Phase E.1 can use them externally.
+
+**Helper lemma added**: `norm_half_smul_bracket_le`
+(`‖(2:𝕂)⁻¹ • (X*Y - Y*X)‖ ≤ ‖X‖·‖Y‖`).
+
+**Next session priority**: Phase E.2 — discharge the Group C+D sub-axiom
+via algebraic identity + 3-residual decomposition. Estimated ~1000-1500 lines.
+
+**Phase E.2 plan** (algebraic decomposition + per-residual bounds):
+
+The Group C+D sub-axiom asserts:
+```
+‖Group C + Group D‖ ≤ 10⁸·s⁷
+```
+where Group C = T₅ + T₆ + ½[C₄(a',b),a'] - correction and Group D =
+½[C₅(a',b),a'] + C₆(a',b) + C₆(a'+b,a') + (C₅(z,a') - C₅(a'+b,a')).
+
+By Phase B + Phase C identities, this equals 3 deg-7+ residuals:
+- `R_T5_sept` := T₅ - ΔC₃_lin(V₃) - ΔC₃_quad(V₂) - T5_d6_op (~6·10⁶·s⁷)
+- `R_T6_sept` := T₆ - ΔC₄_lin(V₂) - T6_d6_op (~10⁷·s⁷)
+- `C5_diff_residual` := (C₅(z,a') - C₅(a'+b,a')) - ΔC₅_lin (~10⁴·s⁷)
+
+Each residual decomposes into Lipschitz-bounded pieces:
+- `R_T5_sept = (1/12)·(L_R₁_sept + L_C₅ + L_C₆) + (1/12)·Q_residual`
+  where `Q_residual = Q(W'_septic, W'_septic) + Q_bilin(V₂, V₄+C₅+C₆+R₁_sept)`,
+  `W'_septic = V₃+V₄+C₅+C₆+R₁_sept`. Each piece deg-7+.
+- `R_T6_sept`: similar L+Q decomposition for C₄ Taylor.
+- `C5_diff_residual`: triangle through `norm_bch_quintic_term_diff_le`.
+
+**Phase E.2 sub-tasks**:
+1. Algebraic identity (Group C+D = R_T5_sept + R_T6_sept + C5_diff_residual)
+   via Phase B+C identities (~50 lines, pure ring).
+2. Bound `R_T5_sept` (~300 lines): cubic-template-style hT5_id extension +
+   norm bounds on Q_residual (19 sub-terms) and L_remaining.
+3. Bound `R_T6_sept` (~300 lines): similar for C₄.
+4. Bound `C5_diff_residual` (~200 lines): Lipschitz on quintic term diff.
+5. Triangle inequality + constant comparison (~50 lines).
+6. Replace Group C+D sub-axiom with proven theorem.
+
+The proof structure mirrors the cubic template `norm_symmetric_bch_cubic_sub_poly_le`
+in `Basic.lean`, which uses the analog hT5_id and hT6_id decompositions
+(but at one degree lower, giving O(s⁵) bounds).
 
 **Session 21 step 11 (Phase C of T2-F7e discharge, complete)**:
 deg-6 cancellation algebraic identity. CAS verified at
