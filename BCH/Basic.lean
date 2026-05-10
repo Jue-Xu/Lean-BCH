@@ -10527,7 +10527,7 @@ This is the key step relating the explicit polynomial definition to the form tha
 arises from applying `norm_bch_quintic_remainder_le` twice through the symmetric
 composition. Verified by multiplying both sides by 48, clearing scalars, and
 `noncomm_ring`. -/
-private theorem symmetric_bch_cubic_poly_alt_form (a b : 𝔸) :
+theorem symmetric_bch_cubic_poly_alt_form (a b : 𝔸) :
     symmetric_bch_cubic_poly 𝕂 a b =
       bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
       bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) -
@@ -10554,7 +10554,7 @@ The identity `A + B + C + D = 0` holds because, after expansion:
 - B + C contributes `-(1/48)·[b, DC_a]`.
 - And `[DC_b, a] = [b, DC_a]` is itself an associative-algebra identity (both expand
   to `b²a² - 2baba + 2abab - a²b²`). -/
-private theorem symmetric_bch_quartic_identity (a b : 𝔸) :
+theorem symmetric_bch_quartic_identity (a b : 𝔸) :
     (2 : 𝕂)⁻¹ • (bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
                   ((2 : 𝕂)⁻¹ • a) * bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) +
       bch_quartic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +

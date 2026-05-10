@@ -106,16 +106,31 @@ parent discharge.
 Maxheartbeats: 800K (inner) and 1.6M (outer signature elaboration +
 nlinarith with `(57/22)^7` numerical step).
 
-**Next session priority**: Phase D of the discharge — extended hdecomp for
-`sym_bch_cubic - sym_E₃ - sym_E₅`. Express this as ~11 pieces, each of
-which can be norm-bounded by `K · s⁷` using existing infrastructure
-(Lipschitz bounds for `bch_cubic_term` / `bch_quintic_term` /
-`bch_sextic_term`, septic remainder bounds for inner/outer Phase A,
-Phase B+C deg-5/deg-6 cancellation identities for the algebraic chunks).
-Estimated ~150 lines.
+**Session 21 step 12 (Phase D of T2-F7e discharge, complete)**:
+extended hdecomp algebraic identity. Lean theorem
+`symmetric_bch_quintic_extended_hdecomp` in `SymmetricQuintic.lean`.
 
-After Phase D: Phase E (per-piece norm bounds + triangle assembly +
-axiom replacement). Estimated ~500 lines.
+The theorem states the algebraic decomposition of
+`sym_bch_cubic - sym_E₃ - sym_E₅` into 13 sub-pieces (organized into
+4 groups: sept-related, C₆-related, Phase B group, Phase C group). The
+proof extends the cubic template's hdecomp from `Basic.lean` by:
+1. Substituting the sym_E₃ alt-form (via `symmetric_bch_cubic_poly_alt_form`).
+2. Substituting the sym_E₅ alt-form (via `symmetric_bch_quintic_poly_alt_form`).
+3. Using septic R-definitions instead of quintic R-definitions (extra C₅, C₆
+   subtractions).
+4. Using `symmetric_bch_quartic_identity` for deg-4 cancellation.
+
+Made `symmetric_bch_quartic_identity` and `symmetric_bch_cubic_poly_alt_form`
+public (removed `private` keyword) so Phase D can reuse them. ~150 lines
+in SymmetricQuintic.lean. Heartbeats: 8M.
+
+Closing tactic: `match_scalars <;> ring` (after simp distribution) — the
+modern alternative to cubic template's `linear_combination + abel`, which
+requires only the explicit a' unfold (`show a' = (2:𝕂)⁻¹ • a from rfl`)
+to align all atoms.
+
+**Next session priority**: Phase E (per-piece norm bounds + triangle
+assembly + axiom replacement). Estimated ~500 lines.
 
 **Session 20 steps 2-6** (~870 lines in `Basic.lean`): Lipschitz bounds for
 `bch_cubic_term` and `bch_quintic_term` in their first argument. These are
@@ -264,7 +279,8 @@ session 19 final).
   extension to deg-5+6 cancellation). Phase A complete (inner/outer septic
   remainder helpers, session 21 steps 1-8). Phase B complete (deg-5
   cancellation pure identity, session 21 steps 9-10). Phase C complete
-  (deg-6 cancellation pure identity, session 21 step 11). Phases D, E
+  (deg-6 cancellation pure identity, session 21 step 11). Phase D complete
+  (extended hdecomp identity, session 21 step 12, ~150 lines). Phase E
   remaining (~500 lines).
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
