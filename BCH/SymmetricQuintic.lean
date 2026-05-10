@@ -3637,24 +3637,328 @@ private theorem norm_R_T6_sept_le
     _ = 610000 * s ^ 7 := by ring
     _ ≤ 1000000 * s ^ 7 := by nlinarith [hs7_nn]
 
-/-! ### T2-F7e Phase E.2 step 4: norm bound on C5_diff_residual
+/-! ### T2-F7e Phase E.2 step 4: norm bound on C5_diff_residual (partial)
 
 The third residual `C5_diff_residual = (C₅(z,a') - C₅(a'+b,a')) - ΔC₅_lin_explicit`
 captures the deg-7+ remainder of the C₅ Taylor expansion in V₂ after subtracting
 the explicit deg-6 (linear-in-V₂) leading polynomial.
 
-**Discharge status (axiom)**: The bound `‖C5_diff_residual‖ ≤ 10⁵·s⁷` is asserted
-as a focused private axiom. The full discharge requires either:
-- An algebraic identity expressing C5_diff_residual as deg-7+ structured pieces
-  (analog of `bch_cubic_term_LQ_decomp`/`bch_quartic_term_LQ_decomp` extended to
-  C₅, with quadratic-in-V₂ residual bounded directly), or
-- An L+Q+higher decomposition of C₅ in its first argument (~76+ linear-in-V₂
-  monomials × 30 base monomials, so ~500+ lines of polynomial identity work).
+**Status (partial discharge)**: The algebraic foundation
+(`C5_LinResidual_at_V2_eq_polynomial`) is proven, identifying the V₂-Taylor
+residual at `z₁ = (a'+b)+V₂` with an explicit deg-7+ polynomial in (a, b).
+The full discharge (axiom replacement) is pending the norm bound on this
+polynomial — see the section comment below for details. -/
 
-This axiom is a **stepping stone** — significantly more focused than the
-parent T2-F7e axiom or the previous Group C+D axiom (10⁸·s⁷, 8 pieces). It
-isolates the linearization residual of one explicit term to a smaller bound
-(10⁵·s⁷, 1 piece). -/
+/- ## C5_diff_residual: algebraic foundation (proved) + norm bound (axiom).
+
+The bound `‖C5_diff_residual‖ ≤ 5·10⁶·s⁷` is decomposed as `LipPiece + LinResidual`:
+
+- **LipPiece** = `C₅(z, a') - C₅((a'+b)+V₂, a')`. Bounded directly by
+  `BCH.norm_bch_quintic_term_diff_le` with `‖z - ((a'+b)+V₂)‖ = ‖WRest6‖ ≤ 6000·s³`.
+  M = ‖z‖+‖(a'+b)+V₂‖+‖a'‖ ≤ 5s, so M⁴·6000·s³ ≤ 4·10⁶·s⁷.
+
+- **LinResidual** = `(C₅((a'+b)+V₂, a') - C₅(a'+b, a')) - ΔC₅_lin_explicit`.
+  Equals the explicit deg-7+ polynomial `C5_LinResidual_polynomial 𝕂 a b`
+  (CAS-verified at `scripts/compute_C5_diff_LinResidual.py`), as proved by
+  `C5_LinResidual_at_V2_eq_polynomial` below.
+  Norm bound: ‖C5_LinResidual_polynomial 𝕂 a b‖ ≤ K·s⁷ where K = Σ|coef| ≈ 0.027.
+
+**Status (this session)**:
+- ✅ `C5_LinResidual_polynomial` def (205 explicit deg-7+ monomials, denoms in
+  {92160, 184320, 368640}).
+- ✅ `C5_LinResidual_at_V2_eq_polynomial` algebraic identity (proved via
+  `match_scalars + ring`, using 1024M heartbeats).
+- ❌ `norm_C5_LinResidual_polynomial_le` (the 205-term triangle inequality;
+  Σ|coef|·s^7 ≤ 1·s⁷). Estimated 1500+ lines of Lean code (linear in n via
+  `set` for prefix sums + per-term bounds + chained `norm_add_le`).
+- ❌ Main theorem `symmetric_bch_quintic_C5_diff_residual_le` discharging the
+  axiom (combines algebraic identity + LinResidual bound + LipPiece bound).
+
+The algebraic identity is the **core technical contribution** for the discharge —
+it isolates the deg-6 cancellation between the linearization of C₅ and
+ΔC₅_lin_explicit, leaving only deg-7+ residuals that are easy to bound.
+
+The remaining work (norm bound) is mechanical but verbose due to the 205-term
+sum. Future sessions should:
+1. Either generate the norm bound proof via Python (clean Σ|coef| approach), or
+2. Refactor to reduce the per-term verbosity (e.g., via a generic helper
+   `norm_word_le_pow_s` for d-letter words in {a, b}).
+-/
+
+-- Explicit deg-7+ polynomial form of LinResidual (CAS-verified, 205 monomials).
+-- Common denominator 368640. Used in `LinResidual_eq_polynomial` below.
+private noncomputable def C5_LinResidual_polynomial
+    (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    -- Degree 7 (79 terms):
+    (-7 / 92160 : 𝕂) • (a * a * a * a * b * a * b) +
+    (7 / 92160 : 𝕂) • (a * a * a * a * b * b * a) +
+    (30 / 92160 : 𝕂) • (a * a * a * b * a * a * b) +
+    (-32 / 92160 : 𝕂) • (a * a * a * b * a * b * a) +
+    (14 / 92160 : 𝕂) • (a * a * a * b * a * b * b) +
+    (2 / 92160 : 𝕂) • (a * a * a * b * b * a * a) +
+    (-14 / 92160 : 𝕂) • (a * a * a * b * b * b * a) +
+    (-50 / 92160 : 𝕂) • (a * a * b * a * a * a * b) +
+    (60 / 92160 : 𝕂) • (a * a * b * a * a * b * a) +
+    (-40 / 92160 : 𝕂) • (a * a * b * a * a * b * b) +
+    (-12 / 92160 : 𝕂) • (a * a * b * a * b * a * a) +
+    (8 / 92160 : 𝕂) • (a * a * b * a * b * a * b) +
+    (30 / 92160 : 𝕂) • (a * a * b * a * b * b * a) +
+    (-4 / 92160 : 𝕂) • (a * a * b * a * b * b * b) +
+    (2 / 92160 : 𝕂) • (a * a * b * b * a * a * a) +
+    (-14 / 92160 : 𝕂) • (a * a * b * b * a * a * b) +
+    (20 / 92160 : 𝕂) • (a * a * b * b * a * b * a) +
+    (-4 / 92160 : 𝕂) • (a * a * b * b * b * a * a) +
+    (4 / 92160 : 𝕂) • (a * a * b * b * b * b * a) +
+    (45 / 92160 : 𝕂) • (a * b * a * a * a * a * b) +
+    (-80 / 92160 : 𝕂) • (a * b * a * a * a * b * a) +
+    (10 / 92160 : 𝕂) • (a * b * a * a * a * b * b) +
+    (60 / 92160 : 𝕂) • (a * b * a * a * b * a * a) +
+    (44 / 92160 : 𝕂) • (a * b * a * a * b * a * b) +
+    (6 / 92160 : 𝕂) • (a * b * a * a * b * b * a) +
+    (20 / 92160 : 𝕂) • (a * b * a * a * b * b * b) +
+    (-32 / 92160 : 𝕂) • (a * b * a * b * a * a * a) +
+    (4 / 92160 : 𝕂) • (a * b * a * b * a * a * b) +
+    (-112 / 92160 : 𝕂) • (a * b * a * b * a * b * a) +
+    (-28 / 92160 : 𝕂) • (a * b * a * b * a * b * b) +
+    (20 / 92160 : 𝕂) • (a * b * a * b * b * a * a) +
+    (16 / 92160 : 𝕂) • (a * b * a * b * b * a * b) +
+    (-20 / 92160 : 𝕂) • (a * b * a * b * b * b * a) +
+    (7 / 92160 : 𝕂) • (a * b * b * a * a * a * a) +
+    (6 / 92160 : 𝕂) • (a * b * b * a * a * a * b) +
+    (6 / 92160 : 𝕂) • (a * b * b * a * a * b * a) +
+    (4 / 92160 : 𝕂) • (a * b * b * a * a * b * b) +
+    (30 / 92160 : 𝕂) • (a * b * b * a * b * a * a) +
+    (-4 / 92160 : 𝕂) • (a * b * b * a * b * a * b) +
+    (24 / 92160 : 𝕂) • (a * b * b * a * b * b * a) +
+    (-14 / 92160 : 𝕂) • (a * b * b * b * a * a * a) +
+    (4 / 92160 : 𝕂) • (a * b * b * b * a * a * b) +
+    (-20 / 92160 : 𝕂) • (a * b * b * b * a * b * a) +
+    (4 / 92160 : 𝕂) • (a * b * b * b * b * a * a) +
+    (-18 / 92160 : 𝕂) • (b * a * a * a * a * a * b) +
+    (45 / 92160 : 𝕂) • (b * a * a * a * a * b * a) +
+    (16 / 92160 : 𝕂) • (b * a * a * a * a * b * b) +
+    (-50 / 92160 : 𝕂) • (b * a * a * a * b * a * a) +
+    (-80 / 92160 : 𝕂) • (b * a * a * a * b * a * b) +
+    (6 / 92160 : 𝕂) • (b * a * a * a * b * b * a) +
+    (-16 / 92160 : 𝕂) • (b * a * a * a * b * b * b) +
+    (30 / 92160 : 𝕂) • (b * a * a * b * a * a * a) +
+    (96 / 92160 : 𝕂) • (b * a * a * b * a * a * b) +
+    (4 / 92160 : 𝕂) • (b * a * a * b * a * b * a) +
+    (40 / 92160 : 𝕂) • (b * a * a * b * a * b * b) +
+    (-14 / 92160 : 𝕂) • (b * a * a * b * b * a * a) +
+    (-16 / 92160 : 𝕂) • (b * a * a * b * b * a * b) +
+    (4 / 92160 : 𝕂) • (b * a * a * b * b * b * a) +
+    (-7 / 92160 : 𝕂) • (b * a * b * a * a * a * a) +
+    (-80 / 92160 : 𝕂) • (b * a * b * a * a * a * b) +
+    (44 / 92160 : 𝕂) • (b * a * b * a * a * b * a) +
+    (-40 / 92160 : 𝕂) • (b * a * b * a * a * b * b) +
+    (8 / 92160 : 𝕂) • (b * a * b * a * b * a * a) +
+    (32 / 92160 : 𝕂) • (b * a * b * a * b * a * b) +
+    (-4 / 92160 : 𝕂) • (b * a * b * a * b * b * a) +
+    (-16 / 92160 : 𝕂) • (b * a * b * b * a * a * b) +
+    (16 / 92160 : 𝕂) • (b * a * b * b * a * b * a) +
+    (16 / 92160 : 𝕂) • (b * b * a * a * a * a * b) +
+    (10 / 92160 : 𝕂) • (b * b * a * a * a * b * a) +
+    (24 / 92160 : 𝕂) • (b * b * a * a * a * b * b) +
+    (-40 / 92160 : 𝕂) • (b * b * a * a * b * a * a) +
+    (-40 / 92160 : 𝕂) • (b * b * a * a * b * a * b) +
+    (4 / 92160 : 𝕂) • (b * b * a * a * b * b * a) +
+    (14 / 92160 : 𝕂) • (b * b * a * b * a * a * a) +
+    (40 / 92160 : 𝕂) • (b * b * a * b * a * a * b) +
+    (-28 / 92160 : 𝕂) • (b * b * a * b * a * b * a) +
+    (-16 / 92160 : 𝕂) • (b * b * b * a * a * a * b) +
+    (20 / 92160 : 𝕂) • (b * b * b * a * a * b * a) +
+    (-4 / 92160 : 𝕂) • (b * b * b * a * b * a * a) +
+    -- Degree 8 (78 terms):
+    (7 / 184320 : 𝕂) • (a * a * a * b * a * b * a * b) +
+    (-7 / 184320 : 𝕂) • (a * a * a * b * a * b * b * a) +
+    (-7 / 184320 : 𝕂) • (a * a * a * b * b * a * a * b) +
+    (7 / 184320 : 𝕂) • (a * a * a * b * b * a * b * a) +
+    (-20 / 184320 : 𝕂) • (a * a * b * a * a * b * a * b) +
+    (20 / 184320 : 𝕂) • (a * a * b * a * a * b * b * a) +
+    (17 / 184320 : 𝕂) • (a * a * b * a * b * a * a * b) +
+    (-15 / 184320 : 𝕂) • (a * a * b * a * b * a * b * a) +
+    (-2 / 184320 : 𝕂) • (a * a * b * a * b * a * b * b) +
+    (-2 / 184320 : 𝕂) • (a * a * b * a * b * b * a * a) +
+    (2 / 184320 : 𝕂) • (a * a * b * a * b * b * b * a) +
+    (3 / 184320 : 𝕂) • (a * a * b * b * a * a * a * b) +
+    (-5 / 184320 : 𝕂) • (a * a * b * b * a * a * b * a) +
+    (2 / 184320 : 𝕂) • (a * a * b * b * a * a * b * b) +
+    (2 / 184320 : 𝕂) • (a * a * b * b * a * b * a * a) +
+    (-2 / 184320 : 𝕂) • (a * a * b * b * a * b * a * b) +
+    (2 / 184320 : 𝕂) • (a * a * b * b * b * a * a * b) +
+    (-2 / 184320 : 𝕂) • (a * a * b * b * b * a * b * a) +
+    (5 / 184320 : 𝕂) • (a * b * a * a * a * b * a * b) +
+    (-5 / 184320 : 𝕂) • (a * b * a * a * a * b * b * a) +
+    (30 / 184320 : 𝕂) • (a * b * a * a * b * a * a * b) +
+    (-35 / 184320 : 𝕂) • (a * b * a * a * b * a * b * a) +
+    (10 / 184320 : 𝕂) • (a * b * a * a * b * a * b * b) +
+    (5 / 184320 : 𝕂) • (a * b * a * a * b * b * a * a) +
+    (-10 / 184320 : 𝕂) • (a * b * a * a * b * b * b * a) +
+    (-43 / 184320 : 𝕂) • (a * b * a * b * a * a * a * b) +
+    (35 / 184320 : 𝕂) • (a * b * a * b * a * a * b * a) +
+    (-22 / 184320 : 𝕂) • (a * b * a * b * a * a * b * b) +
+    (15 / 184320 : 𝕂) • (a * b * a * b * a * b * a * a) +
+    (16 / 184320 : 𝕂) • (a * b * a * b * a * b * a * b) +
+    (12 / 184320 : 𝕂) • (a * b * a * b * a * b * b * a) +
+    (-7 / 184320 : 𝕂) • (a * b * a * b * b * a * a * a) +
+    (-8 / 184320 : 𝕂) • (a * b * a * b * b * a * a * b) +
+    (2 / 184320 : 𝕂) • (a * b * a * b * b * b * a * a) +
+    (8 / 184320 : 𝕂) • (a * b * b * a * a * a * a * b) +
+    (5 / 184320 : 𝕂) • (a * b * b * a * a * a * b * a) +
+    (12 / 184320 : 𝕂) • (a * b * b * a * a * a * b * b) +
+    (-20 / 184320 : 𝕂) • (a * b * b * a * a * b * a * a) +
+    (-18 / 184320 : 𝕂) • (a * b * b * a * a * b * a * b) +
+    (7 / 184320 : 𝕂) • (a * b * b * a * b * a * a * a) +
+    (18 / 184320 : 𝕂) • (a * b * b * a * b * a * a * b) +
+    (-12 / 184320 : 𝕂) • (a * b * b * a * b * a * b * a) +
+    (-8 / 184320 : 𝕂) • (a * b * b * b * a * a * a * b) +
+    (10 / 184320 : 𝕂) • (a * b * b * b * a * a * b * a) +
+    (-2 / 184320 : 𝕂) • (a * b * b * b * a * b * a * a) +
+    (8 / 184320 : 𝕂) • (b * a * a * a * a * b * a * b) +
+    (-8 / 184320 : 𝕂) • (b * a * a * a * a * b * b * a) +
+    (-40 / 184320 : 𝕂) • (b * a * a * a * b * a * a * b) +
+    (43 / 184320 : 𝕂) • (b * a * a * a * b * a * b * a) +
+    (-8 / 184320 : 𝕂) • (b * a * a * a * b * a * b * b) +
+    (-3 / 184320 : 𝕂) • (b * a * a * a * b * b * a * a) +
+    (8 / 184320 : 𝕂) • (b * a * a * a * b * b * b * a) +
+    (40 / 184320 : 𝕂) • (b * a * a * b * a * a * a * b) +
+    (-30 / 184320 : 𝕂) • (b * a * a * b * a * a * b * a) +
+    (20 / 184320 : 𝕂) • (b * a * a * b * a * a * b * b) +
+    (-17 / 184320 : 𝕂) • (b * a * a * b * a * b * a * a) +
+    (-8 / 184320 : 𝕂) • (b * a * a * b * a * b * a * b) +
+    (-18 / 184320 : 𝕂) • (b * a * a * b * a * b * b * a) +
+    (7 / 184320 : 𝕂) • (b * a * a * b * b * a * a * a) +
+    (8 / 184320 : 𝕂) • (b * a * a * b * b * a * b * a) +
+    (-2 / 184320 : 𝕂) • (b * a * a * b * b * b * a * a) +
+    (-8 / 184320 : 𝕂) • (b * a * b * a * a * a * a * b) +
+    (-5 / 184320 : 𝕂) • (b * a * b * a * a * a * b * a) +
+    (-12 / 184320 : 𝕂) • (b * a * b * a * a * a * b * b) +
+    (20 / 184320 : 𝕂) • (b * a * b * a * a * b * a * a) +
+    (18 / 184320 : 𝕂) • (b * a * b * a * a * b * b * a) +
+    (-7 / 184320 : 𝕂) • (b * a * b * a * b * a * a * a) +
+    (8 / 184320 : 𝕂) • (b * a * b * a * b * a * a * b) +
+    (-16 / 184320 : 𝕂) • (b * a * b * a * b * a * b * a) +
+    (2 / 184320 : 𝕂) • (b * a * b * a * b * b * a * a) +
+    (12 / 184320 : 𝕂) • (b * b * a * a * a * b * a * b) +
+    (-12 / 184320 : 𝕂) • (b * b * a * a * a * b * b * a) +
+    (-20 / 184320 : 𝕂) • (b * b * a * a * b * a * a * b) +
+    (22 / 184320 : 𝕂) • (b * b * a * a * b * a * b * a) +
+    (-2 / 184320 : 𝕂) • (b * b * a * a * b * b * a * a) +
+    (8 / 184320 : 𝕂) • (b * b * a * b * a * a * a * b) +
+    (-10 / 184320 : 𝕂) • (b * b * a * b * a * a * b * a) +
+    (2 / 184320 : 𝕂) • (b * b * a * b * a * b * a * a) +
+    -- Degree 9 (48 terms):
+    (-1 / 368640 : 𝕂) • (a * a * b * a * b * a * b * a * b) +
+    (1 / 368640 : 𝕂) • (a * a * b * a * b * a * b * b * a) +
+    (1 / 368640 : 𝕂) • (a * a * b * a * b * b * a * a * b) +
+    (-1 / 368640 : 𝕂) • (a * a * b * a * b * b * a * b * a) +
+    (1 / 368640 : 𝕂) • (a * a * b * b * a * a * b * a * b) +
+    (-1 / 368640 : 𝕂) • (a * a * b * b * a * a * b * b * a) +
+    (-1 / 368640 : 𝕂) • (a * a * b * b * a * b * a * a * b) +
+    (1 / 368640 : 𝕂) • (a * a * b * b * a * b * a * b * a) +
+    (5 / 368640 : 𝕂) • (a * b * a * a * b * a * b * a * b) +
+    (-5 / 368640 : 𝕂) • (a * b * a * a * b * a * b * b * a) +
+    (-5 / 368640 : 𝕂) • (a * b * a * a * b * b * a * a * b) +
+    (5 / 368640 : 𝕂) • (a * b * a * a * b * b * a * b * a) +
+    (-11 / 368640 : 𝕂) • (a * b * a * b * a * a * b * a * b) +
+    (11 / 368640 : 𝕂) • (a * b * a * b * a * a * b * b * a) +
+    (15 / 368640 : 𝕂) • (a * b * a * b * a * b * a * a * b) +
+    (-16 / 368640 : 𝕂) • (a * b * a * b * a * b * a * b * a) +
+    (1 / 368640 : 𝕂) • (a * b * a * b * a * b * b * a * a) +
+    (-4 / 368640 : 𝕂) • (a * b * a * b * b * a * a * a * b) +
+    (5 / 368640 : 𝕂) • (a * b * a * b * b * a * a * b * a) +
+    (-1 / 368640 : 𝕂) • (a * b * a * b * b * a * b * a * a) +
+    (6 / 368640 : 𝕂) • (a * b * b * a * a * a * b * a * b) +
+    (-6 / 368640 : 𝕂) • (a * b * b * a * a * a * b * b * a) +
+    (-10 / 368640 : 𝕂) • (a * b * b * a * a * b * a * a * b) +
+    (11 / 368640 : 𝕂) • (a * b * b * a * a * b * a * b * a) +
+    (-1 / 368640 : 𝕂) • (a * b * b * a * a * b * b * a * a) +
+    (4 / 368640 : 𝕂) • (a * b * b * a * b * a * a * a * b) +
+    (-5 / 368640 : 𝕂) • (a * b * b * a * b * a * a * b * a) +
+    (1 / 368640 : 𝕂) • (a * b * b * a * b * a * b * a * a) +
+    (-4 / 368640 : 𝕂) • (b * a * a * a * b * a * b * a * b) +
+    (4 / 368640 : 𝕂) • (b * a * a * a * b * a * b * b * a) +
+    (4 / 368640 : 𝕂) • (b * a * a * a * b * b * a * a * b) +
+    (-4 / 368640 : 𝕂) • (b * a * a * a * b * b * a * b * a) +
+    (10 / 368640 : 𝕂) • (b * a * a * b * a * a * b * a * b) +
+    (-10 / 368640 : 𝕂) • (b * a * a * b * a * a * b * b * a) +
+    (-14 / 368640 : 𝕂) • (b * a * a * b * a * b * a * a * b) +
+    (15 / 368640 : 𝕂) • (b * a * a * b * a * b * a * b * a) +
+    (-1 / 368640 : 𝕂) • (b * a * a * b * a * b * b * a * a) +
+    (4 / 368640 : 𝕂) • (b * a * a * b * b * a * a * a * b) +
+    (-5 / 368640 : 𝕂) • (b * a * a * b * b * a * a * b * a) +
+    (1 / 368640 : 𝕂) • (b * a * a * b * b * a * b * a * a) +
+    (-6 / 368640 : 𝕂) • (b * a * b * a * a * a * b * a * b) +
+    (6 / 368640 : 𝕂) • (b * a * b * a * a * a * b * b * a) +
+    (10 / 368640 : 𝕂) • (b * a * b * a * a * b * a * a * b) +
+    (-11 / 368640 : 𝕂) • (b * a * b * a * a * b * a * b * a) +
+    (1 / 368640 : 𝕂) • (b * a * b * a * a * b * b * a * a) +
+    (-4 / 368640 : 𝕂) • (b * a * b * a * b * a * a * a * b) +
+    (5 / 368640 : 𝕂) • (b * a * b * a * b * a * a * b * a) +
+    (-1 / 368640 : 𝕂) • (b * a * b * a * b * a * b * a * a)
+
+-- Algebraic identity: at z₁ = (a'+b)+V₂ where V₂ = ½·[a',b], a' = a/2,
+-- the C5 Taylor difference minus the explicit linear-in-V₂ leading polynomial
+-- equals the explicit deg-7+ residual polynomial `C5_LinResidual_polynomial`.
+-- Pure polynomial identity in (a, b). Proved by `match_scalars + ring`.
+set_option maxHeartbeats 1024000000 in
+private theorem C5_LinResidual_at_V2_eq_polynomial
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    (bch_quintic_term 𝕂 ((a' + b) + V₂) a' - bch_quintic_term 𝕂 (a' + b) a') -
+     ((-14 / 46080 : 𝕂) • (a * a * a * a * b * b) +
+      (46 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+      (10 / 46080 : 𝕂) • (a * a * a * b * b * a) +
+      (28 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+      (-54 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+      (-30 / 46080 : 𝕂) • (a * a * b * a * b * a) +
+      (-52 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+      (-12 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+      (-20 / 46080 : 𝕂) • (a * a * b * b * b * a) +
+      (-8 / 46080 : 𝕂) • (a * a * b * b * b * b) +
+      (36 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+      (-32 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+      (30 / 46080 : 𝕂) • (a * b * a * b * a * a) +
+      (128 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+      (40 / 46080 : 𝕂) • (a * b * a * b * b * a) +
+      (32 / 46080 : 𝕂) • (a * b * a * b * b * b) +
+      (-10 / 46080 : 𝕂) • (a * b * b * a * a * a) +
+      (-32 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+      (-40 / 46080 : 𝕂) • (a * b * b * a * b * a) +
+      (-48 / 46080 : 𝕂) • (a * b * b * a * b * b) +
+      (20 / 46080 : 𝕂) • (a * b * b * b * a * a) +
+      (32 / 46080 : 𝕂) • (a * b * b * b * a * b) +
+      (-36 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+      (54 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+      (32 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+      (-46 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+      (-128 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+      (12 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+      (-32 / 46080 : 𝕂) • (b * a * b * b * b * a) +
+      (14 / 46080 : 𝕂) • (b * b * a * a * a * a) +
+      (32 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+      (52 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+      (48 / 46080 : 𝕂) • (b * b * a * b * b * a) +
+      (-28 / 46080 : 𝕂) • (b * b * b * a * a * a) +
+      (-32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
+      (8 / 46080 : 𝕂) • (b * b * b * b * a * a)) =
+    C5_LinResidual_polynomial 𝕂 a b := by
+  intro a' V₂
+  -- Unfold all definitions to get a polynomial identity in (a, b).
+  show _ = _
+  unfold C5_LinResidual_polynomial bch_quintic_term bch_quintic_group_1
+    bch_quintic_group_4 bch_quintic_group_6 bch_quintic_group_24
+  simp only [show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl]
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+    smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc,
+    neg_mul, mul_neg, neg_neg, sub_neg_eq_add, neg_smul, smul_neg]
+  match_scalars <;> ring
 
 private axiom symmetric_bch_quintic_C5_diff_residual_axiom
     {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
