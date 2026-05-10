@@ -2237,6 +2237,37 @@ private lemma norm_6prod_le (A B C D E F : 𝔸) :
     _ ≤ ‖A * B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ := by gcongr; exact norm_mul_le _ _
     _ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ := by gcongr; exact norm_mul_le _ _
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **7-product norm helper**: `‖A·B·C·D·E·F·G‖ ≤ ‖A‖·‖B‖·‖C‖·‖D‖·‖E‖·‖F‖·‖G‖`.
+For T2-F7e Phase E.2 step 4 (C5_diff_residual norm bound, deg-7 monomials). -/
+private lemma norm_7prod_le (A B C D E F G : 𝔸) :
+    ‖A * B * C * D * E * F * G‖ ≤
+      ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ := by
+  calc ‖A * B * C * D * E * F * G‖
+      ≤ ‖A * B * C * D * E * F‖ * ‖G‖ := norm_mul_le _ _
+    _ ≤ (‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖) * ‖G‖ :=
+        mul_le_mul_of_nonneg_right (norm_6prod_le A B C D E F) (norm_nonneg _)
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **8-product norm helper**: deg-8 generalization. -/
+private lemma norm_8prod_le (A B C D E F G H : 𝔸) :
+    ‖A * B * C * D * E * F * G * H‖ ≤
+      ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ * ‖H‖ := by
+  calc ‖A * B * C * D * E * F * G * H‖
+      ≤ ‖A * B * C * D * E * F * G‖ * ‖H‖ := norm_mul_le _ _
+    _ ≤ (‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖) * ‖H‖ :=
+        mul_le_mul_of_nonneg_right (norm_7prod_le A B C D E F G) (norm_nonneg _)
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **9-product norm helper**: deg-9 generalization. -/
+private lemma norm_9prod_le (A B C D E F G H I : 𝔸) :
+    ‖A * B * C * D * E * F * G * H * I‖ ≤
+      ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ * ‖H‖ * ‖I‖ := by
+  calc ‖A * B * C * D * E * F * G * H * I‖
+      ≤ ‖A * B * C * D * E * F * G * H‖ * ‖I‖ := norm_mul_le _ _
+    _ ≤ (‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ * ‖H‖) * ‖I‖ :=
+        mul_le_mul_of_nonneg_right (norm_8prod_le A B C D E F G H) (norm_nonneg _)
+
 set_option maxHeartbeats 800000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **Lipschitz bound for `bch_quintic_group_4` in its first argument**:
