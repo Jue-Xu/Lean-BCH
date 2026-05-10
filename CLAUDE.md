@@ -40,15 +40,68 @@ now proved as `BCH.group_CD_eq_three_residuals`.
 Group C + Group D = R_T5_sept + R_T6_sept + C5_diff_residual
 ```
 
-The proof is 1-line: `linear_combination (norm := abel) -hB + hC` where
+The proof is 1-line: `linear_combination (norm := abel) hB + hC` where
 hB = Phase B identity, hC = Phase C identity. ~120 lines (mostly the
 explicit residual statement).
 
-**Next session priority**: Phase E.2 steps 2-4 — bound each residual:
-- R_T5_sept (~6·10⁶·s⁷): cubic-template hT5_id extension to higher orders.
-- R_T6_sept (~10⁷·s⁷): similar for C₄ Taylor.
-- C5_diff_residual (~1.5·10⁶·s⁷): norm_bch_quintic_term_diff_le + Lipschitz on V₂.
-Then triangle inequality + sub-axiom discharge. Estimated ~800-1200 lines.
+**Session 22 step 3 (Phase E.1+E.2 step 1 fix-up)**: build was broken at
+HEAD due to multiple latent issues introduced by ce83486 (Phase E.1) and
+d40ce65 (Phase E.2 step 1). Fixed:
+- Made `BCH.real_exp_third_order_le_cube` public (Phase E.1 inline needed it).
+- Reordered doc-comment + `set_option ... in` for the parent theorem
+  (Lean disallows `/-- doc -/ set_option ... in theorem`).
+- Fixed `linear_combination` sign error in `group_CD_eq_three_residuals`
+  (`-hB + hC` → `hB + hC`).
+- Removed redundant `rw [hz_def]` after `convert h using 2` in Phase E.1
+  inline term setup.
+- Tightened `(45/11)^5 ≤ 184` to `(45/11)^5 ≤ 1146` (correct numerical bound).
+- Restructured `set T_CD` (which didn't fold the goal due to parenthesization
+  mismatch in the 13-piece sum) as explicit abel re-association to
+  (T₁..T₅) + CD_SUM, then triangle inequality.
+
+Net: build clean, 0 sorries, 2 scoped private axioms (parent Group C+D
+sub-axiom + Suzuki5 septic axiom). HEAD now compiles.
+
+**Session 22 step 4 (Phase E.2 step 2a, complete)**: R_T5_sept algebraic
+decomposition proved. Adds `BCH.R_T5_sept_decomp_eq`:
+
+```
+R_T5_sept = (1/12) · L_C3(a'+b, WHigh, a') + (1/12) · Q_residual
+```
+
+where `WHigh := V₅ + V₆ + R₁_sept` (deg-5+ part of W after V₂, V₃, V₄
+extracted), and `Q_residual := Q(V₂, WMid) + Q(WMid, V₂) + Q(WRestSept, WRestSept)`
+is a sum of 3 deg-7+ bilinear cross terms. Each piece is naturally O(s⁷):
+- ‖(1/12)·L_C3‖ ≤ 12·s²·‖WHigh‖/12 = s²·‖WHigh‖ ≈ 100,000·s⁷ (max(‖x‖,‖y‖)
+  bounded by max(3s/2, s/2) ≈ 3s/2; ‖WHigh‖ ≤ 100,000·s⁵ for s ≤ 1/4 since
+  ‖R₁_sept‖ ≤ 1.5·10⁶·s⁷).
+- ‖(1/12)·Q_residual‖ ≤ 6·10⁶·s⁷ (dominated by Q(WRestSept, WRestSept)
+  with ‖WRestSept‖ ≤ 6000·s³).
+
+Total estimate: ‖R_T5_sept‖ ≤ ~6·10⁶·s⁷ (matching CLAUDE.md plan).
+
+Foundation lemma added to `Basic.lean`:
+- `BCH.bch_cubic_term_LQ_decomp`: standalone L+Q decomposition of
+  `bch_cubic_term(x+W, y) - bch_cubic_term(x, y)`. Used by R_T5_sept
+  decomposition to expose the linear-in-W and quadratic-in-W structure of
+  T₅ explicitly (matches cubic template's L_W and Q_W shapes).
+
+Proof structure: substitute z = (a'+b) + (V₂+V₃+V₄+V₅+V₆+R₁_sept) (true
+by R₁_sept's definition), apply LQ decomp, then `match_scalars <;> ring`
+closes the polynomial identity (with V₃, V₄, V₅, V₆, R₁_sept kept as
+atoms; V₂ unfolded for the cubic-identity cancellation with
+(96)⁻¹·(b·DC_a - DC_a·b)). 64M heartbeats, ~140 lines.
+
+**Next session priority**: Phase E.2 steps 2b, 3, 4 — norm bound the 3
+residuals:
+- 2b. `norm_R_T5_sept_le` (~150 lines): use `R_T5_sept_decomp_eq` +
+  triangle inequality + per-piece norm bounds.
+- 3. R_T6_sept analog (~300 lines): need `bch_quartic_term_LQ_decomp` (new),
+  then similar decomposition + bound.
+- 4. C5_diff_residual (~200 lines): norm_bch_quintic_term_diff_le +
+  Lipschitz on V₂.
+
+Then Phase E.2 step 5: assemble triangle + replace sub-axiom (~50 lines).
 
 **Phase E.2 plan** (algebraic decomposition + per-residual bounds):
 
