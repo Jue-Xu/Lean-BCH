@@ -168,6 +168,45 @@ cubic/quartic LQ_decomp foundations, but with 76+ linear-in-V₂ and
 quadratic-in-V₂ subterms — ~500 lines of polynomial identity work) OR
 an alternative Lipschitz-of-V₂ structural argument. Future work.
 
+**Session 22 step 12 (Phase E.2 stage 3b: parent axiom replaced; polynomial
+axiom remaining, complete)**: the BCH-theory axiom
+`symmetric_bch_quintic_C5_diff_residual_axiom` is REPLACED with a proved
+theorem `BCH.symmetric_bch_quintic_C5_diff_residual_le`, derived from:
+- `C5_LinResidual_at_V2_eq_polynomial` (algebraic identity, Stage 3a).
+- `norm_bch_quintic_term_diff_le` (Lipschitz on z vs (a'+b)+V₂).
+- `norm_bch_inner_septic_remainder_le` (Phase A WRest6 bound).
+- `BCH.norm_C5_LinResidual_polynomial_le` (NEW focused axiom).
+
+The new axiom `norm_C5_LinResidual_polynomial_le` is much more focused
+than the original: it asserts only that
+`‖C5_LinResidual_polynomial 𝕂 a b‖ ≤ 1·s⁷` where `C5_LinResidual_polynomial`
+is the specific 205-term polynomial in (a, b) (CAS-verified Σ|coef|·s^d ≤
+0.022·s⁷ for s ≤ 1/4). This bound is "trivially" true by triangle
+inequality, but requires ~3000-4400 lines of mechanical Lean code due to
+per-term enumeration.
+
+Made `norm_5prod_le`, `norm_6prod_le`, `norm_7prod_le`, `norm_8prod_le`,
+`norm_9prod_le` non-private in `Basic.lean` for cross-file use.
+
+Net axiom count: still 2 scoped private. Structural shift:
+- BEFORE: BCH-theory axiom asserting a complex LHS bound (10⁵·s⁷
+  originally, then 5·10⁶·s⁷ post-Stage 1).
+- AFTER: focused polynomial-norm-only axiom asserting a triangle-trivial
+  bound on a fully-explicit polynomial in (a, b).
+
+The remaining work for full T2-F7e closure (1 axiom remaining → 0):
+1. Discharge `norm_C5_LinResidual_polynomial_le` via either:
+   - Refactor `C5_LinResidual_polynomial` as `Finset.sum` over a list of
+     `(coef, word)` pairs; apply `Finset.norm_sum_le` directly (~300-500
+     lines, cleanest).
+   - Split per-degree (79+78+48 sub-lemmas to limit context growth).
+   - Patient compilation of the brute-force ~3000-line proof
+     (`scripts/gen_lean_norm_bound_final.py` generates this).
+
+After this discharge, T2-F7e is fully proved; only
+`suzuki5_log_product_septic_at_suzukiP_axiom` remains as the Lean-Trotter
+axiom 3 for the overall Suzuki-5 BCH framework.
+
 **Session 22 step 11 (Phase E.2 stage 3a: C5 LinResidual algebraic
 identity, complete)**: the core algebraic foundation for discharging the
 C5_diff_residual axiom is now proved. Key lemmas in `SymmetricQuintic.lean`:
@@ -645,17 +684,14 @@ I1 RHS ≤ 21·s⁷.
 **Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (unchanged in
 total count from session 19 final, but the parent axioms have been
 progressively narrowed).
-- `BCH.symmetric_bch_quintic_C5_diff_residual_axiom` — Phase E.2 step 4
-  stepping-stone (1 piece, 5·10⁶·s⁷), in `SymmetricQuintic.lean`. Replaces
-  the previous Group C+D sub-axiom (8 pieces, 10⁸·s⁷). Bounds the
-  linearization residual of C₅(z, a') - C₅(a'+b, a') after subtracting
-  the explicit deg-6 polynomial. The 5·10⁶·s⁷ constant tightly tracks the
-  realistic upper bound: M⁴·‖WRest6‖ ≈ 1.9·10⁶·s⁷ where M ≤ 4.22·s,
-  ‖WRest6‖ ≤ 6000·s³ (the latter dominated by Phase A's 1.5·10⁶·s⁷ inner
-  septic remainder bound). Discharge requires either an L+Q+higher
-  decomposition of `bch_quintic_term` (analog of cubic/quartic LQ_decomp,
-  ~600-1000 lines for 180 explicit monomials across 4 per-group decomps)
-  or an alternative Lipschitz-of-V₂ structural argument.
+- `BCH.norm_C5_LinResidual_polynomial_le` — Phase E.2 step 4 polynomial
+  bound axiom (1 piece, 1·s⁷ on a 205-term explicit polynomial in (a, b)),
+  in `SymmetricQuintic.lean`. Asserts a triangle-trivial bound: the polynomial
+  has Σ|coef|·s^d ≤ 0.022·s⁷ for s ≤ 1/4 (CAS-verified). The discharge
+  requires ~3000-4400 lines of mechanical per-term Lean code, deferred for
+  efficiency. The full algebraic foundation
+  (`C5_LinResidual_at_V2_eq_polynomial` + `symmetric_bch_quintic_C5_diff_residual_le`)
+  is PROVED, using this axiom as the only remaining gap.
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
 
