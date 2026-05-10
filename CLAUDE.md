@@ -115,11 +115,21 @@ closes the polynomial identity (with V₃, V₄, V₅, V₆, R₁_sept kept as
 atoms; V₂ unfolded for the cubic-identity cancellation with
 (96)⁻¹·(b·DC_a - DC_a·b)). 64M heartbeats, ~140 lines.
 
-**Next session priority**: Phase E.2 steps 3, 4, 5:
-- 3. R_T6_sept analog (~600 lines: algebraic identity + norm bound):
-  needs `bch_quartic_term_LQ_decomp` (new foundation lemma analogous to
-  `bch_cubic_term_LQ_decomp`), then similar decomposition + bound.
-  Estimated bound: ‖R_T6_sept‖ ≤ ~10⁷·s⁷.
+**Session 22 step 6 (Phase E.2 step 3 foundation, complete)**: added
+`BCH.bch_quartic_term_LQ_decomp` foundation lemma in `Basic.lean`
+(analogous to `bch_cubic_term_LQ_decomp`):
+
+```
+C₄(x+W, y) - C₄(x, y) = (1/24) · L_C4(x, W, y) + (1/24) · Q_C4(W, y)
+```
+
+L_C4 is linear-in-W (8 sub-terms), Q_C4 is quadratic-in-W (4 sub-terms).
+12+6 = 18 multiplicities total. Proof: 1-line `unfold + simp + match_scalars`.
+
+**Next session priority**: Phase E.2 steps 3 (rest), 4, 5:
+- 3. R_T6_sept algebraic identity + norm bound (~600 lines): structurally
+  analogous to R_T5_sept_decomp_eq + norm_R_T5_sept_le. Use the new
+  `bch_quartic_term_LQ_decomp`. Estimated bound: ‖R_T6_sept‖ ≤ ~10⁷·s⁷.
 - 4. C5_diff_residual (~200 lines): use existing `norm_bch_quintic_term_diff_le`
   + Lipschitz on V₂. Estimated bound: ‖C5_diff_residual‖ ≤ ~10⁴·s⁷.
 - 5. Triangle inequality + replace `symmetric_bch_quintic_group_CD_axiom`
