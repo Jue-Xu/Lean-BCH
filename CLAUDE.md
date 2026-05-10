@@ -168,6 +168,30 @@ cubic/quartic LQ_decomp foundations, but with 76+ linear-in-V₂ and
 quadratic-in-V₂ subterms — ~500 lines of polynomial identity work) OR
 an alternative Lipschitz-of-V₂ structural argument. Future work.
 
+**Session 22 step 10 (Phase E.2 stage 2: per-group LQ_decomps, complete)**:
+implemented foundation lemmas in `Basic.lean` for the C5_diff_residual
+axiom discharge. Each `BCH.bch_quintic_group_k_LQ_decomp` (k=1, 4, 6, 24)
+expresses `group_k(x+W, y) - group_k(x, y)` as a sum of explicit sub-terms
+by W-count (linear, quadratic, cubic, quartic in W).
+
+Total: 180 sub-terms across 4 lemmas:
+- group_1 (4 monomials): 32 sub-terms (10+12+8+2).
+- group_4 (10 monomials): 62 sub-terms (25+24+11+2). Heartbeats 1.6M.
+- group_6 (14 monomials): 76 sub-terms (35+30+10+1). Heartbeats 3.2M.
+- group_24 (2 monomials): 10 sub-terms (5+4+1).
+
+Sum matches Σ(2^k - 1) over all 30 monomials of `bch_quintic_term`
+(k = #a's per monomial). Each proof: 1-line `unfold + noncomm_ring`.
+Algebraic verification: expanding (x+W)^k for k a-positions gives 2^k
+sub-terms; subtracting all-x leaves 2^k - 1.
+
+Stage 3 (next session, ~200-400 lines): use these to discharge the
+C5_diff_residual axiom. Apply at x = a'+b, W = V₂, y = a'. Identify
+linear-in-V₂ form with ΔC₅_lin_explicit (match_scalars + ring identity),
+bound quadratic+cubic+quartic-in-V₂ via per-monomial triangle inequality
+(each is naturally O(s⁷+) since ‖V₂‖ ≤ s²/2). Combine with Lipschitz
+piece (z vs (a'+b)+V₂) via triangle. Total bound ≈ 2·10⁶·s⁷ ≤ 5·10⁶·s⁷.
+
 **Session 22 step 9 (axiom constant correction, complete)**: bumped
 `symmetric_bch_quintic_C5_diff_residual_axiom` constant from 10⁵·s⁷ to
 5·10⁶·s⁷ for satisfiability. The original 10⁵·s⁷ was unsatisfiable
