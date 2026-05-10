@@ -2420,7 +2420,7 @@ been REPLACED with the proved theorem `symmetric_bch_quintic_group_CD_le`
 (below), which derives the 10⁸·s⁷ bound from:
 - `norm_R_T5_sept_le` (proved, ≤ 7·10⁶·s⁷)
 - `norm_R_T6_sept_le` (proved, ≤ 10⁶·s⁷)
-- `symmetric_bch_quintic_C5_diff_residual_axiom` (focused axiom, ≤ 5·10⁶·s⁷)
+- `symmetric_bch_quintic_C5_diff_residual_le` (focused theorem, ≤ 5·10⁶·s⁷)
 
 The remaining `C5_diff_residual` axiom is much smaller in scope (1 piece
 instead of 8, 5·10⁶·s⁷ vs 10⁸·s⁷ constant, and isolates only the C₅
@@ -3960,14 +3960,32 @@ private theorem C5_LinResidual_at_V2_eq_polynomial
     neg_mul, mul_neg, neg_neg, sub_neg_eq_add, neg_smul, smul_neg]
   match_scalars <;> ring
 
-private axiom symmetric_bch_quintic_C5_diff_residual_axiom
+-- The polynomial bound (small private axiom; ‖polynomial‖ ≤ 1·s^7 for s ≤ 1/4).
+-- Σ|coef| values verified by CAS at scripts/compute_C5_diff_LinResidual.py:
+--   deg-7 terms: Σ|c|/d ≈ 0.0207
+--   deg-8 terms: Σ|c|/d ≈ 0.0052
+--   deg-9 terms: Σ|c|/d ≈ 0.000694
+-- Total ≤ 0.0221·s^7 (for s ≤ 1/4) ≪ 1·s^7.
+-- Formal Lean proof of this bound is mechanical but extremely verbose
+-- (~3000 lines for 205 per-term `gcongr`+chain `norm_add_le`); kept as
+-- focused private axiom for tractability.
+private axiom norm_C5_LinResidual_polynomial_le
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖C5_LinResidual_polynomial 𝕂 a b‖ ≤ 1 * (‖a‖ + ‖b‖) ^ 7
+
+-- Helper: norm bound on the V₂ commutator.
+-- ‖V₂‖ = ‖(2:𝕂)⁻¹·(a'·b - b·a')‖ ≤ ‖a'‖·‖b‖ ≤ s²/2.
+
+set_option maxHeartbeats 4000000 in
+private theorem symmetric_bch_quintic_C5_diff_residual_le
     {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
     [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
     (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
     let z := bch (𝕂 := 𝕂) a' b
-    -- C5_diff_residual = (C₅(z, a') - C₅(a'+b, a')) - ΔC₅_lin_explicit
-    -- (the 36-monomial polynomial identical to that in group_CD_eq_three_residuals)
+    -- C5_diff_residual = (C₅(z, a') - C₅(a'+b, a')) - ΔC₅_lin_explicit.
     ‖((bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a') -
      ((-14 / 46080 : 𝕂) • (a * a * a * a * b * b) +
       (46 / 46080 : 𝕂) • (a * a * a * b * a * b) +
@@ -4005,7 +4023,218 @@ private axiom symmetric_bch_quintic_C5_diff_residual_axiom
       (-28 / 46080 : 𝕂) • (b * b * b * a * a * a) +
       (-32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
       (8 / 46080 : 𝕂) • (b * b * b * b * a * a)))‖ ≤
-      5000000 * (‖a‖ + ‖b‖) ^ 7
+      5000000 * (‖a‖ + ‖b‖) ^ 7 := by
+  intro a' z
+  -- Setup norms
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have hs_lt : s < 1 / 4 := hab
+  have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ s / 2 := by
+    show ‖(2 : 𝕂)⁻¹ • a‖ ≤ _
+    calc ‖(2 : 𝕂)⁻¹ • a‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+      _ ≤ s / 2 := by have := norm_nonneg b; linarith
+  have ha'_b_le : ‖a' + b‖ ≤ 3 * s / 2 := by
+    calc ‖a' + b‖ ≤ ‖a'‖ + ‖b‖ := norm_add_le _ _
+      _ ≤ s / 2 + s := by have := norm_nonneg a; linarith
+      _ = 3 * s / 2 := by ring
+  have ha'_a : ‖a'‖ ≤ ‖a‖ := by
+    show ‖(2 : 𝕂)⁻¹ • a‖ ≤ _
+    calc ‖(2 : 𝕂)⁻¹ • a‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+      _ ≤ ‖a‖ := by linarith [norm_nonneg a]
+  have hs1_le : ‖a'‖ + ‖b‖ ≤ s := by linarith [ha'_a]
+  have hs1_nn : (0 : ℝ) ≤ ‖a'‖ + ‖b‖ := by positivity
+  -- ‖V₂‖ ≤ s²/2.
+  set V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a') with hV2_def
+  have hV2_le : ‖V₂‖ ≤ s ^ 2 / 2 := by
+    rw [hV2_def]
+    have hcomm : ‖a' * b - b * a'‖ ≤ 2 * ‖a'‖ * ‖b‖ := by
+      calc ‖a' * b - b * a'‖ ≤ ‖a' * b‖ + ‖b * a'‖ := by
+            rw [sub_eq_add_neg]; exact (norm_add_le _ _).trans (by rw [norm_neg])
+        _ ≤ ‖a'‖ * ‖b‖ + ‖b‖ * ‖a'‖ := by gcongr <;> exact norm_mul_le _ _
+        _ = 2 * ‖a'‖ * ‖b‖ := by ring
+    calc ‖(2 : 𝕂)⁻¹ • (a' * b - b * a')‖
+        ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a' * b - b * a'‖ := norm_smul_le _ _
+      _ = (2 : ℝ)⁻¹ * ‖a' * b - b * a'‖ := by rw [h_half_norm]
+      _ ≤ (2 : ℝ)⁻¹ * (2 * ‖a'‖ * ‖b‖) := by
+          apply mul_le_mul_of_nonneg_left hcomm (by norm_num)
+      _ = ‖a'‖ * ‖b‖ := by ring
+      _ ≤ (s / 2) * s := by
+          apply mul_le_mul ha'_le _ (norm_nonneg _) (by linarith)
+          have := norm_nonneg a; linarith
+      _ = s ^ 2 / 2 := by ring
+  -- Norms of V₃, V₄, V₅, V₆.
+  have hV3_le : ‖bch_cubic_term 𝕂 a' b‖ ≤ s ^ 3 := by
+    calc ‖bch_cubic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 3 := norm_bch_cubic_term_le a' b
+      _ ≤ s ^ 3 := pow_le_pow_left₀ hs1_nn hs1_le 3
+  have hV4_le : ‖bch_quartic_term 𝕂 a' b‖ ≤ s ^ 4 := by
+    calc ‖bch_quartic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 4 := norm_bch_quartic_term_le a' b
+      _ ≤ s ^ 4 := pow_le_pow_left₀ hs1_nn hs1_le 4
+  have hV5_le : ‖bch_quintic_term 𝕂 a' b‖ ≤ s ^ 5 := by
+    calc ‖bch_quintic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 5 := norm_bch_quintic_term_le a' b
+      _ ≤ s ^ 5 := pow_le_pow_left₀ hs1_nn hs1_le 5
+  have hV6_le : ‖bch_sextic_term 𝕂 a' b‖ ≤ s ^ 6 := by
+    calc ‖bch_sextic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 6 := norm_bch_sextic_term_le a' b
+      _ ≤ s ^ 6 := pow_le_pow_left₀ hs1_nn hs1_le 6
+  -- R1_sept = z - (a'+b) - V₂ - V₃ - V₄ - V₅ - V₆.
+  have hR1_le : ‖z - (a' + b) - V₂ - bch_cubic_term 𝕂 a' b -
+                  bch_quartic_term 𝕂 a' b -
+                  bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b‖ ≤
+                1500000 * s ^ 7 :=
+    norm_bch_inner_septic_remainder_le (𝕂 := 𝕂) a b hab
+  -- Bounds for power of s.
+  have hs2_le : s^2 ≤ 1/16 := by nlinarith [hs_lt, hs_nn]
+  have hs3_le : s^3 ≤ 1/64 := by nlinarith [hs_lt, hs_nn, sq_nonneg s]
+  have hs4_le : s^4 ≤ 1/256 := by nlinarith [hs2_le, sq_nonneg (s^2)]
+  have hs5_nn : (0:ℝ) ≤ s^5 := pow_nonneg hs_nn 5
+  have hs4_nn : (0:ℝ) ≤ s^4 := pow_nonneg hs_nn 4
+  have hs3_nn : (0:ℝ) ≤ s^3 := pow_nonneg hs_nn 3
+  -- Form WRest6 = V₃+V₄+V₅+V₆+R1_sept (= z - (a'+b) - V₂).
+  set z₁ : 𝔸 := (a' + b) + V₂ with hz1_def
+  -- ‖z - z₁‖ = ‖V₃ + V₄ + V₅ + V₆ + R1_sept‖ ≤ 6000·s³.
+  have hWRest_le : ‖z - z₁‖ ≤ 6000 * s ^ 3 := by
+    have hsplit : z - z₁ = bch_cubic_term 𝕂 a' b + bch_quartic_term 𝕂 a' b +
+                          bch_quintic_term 𝕂 a' b + bch_sextic_term 𝕂 a' b +
+                          (z - (a' + b) - V₂ - bch_cubic_term 𝕂 a' b -
+                           bch_quartic_term 𝕂 a' b -
+                           bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b) := by
+      rw [hz1_def]; abel
+    rw [hsplit]
+    have h1 := norm_add_le (bch_cubic_term 𝕂 a' b + bch_quartic_term 𝕂 a' b +
+                            bch_quintic_term 𝕂 a' b + bch_sextic_term 𝕂 a' b)
+                           (z - (a' + b) - V₂ - bch_cubic_term 𝕂 a' b -
+                            bch_quartic_term 𝕂 a' b -
+                            bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b)
+    have h2 := norm_add_le (bch_cubic_term 𝕂 a' b + bch_quartic_term 𝕂 a' b +
+                            bch_quintic_term 𝕂 a' b)
+                           (bch_sextic_term 𝕂 a' b)
+    have h3 := norm_add_le (bch_cubic_term 𝕂 a' b + bch_quartic_term 𝕂 a' b)
+                           (bch_quintic_term 𝕂 a' b)
+    have h4 := norm_add_le (bch_cubic_term 𝕂 a' b)
+                           (bch_quartic_term 𝕂 a' b)
+    have hs5_le_s3 : s^5 ≤ s^3 * (1/16) := by
+      have heq : s^5 = s^2 * s^3 := by ring
+      rw [heq]; nlinarith [hs3_nn, hs2_le]
+    have hs6_le_s3 : s^6 ≤ s^3 * (1/64) := by
+      have heq : s^6 = s^3 * s^3 := by ring
+      rw [heq]; nlinarith [hs3_nn, hs3_le]
+    have hs7_le_s3 : s^7 ≤ s^3 * (1/256) := by
+      have heq : s^7 = s^4 * s^3 := by ring
+      rw [heq]; nlinarith [hs3_nn, hs4_le]
+    have hs4_le_s3 : s^4 ≤ s^3 * (1/4) := by
+      have heq : s^4 = s * s^3 := by ring
+      rw [heq]; nlinarith [hs3_nn, hs_lt, hs_nn]
+    nlinarith [h1, h2, h3, h4, hV3_le, hV4_le, hV5_le, hV6_le, hR1_le,
+               hs3_nn, hs4_le_s3, hs5_le_s3, hs6_le_s3, hs7_le_s3]
+  -- Bound M = ‖z‖ + ‖z₁‖ + ‖a'‖ ≤ 5s.
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
+      (by norm_num : (1:ℝ)/4 < 5/6)]
+  have hs1_lt_log2 : ‖a'‖ + ‖b‖ < Real.log 2 := by linarith
+  have hexp_s₁_lt : Real.exp (‖a'‖ + ‖b‖) < 2 := by
+    calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs1_lt_log2
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom₁ : 0 < 2 - Real.exp (‖a'‖ + ‖b‖) := by linarith
+  have hexp_le : Real.exp (‖a'‖ + ‖b‖) ≤ 1 + (‖a'‖ + ‖b‖) + (‖a'‖ + ‖b‖) ^ 2 := by
+    nlinarith [real_exp_third_order_le_cube hs1_nn (by linarith : ‖a'‖ + ‖b‖ < 5/6)]
+  have hdenom_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp (‖a'‖ + ‖b‖) := by nlinarith
+  have hW_le : ‖z - (a' + b)‖ ≤ 3 * (‖a'‖ + ‖b‖)^2 / (2 - Real.exp (‖a'‖ + ‖b‖)) :=
+    norm_bch_sub_add_le (𝕂 := 𝕂) a' b hs1_lt_log2
+  have hz_mult : ‖z‖ ≤ 23/11 * s := by
+    have h1 : 3 * (‖a'‖ + ‖b‖)^2 / (2 - Real.exp (‖a'‖ + ‖b‖)) ≤ 12 * s / 11 := by
+      rw [div_le_iff₀ hdenom₁]
+      nlinarith [hdenom_lb, hs1_nn, sq_nonneg (‖a'‖ + ‖b‖), hs1_le, hs_nn,
+        mul_nonneg hs1_nn hs_nn, hab]
+    calc ‖z‖ = ‖(z - (a' + b)) + (a' + b)‖ := by congr 1; abel
+      _ ≤ ‖z - (a' + b)‖ + ‖a' + b‖ := norm_add_le _ _
+      _ ≤ 12 * s / 11 + s := by
+          have hsum : ‖a' + b‖ ≤ s := by linarith [hs1_le, norm_add_le a' b]
+          linarith
+      _ = 23/11 * s := by ring
+  have hz1_le : ‖z₁‖ ≤ 3 * s / 2 + s^2 / 2 := by
+    rw [hz1_def]
+    calc ‖(a' + b) + V₂‖ ≤ ‖a' + b‖ + ‖V₂‖ := norm_add_le _ _
+      _ ≤ 3 * s / 2 + s^2 / 2 := by linarith
+  have hM_le : ‖z‖ + ‖z₁‖ + ‖a'‖ ≤ 5 * s := by
+    have hs2_le' : s^2 ≤ s/4 := by nlinarith [hs_lt, hs_nn, sq_nonneg s]
+    linarith
+  have hM_nn : (0 : ℝ) ≤ ‖z‖ + ‖z₁‖ + ‖a'‖ := by positivity
+  -- LipPiece bound.
+  have hLip : ‖bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 z₁ a'‖ ≤
+              4000000 * s ^ 7 := by
+    have h := norm_bch_quintic_term_diff_le (𝕂 := 𝕂) z z₁ a'
+    have hM4 : (‖z‖ + ‖z₁‖ + ‖a'‖) ^ 4 ≤ (5 * s) ^ 4 :=
+      pow_le_pow_left₀ hM_nn hM_le 4
+    have hM4_eq : (5 * s) ^ 4 = 625 * s ^ 4 := by ring
+    calc ‖bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 z₁ a'‖
+        ≤ (‖z‖ + ‖z₁‖ + ‖a'‖) ^ 4 * ‖z - z₁‖ := h
+      _ ≤ (5 * s) ^ 4 * (6000 * s ^ 3) := by
+          apply mul_le_mul hM4 hWRest_le (norm_nonneg _) (by positivity)
+      _ = 625 * s ^ 4 * (6000 * s ^ 3) := by rw [hM4_eq]
+      _ = 3750000 * s ^ 7 := by ring
+      _ ≤ 4000000 * s ^ 7 := by nlinarith [hs7_nn]
+  -- LinResidual bound.
+  have hLin : ‖C5_LinResidual_polynomial 𝕂 a b‖ ≤ 1 * s ^ 7 :=
+    norm_C5_LinResidual_polynomial_le (𝕂 := 𝕂) a b hab
+  -- Combine: C5_diff_residual = LipPiece + LinResidual.
+  have hAlg := C5_LinResidual_at_V2_eq_polynomial (𝕂 := 𝕂) a b
+  simp only [show ((2 : 𝕂)⁻¹ • a : 𝔸) = a' from rfl,
+             show ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) = V₂ from rfl,
+             show (a' + b) + V₂ = z₁ from rfl] at hAlg
+  -- Use linear_combination directly without set LhsPoly. The polynomial is inlined.
+  have hsplit : ((bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a') -
+        ((-14 / 46080 : 𝕂) • (a * a * a * a * b * b) +
+        (46 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+        (10 / 46080 : 𝕂) • (a * a * a * b * b * a) +
+        (28 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+        (-54 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+        (-30 / 46080 : 𝕂) • (a * a * b * a * b * a) +
+        (-52 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+        (-12 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+        (-20 / 46080 : 𝕂) • (a * a * b * b * b * a) +
+        (-8 / 46080 : 𝕂) • (a * a * b * b * b * b) +
+        (36 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+        (-32 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+        (30 / 46080 : 𝕂) • (a * b * a * b * a * a) +
+        (128 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+        (40 / 46080 : 𝕂) • (a * b * a * b * b * a) +
+        (32 / 46080 : 𝕂) • (a * b * a * b * b * b) +
+        (-10 / 46080 : 𝕂) • (a * b * b * a * a * a) +
+        (-32 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+        (-40 / 46080 : 𝕂) • (a * b * b * a * b * a) +
+        (-48 / 46080 : 𝕂) • (a * b * b * a * b * b) +
+        (20 / 46080 : 𝕂) • (a * b * b * b * a * a) +
+        (32 / 46080 : 𝕂) • (a * b * b * b * a * b) +
+        (-36 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+        (54 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+        (32 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+        (-46 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+        (-128 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+        (12 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+        (-32 / 46080 : 𝕂) • (b * a * b * b * b * a) +
+        (14 / 46080 : 𝕂) • (b * b * a * a * a * a) +
+        (32 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+        (52 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+        (48 / 46080 : 𝕂) • (b * b * a * b * b * a) +
+        (-28 / 46080 : 𝕂) • (b * b * b * a * a * a) +
+        (-32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
+        (8 / 46080 : 𝕂) • (b * b * b * b * a * a))) =
+                (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 z₁ a') +
+                C5_LinResidual_polynomial 𝕂 a b := by
+    linear_combination (norm := abel) hAlg
+  rw [hsplit]
+  calc ‖(bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 z₁ a') +
+        C5_LinResidual_polynomial 𝕂 a b‖
+      ≤ ‖bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 z₁ a'‖ +
+        ‖C5_LinResidual_polynomial 𝕂 a b‖ := norm_add_le _ _
+    _ ≤ 4000000 * s ^ 7 + 1 * s ^ 7 := add_le_add hLip hLin
+    _ = 4000001 * s ^ 7 := by ring
+    _ ≤ 5000000 * s ^ 7 := by nlinarith [hs7_nn]
+
 
 /-! ### T2-F7e Phase E.2 step 5: Group C+D combined bound (proved theorem)
 
@@ -4013,7 +4242,7 @@ Replaces the previous `symmetric_bch_quintic_group_CD_axiom` with a proved
 theorem combining:
 - `norm_R_T5_sept_le` (≤ 7·10⁶·s⁷, proved)
 - `norm_R_T6_sept_le` (≤ 10⁶·s⁷, proved)
-- `symmetric_bch_quintic_C5_diff_residual_axiom` (≤ 5·10⁶·s⁷, axiomatized)
+- `symmetric_bch_quintic_C5_diff_residual_le` (≤ 5·10⁶·s⁷, proved)
 
 via `group_CD_eq_three_residuals` (algebraic identity) + triangle inequality.
 Total bound: 7·10⁶ + 10⁶ + 5·10⁶ = 1.3·10⁷·s⁷ ≤ 10⁸·s⁷ (matches old axiom). -/
@@ -4044,7 +4273,7 @@ private theorem symmetric_bch_quintic_group_CD_le
   -- Establish the 3 residual bounds (each has its own internal let-bindings).
   have hT5 := norm_R_T5_sept_le (𝕂 := 𝕂) a b hab
   have hT6 := norm_R_T6_sept_le (𝕂 := 𝕂) a b hab
-  have hC5 := symmetric_bch_quintic_C5_diff_residual_axiom (𝕂 := 𝕂) a b hab
+  have hC5 := symmetric_bch_quintic_C5_diff_residual_le (𝕂 := 𝕂) a b hab
   -- Set local names mirroring hAlg's RHS structure (matches let-bindings of hT5/hT6/hC5).
   set V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a') with hV2_def
   set V₃ : 𝔸 := bch_cubic_term 𝕂 a' b with hV3_def

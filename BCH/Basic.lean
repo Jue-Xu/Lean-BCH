@@ -2216,7 +2216,7 @@ theorem norm_bch_quintic_group_1_diff_le (z x y : 𝔸) :
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **5-product norm helper**: `‖A·B·C·D·E‖ ≤ ‖A‖·‖B‖·‖C‖·‖D‖·‖E‖`.
 Factored out for use in the `bch_quintic_group_*_diff_le` lemmas. -/
-private lemma norm_5prod_le (A B C D E : 𝔸) :
+lemma norm_5prod_le (A B C D E : 𝔸) :
     ‖A * B * C * D * E‖ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ := by
   calc ‖A * B * C * D * E‖
       ≤ ‖A * B * C * D‖ * ‖E‖ := norm_mul_le _ _
@@ -2228,7 +2228,7 @@ omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **6-product norm helper**: `‖A·B·C·D·E·F‖ ≤ ‖A‖·‖B‖·‖C‖·‖D‖·‖E‖·‖F‖`.
 Factored out for use in the future `bch_sextic_term`-related diff bounds
 (per-word Lipschitz lemmas needed for the parent T2-F7e discharge). -/
-private lemma norm_6prod_le (A B C D E F : 𝔸) :
+lemma norm_6prod_le (A B C D E F : 𝔸) :
     ‖A * B * C * D * E * F‖ ≤ ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ := by
   calc ‖A * B * C * D * E * F‖
       ≤ ‖A * B * C * D * E‖ * ‖F‖ := norm_mul_le _ _
@@ -2240,7 +2240,7 @@ private lemma norm_6prod_le (A B C D E F : 𝔸) :
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **7-product norm helper**: `‖A·B·C·D·E·F·G‖ ≤ ‖A‖·‖B‖·‖C‖·‖D‖·‖E‖·‖F‖·‖G‖`.
 For T2-F7e Phase E.2 step 4 (C5_diff_residual norm bound, deg-7 monomials). -/
-private lemma norm_7prod_le (A B C D E F G : 𝔸) :
+lemma norm_7prod_le (A B C D E F G : 𝔸) :
     ‖A * B * C * D * E * F * G‖ ≤
       ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ := by
   calc ‖A * B * C * D * E * F * G‖
@@ -2250,7 +2250,7 @@ private lemma norm_7prod_le (A B C D E F G : 𝔸) :
 
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **8-product norm helper**: deg-8 generalization. -/
-private lemma norm_8prod_le (A B C D E F G H : 𝔸) :
+lemma norm_8prod_le (A B C D E F G H : 𝔸) :
     ‖A * B * C * D * E * F * G * H‖ ≤
       ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ * ‖H‖ := by
   calc ‖A * B * C * D * E * F * G * H‖
@@ -2260,7 +2260,7 @@ private lemma norm_8prod_le (A B C D E F G H : 𝔸) :
 
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **9-product norm helper**: deg-9 generalization. -/
-private lemma norm_9prod_le (A B C D E F G H I : 𝔸) :
+lemma norm_9prod_le (A B C D E F G H I : 𝔸) :
     ‖A * B * C * D * E * F * G * H * I‖ ≤
       ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ * ‖H‖ * ‖I‖ := by
   calc ‖A * B * C * D * E * F * G * H * I‖
