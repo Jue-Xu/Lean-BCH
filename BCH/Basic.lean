@@ -1730,6 +1730,37 @@ theorem norm_bch_quartic_term_le (a b : 𝔸) :
           nlinarith [h1]
         nlinarith
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **C₄ LQ decomposition** (T2-F7e Phase E.2 step 3 helper):
+    `C₄(x+W, y) − C₄(x, y) = (1/24) · L_C4(x, W, y) + (1/24) · Q_C4(W, y)`
+where L_C4 is linear in W and Q_C4 is quadratic in W.
+
+Analog of `bch_cubic_term_LQ_decomp` for the deg-4 BCH term. Used to
+extract the deg-4 (linear-in-W with W=V₂) and deg-6 (linear-in-W with
+W=V₃ + quadratic-in-W with W=V₂) leading parts of T₆ for the Phase E.2
+discharge of R_T6_sept.
+
+Recall `C₄(z, y) = (1/24)·(zzyy - 2·zyzy + 2·yzyz - yyzz)`. After the
+substitution `z := x + W` and subtracting `C₄(x, y)`, the result has
+linear-in-W (8 sub-terms) and quadratic-in-W (4 sub-terms) pieces. -/
+theorem bch_quartic_term_LQ_decomp (x W y : 𝔸) :
+    bch_quartic_term 𝕂 (x + W) y - bch_quartic_term 𝕂 x y =
+      (24 : 𝕂)⁻¹ • (
+        -- Linear in W (12 sub-terms with multiplicities; coefficients ±1, ±2).
+        x * W * y * y + W * x * y * y - x * y * W * y - x * y * W * y -
+        W * y * x * y - W * y * x * y +
+        y * W * y * x + y * W * y * x + y * x * y * W + y * x * y * W -
+        y * y * x * W - y * y * W * x) +
+      (24 : 𝕂)⁻¹ • (
+        -- Quadratic in W (6 sub-terms with multiplicities).
+        W * W * y * y - W * y * W * y - W * y * W * y +
+        y * W * y * W + y * W * y * W - y * y * W * W) := by
+  unfold bch_quartic_term
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+    smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, neg_neg, neg_mul, mul_neg,
+    sub_neg_eq_add, ← mul_assoc]
+  match_scalars <;> ring
+
 /-! ### Fifth-order BCH term (Z₅) -/
 
 /-- **Sign-1 group** of `bch_quintic_term`: the four 5-letter words with
