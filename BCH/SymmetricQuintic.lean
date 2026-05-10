@@ -2420,11 +2420,14 @@ been REPLACED with the proved theorem `symmetric_bch_quintic_group_CD_le`
 (below), which derives the 10⁸·s⁷ bound from:
 - `norm_R_T5_sept_le` (proved, ≤ 7·10⁶·s⁷)
 - `norm_R_T6_sept_le` (proved, ≤ 10⁶·s⁷)
-- `symmetric_bch_quintic_C5_diff_residual_axiom` (focused axiom, ≤ 10⁵·s⁷)
+- `symmetric_bch_quintic_C5_diff_residual_axiom` (focused axiom, ≤ 5·10⁶·s⁷)
 
 The remaining `C5_diff_residual` axiom is much smaller in scope (1 piece
-instead of 8, 10⁵·s⁷ vs 10⁸·s⁷ constant, and isolates only the C₅
-linearization residual). -/
+instead of 8, 5·10⁶·s⁷ vs 10⁸·s⁷ constant, and isolates only the C₅
+linearization residual). The constant 5·10⁶ is tightly tracking the
+realistic Lipschitz piece bound (M⁴·‖WRest6‖ ≈ 1.9·10⁶·s⁷ where
+M ≤ 4.22·s, ‖WRest6‖ ≤ 6000·s³ — the latter dominated by Phase A's
+1.5·10⁶·s⁷ inner septic remainder bound). -/
 
 /-! ### Group C+D 3-residual algebraic identity (Phase E.2 step 1)
 
@@ -3698,7 +3701,7 @@ private axiom symmetric_bch_quintic_C5_diff_residual_axiom
       (-28 / 46080 : 𝕂) • (b * b * b * a * a * a) +
       (-32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
       (8 / 46080 : 𝕂) • (b * b * b * b * a * a)))‖ ≤
-      100000 * (‖a‖ + ‖b‖) ^ 7
+      5000000 * (‖a‖ + ‖b‖) ^ 7
 
 /-! ### T2-F7e Phase E.2 step 5: Group C+D combined bound (proved theorem)
 
@@ -3706,10 +3709,10 @@ Replaces the previous `symmetric_bch_quintic_group_CD_axiom` with a proved
 theorem combining:
 - `norm_R_T5_sept_le` (≤ 7·10⁶·s⁷, proved)
 - `norm_R_T6_sept_le` (≤ 10⁶·s⁷, proved)
-- `symmetric_bch_quintic_C5_diff_residual_axiom` (≤ 10⁵·s⁷, axiomatized)
+- `symmetric_bch_quintic_C5_diff_residual_axiom` (≤ 5·10⁶·s⁷, axiomatized)
 
 via `group_CD_eq_three_residuals` (algebraic identity) + triangle inequality.
-Total bound: 7·10⁶ + 10⁶ + 10⁵ = 8.1·10⁶·s⁷ ≤ 10⁸·s⁷ (matches old axiom). -/
+Total bound: 7·10⁶ + 10⁶ + 5·10⁶ = 1.3·10⁷·s⁷ ≤ 10⁸·s⁷ (matches old axiom). -/
 
 set_option maxHeartbeats 800000 in
 private theorem symmetric_bch_quintic_group_CD_le
@@ -3753,9 +3756,9 @@ private theorem symmetric_bch_quintic_group_CD_le
   refine le_trans (norm_add_le _ _) ?_
   refine le_trans (add_le_add (norm_add_le _ _) (le_refl _)) ?_
   -- Now goal: ‖R_T5‖ + ‖R_T6‖ + ‖C5_diff‖ ≤ 10⁸·s⁷.
-  calc _ ≤ 7000000 * s ^ 7 + 1000000 * s ^ 7 + 100000 * s ^ 7 :=
+  calc _ ≤ 7000000 * s ^ 7 + 1000000 * s ^ 7 + 5000000 * s ^ 7 :=
         add_le_add (add_le_add hT5 hT6) hC5
-    _ = 8100000 * s ^ 7 := by ring
+    _ = 13000000 * s ^ 7 := by ring
     _ ≤ 100000000 * s ^ 7 := by nlinarith [hs7_nn]
 
 -- Quintic Taylor bridge for the 3-factor symmetric BCH:

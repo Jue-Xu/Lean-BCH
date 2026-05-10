@@ -168,12 +168,54 @@ cubic/quartic LQ_decomp foundations, but with 76+ linear-in-V₂ and
 quadratic-in-V₂ subterms — ~500 lines of polynomial identity work) OR
 an alternative Lipschitz-of-V₂ structural argument. Future work.
 
+**Session 22 step 9 (axiom constant correction, complete)**: bumped
+`symmetric_bch_quintic_C5_diff_residual_axiom` constant from 10⁵·s⁷ to
+5·10⁶·s⁷ for satisfiability. The original 10⁵·s⁷ was unsatisfiable
+because the realistic upper bound (Lipschitz piece M⁴·‖WRest6‖) is
+≈ 1.9·10⁶·s⁷:
+- M = ‖z‖+‖(a'+b)+V₂‖+‖a'‖ ≤ 4.22·s (using ‖z‖ ≤ 23/11·s,
+  ‖(a'+b)+V₂‖ ≤ 13s/8 for s ≤ 1/4, ‖a'‖ ≤ s/2).
+- ‖WRest6‖ = ‖V₃+V₄+V₅+V₆+R₁_sept‖ ≤ s³+s⁴+s⁵+s⁶+1.5·10⁶·s⁷ ≤ 6000·s³,
+  dominated by Phase A's R₁_sept bound.
+- M⁴·‖WRest6‖ ≤ (4.22)⁴·6000·s⁷ ≈ 1.9·10⁶·s⁷.
+
+Plus the linearization residual at V₂ (algebraic): bounded by
+K_2·M_max³·‖V₂‖² + smaller ≤ 0.5·s⁷ (negligible).
+
+Total realistic bound ≈ 2·10⁶·s⁷; axiom uses 5·10⁶·s⁷ for ~2.5x safety.
+
+Group C+D total bound: 7·10⁶ + 10⁶ + 5·10⁶ = 1.3·10⁷·s⁷ ≤ 10⁸·s⁷ ✓.
+
 **Next session priority**: Phase E.2 step 4 full discharge:
 - Implement `BCH.bch_quintic_term_LQ_decomp` foundation in `Basic.lean`.
-- Use it to express C5_diff_residual = (Lipschitz-on-WRest6 piece) +
-  (quadratic-in-V₂ residual) + (cubic-in-V₂ + higher), each bounded by O(s⁷).
+  This is a large polynomial identity: C₅(x+W, y) - C₅(x, y) =
+  (1/720)·(L_C5 + Q_C5 + Cu_C5 + Q4_C5) where
+  - L_C5 (linear-in-W): 75 entries, weighted sum 440 = 11/18·720
+  - Q_C5 (quadratic-in-W): 70 entries, weighted sum 384 = 8/15·720
+  - Cu_C5 (cubic-in-W): 30 entries, weighted sum 136 = 17/90·720
+  - Q4_C5 (quartic-in-W): 5 entries, weighted sum 16 = 2/90·720
+  - Q5_C5 (quintic-in-W): 0 (no monomial has all 5 a's).
+  Total 180 explicit monomials. Proof: 1-line `unfold + match_scalars + ring`,
+  estimated 256M-512M heartbeats. ~250-300 lines.
+
+  Best implemented per-group (4 separate LQ_decomp lemmas for
+  group_1, group_4, group_6, group_24, sizes ~32, 62, 76, 10 entries
+  respectively), then combined.
+
+- Identity: (1/720)·L_C5(a'+b, V₂, a') = ΔC₅_lin_explicit (after
+  V₂ → ½(a'·b - b·a'), a' → a/2). Proof: `match_scalars + ring`. ~50-100 lines.
+
+- Use to discharge the C5_diff_residual axiom:
+  - Split: C5_diff_residual = (C₅(z,a')-C₅(z₁,a')) +
+    (C₅(z₁,a')-C₅(a'+b,a') - ΔC₅_lin_explicit) where z₁ = (a'+b)+V₂.
+  - Bound piece 1 via existing `norm_bch_quintic_term_diff_le`: ≤ 2·10⁶·s⁷.
+  - Bound piece 2 = (1/720)·(Q+Cu+Q4) at W=V₂: ≤ 1·s⁷ via per-form bounds.
+  - Triangle: total ≤ 2·10⁶·s⁷ + 1·s⁷ ≤ 5·10⁶·s⁷. ~200-300 lines.
+
 - Replace `symmetric_bch_quintic_C5_diff_residual_axiom` with proved theorem.
-- Estimated work: ~500-800 lines.
+  T2-F7e is then fully discharged.
+
+Total estimated work: ~600-1000 lines, possibly 2-3 sessions.
 
 After that, T2-F7e is fully discharged, leaving only the
 `suzuki5_log_product_septic_at_suzukiP_axiom` (axiom 3) for the
@@ -537,12 +579,16 @@ I1 RHS ≤ 21·s⁷.
 total count from session 19 final, but the parent axioms have been
 progressively narrowed).
 - `BCH.symmetric_bch_quintic_C5_diff_residual_axiom` — Phase E.2 step 4
-  stepping-stone (1 piece, 10⁵·s⁷), in `SymmetricQuintic.lean`. Replaces
+  stepping-stone (1 piece, 5·10⁶·s⁷), in `SymmetricQuintic.lean`. Replaces
   the previous Group C+D sub-axiom (8 pieces, 10⁸·s⁷). Bounds the
   linearization residual of C₅(z, a') - C₅(a'+b, a') after subtracting
-  the explicit deg-6 polynomial. Discharge requires either an L+Q+higher
-  decomposition of `bch_quintic_term` (analog of cubic/quartic LQ_decomp)
-  or an alternative Lipschitz-of-V₂ structural argument (~500-800 lines).
+  the explicit deg-6 polynomial. The 5·10⁶·s⁷ constant tightly tracks the
+  realistic upper bound: M⁴·‖WRest6‖ ≈ 1.9·10⁶·s⁷ where M ≤ 4.22·s,
+  ‖WRest6‖ ≤ 6000·s³ (the latter dominated by Phase A's 1.5·10⁶·s⁷ inner
+  septic remainder bound). Discharge requires either an L+Q+higher
+  decomposition of `bch_quintic_term` (analog of cubic/quartic LQ_decomp,
+  ~600-1000 lines for 180 explicit monomials across 4 per-group decomps)
+  or an alternative Lipschitz-of-V₂ structural argument.
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
 
