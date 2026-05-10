@@ -2467,6 +2467,132 @@ private axiom symmetric_bch_quintic_group_CD_axiom
      (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a')‖ ≤
       100000000 * (‖a‖ + ‖b‖) ^ 7
 
+/-! ### Group C+D 3-residual algebraic identity (Phase E.2 step 1)
+
+The Phase E.2 discharge proceeds in two stages:
+1. **Algebraic identity**: rewrite `Group C + Group D` as a sum of 3 explicit
+   deg-7+ residuals using the Phase B and Phase C cancellation identities.
+2. **Analytic bounds**: bound each residual by `K·s⁷` via the Lipschitz
+   infrastructure (`norm_bch_*_term_diff_le`).
+
+This section completes step 1. The residuals are:
+- `R_T5_sept` = T₅ - ΔC₃_lin(V₃) - ΔC₃_quad(V₂) - T5_d6_op
+- `R_T6_sept` = T₆ - ΔC₄_lin(V₂) - T6_d6_op
+- `C5_diff_residual` = (C₅(z,a') - C₅(a'+b,a')) - ΔC₅_lin
+
+The algebraic identity follows from:
+- Phase B: ΔC₃_lin(V₃) + ΔC₃_quad(V₂) + ΔC₄_lin(V₂) + ½·[C₄(a',b),a'] = correction
+- Phase C: T5_d6_op + T6_d6_op + ½·[C₅(a',b),a'] + C₆(a',b) + C₆(a'+b,a') + ΔC₅_lin = 0
+
+Adding `(½·[C₄,a'] - correction) = -(ΔC₃_lin(V₃) + ΔC₃_quad(V₂) + ΔC₄_lin(V₂))`
+and `(½·[C₅,a'] + C₆(a',b) + C₆(a'+b,a')) = -(T5_d6_op + T6_d6_op + ΔC₅_lin)`
+to the C₅-diff piece gives the 3-residual rearrangement.
+-/
+
+set_option maxHeartbeats 4000000 in
+private theorem group_CD_eq_three_residuals
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    let DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a
+    -- LHS: Group C + Group D (8 pieces).
+    (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+       -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+    (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
+    (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+    -symmetric_bch_quintic_correction_poly 𝕂 a b +
+    (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
+    bch_sextic_term 𝕂 a' b +
+    bch_sextic_term 𝕂 (a' + b) a' +
+    (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a')
+    =
+    -- RHS: R_T5_sept + R_T6_sept + C5_diff_residual.
+    -- R_T5_sept = T₅ - ΔC₃_lin(V₃) - ΔC₃_quad(V₂) - T5_d6_op
+    ((bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+        -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) -
+     -- ΔC₃_lin(V₃, x, a')
+     ((12 : 𝕂)⁻¹ • (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) +
+      (12 : 𝕂)⁻¹ • (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) +
+      (12 : 𝕂)⁻¹ • (a' * (a' * V₃ - V₃ * a') - (a' * V₃ - V₃ * a') * a')) -
+     -- ΔC₃_quad(V₂, x, a')
+     ((12 : 𝕂)⁻¹ • (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂)) -
+     -- T5_d6_op = ΔC₃_lin(V₄) + (1/12)·([V₂,[V₃,a']]+[V₃,[V₂,a']])
+     ((12 : 𝕂)⁻¹ • (V₄ * (x * a' - a' * x) - (x * a' - a' * x) * V₄ +
+                     x * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * x +
+                     a' * (a' * V₄ - V₄ * a') - (a' * V₄ - V₄ * a') * a') +
+      (12 : 𝕂)⁻¹ • (V₂ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₂ +
+                     V₃ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₃))) +
+    -- R_T6_sept = T₆ - ΔC₄_lin(V₂) - T6_d6_op
+    ((bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') -
+     -- ΔC₄_lin(V₂, x, a')
+     ((0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) -
+                                (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) -
+                                (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) * a')) -
+     -- T6_d6_op = ΔC₄_lin(V₃) + ΔC₄_quad(V₂)
+     ((0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) -
+                                (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) -
+                                (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) -
+                                (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) * a'))) +
+    -- C5_diff_residual = (C₅(z,a') - C₅(a'+b,a')) - ΔC₅_lin (the 36-monomial polynomial)
+    ((bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a') -
+     ((-14 / 46080 : 𝕂) • (a * a * a * a * b * b) +
+      (46 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+      (10 / 46080 : 𝕂) • (a * a * a * b * b * a) +
+      (28 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+      (-54 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+      (-30 / 46080 : 𝕂) • (a * a * b * a * b * a) +
+      (-52 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+      (-12 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+      (-20 / 46080 : 𝕂) • (a * a * b * b * b * a) +
+      (-8 / 46080 : 𝕂) • (a * a * b * b * b * b) +
+      (36 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+      (-32 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+      (30 / 46080 : 𝕂) • (a * b * a * b * a * a) +
+      (128 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+      (40 / 46080 : 𝕂) • (a * b * a * b * b * a) +
+      (32 / 46080 : 𝕂) • (a * b * a * b * b * b) +
+      (-10 / 46080 : 𝕂) • (a * b * b * a * a * a) +
+      (-32 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+      (-40 / 46080 : 𝕂) • (a * b * b * a * b * a) +
+      (-48 / 46080 : 𝕂) • (a * b * b * a * b * b) +
+      (20 / 46080 : 𝕂) • (a * b * b * b * a * a) +
+      (32 / 46080 : 𝕂) • (a * b * b * b * a * b) +
+      (-36 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+      (54 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+      (32 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+      (-46 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+      (-128 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+      (12 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+      (-32 / 46080 : 𝕂) • (b * a * b * b * b * a) +
+      (14 / 46080 : 𝕂) • (b * b * a * a * a * a) +
+      (32 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+      (52 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+      (48 / 46080 : 𝕂) • (b * b * a * b * b * a) +
+      (-28 / 46080 : 𝕂) • (b * b * b * a * a * a) +
+      (-32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
+      (8 / 46080 : 𝕂) • (b * b * b * b * a * a))) := by
+  intro a' z V₂ V₃ V₄ x DC_a
+  -- Use Phase B identity (deg-5 cancellation).
+  have hB := symmetric_bch_quintic_deg5_cancellation_pure_identity (𝕂 := 𝕂) a b
+  -- Use Phase C identity (deg-6 cancellation; both sides equal 0).
+  have hC := symmetric_bch_quintic_deg6_cancellation_pure_identity (𝕂 := 𝕂) a b
+  -- Both hB and hC have inner let-bindings. Reduce them via show.
+  show _ = _
+  simp only [show ((2 : 𝕂)⁻¹ • a : 𝔸) = a' from rfl] at hB hC
+  -- hB and hC should now match our let-bindings (a', V₂, V₃, V₄ identifications).
+  -- The identity is: LHS - RHS = (LHS_B - correction_poly) + (LHS_C - 0)
+  -- = (LHS_B - correction_poly) + LHS_C, both of which are 0 by hypothesis.
+  linear_combination (norm := abel) -hB + hC
+
 /-- **Helper (½-smul commutator bound)**: `‖(2:𝕂)⁻¹ • (X*Y - Y*X)‖ ≤ ‖X‖·‖Y‖`.
 Used in Phase E.1 to bound `½·[R₁_sept, a']` and `½·[C₆(a',b), a']`. -/
 private lemma norm_half_smul_bracket_le {𝕂 : Type*} [RCLike 𝕂]
