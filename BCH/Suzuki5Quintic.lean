@@ -577,9 +577,9 @@ private theorem norm_suzuki5_bch_sub_smul_sub_R5_le_under_regime
         (strangBlock_log ℝ A B (1 - 4 * p) τ))
       ((2 : ℝ)⁻¹ • ((4 : ℝ) • strangBlock_log ℝ A B p τ))‖ < Real.log 2) :
     ‖suzuki5_bch ℝ A B p τ - τ • (A + B) - τ ^ 5 • suzuki5_R5 A B p‖ ≤
-      (4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
-        1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
-        1000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+      (4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+        20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
+        20000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
                       ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 7) +
       ((3 / 2 : ℝ) *
           ((‖((4 * p * τ : ℝ)) • (A + B)‖ + ‖(((1 - 4 * p) * τ : ℝ)) • (A + B)‖) *
@@ -676,9 +676,9 @@ private theorem norm_suzuki5_bch_sub_smul_sub_R5_le_under_regime
 /-- The bound RHS expression from `norm_suzuki5_bch_sub_smul_sub_R5_le_under_regime`.
 Abbreviated for use in the bookkeeping step of the public theorem. -/
 private noncomputable def suzuki5_bch_sub_R5_RHS (A B : 𝔸) (p τ : ℝ) : ℝ :=
-  (4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
-    1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
-    1000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+  (4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+    20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
+    20000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
                   ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 7) +
   ((3 / 2 : ℝ) *
       ((‖((4 * p * τ : ℝ)) • (A + B)‖ + ‖(((1 - 4 * p) * τ : ℝ)) • (A + B)‖) *
@@ -1516,9 +1516,9 @@ private lemma RHS_T1_le_aux
     (hp_le : ‖p‖ ≤ pn) (hq_le : ‖((1 : ℝ) - 4 * p)‖ ≤ qn)
     (hAB_le : ‖A‖ + ‖B‖ ≤ s)
     (hτ_lt : ‖τ‖ < 1 / (10^11 * pn * qn * s)) :
-    4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
-        1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
-        1000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+    4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+        20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
+        20000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
                       ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 7 ≤
       (4 * 10^9 * pn^7 * s^7 + 10^9 * qn^7 * s^7 +
        10^9 * 40002^7 * (4 * pn + qn)^7 * s^7) * ‖τ‖^6 := by
@@ -1607,7 +1607,7 @@ private lemma RHS_T1_le_aux
   have hL_nn : 0 ≤ ‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
                    ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖ := by positivity
   -- Term 1a bound.
-  have hT1a : 4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) ≤
+  have hT1a : 4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) ≤
               (4 * 10^9 * pn^7 * s^7) * ‖τ‖^6 := by
     rw [hηp_eq]
     have h_pow7 : (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖))^7 ≤ (pn * s * ‖τ‖)^7 :=
@@ -1615,35 +1615,35 @@ private lemma RHS_T1_le_aux
     have h_pow7_eq : (pn * s * ‖τ‖)^7 = pn^7 * s^7 * ‖τ‖^7 := by ring
     have h_τ_step : pn^7 * s^7 * ‖τ‖^7 ≤ pn^7 * s^7 * ‖τ‖^6 :=
       mul_le_mul_of_nonneg_left hτ7_le_6 (by positivity)
-    have h_pre : 4 * (1000000000 * (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖))^7) ≤
-                 4 * (1000000000 * (pn * s * ‖τ‖)^7) := by
+    have h_pre : 4 * (20000000000 * (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖))^7) ≤
+                 4 * (20000000000 * (pn * s * ‖τ‖)^7) := by
       have h_step : (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖))^7 ≤ (pn * s * ‖τ‖)^7 := h_pow7
-      have h_step2 : 1000000000 * (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖))^7 ≤
-                     1000000000 * (pn * s * ‖τ‖)^7 :=
+      have h_step2 : 20000000000 * (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖))^7 ≤
+                     20000000000 * (pn * s * ‖τ‖)^7 :=
         mul_le_mul_of_nonneg_left h_step (by norm_num)
       linarith
-    have h_chain : 4 * (1000000000 * (pn * s * ‖τ‖)^7) =
+    have h_chain : 4 * (20000000000 * (pn * s * ‖τ‖)^7) =
                    (4 * 10^9 * pn^7 * s^7) * ‖τ‖^7 := by rw [h_pow7_eq]; ring
     have h_τ7_to_6 : (4 * 10^9 * pn^7 * s^7) * ‖τ‖^7 ≤ (4 * 10^9 * pn^7 * s^7) * ‖τ‖^6 :=
       mul_le_mul_of_nonneg_left hτ7_le_6 (by positivity)
     linarith [h_pre, h_chain, h_τ7_to_6]
   -- Term 1b bound.
-  have hT1b : 1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 ≤
+  have hT1b : 20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 ≤
               (10^9 * qn^7 * s^7) * ‖τ‖^6 := by
     rw [hηq_eq]
     have h_pow7 : (‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖))^7 ≤ (qn * s * ‖τ‖)^7 :=
       pow_le_pow_left₀ hηq_nn hηq_le 7
     have h_pow7_eq : (qn * s * ‖τ‖)^7 = qn^7 * s^7 * ‖τ‖^7 := by ring
-    have h_pre : 1000000000 * (‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖))^7 ≤
-                 1000000000 * (qn * s * ‖τ‖)^7 :=
+    have h_pre : 20000000000 * (‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖))^7 ≤
+                 20000000000 * (qn * s * ‖τ‖)^7 :=
       mul_le_mul_of_nonneg_left h_pow7 (by norm_num)
-    have h_chain : 1000000000 * (qn * s * ‖τ‖)^7 = (10^9 * qn^7 * s^7) * ‖τ‖^7 := by
+    have h_chain : 20000000000 * (qn * s * ‖τ‖)^7 = (10^9 * qn^7 * s^7) * ‖τ‖^7 := by
       rw [h_pow7_eq]; ring
     have h_τ7_to_6 : (10^9 * qn^7 * s^7) * ‖τ‖^7 ≤ (10^9 * qn^7 * s^7) * ‖τ‖^6 :=
       mul_le_mul_of_nonneg_left hτ7_le_6 (by positivity)
     linarith [h_pre, h_chain, h_τ7_to_6]
   -- Term 1c bound.
-  have hT1c : 1000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+  have hT1c : 20000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
                             ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 7 ≤
               (10^9 * 40002^7 * (4 * pn + qn)^7 * s^7) * ‖τ‖^6 := by
     have h_pow7 : (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
@@ -1652,11 +1652,11 @@ private lemma RHS_T1_le_aux
       pow_le_pow_left₀ hL_nn hL_bnd 7
     have h_pow7_eq : (40002 * (4 * pn + qn) * s * ‖τ‖)^7 =
                      40002^7 * (4 * pn + qn)^7 * s^7 * ‖τ‖^7 := by ring
-    have h_pre : 1000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+    have h_pre : 20000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
                                ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖)^7 ≤
-                 1000000000 * (40002 * (4 * pn + qn) * s * ‖τ‖)^7 :=
+                 20000000000 * (40002 * (4 * pn + qn) * s * ‖τ‖)^7 :=
       mul_le_mul_of_nonneg_left h_pow7 (by norm_num)
-    have h_chain : 1000000000 * (40002 * (4 * pn + qn) * s * ‖τ‖)^7 =
+    have h_chain : 20000000000 * (40002 * (4 * pn + qn) * s * ‖τ‖)^7 =
                    (10^9 * 40002^7 * (4 * pn + qn)^7 * s^7) * ‖τ‖^7 := by
       rw [h_pow7_eq]; ring
     have h_τ7_to_6 : (10^9 * 40002^7 * (4 * pn + qn)^7 * s^7) * ‖τ‖^7 ≤

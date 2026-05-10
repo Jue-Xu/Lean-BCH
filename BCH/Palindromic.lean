@@ -1198,7 +1198,7 @@ lemma norm_polynomial_in_y_sub_add_sub_E3_sub_E5_via_parent (a b : 𝔸)
         (5 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 5 -
         (6 : 𝕂)⁻¹ • (exp ((2 : 𝕂)⁻¹ • a) * exp b * exp ((2 : 𝕂)⁻¹ • a) - 1) ^ 6) -
         (a + b) - symmetric_bch_cubic_poly 𝕂 a b - symmetric_bch_quintic_poly 𝕂 a b‖ ≤
-      1000000000 * (‖a‖ + ‖b‖) ^ 7 +
+      20000000000 * (‖a‖ + ‖b‖) ^ 7 +
         (Real.exp (‖a‖ + ‖b‖) - 1) ^ 7 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
   -- Use the parent (currently axiom-derived): ‖sym_bch_cubic - sym_E₃ - sym_E₅‖ ≤ 10⁹·s⁷.
   have h_parent := norm_symmetric_bch_quintic_sub_poly_le (𝕂 := 𝕂) a b hab
@@ -1476,7 +1476,7 @@ theorem norm_strangBlock_log_sub_quintic_target_le (A B : 𝔸) (c τ : 𝕂)
     ‖strangBlock_log 𝕂 A B c τ - (c * τ) • (A + B)
         - (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B
         - (c * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B‖ ≤
-      1000000000 * (‖(c * τ) • A‖ + ‖(c * τ) • B‖) ^ 7 := by
+      20000000000 * (‖(c * τ) • A‖ + ‖(c * τ) • B‖) ^ 7 := by
   unfold strangBlock_log
   -- Apply `norm_symmetric_bch_quintic_sub_poly_le` with a = cτ•A, b = cτ•B.
   have key := norm_symmetric_bch_quintic_sub_poly_le
@@ -3177,14 +3177,14 @@ theorem norm_4X_plus_Y_sub_quintic_target_le (A B : 𝔸) (p τ : 𝕂)
         τ • (A + B) -
         (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
         (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B‖ ≤
-      4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
-      1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
+      4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+      20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
   set X := strangBlock_log 𝕂 A B p τ with hX_def
   set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
   set T_p := strangBlock_log_target_quintic 𝕂 A B p τ with hTp_def
   set T_q := strangBlock_log_target_quintic 𝕂 A B (1 - 4 * p) τ with hTq_def
   -- B1.d per-block bounds.
-  have hX_le : ‖X - T_p‖ ≤ 1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7 := by
+  have hX_le : ‖X - T_p‖ ≤ 20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7 := by
     have := norm_strangBlock_log_sub_quintic_target_le (𝕂 := 𝕂) A B p τ hp
     -- The target unfolds as `T_p = (cτ)•V + (cτ)³•E + (cτ)⁵•E5`; B1.d's signature
     -- has the three subtracted parts written separately; collapse into T_p.
@@ -3199,7 +3199,7 @@ theorem norm_4X_plus_Y_sub_quintic_target_le (A B : 𝔸) (p τ : 𝕂)
       rw [hT_eq]; abel
     rw [h_sub_eq]; exact this
   have hY_le : ‖Y - T_q‖ ≤
-      1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
+      20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
     have := norm_strangBlock_log_sub_quintic_target_le (𝕂 := 𝕂) A B (1 - 4 * p) τ h1m4p
     have hT_eq : T_q =
         ((1 - 4 * p) * τ) • (A + B) +
@@ -3216,10 +3216,10 @@ theorem norm_4X_plus_Y_sub_quintic_target_le (A B : 𝔸) (p τ : 𝕂)
   -- Bound for 4•(X - T_p)
   have h4_norm_eq : ‖(4 : 𝕂)‖ = 4 := by rw [RCLike.norm_ofNat]
   have h4X_le : ‖(4 : 𝕂) • (X - T_p)‖ ≤
-      4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) := by
+      4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) := by
     calc ‖(4 : 𝕂) • (X - T_p)‖ ≤ ‖(4 : 𝕂)‖ * ‖X - T_p‖ := norm_smul_le _ _
       _ = 4 * ‖X - T_p‖ := by rw [h4_norm_eq]
-      _ ≤ 4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) := by gcongr
+      _ ≤ 4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) := by gcongr
   -- Algebraic decomposition: rewrite (4•X + Y - target) = 4•(X - T_p) + (Y - T_q).
   have h_target_eq :
       τ • (A + B) +
@@ -3248,8 +3248,8 @@ theorem norm_4X_plus_Y_sub_quintic_target_le (A B : 𝔸) (p τ : 𝕂)
   -- Triangle inequality.
   calc ‖(4 : 𝕂) • (X - T_p) + (Y - T_q)‖
       ≤ ‖(4 : 𝕂) • (X - T_p)‖ + ‖Y - T_q‖ := norm_add_le _ _
-    _ ≤ 4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
-        1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
+    _ ≤ 4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+        20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
         linarith
 
 include 𝕂 in
@@ -3269,8 +3269,8 @@ theorem norm_4X_plus_Y_sub_quintic_target_of_IsSuzukiCubic_le
         strangBlock_log 𝕂 A B (1 - 4 * p) τ -
         τ • (A + B) -
         (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B‖ ≤
-      4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
-      1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
+      4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+      20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 := by
   have hcubic := hp_suzuki  -- 4p³ + (1-4p)³ = 0
   unfold IsSuzukiCubic suzuki5_bch_cubic_coeff at hcubic
   have h_main := norm_4X_plus_Y_sub_quintic_target_le (𝕂 := 𝕂) A B p τ hp h1m4p
@@ -3503,9 +3503,9 @@ theorem norm_suzuki5_bch_sub_smul_sub_quintic_le (A B : 𝔸) (p τ : 𝕂)
         symmetric_bch_quintic_poly 𝕂
           ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
           (strangBlock_log 𝕂 A B (1 - 4 * p) τ)‖ ≤
-      4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
-      1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
-      1000000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+      4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+      20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
+      20000000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
                     ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 7 := by
   set X := strangBlock_log 𝕂 A B p τ with hX_def
   set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
@@ -3558,13 +3558,13 @@ theorem norm_suzuki5_bch_sub_smul_sub_quintic_le (A B : 𝔸) (p τ : 𝕂)
         ‖symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y -
             symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
             symmetric_bch_quintic_poly 𝕂 ((4 : 𝕂) • X) Y‖ := norm_add_le _ _
-    _ ≤ (4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
-         1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7) +
-        1000000000 * (‖(4 : 𝕂) • X‖ + ‖Y‖) ^ 7 := by
+    _ ≤ (4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+         20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7) +
+        20000000000 * (‖(4 : 𝕂) • X‖ + ‖Y‖) ^ 7 := by
         linarith
-    _ = 4 * (1000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
-        1000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
-        1000000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+    _ = 4 * (20000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 7) +
+        20000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 7 +
+        20000000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
                       ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 7 := by
         rw [hX_def, hY_def]
 

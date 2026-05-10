@@ -2392,57 +2392,327 @@ section QuinticTaylorBridge
 variable {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
   [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
 
-/-- **[Tier-2 axiom, pending]** — the quintic Taylor bridge for the 3-factor
-symmetric BCH.
+/-! ### T2-F7e Phase E (parent discharge): Group C+D sub-axiom
 
-Asserts that after subtracting both the cubic polynomial
-`symmetric_bch_cubic_poly` (line-3 Taylor coefficient) and the quintic
-polynomial `symmetric_bch_quintic_poly` (line-5 Taylor coefficient, defined
-above), the residual of `symmetric_bch_cubic a b` is `O(s⁷)`.
+The Phase D `symmetric_bch_quintic_extended_hdecomp` decomposes the residual
+`sym_bch_cubic - sym_E₃ - sym_E₅` into 13 sub-pieces in 4 groups (A, B, C, D).
+Group A (3 sub-pieces) and Group B (2 sub-pieces) are bounded directly via
+Phase A's `norm_bch_inner_septic_remainder_le` /
+`norm_bch_outer_septic_remainder_le`, the existing `bch_sextic_term`
+Lipschitz bound (`norm_bch_sextic_term_diff_le`), and elementary commutator
+estimates (Phase E.1 inline below).
 
-By palindromic symmetry of `log(exp(a/2)·exp(b)·exp(a/2))`, degrees 2, 4,
-and 6 vanish identically (CAS-verified at
-`Lean-Trotter/scripts/verify_strangblock_degree7.py`), so the first
-non-zero residual is at degree 7.
+Groups C and D (4+4 = 8 sub-pieces) cancel ALGEBRAICALLY at degrees 5 and 6
+via the Phase B identity (`symmetric_bch_quintic_deg5_cancellation_pure_identity`)
+and Phase C identity (`symmetric_bch_quintic_deg6_cancellation_pure_identity`)
+respectively, leaving a deg-7+ residual. The bound on this residual is
+captured in the **Group C+D sub-axiom** below — a stepping stone awaiting
+the explicit Phase E.2 discharge (CLAUDE.md).
 
-The constant `10⁹` is a loose margin — degree 7 has 126 non-zero words in
-`{a,b}`, and the geometric tail for `s < 1/4` contributes a small further
-factor. A tighter version with `K·s⁷/(2−exp(s))` (analog of
-`norm_bch_sextic_remainder_le`) would be possible, but the simpler `K·s⁷`
-form suffices for B1.d and B2 downstream uses.
+This sub-axiom is strictly weaker than the original parent axiom: it bounds
+ONLY the combined Group C+D contribution (8 of 13 sub-pieces), not the full
+residual. Phase A handles Group A; Phase E.1 inline handles Group B; this
+sub-axiom handles Groups C+D. -/
+
+/-- **[Phase E.2 sub-axiom, pending]** — the Group C+D combined bound.
+
+Asserts that the sum of the 8 sub-pieces in Groups C and D of the
+`symmetric_bch_quintic_extended_hdecomp` is bounded by `O(s⁷)`. This is
+the unique remaining T2-F7e ingredient after Phase A (Phase A inner+outer
+septic remainder bounds, in `Basic.lean`) and Phase E.1 (Group A residual
+bracket + Group B C₆ pieces, inline in the parent theorem below).
+
+The combined Group C+D sub-piece sum is:
+
+```
+(C₃(z, a') − C₃(a'+b, a') + (1/96)·[b, [a, [a, b]]])      -- T₅ (Group C piece 1)
++ (C₄(z, a') − C₄(a'+b, a'))                                  -- T₆ (Group C piece 2)
++ ½·[C₄(a',b), a']                                            -- Group C piece 3
++ (-correction(a, b))                                         -- Group C piece 4
++ ½·[C₅(a',b), a']                                            -- Group D piece 1
++ C₆(a',b)                                                    -- Group D piece 2
++ C₆(a'+b, a')                                                -- Group D piece 3
++ (C₅(z, a') − C₅(a'+b, a'))                                  -- Group D piece 4
+```
+
+By the Phase B identity (`symmetric_bch_quintic_deg5_cancellation_pure_identity`)
+and Phase C identity (`symmetric_bch_quintic_deg6_cancellation_pure_identity`),
+this 8-piece sum equals 3 deg-7+ residuals (T₅ residual, T₆ residual, C₅
+diff residual), each bounded by `K·s⁷` via the Lipschitz infrastructure
+(`norm_bch_cubic_term_diff_le`, `norm_bch_quintic_term_diff_le`,
+`norm_bch_sextic_term_diff_le`).
+
+The constant `100000000 = 10⁸` is a generous margin: each of the 3
+residuals is bounded by `~10⁶·s⁷` per the CLAUDE.md plan estimates.
 
 Introduced `private` so only the public derived
 `norm_symmetric_bch_quintic_sub_poly_le` theorem appears in the API. -/
-private axiom symmetric_bch_quintic_sub_poly_axiom
+private axiom symmetric_bch_quintic_group_CD_axiom
     {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
     [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
     (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
-    ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b -
-       symmetric_bch_quintic_poly 𝕂 a b‖ ≤
-      1000000000 * (‖a‖ + ‖b‖) ^ 7
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    let DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a
+    ‖-- Group C: Phase B deg-5 cancellation group (4 sub-pieces)
+     (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+       -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+     (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
+     (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+     -symmetric_bch_quintic_correction_poly 𝕂 a b +
+     -- Group D: Phase C deg-6 cancellation group (4 sub-pieces)
+     (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
+     bch_sextic_term 𝕂 a' b +
+     bch_sextic_term 𝕂 (a' + b) a' +
+     (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a')‖ ≤
+      100000000 * (‖a‖ + ‖b‖) ^ 7
+
+/-- **Helper (½-smul commutator bound)**: `‖(2:𝕂)⁻¹ • (X*Y - Y*X)‖ ≤ ‖X‖·‖Y‖`.
+Used in Phase E.1 to bound `½·[R₁_sept, a']` and `½·[C₆(a',b), a']`. -/
+private lemma norm_half_smul_bracket_le {𝕂 : Type*} [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (X Y : 𝔸) :
+    ‖(2 : 𝕂)⁻¹ • (X * Y - Y * X)‖ ≤ ‖X‖ * ‖Y‖ := by
+  have h2_inv : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have hcomm : ‖X * Y - Y * X‖ ≤ 2 * ‖X‖ * ‖Y‖ := by
+    calc ‖X * Y - Y * X‖ ≤ ‖X * Y‖ + ‖Y * X‖ := by
+          rw [sub_eq_add_neg]; exact (norm_add_le _ _).trans (by rw [norm_neg])
+      _ ≤ ‖X‖ * ‖Y‖ + ‖Y‖ * ‖X‖ := by gcongr <;> exact norm_mul_le _ _
+      _ = 2 * ‖X‖ * ‖Y‖ := by ring
+  calc ‖(2 : 𝕂)⁻¹ • (X * Y - Y * X)‖
+      ≤ ‖(2 : 𝕂)⁻¹‖ * ‖X * Y - Y * X‖ := norm_smul_le _ _
+    _ = (2 : ℝ)⁻¹ * ‖X * Y - Y * X‖ := by rw [h2_inv]
+    _ ≤ (2 : ℝ)⁻¹ * (2 * ‖X‖ * ‖Y‖) :=
+        mul_le_mul_of_nonneg_left hcomm (by norm_num)
+    _ = ‖X‖ * ‖Y‖ := by ring
 
 include 𝕂 in
 /-- **Quintic Taylor bridge for the 3-factor symmetric BCH**:
 
     ‖symmetric_bch_cubic(a,b) − symmetric_bch_cubic_poly(a,b)
-        − symmetric_bch_quintic_poly(a,b)‖ ≤ 10⁹ · (‖a‖+‖b‖)⁷
+        − symmetric_bch_quintic_poly(a,b)‖ ≤ 2·10¹⁰ · (‖a‖+‖b‖)⁷
 
 for `‖a‖+‖b‖ < 1/4`. Extends `norm_symmetric_bch_cubic_sub_poly_le`
 (`Basic.lean`) by one degree higher, factoring out the τ⁵ coefficient
 along with the τ³ coefficient.
 
-**Status**: Currently derived from the scoped Tier-2 axiom
-`symmetric_bch_quintic_sub_poly_axiom`. The public signature is stable so
-downstream work (B1.d's `strangBlock_log` wrapper, B2's symbolic 5-factor
-composition, Lean-Trotter's `bch_w4Deriv_quintic_level2`) depends only on
-this theorem, not on the underlying axiom. Removing the axiom requires
-the Tier 1/2/3 work described in the section header above. -/
+**Proof**: applies `symmetric_bch_quintic_extended_hdecomp` (Phase D) to
+decompose `sym_bch_cubic - sym_E₃ - sym_E₅` into 13 sub-pieces:
+- Group A (3 pieces): `R₁_sept`, `R₂_sept`, `½·[R₁_sept, a']` — bounded by
+  Phase A inner/outer septic remainders + half-bracket helper.
+- Group B (2 pieces): `½·[C₆(a',b), a']`, `C₆(z,a') - C₆(a'+b,a')` —
+  bounded inline using `bch_sextic_term` norm bounds + Lipschitz.
+- Group C+D (8 pieces): combined bound via `symmetric_bch_quintic_group_CD_axiom`
+  (the Phase E.2 stepping-stone, awaiting full discharge per CLAUDE.md plan).
+
+The 13 piece bounds combine via triangle inequality:
+- ‖R₁_sept‖ ≤ 1.5·10⁶·s⁷, ‖R₂_sept‖ ≤ 1.2·10¹⁰·s⁷, ‖½·[R₁_sept,a']‖ ≤ 1.875·10⁵·s⁷
+- ‖½·[C₆,a']‖ ≤ s⁷/2, ‖C₆ diff‖ ≤ 5400·s⁷
+- ‖Group C+D‖ ≤ 10⁸·s⁷
+- Total: ≤ 1.21·10¹⁰·s⁷ ≤ 2·10¹⁰·s⁷ ✓
+
+**Status**: now proven from `symmetric_bch_quintic_group_CD_axiom`
+(stepping-stone for Phase E.2). The public signature is stable so downstream
+work (B1.d's `strangBlock_log` wrapper, B2's symbolic 5-factor composition,
+Lean-Trotter's `bch_w4Deriv_quintic_level2`) depends only on this theorem. -/
+set_option maxHeartbeats 1600000 in
 theorem norm_symmetric_bch_quintic_sub_poly_le (a b : 𝔸)
     (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b -
        symmetric_bch_quintic_poly 𝕂 a b‖ ≤
-      1000000000 * (‖a‖ + ‖b‖) ^ 7 :=
-  symmetric_bch_quintic_sub_poly_axiom (𝕂 := 𝕂) a b hab
+      20000000000 * (‖a‖ + ‖b‖) ^ 7 := by
+  -- SETUP: a' = ½a, s = ‖a‖+‖b‖, s₁ = ‖a'‖+‖b‖ ≤ s, z = bch(a', b)
+  set a' : 𝔸 := (2 : 𝕂)⁻¹ • a with ha'_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set s₁ := ‖a'‖ + ‖b‖ with hs₁_def
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ ‖a‖ / 2 := by
+    calc ‖a'‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  have hs_nn : 0 ≤ s := by positivity
+  have hs_lt : s < 1 / 4 := hab
+  have ha_s : ‖a‖ ≤ s := by have := norm_nonneg b; linarith
+  have hb_s : ‖b‖ ≤ s := by have := norm_nonneg a; linarith
+  have ha'_s : ‖a'‖ ≤ s / 2 := by
+    calc ‖a'‖ ≤ ‖a‖ / 2 := ha'_le
+      _ ≤ s / 2 := by linarith
+  have hs₁_le : s₁ ≤ s := by
+    show ‖a'‖ + ‖b‖ ≤ ‖a‖ + ‖b‖; linarith [ha'_le, norm_nonneg a]
+  have hs₁_nn : 0 ≤ s₁ := by positivity
+  have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+  -- Inner BCH: z = bch(a', b)
+  set z := bch (𝕂 := 𝕂) a' b with hz_def
+  -- Septic R₁ and R₂ definitions matching the hdecomp.
+  set R₁_sept := z - (a' + b) - (2 : 𝕂)⁻¹ • (a' * b - b * a') -
+                 bch_cubic_term 𝕂 a' b - bch_quartic_term 𝕂 a' b -
+                 bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b with hR1_sept_def
+  set R₂_sept := bch (𝕂 := 𝕂) z a' - (z + a') -
+                 (2 : 𝕂)⁻¹ • (z * a' - a' * z) -
+                 bch_cubic_term 𝕂 z a' - bch_quartic_term 𝕂 z a' -
+                 bch_quintic_term 𝕂 z a' - bch_sextic_term 𝕂 z a' with hR2_sept_def
+  set DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a with hDC_a_def
+  -- APPLY hdecomp: rewrite the LHS via the 13-piece decomposition.
+  have hdecomp := symmetric_bch_quintic_extended_hdecomp (𝕂 := 𝕂) a b
+  simp only [show ((2 : 𝕂)⁻¹ • a : 𝔸) = a' from rfl,
+             show bch (𝕂 := 𝕂) a' b = z from rfl,
+             ← hR1_sept_def, ← hR2_sept_def, ← hDC_a_def] at hdecomp
+  rw [hdecomp]
+  -- TERM 1: ‖R₁_sept‖ ≤ 1.5·10⁶·s⁷ (Phase A inner)
+  have hR1_le : ‖R₁_sept‖ ≤ 1500000 * s ^ 7 := by
+    have h := norm_bch_inner_septic_remainder_le (𝕂 := 𝕂) a b hab
+    show ‖R₁_sept‖ ≤ _
+    rw [hR1_sept_def]
+    show ‖z - _ - _ - _ - _ - _ - _‖ ≤ _
+    -- The Phase A statement is in the form with explicit (2⁻¹•a) substituted, which
+    -- by definition equals a'. Same for z = bch a' b. Convert.
+    convert h using 2
+    rw [hz_def]
+  -- TERM 2: ‖R₂_sept‖ ≤ 1.2·10¹⁰·s⁷ (Phase A outer)
+  have hR2_le : ‖R₂_sept‖ ≤ 12000000000 * s ^ 7 := by
+    have h := norm_bch_outer_septic_remainder_le (𝕂 := 𝕂) a b hab
+    rw [hR2_sept_def]
+    convert h using 2
+    rw [hz_def]
+  -- TERM 3: ‖½·(R₁_sept·a' - a'·R₁_sept)‖ ≤ ‖R₁_sept‖·‖a'‖ ≤ 1.875·10⁵·s⁷
+  -- Using ‖R₁_sept‖ ≤ 1.5·10⁶·s⁷ and ‖a'‖ ≤ s/2 ≤ 1/8.
+  have hT3 : ‖(2 : 𝕂)⁻¹ • (R₁_sept * a' - a' * R₁_sept)‖ ≤ 187500 * s ^ 7 := by
+    calc ‖(2 : 𝕂)⁻¹ • (R₁_sept * a' - a' * R₁_sept)‖
+        ≤ ‖R₁_sept‖ * ‖a'‖ := norm_half_smul_bracket_le R₁_sept a'
+      _ ≤ (1500000 * s ^ 7) * (s / 2) :=
+          mul_le_mul hR1_le ha'_s (norm_nonneg _) (by positivity)
+      _ ≤ 187500 * s ^ 7 := by nlinarith [hs7_nn, hs_lt]
+  -- TERM 4: ‖½·(C₆(a',b)·a' - a'·C₆(a',b))‖ ≤ ‖C₆(a',b)‖·‖a'‖ ≤ s⁶·(s/2) = s⁷/2 ≤ s⁷
+  have hC6_ab_le : ‖bch_sextic_term 𝕂 a' b‖ ≤ s ^ 6 := by
+    calc ‖bch_sextic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 6 := norm_bch_sextic_term_le a' b
+      _ = s₁ ^ 6 := by rw [← hs₁_def]
+      _ ≤ s ^ 6 := pow_le_pow_left₀ hs₁_nn hs₁_le 6
+  have hT4 : ‖(2 : 𝕂)⁻¹ • (bch_sextic_term 𝕂 a' b * a' -
+                            a' * bch_sextic_term 𝕂 a' b)‖ ≤ s ^ 7 := by
+    calc ‖(2 : 𝕂)⁻¹ • (bch_sextic_term 𝕂 a' b * a' -
+                        a' * bch_sextic_term 𝕂 a' b)‖
+        ≤ ‖bch_sextic_term 𝕂 a' b‖ * ‖a'‖ :=
+          norm_half_smul_bracket_le (bch_sextic_term 𝕂 a' b) a'
+      _ ≤ s ^ 6 * (s / 2) :=
+          mul_le_mul hC6_ab_le ha'_s (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 7 := by nlinarith [hs7_nn, hs_lt]
+  -- SETUP for TERM 5: bounds on ‖z‖, ‖a'+b‖, ‖z-(a'+b)‖.
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
+      (by norm_num : (1:ℝ)/4 < 5/6)]
+  have hs₁_lt_log2 : s₁ < Real.log 2 := by linarith
+  have hexp_s₁_lt : Real.exp s₁ < 2 := by
+    calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs₁_lt_log2
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom₁ : 0 < 2 - Real.exp s₁ := by linarith
+  have hexp_le : Real.exp s₁ ≤ 1 + s₁ + s₁ ^ 2 := by
+    nlinarith [real_exp_third_order_le_cube hs₁_nn (by linarith : s₁ < 5/6)]
+  have hdenom_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp s₁ := by nlinarith
+  have hW_le : ‖z - (a' + b)‖ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    rw [hz_def]; exact norm_bch_sub_add_le (𝕂 := 𝕂) a' b hs₁_lt_log2
+  have hW_s2 : ‖z - (a' + b)‖ ≤ 48 / 11 * s ^ 2 := by
+    have hs₁_sq_le : s₁ ^ 2 ≤ s ^ 2 := pow_le_pow_left₀ hs₁_nn hs₁_le 2
+    calc ‖z - (a' + b)‖ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) := hW_le
+      _ ≤ 3 * s ^ 2 / (11 / 16) := by
+          apply div_le_div₀ (by positivity) _ (by norm_num) hdenom_lb
+          exact mul_le_mul_of_nonneg_left hs₁_sq_le (by norm_num)
+      _ = 48 / 11 * s ^ 2 := by ring
+  have hquad_bound : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 3 / 11 := by
+    rw [div_le_div_iff₀ hdenom₁ (by norm_num : (0:ℝ) < 11)]
+    nlinarith [sq_nonneg s₁, sq_nonneg (1/4 - s₁)]
+  have hz_le : ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    calc ‖z‖ = ‖(z - (a' + b)) + (a' + b)‖ := by congr 1; abel
+      _ ≤ ‖z - (a' + b)‖ + ‖a' + b‖ := norm_add_le _ _
+      _ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) + s₁ := by
+          have hsum : ‖a' + b‖ ≤ s₁ := norm_add_le _ _
+          linarith
+      _ = s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by ring
+  have hz_mult : ‖z‖ ≤ 23/11 * s := by
+    have h1 : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 12 * s / 11 := by
+      rw [div_le_iff₀ hdenom₁]
+      nlinarith [hdenom_lb, hs₁_nn, sq_nonneg s₁, hs₁_le, hs_nn,
+        mul_nonneg hs₁_nn hs_nn, hab]
+    calc ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := hz_le
+      _ ≤ s + 12 * s / 11 := by linarith
+      _ = 23/11 * s := by ring
+  have hp_s : ‖a' + b‖ ≤ 3 / 2 * s := by
+    calc ‖a' + b‖ ≤ ‖a'‖ + ‖b‖ := norm_add_le _ _
+      _ ≤ s / 2 + s := by linarith
+      _ = 3 / 2 * s := by ring
+  -- TERM 5: ‖C₆(z, a') - C₆(a'+b, a')‖ ≤ M⁵·‖z-(a'+b)‖, with M ≤ (45/11)·s.
+  -- M = ‖z‖+‖a'+b‖+‖a'‖ ≤ 23s/11 + 3s/2 + s/2 = (46/22 + 33/22 + 11/22)s = (90/22)s = (45/11)s.
+  have hM_le : ‖z‖ + ‖a' + b‖ + ‖a'‖ ≤ 45/11 * s := by
+    have h1 : ‖z‖ + ‖a' + b‖ + ‖a'‖ ≤ 23/11 * s + 3/2 * s + s/2 := by
+      linarith [hz_mult, hp_s, ha'_s]
+    linarith
+  have hM_nn : (0 : ℝ) ≤ ‖z‖ + ‖a' + b‖ + ‖a'‖ := by positivity
+  have hT5 : ‖bch_sextic_term 𝕂 z a' - bch_sextic_term 𝕂 (a' + b) a'‖ ≤
+              5500 * s ^ 7 := by
+    have h := norm_bch_sextic_term_diff_le (𝕂 := 𝕂) z (a' + b) a'
+    -- h: ‖.‖ ≤ (‖z‖+‖a'+b‖+‖a'‖)^5 · ‖z-(a'+b)‖
+    -- Bound: (45/11·s)^5 · (48/11·s²) = (45/11)^5·(48/11) · s^7 ≈ 184·(48/11) ≈ 803.
+    -- Use 5500 with margin.
+    have hM_pow_le : (‖z‖ + ‖a' + b‖ + ‖a'‖) ^ 5 ≤ (45/11 * s) ^ 5 :=
+      pow_le_pow_left₀ hM_nn hM_le 5
+    have hM_pow_eq : (45/11 * s) ^ 5 = (45/11 : ℝ) ^ 5 * s ^ 5 := by ring
+    have h_45_5 : ((45 : ℝ) / 11) ^ 5 ≤ 184 := by norm_num
+    have hs5_nn : (0 : ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
+    calc _ ≤ (‖z‖ + ‖a' + b‖ + ‖a'‖) ^ 5 * ‖z - (a' + b)‖ := h
+      _ ≤ (45/11 * s) ^ 5 * (48/11 * s ^ 2) := by
+          apply mul_le_mul hM_pow_le hW_s2 (norm_nonneg _) (by positivity)
+      _ = (45/11 : ℝ) ^ 5 * s ^ 5 * (48/11 * s ^ 2) := by rw [hM_pow_eq]
+      _ ≤ 184 * s ^ 5 * (48/11 * s ^ 2) := by
+          apply mul_le_mul_of_nonneg_right _ (by positivity)
+          exact mul_le_mul_of_nonneg_right h_45_5 hs5_nn
+      _ ≤ 5500 * s ^ 7 := by nlinarith [hs7_nn]
+  -- GROUP C+D: combined bound via sub-axiom (Phase E.2 stepping stone).
+  have hCD := symmetric_bch_quintic_group_CD_axiom (𝕂 := 𝕂) a b hab
+  simp only [show ((2 : 𝕂)⁻¹ • a : 𝔸) = a' from rfl,
+             show bch (𝕂 := 𝕂) a' b = z from rfl,
+             ← hDC_a_def] at hCD
+  -- TRIANGLE INEQUALITY: sum the 5 piece bounds + Group C+D bound.
+  -- Layout (matching the hdecomp's RHS structure):
+  -- T₁ = R₁_sept                                                (Group A piece 1)
+  -- T₂ = R₂_sept                                                (Group A piece 2)
+  -- T₃ = ½·[R₁_sept, a']                                        (Group A piece 3)
+  -- T₄ = ½·[C₆(a',b), a']                                       (Group B piece 1)
+  -- T₅ = C₆(z,a') - C₆(a'+b,a')                                 (Group B piece 2)
+  -- T_CD = sum of Group C (4 pieces) + Group D (4 pieces)        (sub-axiom)
+  set T₁ := R₁_sept with hT₁
+  set T₂ := R₂_sept with hT₂
+  set T₃ : 𝔸 := (2 : 𝕂)⁻¹ • (R₁_sept * a' - a' * R₁_sept) with hT₃
+  set T₄ : 𝔸 := (2 : 𝕂)⁻¹ • (bch_sextic_term 𝕂 a' b * a' -
+                              a' * bch_sextic_term 𝕂 a' b) with hT₄
+  set T₅ : 𝔸 := bch_sextic_term 𝕂 z a' - bch_sextic_term 𝕂 (a' + b) a' with hT₅
+  set T_CD : 𝔸 :=
+    -- Group C
+    (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+      -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+    (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
+    (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+    -symmetric_bch_quintic_correction_poly 𝕂 a b +
+    -- Group D
+    (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
+    bch_sextic_term 𝕂 a' b +
+    bch_sextic_term 𝕂 (a' + b) a' +
+    (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a') with hT_CD
+  -- Match the RHS of hdecomp to T₁ + T₂ + T₃ + T₄ + T₅ + T_CD.
+  show ‖T₁ + T₂ + T₃ + T₄ + T₅ + T_CD‖ ≤ _
+  -- Triangle inequality.
+  have hsum_le : ‖T₁ + T₂ + T₃ + T₄ + T₅ + T_CD‖ ≤
+      ‖T₁‖ + ‖T₂‖ + ‖T₃‖ + ‖T₄‖ + ‖T₅‖ + ‖T_CD‖ := by
+    have a5 := norm_add_le (T₁ + T₂ + T₃ + T₄ + T₅) T_CD
+    have a4 := norm_add_le (T₁ + T₂ + T₃ + T₄) T₅
+    have a3 := norm_add_le (T₁ + T₂ + T₃) T₄
+    have a2 := norm_add_le (T₁ + T₂) T₃
+    have a1 := norm_add_le T₁ T₂
+    linarith
+  calc ‖T₁ + T₂ + T₃ + T₄ + T₅ + T_CD‖
+      ≤ ‖T₁‖ + ‖T₂‖ + ‖T₃‖ + ‖T₄‖ + ‖T₅‖ + ‖T_CD‖ := hsum_le
+    _ ≤ 1500000 * s ^ 7 + 12000000000 * s ^ 7 + 187500 * s ^ 7 +
+        s ^ 7 + 5500 * s ^ 7 + 100000000 * s ^ 7 := by
+          linarith [hR1_le, hR2_le, hT3, hT4, hT5, hCD]
+    _ = 12101693001 * s ^ 7 := by ring
+    _ ≤ 20000000000 * s ^ 7 := by nlinarith [hs7_nn]
 
 end QuinticTaylorBridge
 

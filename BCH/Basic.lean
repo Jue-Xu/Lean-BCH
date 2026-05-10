@@ -11250,7 +11250,7 @@ Direct application of `norm_bch_septic_remainder_le` to `(½a, b)` plus the
 standard `s₁ := ‖½a‖ + ‖b‖ ≤ s` and `2 - exp(s₁) ≥ 11/16` (from `s₁ ≤ 1/4`).
 The bound constant `1500000` is chosen to absorb `1000010·(16/11) ≈ 1454560`
 with small margin. -/
-private theorem norm_bch_inner_septic_remainder_le (a b : 𝔸)
+theorem norm_bch_inner_septic_remainder_le (a b : 𝔸)
     (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b - ((2 : 𝕂)⁻¹ • a + b) -
       (2 : 𝕂)⁻¹ • ((2 : 𝕂)⁻¹ • a * b - b * ((2 : 𝕂)⁻¹ • a)) -
@@ -11309,7 +11309,7 @@ Uses the standard outer-radius bound `s₂ := ‖z‖ + ‖½a‖ ≤ (57/22)·s
 `‖z‖ ≤ (23/11)·s`) together with `s₂ ≤ 57/88` and `2 - exp(57/88) ≥ 1/12`
 (via `Real.exp_bound'`). The bound constant `12000000000 = 1.2·10¹⁰` is
 chosen to absorb `1000010·(57/22)^7·12 ≈ 9.41·10⁹` with comfortable margin. -/
-private theorem norm_bch_outer_septic_remainder_le (a b : 𝔸)
+theorem norm_bch_outer_septic_remainder_le (a b : 𝔸)
     (hab : ‖a‖ + ‖b‖ < 1 / 4) :
     ‖bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
       (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b + (2 : 𝕂)⁻¹ • a) -
