@@ -1630,6 +1630,34 @@ theorem norm_bch_cubic_term_diff_le (z x y : 𝔸) :
         apply mul_le_mul_of_nonneg_left hS_le (by norm_num)
     _ = M ^ 2 * d := by ring
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **C₃ LQ decomposition** (T2-F7e Phase E.2 helper):
+    `C₃(x+W, y) − C₃(x, y) = (1/12) · L_C3(x, W, y) + (1/12) · Q_C3(W, y)`
+where `L_C3` is linear in W and `Q_C3` is quadratic in W.
+
+This is a more granular form of the telescoping identity in
+`norm_bch_cubic_term_diff_le`: separating linear-in-W from quadratic-in-W
+contributions of the difference. Used to extract the deg-5 (linear-in-W
+when W=O(s²)) and deg-6+ (quadratic) parts of the cubic term difference
+for the parent T2-F7e discharge.
+
+The L_C3 shape matches the cubic template's `L_W` (in Basic.lean's
+`norm_symmetric_bch_cubic_sub_poly_le`) with `x ≡ a'+b`, `y ≡ a'`,
+giving `L_W = L_C3(a'+b, W, a')`. -/
+theorem bch_cubic_term_LQ_decomp (x W y : 𝔸) :
+    bch_cubic_term 𝕂 (x + W) y - bch_cubic_term 𝕂 x y =
+      (12 : 𝕂)⁻¹ • (
+        -- Linear in W (9 distinct terms; "- X - X" written as -2·X equivalent).
+        x * W * y + W * x * y - x * y * W - x * y * W - W * y * x - W * y * x +
+        y * x * W + y * W * x + y * y * W - y * W * y - y * W * y + W * y * y) +
+      (12 : 𝕂)⁻¹ • (
+        -- Quadratic in W (3 distinct terms).
+        W * W * y - W * y * W - W * y * W + y * W * W) := by
+  unfold bch_cubic_term
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+    smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
+
 /-- The degree-4 BCH term: `-(1/24)⁅b,⁅a,⁅a,b⁆⁆⁆`.
 
 This is the quartic correction in the BCH expansion:

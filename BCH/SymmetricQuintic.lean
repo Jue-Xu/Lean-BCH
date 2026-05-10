@@ -2611,6 +2611,122 @@ private lemma norm_half_smul_bracket_le {𝕂 : Type*} [RCLike 𝕂]
         mul_le_mul_of_nonneg_left hcomm (by norm_num)
     _ = ‖X‖ * ‖Y‖ := by ring
 
+/-! ### T2-F7e Phase E.2 step 2: R_T5_sept algebraic decomposition
+
+The first residual `R_T5_sept = T₅ - ΔC₃_lin(V₃) - ΔC₃_quad(V₂) - T5_d6_op`
+(from `group_CD_eq_three_residuals` above) decomposes structurally as a sum
+of L-form (linear-in-W) and Q-form (quadratic-in-W) operator pieces:
+
+```
+R_T5_sept = (1/12) · L_C3(a'+b, WHigh, a') + (1/12) · Q_residual
+```
+
+where:
+- `WHigh := V₅ + V₆ + R₁_sept` (deg-5+ part of W after V₂, V₃, V₄ extracted)
+- `WMid := V₄ + V₅ + V₆ + R₁_sept`
+- `WRestSept := V₃ + V₄ + V₅ + V₆ + R₁_sept`
+- `Q_residual := Q(V₂, WMid) + Q(WMid, V₂) + Q(WRestSept, WRestSept)`
+  (the deg-7+ cross terms in the bilinear expansion of Q_C3(W, a'))
+
+The L_C3 and Q_C3 templates match the cubic template's `L_W` and `Q_W` shapes
+(see `Basic.lean`'s `norm_symmetric_bch_cubic_sub_poly_le`); the bilinear
+extension is via `bch_cubic_term_LQ_decomp` (`Basic.lean`).
+
+The proof uses:
+- `bch_cubic_term_LQ_decomp` to split bch_cubic_term(z, a') - bch_cubic_term((a'+b), a')
+  into L+Q form with W = z - (a'+b) = V₂ + V₃ + V₄ + V₅ + V₆ + R₁_sept (by
+  R₁_sept's definition).
+- `match_scalars <;> ring` after distributing smul/mul/add and unfolding V₂, x,
+  a', WHigh, WMid, WRestSept (keeping V₃, V₄, V₅, V₆, R₁_sept atomic).
+
+The cancellation `(12)⁻¹·L_V₂ + (96)⁻¹·(b·DC_a - DC_a·b) = 0` (cubic identity)
+fires automatically via the polynomial reduction. -/
+
+set_option maxHeartbeats 64000000 in
+private theorem R_T5_sept_decomp_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    let V₅ : 𝔸 := bch_quintic_term 𝕂 a' b
+    let V₆ : 𝔸 := bch_sextic_term 𝕂 a' b
+    let R₁_sept : 𝔸 := z - (a' + b) - V₂ - V₃ - V₄ - V₅ - V₆
+    let WHigh : 𝔸 := V₅ + V₆ + R₁_sept
+    let WMid : 𝔸 := V₄ + V₅ + V₆ + R₁_sept
+    let WRestSept : 𝔸 := V₃ + V₄ + V₅ + V₆ + R₁_sept
+    let x : 𝔸 := a' + b
+    let DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a
+    -- LHS: R_T5_sept = T₅ - ΔC₃_lin(V₃) - ΔC₃_quad(V₂) - T5_d6_op
+    ((bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+       -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) -
+     -- ΔC₃_lin(V₃, x, a')
+     ((12 : 𝕂)⁻¹ • (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) +
+      (12 : 𝕂)⁻¹ • (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) +
+      (12 : 𝕂)⁻¹ • (a' * (a' * V₃ - V₃ * a') - (a' * V₃ - V₃ * a') * a')) -
+     -- ΔC₃_quad(V₂)
+     ((12 : 𝕂)⁻¹ • (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂)) -
+     -- T5_d6_op = ΔC₃_lin(V₄) + (1/12)·([V₂,[V₃,a']]+[V₃,[V₂,a']])
+     ((12 : 𝕂)⁻¹ • (V₄ * (x * a' - a' * x) - (x * a' - a' * x) * V₄ +
+                     x * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * x +
+                     a' * (a' * V₄ - V₄ * a') - (a' * V₄ - V₄ * a') * a') +
+      (12 : 𝕂)⁻¹ • (V₂ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₂ +
+                     V₃ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₃)))
+    =
+    -- RHS: (12)⁻¹·L_C3(a'+b, WHigh, a') + (12)⁻¹·Q_residual
+    -- L_C3 template (matches cubic template's L_W shape).
+    (12 : 𝕂)⁻¹ • (
+      x * WHigh * a' + WHigh * x * a' - x * a' * WHigh - x * a' * WHigh -
+      WHigh * a' * x - WHigh * a' * x +
+      a' * x * WHigh + a' * WHigh * x + a' * a' * WHigh -
+      a' * WHigh * a' - a' * WHigh * a' + WHigh * a' * a') +
+    -- Q_residual = Q(V₂, WMid) + Q(WMid, V₂) + Q(WRestSept, WRestSept)
+    -- where Q(X, Y) = X·Y·a' - X·a'·Y - Y·a'·X + a'·X·Y.
+    (12 : 𝕂)⁻¹ • (
+      -- Q(V₂, WMid)
+      V₂ * WMid * a' - V₂ * a' * WMid - WMid * a' * V₂ + a' * V₂ * WMid +
+      -- Q(WMid, V₂)
+      WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂ +
+      -- Q(WRestSept, WRestSept) = WRestSept²·a' - 2·WRestSept·a'·WRestSept + a'·WRestSept²
+      WRestSept * WRestSept * a' - WRestSept * a' * WRestSept -
+      WRestSept * a' * WRestSept + a' * WRestSept * WRestSept) := by
+  intro a' z V₂ V₃ V₄ V₅ V₆ R₁_sept WHigh WMid WRestSept x DC_a
+  -- Step 1: z = (a'+b) + (V₂ + V₃ + V₄ + V₅ + V₆ + R₁_sept) by R₁_sept's definition.
+  have hz_W : z = (a' + b) + (V₂ + V₃ + V₄ + V₅ + V₆ + R₁_sept) := by
+    show z = _
+    -- Unfold R₁_sept's let-binding.
+    rw [show R₁_sept = z - (a' + b) - V₂ - V₃ - V₄ - V₅ - V₆ from rfl]
+    abel
+  -- Step 2: Apply LQ decomp at x = a'+b, W = V₂+V₃+V₄+V₅+V₆+R₁_sept, y = a'.
+  have hLQ := bch_cubic_term_LQ_decomp (𝕂 := 𝕂) (a' + b)
+              (V₂ + V₃ + V₄ + V₅ + V₆ + R₁_sept) a'
+  -- hLQ: bch_cubic_term((a'+b)+(V₂+...+R₁_sept), a') - bch_cubic_term((a'+b), a') = ...
+  -- After substituting z = (a'+b) + (V₂+...+R₁_sept), this gives
+  -- bch_cubic_term(z, a') - bch_cubic_term((a'+b), a') = ...
+  -- Convert hLQ to use z:
+  rw [show ((a' + b) + (V₂ + V₃ + V₄ + V₅ + V₆ + R₁_sept) : 𝔸) = z from hz_W.symm] at hLQ
+  -- Now hLQ : bch_cubic_term(z, a') - bch_cubic_term((a'+b), a') = (12)⁻¹·L_expr + (12)⁻¹·Q_expr
+  -- Substitute hLQ into the goal to replace the bch_cubic_term diff.
+  rw [hLQ]
+  -- Step 3: Goal is now polynomial. Unfold V₂, DC_a, x, a', WHigh, WMid, WRestSept.
+  -- Keep V₃, V₄, V₅, V₆, R₁_sept atomic.
+  show _ = _
+  simp only [show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show DC_a = a * (a * b - b * a) - (a * b - b * a) * a from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl,
+             show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show WHigh = V₅ + V₆ + R₁_sept from rfl,
+             show WMid = V₄ + V₅ + V₆ + R₁_sept from rfl,
+             show WRestSept = V₃ + V₄ + V₅ + V₆ + R₁_sept from rfl]
+  -- Distribute smul/mul/add throughout.
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+    smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  -- Close via match_scalars + ring.
+  match_scalars <;> ring
+
 -- Quintic Taylor bridge for the 3-factor symmetric BCH:
 -- ‖symmetric_bch_cubic(a,b) − symmetric_bch_cubic_poly(a,b)
 --   − symmetric_bch_quintic_poly(a,b)‖ ≤ 2·10¹⁰ · (‖a‖+‖b‖)⁷ for ‖a‖+‖b‖<1/4.
