@@ -132,6 +132,60 @@ to align all atoms.
 **Next session priority**: Phase E (per-piece norm bounds + triangle
 assembly + axiom replacement). Estimated ~500 lines.
 
+**Phase E plan** (the final step of T2-F7e parent discharge):
+
+The parent theorem replaces `symmetric_bch_quintic_sub_poly_axiom`. The
+proof uses Phase D's `symmetric_bch_quintic_extended_hdecomp` to express
+`sym_bch_cubic - sym_E₃ - sym_E₅` as 13 sub-pieces, then bounds each:
+
+**Phase E.1: 5 easy pieces** (~150 lines, each O(s⁷)):
+- `R₁_sept` ≤ 1.5·10⁶·s⁷ — direct from Phase A `norm_bch_inner_septic_remainder_le`.
+- `R₂_sept` ≤ 1.2·10¹⁰·s⁷ — direct from Phase A `norm_bch_outer_septic_remainder_le`.
+- `½[R₁_sept, a']` ≤ ‖R₁_sept‖·‖a'‖ ≤ 1.875·10⁵·s⁷ (using s ≤ 1/4).
+- `½[C₆(a',b), a']` ≤ ‖C₆(a',b)‖·‖a'‖ ≤ s⁶·s/2 = s⁷/2.
+- `C₆(z, a') − C₆(a'+b, a')` ≤ M⁵·‖W‖ via `norm_bch_sextic_term_diff_le`,
+  where M = ‖z‖+‖a'+b‖+‖a'‖ ≤ (45/11)·s and ‖W‖ ≤ (48/11)·s². Bound ≈ 5400·s⁷.
+
+**Phase E.2: Phase B+C combined group** (~250 lines, the hard part):
+
+LINE 2 + LINE 3 = (T₅ + T₆ + ½[C₄,a'] − correction) + (½[C₅,a'] + C₆(a',b) +
+C₆(a'+b,a') + (C₅(z,a') − C₅(a'+b,a'))) — the deg-5 and deg-6 cancellation
+groups from Phases B and C respectively. Each individual piece is at most
+O(s⁵) or O(s⁶), so triangle inequality alone fails. Must use Phase B+C
+identities to rewrite the combined sum as 3 deg-7+ residuals:
+
+1. **T₅ residual** = `T₅ − ΔC₃_lin(V₃, x, a') − ΔC₃_quad(V₂, x, a') − T5_d6_op`
+   (where T5_d6_op = ΔC₃_lin(V₄) + (1/12)·([V₂,[V₃,a']] + [V₃,[V₂,a']])).
+   Algebraically: T₅ − (deg-5 ops) − (deg-6 ops) = ΔC₃_lin(V₅+V₆+R₁_sept) +
+   ΔC₃_quad(V₂, V₄+V₅+V₆+R₁_sept) + ΔC₃_quad(V₄+V₅+V₆+R₁_sept, V₂) +
+   ΔC₃_quad(W', W') where W' = V₃+V₄+V₅+V₆+R₁_sept. Each term ≤ K·s⁷.
+
+2. **T₆ residual** = `T₆ − ΔC₄_lin(V₂, x, a') − T6_d6_op`
+   (where T6_d6_op = ΔC₄_lin(V₃) + ΔC₄_quad(V₂)). Similar Lipschitz/quad
+   structure, each term ≤ K·s⁷.
+
+3. **C₅ diff residual** = `(C₅(z,a') − C₅(a'+b,a')) − deltaC5_lin_explicit`.
+   Use `norm_bch_quintic_term_diff_le` (already proved in session 20)
+   plus subtract the explicit deg-6 polynomial. The remaining residual is
+   O(s⁷) by Lipschitz with ‖z − (a'+b) − V₂‖ ≤ K·s³.
+
+Algebraic identity (LINE 2 + LINE 3 = 3 residuals) follows from Phase B
+identity + Phase C identity. Bounds: each residual via triangle +
+Lipschitz infrastructure.
+
+**Phase E.3: assembly** (~100 lines):
+- Triangle inequality: 13 piece bounds → ≤ K_total·s⁷.
+- K_total = sum of constants ≈ 1.2·10¹⁰ + 1.5·10⁶ + 1.875·10⁵ + s⁷/2 + 5400 + 3·(K_residual). All << 10⁹.
+- Replace `symmetric_bch_quintic_sub_poly_axiom` with the proven theorem.
+
+**Required lemmas to add** (in addition to Phase E body):
+- A generic commutator-norm helper: `norm_smul_half_bracket_le` (or use
+  inline triangle inequalities, ~5 lines each).
+- ΔC₃_lin operator bound: `‖(12)⁻¹•(...)‖ ≤ ‖V‖·‖x‖·‖y‖` (and similar for
+  ΔC₃_quad, ΔC₄_lin, ΔC₄_quad). May need 4-6 helpers.
+
+**Heartbeats**: estimated 16M-32M for the full parent theorem due to size.
+
 **Session 20 steps 2-6** (~870 lines in `Basic.lean`): Lipschitz bounds for
 `bch_cubic_term` and `bch_quintic_term` in their first argument. These are
 key infrastructure for the parent T2-F7e discharge — they provide the
