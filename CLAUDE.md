@@ -3,10 +3,11 @@
 ## Status (session 22, 2026-05-10)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**.
-Net axiom count unchanged from session 21 (still 2), but the parent T2-F7e
-axiom has been REPLACED with a smaller, more focused **Group C+D
-sub-axiom** (10⁸·s⁷ stepping-stone) — a major narrowing of the remaining
-discharge work.
+Net axiom count unchanged from session 21 (still 2), but Phase E.2 of
+T2-F7e is now complete modulo a much smaller, more focused **C5_diff_residual
+sub-axiom** (10⁵·s⁷ on a single deg-7+ piece). This replaces the previous
+Group C+D sub-axiom (10⁸·s⁷ on 8 pieces) — a 1000× tighter constant on a
+single isolated deg-7+ residual.
 
 **Session 22 (Phase E.1 of T2-F7e discharge, complete)**: parent axiom
 discharged modulo the Group C+D sub-axiom. The parent theorem
@@ -126,14 +127,57 @@ C₄(x+W, y) - C₄(x, y) = (1/24) · L_C4(x, W, y) + (1/24) · Q_C4(W, y)
 L_C4 is linear-in-W (8 sub-terms), Q_C4 is quadratic-in-W (4 sub-terms).
 12+6 = 18 multiplicities total. Proof: 1-line `unfold + simp + match_scalars`.
 
-**Next session priority**: Phase E.2 steps 3 (rest), 4, 5:
-- 3. R_T6_sept algebraic identity + norm bound (~600 lines): structurally
-  analogous to R_T5_sept_decomp_eq + norm_R_T5_sept_le. Use the new
-  `bch_quartic_term_LQ_decomp`. Estimated bound: ‖R_T6_sept‖ ≤ ~10⁷·s⁷.
-- 4. C5_diff_residual (~200 lines): use existing `norm_bch_quintic_term_diff_le`
-  + Lipschitz on V₂. Estimated bound: ‖C5_diff_residual‖ ≤ ~10⁴·s⁷.
-- 5. Triangle inequality + replace `symmetric_bch_quintic_group_CD_axiom`
-  with proven theorem (~50 lines). Bound: K_T5 + K_T6 + K_C5diff ≤ 10⁸·s⁷.
+**Session 22 step 7 (Phase E.2 step 3, complete)**: R_T6_sept algebraic
+decomposition + norm bound. Adds `BCH.R_T6_sept_decomp_eq` and
+`BCH.norm_R_T6_sept_le`:
+
+```
+R_T6_sept = (1/24)·L_C4(a'+b, WHigh4, a') + (1/24)·(Q_C4(WRest6, a') + Q_bilin(V₂, WRest6, a'))
+‖R_T6_sept‖ ≤ 10⁶·s⁷  (for s = ‖a‖+‖b‖ < 1/4)
+```
+
+Where:
+- WHigh4 := V₄+V₅+V₆+R₁_sept (deg-4+, ‖.‖ ≤ 25000·s⁴).
+- WRest6 := V₃+V₄+V₅+V₆+R₁_sept (deg-3+, ‖.‖ ≤ 6000·s³).
+- L_C4 contributes ~5000·s⁷, Q_C4(WRest6,a') contributes ~600000·s⁷ (the
+  dominant term, deg-8 truncated to s⁷ via s ≤ 1/4), Q_bilin contributes
+  ~10000·s⁷. Total ~610000·s⁷ ≤ 10⁶·s⁷.
+
+Proof structure mirrors R_T5_sept (12-term L decomposition + Q residual).
+Adds 2 helpers: `norm_LC4_template_le` (12-term form) and `norm_QC4_template_le`
+(6-term form), both via `norm_quad_le_aux` (4-letter products). 64M heartbeats
+for the algebraic identity, 1.6M for the norm bound. ~600 lines total.
+
+**Session 22 step 8 (Phase E.2 steps 4-5, axiomatized + theorem-replaced)**:
+The Group C+D sub-axiom is REPLACED with a proved theorem
+`BCH.symmetric_bch_quintic_group_CD_le`, which combines:
+- `norm_R_T5_sept_le` (proved, ≤ 7·10⁶·s⁷)
+- `norm_R_T6_sept_le` (proved, ≤ 10⁶·s⁷)
+- `BCH.symmetric_bch_quintic_C5_diff_residual_axiom` (focused axiom, ≤ 10⁵·s⁷)
+
+via `group_CD_eq_three_residuals` (algebraic identity) + triangle inequality.
+Total: 7·10⁶ + 10⁶ + 10⁵ = 8.1·10⁶·s⁷ ≤ 10⁸·s⁷ (matches old axiom bound).
+
+**Net axiom shift**: Group C+D axiom (10⁸·s⁷, 8 pieces) → C5_diff_residual
+axiom (10⁵·s⁷, 1 piece). Same axiom count (2), but the new axiom is far
+more focused: a 1000× tighter constant on a single deg-7+ residual.
+
+The C5_diff_residual full discharge requires either an L+Q+higher
+decomposition of `bch_quintic_term` in its first arg (analog of the
+cubic/quartic LQ_decomp foundations, but with 76+ linear-in-V₂ and
+quadratic-in-V₂ subterms — ~500 lines of polynomial identity work) OR
+an alternative Lipschitz-of-V₂ structural argument. Future work.
+
+**Next session priority**: Phase E.2 step 4 full discharge:
+- Implement `BCH.bch_quintic_term_LQ_decomp` foundation in `Basic.lean`.
+- Use it to express C5_diff_residual = (Lipschitz-on-WRest6 piece) +
+  (quadratic-in-V₂ residual) + (cubic-in-V₂ + higher), each bounded by O(s⁷).
+- Replace `symmetric_bch_quintic_C5_diff_residual_axiom` with proved theorem.
+- Estimated work: ~500-800 lines.
+
+After that, T2-F7e is fully discharged, leaving only the
+`suzuki5_log_product_septic_at_suzukiP_axiom` (axiom 3) for the
+overall Suzuki-5 BCH framework.
 
 **Phase E.2 plan** (algebraic decomposition + per-residual bounds):
 
@@ -489,16 +533,16 @@ I1 RHS ≤ 21·s⁷.
   before triangle inequality). hS2_inner_eq's y3_6 ordering re-aligned to
   match pieceB's (T₂zT₃ + T₂T₃z + T₃zT₂ + T₃T₂z), proved via `noncomm_ring`.
 
-**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (unchanged from
-session 19 final).
-- `BCH.symmetric_bch_quintic_sub_poly_axiom` — B1.c Tier-2 PARENT, in
-  `SymmetricQuintic.lean`. Discharge requires T2-F7e (cubic template
-  extension to deg-5+6 cancellation). Phase A complete (inner/outer septic
-  remainder helpers, session 21 steps 1-8). Phase B complete (deg-5
-  cancellation pure identity, session 21 steps 9-10). Phase C complete
-  (deg-6 cancellation pure identity, session 21 step 11). Phase D complete
-  (extended hdecomp identity, session 21 step 12, ~150 lines). Phase E
-  remaining (~500 lines).
+**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (unchanged in
+total count from session 19 final, but the parent axioms have been
+progressively narrowed).
+- `BCH.symmetric_bch_quintic_C5_diff_residual_axiom` — Phase E.2 step 4
+  stepping-stone (1 piece, 10⁵·s⁷), in `SymmetricQuintic.lean`. Replaces
+  the previous Group C+D sub-axiom (8 pieces, 10⁸·s⁷). Bounds the
+  linearization residual of C₅(z, a') - C₅(a'+b, a') after subtracting
+  the explicit deg-6 polynomial. Discharge requires either an L+Q+higher
+  decomposition of `bch_quintic_term` (analog of cubic/quartic LQ_decomp)
+  or an alternative Lipschitz-of-V₂ structural argument (~500-800 lines).
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
   in `Suzuki5Quintic.lean`.
 
