@@ -168,6 +168,49 @@ cubic/quartic LQ_decomp foundations, but with 76+ linear-in-V₂ and
 quadratic-in-V₂ subterms — ~500 lines of polynomial identity work) OR
 an alternative Lipschitz-of-V₂ structural argument. Future work.
 
+**Session 22 step 11 (Phase E.2 stage 3a: C5 LinResidual algebraic
+identity, complete)**: the core algebraic foundation for discharging the
+C5_diff_residual axiom is now proved. Key lemmas in `SymmetricQuintic.lean`:
+
+- `BCH.C5_LinResidual_polynomial`: explicit deg-7+ polynomial def in (a, b)
+  with 205 monomials (79 deg-7 + 78 deg-8 + 48 deg-9). Common denominators
+  in {92160, 184320, 368640}. Σ|coef|/denom ≈ 0.027.
+
+- `BCH.C5_LinResidual_at_V2_eq_polynomial`: pure polynomial identity
+  proving `((C₅((a'+b)+V₂, a') - C₅(a'+b, a')) - ΔC₅_lin_explicit)
+  = C5_LinResidual_polynomial 𝕂 a b`. This isolates the deg-6 cancellation
+  between the C₅ linearization at V₂ and ΔC₅_lin_explicit (Phase C insight),
+  leaving only the deg-7+ residual.
+
+  Proof: `match_scalars + ring` after unfolding all 4 `bch_quintic_group_*`,
+  V₂, and a'. Used 1024M heartbeats (~10 min CPU). 310 lines added.
+
+CAS verification (in `scripts/`):
+- `compute_C5_diff_LinResidual.py`: symbolic expansion verifying the
+  polynomial identity numerically. Confirms deg-6 cancellation.
+- `generate_C5_full_lean.py`: emits Lean code for the polynomial def.
+- `gen_lean_norm_bound_final.py`: scaffold for next-stage norm bound
+  (generates ~4400 lines of mechanical Lean code).
+
+**Stage 3b remaining for full discharge** (deferred):
+- `norm_C5_LinResidual_polynomial_le`: triangle inequality on the 205-term
+  polynomial. Each term `(c/d : 𝕂) • word` with d-letter word in {a, b}
+  bounded by `|c|/d · s^d`. Sum ≤ K·s⁷ where K = Σ|coef|/d · s^(d-7) for
+  s ≤ 1/4 conversion. Estimated ~3000-4400 lines mechanical Lean code
+  (one calc block per term + chained `norm_add_le` + final linarith).
+
+  Likely needs structural refactoring to avoid compile-time blowup:
+  consider splitting per-degree (7, 8, 9), or using Finset.sum encoding,
+  or bundling per-monomial bounds via a generic `norm_word_le_pow_s`
+  helper (`‖letter₁·letter₂·...·letterₙ‖ ≤ s^n` for letters in {a, b}).
+
+- Main theorem `symmetric_bch_quintic_C5_diff_residual_le` (replaces axiom):
+  combines the algebraic identity + LinResidual bound (≤ 1·s⁷) +
+  Lipschitz piece (`norm_bch_quintic_term_diff_le` for z vs (a'+b)+V₂,
+  bounded by ~2·10⁶·s⁷) via triangle. Total ≤ 5·10⁶·s⁷ ✓.
+
+After Stage 3b, T2-F7e is fully discharged.
+
 **Session 22 step 10 (Phase E.2 stage 2: per-group LQ_decomps, complete)**:
 implemented foundation lemmas in `Basic.lean` for the C5_diff_residual
 axiom discharge. Each `BCH.bch_quintic_group_k_LQ_decomp` (k=1, 4, 6, 24)
