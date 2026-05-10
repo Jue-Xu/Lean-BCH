@@ -2778,6 +2778,210 @@ theorem norm_bch_quintic_term_diff_le (z x y : 𝔸) :
         apply mul_le_mul_of_nonneg_left hS_le (by norm_num)
     _ ≤ M ^ 4 * d := by nlinarith [hM4_nn, hd_nn]
 
+/-! ### Per-group LQ decompositions for `bch_quintic_group_*`
+
+These are the building blocks for `bch_quintic_term_LQ_decomp` (T2-F7e Phase E.2
+step 4 foundation). Each decomposes `group_k(x+W, y) - group_k(x, y)` into
+linear-in-W + quadratic-in-W + (cubic-in-W) + (quartic-in-W) parts.
+
+For W = V₂ = ½·[a',b] (degree 2 in (a, b)) and y = a' (degree 1), each piece
+is naturally bounded:
+- linear-in-W: M⁴·‖W‖ scaling.
+- quadratic-in-W: M³·‖W‖² scaling.
+- cubic-in-W: M²·‖W‖³ scaling.
+- quartic-in-W: M·‖W‖⁴ scaling.
+
+When ‖W‖ ≤ s²/2 (V₂ bound), each piece is O(s⁷). -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Per-group LQ decomposition (group 1)**: 4 monomials → 10 linear + 12 quadratic + 8 cubic + 2 quartic = 32 sub-terms.
+The 4 monomials are `aaaab`, `abbbb`, `baaaa`, `bbbba`. After substituting first-arg `a → x+W`,
+each contributes 2^k - 1 sub-terms by W-count (where k = #a's of monomial). -/
+theorem bch_quintic_group_1_LQ_decomp (x W y : 𝔸) :
+    bch_quintic_group_1 (x + W) y - bch_quintic_group_1 x y =
+    -- Linear-in-W (10 sub-terms): 4 from aaaab + 1 from abbbb + 4 from baaaa + 1 from bbbba
+    (W * x * x * x * y + x * W * x * x * y + x * x * W * x * y + x * x * x * W * y +
+     W * y * y * y * y +
+     y * W * x * x * x + y * x * W * x * x + y * x * x * W * x + y * x * x * x * W +
+     y * y * y * y * W) +
+    -- Quadratic-in-W (12 sub-terms): 6 from aaaab + 6 from baaaa
+    (W * W * x * x * y + W * x * W * x * y + W * x * x * W * y +
+     x * W * W * x * y + x * W * x * W * y + x * x * W * W * y +
+     y * W * W * x * x + y * W * x * W * x + y * W * x * x * W +
+     y * x * W * W * x + y * x * W * x * W + y * x * x * W * W) +
+    -- Cubic-in-W (8 sub-terms): 4 from aaaab + 4 from baaaa
+    (W * W * W * x * y + W * W * x * W * y + W * x * W * W * y + x * W * W * W * y +
+     y * W * W * W * x + y * W * W * x * W + y * W * x * W * W + y * x * W * W * W) +
+    -- Quartic-in-W (2 sub-terms): from aaaab + baaaa
+    (W * W * W * W * y + y * W * W * W * W) := by
+  unfold bch_quintic_group_1
+  noncomm_ring
+
+set_option maxHeartbeats 3200000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Per-group LQ decomposition (group 6)**: 14 monomials → 35 linear + 30 quadratic + 10 cubic + 1 quartic = 76 sub-terms.
+The 14 monomials are `aabaa, aabab, aabba, abaab, ababb, abbaa, abbab, baaba, baabb, babaa, babba, bbaab, bbaba, bbabb`. -/
+theorem bch_quintic_group_6_LQ_decomp (x W y : 𝔸) :
+    bch_quintic_group_6 (x + W) y - bch_quintic_group_6 x y =
+    -- Linear-in-W (35 sub-terms)
+    (-- aabaa (4, a-pos 1,2,4,5)
+     W * x * y * x * x + x * W * y * x * x + x * x * y * W * x + x * x * y * x * W +
+     -- aabab (3, a-pos 1,2,4)
+     W * x * y * x * y + x * W * y * x * y + x * x * y * W * y +
+     -- aabba (3, a-pos 1,2,5)
+     W * x * y * y * x + x * W * y * y * x + x * x * y * y * W +
+     -- abaab (3, a-pos 1,3,4)
+     W * y * x * x * y + x * y * W * x * y + x * y * x * W * y +
+     -- ababb (2, a-pos 1,3)
+     W * y * x * y * y + x * y * W * y * y +
+     -- abbaa (3, a-pos 1,4,5)
+     W * y * y * x * x + x * y * y * W * x + x * y * y * x * W +
+     -- abbab (2, a-pos 1,4)
+     W * y * y * x * y + x * y * y * W * y +
+     -- baaba (3, a-pos 2,3,5)
+     y * W * x * y * x + y * x * W * y * x + y * x * x * y * W +
+     -- baabb (2, a-pos 2,3)
+     y * W * x * y * y + y * x * W * y * y +
+     -- babaa (3, a-pos 2,4,5)
+     y * W * y * x * x + y * x * y * W * x + y * x * y * x * W +
+     -- babba (2, a-pos 2,5)
+     y * W * y * y * x + y * x * y * y * W +
+     -- bbaab (2, a-pos 3,4)
+     y * y * W * x * y + y * y * x * W * y +
+     -- bbaba (2, a-pos 3,5)
+     y * y * W * y * x + y * y * x * y * W +
+     -- bbabb (1, a-pos 3)
+     y * y * W * y * y) +
+    -- Quadratic-in-W (30 sub-terms)
+    (-- aabaa (6, pairs {1,2,4,5}: (1,2),(1,4),(1,5),(2,4),(2,5),(4,5))
+     W * W * y * x * x + W * x * y * W * x + W * x * y * x * W +
+     x * W * y * W * x + x * W * y * x * W + x * x * y * W * W +
+     -- aabab (3, pairs (1,2),(1,4),(2,4))
+     W * W * y * x * y + W * x * y * W * y + x * W * y * W * y +
+     -- aabba (3, pairs (1,2),(1,5),(2,5))
+     W * W * y * y * x + W * x * y * y * W + x * W * y * y * W +
+     -- abaab (3, pairs (1,3),(1,4),(3,4))
+     W * y * W * x * y + W * y * x * W * y + x * y * W * W * y +
+     -- ababb (1, pair (1,3))
+     W * y * W * y * y +
+     -- abbaa (3, pairs (1,4),(1,5),(4,5))
+     W * y * y * W * x + W * y * y * x * W + x * y * y * W * W +
+     -- abbab (1, pair (1,4))
+     W * y * y * W * y +
+     -- baaba (3, pairs (2,3),(2,5),(3,5))
+     y * W * W * y * x + y * W * x * y * W + y * x * W * y * W +
+     -- baabb (1, pair (2,3))
+     y * W * W * y * y +
+     -- babaa (3, pairs (2,4),(2,5),(4,5))
+     y * W * y * W * x + y * W * y * x * W + y * x * y * W * W +
+     -- babba (1, pair (2,5))
+     y * W * y * y * W +
+     -- bbaab (1, pair (3,4))
+     y * y * W * W * y +
+     -- bbaba (1, pair (3,5))
+     y * y * W * y * W) +
+    -- Cubic-in-W (10 sub-terms)
+    (-- aabaa (4, triples (1,2,4),(1,2,5),(1,4,5),(2,4,5))
+     W * W * y * W * x + W * W * y * x * W + W * x * y * W * W + x * W * y * W * W +
+     -- aabab (1, triple (1,2,4))
+     W * W * y * W * y +
+     -- aabba (1, triple (1,2,5))
+     W * W * y * y * W +
+     -- abaab (1, triple (1,3,4))
+     W * y * W * W * y +
+     -- abbaa (1, triple (1,4,5))
+     W * y * y * W * W +
+     -- baaba (1, triple (2,3,5))
+     y * W * W * y * W +
+     -- babaa (1, triple (2,4,5))
+     y * W * y * W * W) +
+    -- Quartic-in-W (1 sub-term)
+    -- aabaa (quadruple (1,2,4,5))
+    W * W * y * W * W := by
+  unfold bch_quintic_group_6
+  noncomm_ring
+
+set_option maxHeartbeats 1600000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Per-group LQ decomposition (group 4)**: 10 monomials → 25 linear + 24 quadratic + 11 cubic + 2 quartic = 62 sub-terms.
+The 10 monomials are `aaaba, aaabb, aabbb, abaaa, abbba, baaab, babbb, bbaaa, bbbaa, bbbab`. -/
+theorem bch_quintic_group_4_LQ_decomp (x W y : 𝔸) :
+    bch_quintic_group_4 (x + W) y - bch_quintic_group_4 x y =
+    -- Linear-in-W (25 sub-terms)
+    (-- aaaba (4 sub-terms): W at pos 1, 2, 3, 5
+     W * x * x * y * x + x * W * x * y * x + x * x * W * y * x + x * x * x * y * W +
+     -- aaabb (3 sub-terms): W at pos 1, 2, 3
+     W * x * x * y * y + x * W * x * y * y + x * x * W * y * y +
+     -- aabbb (2 sub-terms): W at pos 1, 2
+     W * x * y * y * y + x * W * y * y * y +
+     -- abaaa (4 sub-terms): W at pos 1, 3, 4, 5
+     W * y * x * x * x + x * y * W * x * x + x * y * x * W * x + x * y * x * x * W +
+     -- abbba (2 sub-terms): W at pos 1, 5
+     W * y * y * y * x + x * y * y * y * W +
+     -- baaab (3 sub-terms): W at pos 2, 3, 4
+     y * W * x * x * y + y * x * W * x * y + y * x * x * W * y +
+     -- babbb (1 sub-term): W at pos 2
+     y * W * y * y * y +
+     -- bbaaa (3 sub-terms): W at pos 3, 4, 5
+     y * y * W * x * x + y * y * x * W * x + y * y * x * x * W +
+     -- bbbaa (2 sub-terms): W at pos 4, 5
+     y * y * y * W * x + y * y * y * x * W +
+     -- bbbab (1 sub-term): W at pos 4
+     y * y * y * W * y) +
+    -- Quadratic-in-W (24 sub-terms)
+    (-- aaaba (6 sub-terms): pairs (1,2), (1,3), (1,5), (2,3), (2,5), (3,5)
+     W * W * x * y * x + W * x * W * y * x + W * x * x * y * W +
+     x * W * W * y * x + x * W * x * y * W + x * x * W * y * W +
+     -- aaabb (3 sub-terms): pairs (1,2), (1,3), (2,3)
+     W * W * x * y * y + W * x * W * y * y + x * W * W * y * y +
+     -- aabbb (1 sub-term): pair (1,2)
+     W * W * y * y * y +
+     -- abaaa (6 sub-terms): pairs (1,3), (1,4), (1,5), (3,4), (3,5), (4,5)
+     W * y * W * x * x + W * y * x * W * x + W * y * x * x * W +
+     x * y * W * W * x + x * y * W * x * W + x * y * x * W * W +
+     -- abbba (1 sub-term): pair (1,5)
+     W * y * y * y * W +
+     -- baaab (3 sub-terms): pairs (2,3), (2,4), (3,4)
+     y * W * W * x * y + y * W * x * W * y + y * x * W * W * y +
+     -- bbaaa (3 sub-terms): pairs (3,4), (3,5), (4,5)
+     y * y * W * W * x + y * y * W * x * W + y * y * x * W * W +
+     -- bbbaa (1 sub-term): pair (4,5)
+     y * y * y * W * W) +
+    -- Cubic-in-W (11 sub-terms)
+    (-- aaaba (4 sub-terms): triples (1,2,3), (1,2,5), (1,3,5), (2,3,5)
+     W * W * W * y * x + W * W * x * y * W + W * x * W * y * W + x * W * W * y * W +
+     -- aaabb (1 sub-term): triple (1,2,3)
+     W * W * W * y * y +
+     -- abaaa (4 sub-terms): triples (1,3,4), (1,3,5), (1,4,5), (3,4,5)
+     W * y * W * W * x + W * y * W * x * W + W * y * x * W * W + x * y * W * W * W +
+     -- baaab (1 sub-term): triple (2,3,4)
+     y * W * W * W * y +
+     -- bbaaa (1 sub-term): triple (3,4,5)
+     y * y * W * W * W) +
+    -- Quartic-in-W (2 sub-terms)
+    (-- aaaba: quadruple (1,2,3,5)
+     W * W * W * y * W +
+     -- abaaa: quadruple (1,3,4,5)
+     W * y * W * W * W) := by
+  unfold bch_quintic_group_4
+  noncomm_ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Per-group LQ decomposition (group 24)**: 2 monomials → 5 linear + 4 quadratic + 1 cubic = 10 sub-terms.
+The 2 monomials are `ababa`, `babab`. -/
+theorem bch_quintic_group_24_LQ_decomp (x W y : 𝔸) :
+    bch_quintic_group_24 (x + W) y - bch_quintic_group_24 x y =
+    -- Linear-in-W (5 sub-terms): from ababa (3) + babab (2)
+    (x * y * x * y * W + x * y * W * y * x + W * y * x * y * x +
+     y * x * y * W * y + y * W * y * x * y) +
+    -- Quadratic-in-W (4 sub-terms): from ababa (3) + babab (1)
+    (x * y * W * y * W + W * y * x * y * W + W * y * W * y * x +
+     y * W * y * W * y) +
+    -- Cubic-in-W (1 sub-term): from ababa
+    W * y * W * y * W := by
+  unfold bch_quintic_group_24
+  noncomm_ring
+
 /-! ### `bch_sextic_term` — the τ⁶ coefficient of `bch(a, b)`
 
 Explicit 28-term polynomial in {a, b}, derived via the CAS pipeline at
