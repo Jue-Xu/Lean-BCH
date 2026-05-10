@@ -2727,6 +2727,398 @@ private theorem R_T5_sept_decomp_eq
   -- Close via match_scalars + ring.
   match_scalars <;> ring
 
+/-! ### T2-F7e Phase E.2 step 2b: norm bound on R_T5_sept
+
+Uses `R_T5_sept_decomp_eq` to express R_T5_sept = (12)⁻¹·L_C3 + (12)⁻¹·Q_residual,
+then bounds each piece by triangle inequality. -/
+
+-- Triple product norm bound: `‖X*Y*Z‖ ≤ ‖X‖·‖Y‖·‖Z‖`. Extracted helper.
+private lemma norm_triple_le_aux {𝔸 : Type*} [NormedRing 𝔸] (X Y Z : 𝔸) :
+    ‖X * Y * Z‖ ≤ ‖X‖ * ‖Y‖ * ‖Z‖ := by
+  calc ‖X * Y * Z‖ ≤ ‖X * Y‖ * ‖Z‖ := norm_mul_le _ _
+    _ ≤ (‖X‖ * ‖Y‖) * ‖Z‖ := by gcongr; exact norm_mul_le _ _
+
+-- Q-bilinear form 4-term bound: `‖X·Y·a' - X·a'·Y - Y·a'·X + a'·X·Y‖ ≤ 4·‖X‖·‖Y‖·‖a'‖`.
+private lemma norm_Q_form_le_aux {𝔸 : Type*} [NormedRing 𝔸] (X Y a' : 𝔸) :
+    ‖X * Y * a' - X * a' * Y - Y * a' * X + a' * X * Y‖ ≤
+      4 * ‖X‖ * ‖Y‖ * ‖a'‖ := by
+  have h1 : ‖X * Y * a'‖ ≤ ‖X‖ * ‖Y‖ * ‖a'‖ := norm_triple_le_aux X Y a'
+  have h2 : ‖X * a' * Y‖ ≤ ‖X‖ * ‖Y‖ * ‖a'‖ := by
+    calc ‖X * a' * Y‖ ≤ ‖X‖ * ‖a'‖ * ‖Y‖ := norm_triple_le_aux X a' Y
+      _ = ‖X‖ * ‖Y‖ * ‖a'‖ := by ring
+  have h3 : ‖Y * a' * X‖ ≤ ‖X‖ * ‖Y‖ * ‖a'‖ := by
+    calc ‖Y * a' * X‖ ≤ ‖Y‖ * ‖a'‖ * ‖X‖ := norm_triple_le_aux Y a' X
+      _ = ‖X‖ * ‖Y‖ * ‖a'‖ := by ring
+  have h4 : ‖a' * X * Y‖ ≤ ‖X‖ * ‖Y‖ * ‖a'‖ := by
+    calc ‖a' * X * Y‖ ≤ ‖a'‖ * ‖X‖ * ‖Y‖ := norm_triple_le_aux a' X Y
+      _ = ‖X‖ * ‖Y‖ * ‖a'‖ := by ring
+  have hreorg : X * Y * a' - X * a' * Y - Y * a' * X + a' * X * Y =
+                X * Y * a' + (-(X * a' * Y)) + (-(Y * a' * X)) + a' * X * Y := by abel
+  rw [hreorg]
+  have b3 := norm_add_le (X * Y * a' + (-(X * a' * Y)) + (-(Y * a' * X))) (a' * X * Y)
+  have b2 := norm_add_le (X * Y * a' + (-(X * a' * Y))) (-(Y * a' * X))
+  have b1 := norm_add_le (X * Y * a') (-(X * a' * Y))
+  simp only [norm_neg] at b1 b2 b3
+  linarith
+
+set_option maxHeartbeats 1600000 in
+private theorem norm_R_T5_sept_le
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    let DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a
+    ‖((bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+       -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) -
+     ((12 : 𝕂)⁻¹ • (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) +
+      (12 : 𝕂)⁻¹ • (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) +
+      (12 : 𝕂)⁻¹ • (a' * (a' * V₃ - V₃ * a') - (a' * V₃ - V₃ * a') * a')) -
+     ((12 : 𝕂)⁻¹ • (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂)) -
+     ((12 : 𝕂)⁻¹ • (V₄ * (x * a' - a' * x) - (x * a' - a' * x) * V₄ +
+                     x * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * x +
+                     a' * (a' * V₄ - V₄ * a') - (a' * V₄ - V₄ * a') * a') +
+      (12 : 𝕂)⁻¹ • (V₂ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₂ +
+                     V₃ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₃)))‖
+    ≤ 7000000 * (‖a‖ + ‖b‖) ^ 7 := by
+  intro a' z V₂ V₃ V₄ x DC_a
+  -- Setup norms.
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have hs_lt : s < 1 / 4 := hab
+  have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ s / 2 := by
+    show ‖(2 : 𝕂)⁻¹ • a‖ ≤ _
+    calc ‖(2 : 𝕂)⁻¹ • a‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+      _ ≤ s / 2 := by have := norm_nonneg b; linarith
+  have ha'_b_le : ‖a' + b‖ ≤ 3 * s / 2 := by
+    calc ‖a' + b‖ ≤ ‖a'‖ + ‖b‖ := norm_add_le _ _
+      _ ≤ s / 2 + s := by have := norm_nonneg a; linarith
+      _ = 3 * s / 2 := by ring
+  -- ‖a'‖ ≤ ‖a‖ (since a' = (1/2)·a and ‖(1/2)‖ = 1/2 ≤ 1).
+  have ha'_a : ‖a'‖ ≤ ‖a‖ := by
+    show ‖(2 : 𝕂)⁻¹ • a‖ ≤ _
+    calc ‖(2 : 𝕂)⁻¹ • a‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+      _ ≤ ‖a‖ := by linarith [norm_nonneg a]
+  have hs1_le : ‖a'‖ + ‖b‖ ≤ s := by linarith [ha'_a]
+  have hs1_nn : (0 : ℝ) ≤ ‖a'‖ + ‖b‖ := by positivity
+  -- ‖V₂‖ ≤ s²/2.
+  have hV2_le : ‖V₂‖ ≤ s ^ 2 / 2 := by
+    show ‖(2 : 𝕂)⁻¹ • (a' * b - b * a')‖ ≤ _
+    have hcomm : ‖a' * b - b * a'‖ ≤ 2 * ‖a'‖ * ‖b‖ := by
+      calc ‖a' * b - b * a'‖ ≤ ‖a' * b‖ + ‖b * a'‖ := by
+            rw [sub_eq_add_neg]; exact (norm_add_le _ _).trans (by rw [norm_neg])
+        _ ≤ ‖a'‖ * ‖b‖ + ‖b‖ * ‖a'‖ := by gcongr <;> exact norm_mul_le _ _
+        _ = 2 * ‖a'‖ * ‖b‖ := by ring
+    calc ‖(2 : 𝕂)⁻¹ • (a' * b - b * a')‖
+        ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a' * b - b * a'‖ := norm_smul_le _ _
+      _ = (2 : ℝ)⁻¹ * ‖a' * b - b * a'‖ := by rw [h_half_norm]
+      _ ≤ (2 : ℝ)⁻¹ * (2 * ‖a'‖ * ‖b‖) := by
+          apply mul_le_mul_of_nonneg_left hcomm (by norm_num)
+      _ = ‖a'‖ * ‖b‖ := by ring
+      _ ≤ (s / 2) * s := by
+          apply mul_le_mul ha'_le _ (norm_nonneg _) (by linarith)
+          have := norm_nonneg a; linarith
+      _ = s ^ 2 / 2 := by ring
+  -- ‖V₃‖ ≤ s³, ‖V₄‖ ≤ s⁴, ‖V₅‖ ≤ s⁵, ‖V₆‖ ≤ s⁶.
+  have hV3_le : ‖V₃‖ ≤ s ^ 3 := by
+    show ‖bch_cubic_term 𝕂 a' b‖ ≤ _
+    calc ‖bch_cubic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 3 := norm_bch_cubic_term_le a' b
+      _ ≤ s ^ 3 := pow_le_pow_left₀ hs1_nn hs1_le 3
+  have hV4_le : ‖V₄‖ ≤ s ^ 4 := by
+    show ‖bch_quartic_term 𝕂 a' b‖ ≤ _
+    calc ‖bch_quartic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 4 := norm_bch_quartic_term_le a' b
+      _ ≤ s ^ 4 := pow_le_pow_left₀ hs1_nn hs1_le 4
+  have hV5_le : ‖bch_quintic_term 𝕂 a' b‖ ≤ s ^ 5 := by
+    calc ‖bch_quintic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 5 := norm_bch_quintic_term_le a' b
+      _ ≤ s ^ 5 := pow_le_pow_left₀ hs1_nn hs1_le 5
+  have hV6_le : ‖bch_sextic_term 𝕂 a' b‖ ≤ s ^ 6 := by
+    calc ‖bch_sextic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 6 := norm_bch_sextic_term_le a' b
+      _ ≤ s ^ 6 := pow_le_pow_left₀ hs1_nn hs1_le 6
+  have hR1_le : ‖z - (a' + b) - V₂ - V₃ - V₄ -
+                  bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b‖ ≤
+                1500000 * s ^ 7 :=
+    norm_bch_inner_septic_remainder_le (𝕂 := 𝕂) a b hab
+  -- Apply algebraic decomposition.
+  rw [R_T5_sept_decomp_eq (𝕂 := 𝕂) a b]
+  -- Goal: ‖(12)⁻¹·L_C3 + (12)⁻¹·Q_residual‖ ≤ 7·10⁶·s⁷
+  -- Set up local names for intermediate expressions.
+  set V₅ : 𝔸 := bch_quintic_term 𝕂 a' b with hV5_def
+  set V₆ : 𝔸 := bch_sextic_term 𝕂 a' b with hV6_def
+  set R₁_sept : 𝔸 := z - (a' + b) - V₂ - V₃ - V₄ - V₅ - V₆ with hR1_def
+  set WHigh : 𝔸 := V₅ + V₆ + R₁_sept with hWHigh_def
+  set WMid : 𝔸 := V₄ + V₅ + V₆ + R₁_sept with hWMid_def
+  set WRestSept : 𝔸 := V₃ + V₄ + V₅ + V₆ + R₁_sept with hWRest_def
+  have hWHigh_nn : (0:ℝ) ≤ ‖WHigh‖ := norm_nonneg _
+  have hWMid_nn : (0:ℝ) ≤ ‖WMid‖ := norm_nonneg _
+  have hWRest_nn : (0:ℝ) ≤ ‖WRestSept‖ := norm_nonneg _
+  have hR1_le' : ‖R₁_sept‖ ≤ 1500000 * s ^ 7 := by rw [hR1_def]; exact hR1_le
+  -- Pow bounds: s^k ≤ s^j · (1/4)^(k-j) for s ≤ 1/4.
+  have hs2_le : s^2 ≤ 1/16 := by nlinarith [hs_lt, hs_nn]
+  have hs3_le : s^3 ≤ 1/64 := by nlinarith [hs_lt, hs_nn, sq_nonneg s]
+  have hs4_le : s^4 ≤ 1/256 := by nlinarith [hs2_le, sq_nonneg (s^2)]
+  have hs5_nn : (0:ℝ) ≤ s^5 := pow_nonneg hs_nn 5
+  have hs4_nn : (0:ℝ) ≤ s^4 := pow_nonneg hs_nn 4
+  have hs3_nn : (0:ℝ) ≤ s^3 := pow_nonneg hs_nn 3
+  have hs6_le_s5 : s^6 ≤ s^5 * (1/4) := by
+    have heq : s^6 = s * s^5 := by ring
+    rw [heq]; nlinarith [hs5_nn, hs_lt, hs_nn]
+  have hs7_le_s5 : s^7 ≤ s^5 * (1/16) := by
+    have heq : s^7 = s^2 * s^5 := by ring
+    rw [heq]; nlinarith [hs5_nn, hs2_le]
+  have hs5_le_s4 : s^5 ≤ s^4 * (1/4) := by
+    have heq : s^5 = s * s^4 := by ring
+    rw [heq]; nlinarith [hs4_nn, hs_lt, hs_nn]
+  have hs6_le_s4 : s^6 ≤ s^4 * (1/16) := by
+    have heq : s^6 = s^2 * s^4 := by ring
+    rw [heq]; nlinarith [hs4_nn, hs2_le]
+  have hs7_le_s4 : s^7 ≤ s^4 * (1/64) := by
+    have heq : s^7 = s^3 * s^4 := by ring
+    rw [heq]; nlinarith [hs4_nn, hs3_le]
+  have hs4_le_s3 : s^4 ≤ s^3 * (1/4) := by
+    have heq : s^4 = s * s^3 := by ring
+    rw [heq]; nlinarith [hs3_nn, hs_lt, hs_nn]
+  have hs5_le_s3 : s^5 ≤ s^3 * (1/16) := by
+    have heq : s^5 = s^2 * s^3 := by ring
+    rw [heq]; nlinarith [hs3_nn, hs2_le]
+  have hs6_le_s3 : s^6 ≤ s^3 * (1/64) := by
+    have heq : s^6 = s^3 * s^3 := by ring
+    rw [heq]; nlinarith [hs3_nn, hs3_le]
+  have hs7_le_s3 : s^7 ≤ s^3 * (1/256) := by
+    have heq : s^7 = s^4 * s^3 := by ring
+    rw [heq]; nlinarith [hs3_nn, hs4_le]
+  -- Bounds on WHigh, WMid, WRestSept.
+  have hWHigh_le : ‖WHigh‖ ≤ 100000 * s ^ 5 := by
+    have hsum : ‖WHigh‖ ≤ ‖V₅‖ + ‖V₆‖ + ‖R₁_sept‖ := by
+      rw [hWHigh_def]
+      have h1 := norm_add_le (V₅ + V₆) R₁_sept
+      have h2 := norm_add_le V₅ V₆
+      linarith
+    have hV5 : ‖V₅‖ ≤ s ^ 5 := hV5_le
+    have hV6 : ‖V₆‖ ≤ s ^ 6 := hV6_le
+    linarith
+  have hWMid_le : ‖WMid‖ ≤ 25000 * s ^ 4 := by
+    have hsum : ‖WMid‖ ≤ ‖V₄‖ + ‖V₅‖ + ‖V₆‖ + ‖R₁_sept‖ := by
+      rw [hWMid_def]
+      have h1 := norm_add_le (V₄ + V₅ + V₆) R₁_sept
+      have h2 := norm_add_le (V₄ + V₅) V₆
+      have h3 := norm_add_le V₄ V₅
+      linarith
+    have hV5 : ‖V₅‖ ≤ s ^ 5 := hV5_le
+    have hV6 : ‖V₆‖ ≤ s ^ 6 := hV6_le
+    linarith
+  have hWRest_le : ‖WRestSept‖ ≤ 6000 * s ^ 3 := by
+    have hsum : ‖WRestSept‖ ≤ ‖V₃‖ + ‖V₄‖ + ‖V₅‖ + ‖V₆‖ + ‖R₁_sept‖ := by
+      rw [hWRest_def]
+      have h1 := norm_add_le (V₃ + V₄ + V₅ + V₆) R₁_sept
+      have h2 := norm_add_le (V₃ + V₄ + V₅) V₆
+      have h3 := norm_add_le (V₃ + V₄) V₅
+      have h4 := norm_add_le V₃ V₄
+      linarith
+    have hV5 : ‖V₅‖ ≤ s ^ 5 := hV5_le
+    have hV6 : ‖V₆‖ ≤ s ^ 6 := hV6_le
+    linarith
+  have h12_inv : ‖(12 : 𝕂)⁻¹‖ = (12 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  -- Bound L_C3: 12 sub-terms, each ≤ (3s/2)²·‖WHigh‖.
+  have hmax_a' : ‖a'‖ ≤ 3 * s / 2 := by linarith
+  have hmax_x : ‖a' + b‖ ≤ 3 * s / 2 := ha'_b_le
+  set K_L : ℝ := (3 * s / 2) ^ 2 * ‖WHigh‖ with hK_L_def
+  have hK_L_nn : 0 ≤ K_L := by rw [hK_L_def]; positivity
+  -- Bound each of the 12 sub-terms of L_C3.
+  have hL_term : ∀ X Y W : 𝔸, ‖X‖ ≤ 3*s/2 → ‖Y‖ ≤ 3*s/2 → ‖W‖ = ‖WHigh‖ →
+                 ‖X * Y * W‖ ≤ K_L ∧ ‖X * W * Y‖ ≤ K_L ∧ ‖W * X * Y‖ ≤ K_L := by
+    intro X Y W hX hY hW
+    refine ⟨?_, ?_, ?_⟩
+    · calc ‖X * Y * W‖ ≤ ‖X‖ * ‖Y‖ * ‖W‖ := norm_triple_le_aux X Y W
+        _ ≤ (3*s/2) * (3*s/2) * ‖W‖ := by gcongr
+        _ = (3*s/2)^2 * ‖W‖ := by ring
+        _ = K_L := by rw [hK_L_def, hW]
+    · calc ‖X * W * Y‖ ≤ ‖X‖ * ‖W‖ * ‖Y‖ := norm_triple_le_aux X W Y
+        _ ≤ (3*s/2) * ‖W‖ * (3*s/2) := by gcongr
+        _ = (3*s/2)^2 * ‖W‖ := by ring
+        _ = K_L := by rw [hK_L_def, hW]
+    · calc ‖W * X * Y‖ ≤ ‖W‖ * ‖X‖ * ‖Y‖ := norm_triple_le_aux W X Y
+        _ ≤ ‖W‖ * (3*s/2) * (3*s/2) := by gcongr
+        _ = (3*s/2)^2 * ‖W‖ := by ring
+        _ = K_L := by rw [hK_L_def, hW]
+  -- 9 distinct triple-product types in L_C3, each bounded by K_L.
+  have e1  : ‖(a'+b) * WHigh * a'‖ ≤ K_L := (hL_term (a'+b) a' WHigh hmax_x hmax_a' rfl).2.1
+  have e2  : ‖WHigh * (a'+b) * a'‖ ≤ K_L := (hL_term (a'+b) a' WHigh hmax_x hmax_a' rfl).2.2
+  have e3  : ‖(a'+b) * a' * WHigh‖ ≤ K_L := (hL_term (a'+b) a' WHigh hmax_x hmax_a' rfl).1
+  have e4  : ‖WHigh * a' * (a'+b)‖ ≤ K_L := (hL_term a' (a'+b) WHigh hmax_a' hmax_x rfl).2.2
+  have e5  : ‖a' * (a'+b) * WHigh‖ ≤ K_L := (hL_term a' (a'+b) WHigh hmax_a' hmax_x rfl).1
+  have e6  : ‖a' * WHigh * (a'+b)‖ ≤ K_L := (hL_term a' (a'+b) WHigh hmax_a' hmax_x rfl).2.1
+  have e7  : ‖a' * a' * WHigh‖ ≤ K_L := (hL_term a' a' WHigh hmax_a' hmax_a' rfl).1
+  have e8  : ‖a' * WHigh * a'‖ ≤ K_L := (hL_term a' a' WHigh hmax_a' hmax_a' rfl).2.1
+  have e9  : ‖WHigh * a' * a'‖ ≤ K_L := (hL_term a' a' WHigh hmax_a' hmax_a' rfl).2.2
+  -- Triangle inequality on the 12 summands of L_C3.
+  -- L_C3 = e1 + e2 - 2·e3 - 2·e4 + e5 + e6 + e7 - 2·e8 + e9 (with abuse of notation).
+  have hL_norm : ‖((a' + b) * WHigh * a' + WHigh * (a' + b) * a' -
+                   (a' + b) * a' * WHigh - (a' + b) * a' * WHigh -
+                   WHigh * a' * (a' + b) - WHigh * a' * (a' + b) +
+                   a' * (a' + b) * WHigh + a' * WHigh * (a' + b) +
+                   a' * a' * WHigh - a' * WHigh * a' - a' * WHigh * a' +
+                   WHigh * a' * a')‖ ≤ 12 * K_L := by
+    have hreorg :
+        (a' + b) * WHigh * a' + WHigh * (a' + b) * a' -
+        (a' + b) * a' * WHigh - (a' + b) * a' * WHigh -
+        WHigh * a' * (a' + b) - WHigh * a' * (a' + b) +
+        a' * (a' + b) * WHigh + a' * WHigh * (a' + b) +
+        a' * a' * WHigh - a' * WHigh * a' - a' * WHigh * a' +
+        WHigh * a' * a' =
+        (a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+        (-((a' + b) * a' * WHigh)) + (-((a' + b) * a' * WHigh)) +
+        (-(WHigh * a' * (a' + b))) + (-(WHigh * a' * (a' + b))) +
+        a' * (a' + b) * WHigh + a' * WHigh * (a' + b) +
+        a' * a' * WHigh + (-(a' * WHigh * a')) + (-(a' * WHigh * a')) +
+        WHigh * a' * a' := by abel
+    rw [hreorg]
+    -- Repeated norm_add_le.
+    have a11 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+      (-((a' + b) * a' * WHigh)) + (-((a' + b) * a' * WHigh)) +
+      (-(WHigh * a' * (a' + b))) + (-(WHigh * a' * (a' + b))) +
+      a' * (a' + b) * WHigh + a' * WHigh * (a' + b) +
+      a' * a' * WHigh + (-(a' * WHigh * a')) + (-(a' * WHigh * a'))) (WHigh * a' * a')
+    have a10 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+      (-((a' + b) * a' * WHigh)) + (-((a' + b) * a' * WHigh)) +
+      (-(WHigh * a' * (a' + b))) + (-(WHigh * a' * (a' + b))) +
+      a' * (a' + b) * WHigh + a' * WHigh * (a' + b) +
+      a' * a' * WHigh + (-(a' * WHigh * a'))) (-(a' * WHigh * a'))
+    have a9 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+      (-((a' + b) * a' * WHigh)) + (-((a' + b) * a' * WHigh)) +
+      (-(WHigh * a' * (a' + b))) + (-(WHigh * a' * (a' + b))) +
+      a' * (a' + b) * WHigh + a' * WHigh * (a' + b) +
+      a' * a' * WHigh) (-(a' * WHigh * a'))
+    have a8 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+      (-((a' + b) * a' * WHigh)) + (-((a' + b) * a' * WHigh)) +
+      (-(WHigh * a' * (a' + b))) + (-(WHigh * a' * (a' + b))) +
+      a' * (a' + b) * WHigh + a' * WHigh * (a' + b)) (a' * a' * WHigh)
+    have a7 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+      (-((a' + b) * a' * WHigh)) + (-((a' + b) * a' * WHigh)) +
+      (-(WHigh * a' * (a' + b))) + (-(WHigh * a' * (a' + b))) +
+      a' * (a' + b) * WHigh) (a' * WHigh * (a' + b))
+    have a6 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+      (-((a' + b) * a' * WHigh)) + (-((a' + b) * a' * WHigh)) +
+      (-(WHigh * a' * (a' + b))) + (-(WHigh * a' * (a' + b)))) (a' * (a' + b) * WHigh)
+    have a5 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+      (-((a' + b) * a' * WHigh)) + (-((a' + b) * a' * WHigh)) +
+      (-(WHigh * a' * (a' + b)))) (-(WHigh * a' * (a' + b)))
+    have a4 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+      (-((a' + b) * a' * WHigh)) + (-((a' + b) * a' * WHigh))) (-(WHigh * a' * (a' + b)))
+    have a3 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' +
+      (-((a' + b) * a' * WHigh))) (-((a' + b) * a' * WHigh))
+    have a2 := norm_add_le ((a' + b) * WHigh * a' + WHigh * (a' + b) * a') (-((a' + b) * a' * WHigh))
+    have a1 := norm_add_le ((a' + b) * WHigh * a') (WHigh * (a' + b) * a')
+    simp only [norm_neg] at a2 a3 a4 a5 a9 a10
+    linarith
+  -- K_L ≤ ((3s/2)^2 · 100000 · s^5) ≤ ... arithmetic for K_L bound in s^7.
+  have hK_L_le : K_L ≤ 225000 * s ^ 7 := by
+    rw [hK_L_def]
+    have : (3 * s / 2) ^ 2 = 9/4 * s^2 := by ring
+    rw [this]
+    calc 9/4 * s^2 * ‖WHigh‖ ≤ 9/4 * s^2 * (100000 * s^5) := by
+          apply mul_le_mul_of_nonneg_left hWHigh_le (by positivity)
+      _ = 225000 * s^7 := by ring
+  -- Bound (12)⁻¹·L_C3.
+  have hL_final : ‖(12 : 𝕂)⁻¹ • ((a' + b) * WHigh * a' + WHigh * (a' + b) * a' -
+                   (a' + b) * a' * WHigh - (a' + b) * a' * WHigh -
+                   WHigh * a' * (a' + b) - WHigh * a' * (a' + b) +
+                   a' * (a' + b) * WHigh + a' * WHigh * (a' + b) +
+                   a' * a' * WHigh - a' * WHigh * a' - a' * WHigh * a' +
+                   WHigh * a' * a')‖ ≤ 225000 * s ^ 7 := by
+    calc _ ≤ ‖(12 : 𝕂)⁻¹‖ * _ := norm_smul_le _ _
+      _ = (12 : ℝ)⁻¹ * _ := by rw [h12_inv]
+      _ ≤ (12 : ℝ)⁻¹ * (12 * K_L) := by
+          apply mul_le_mul_of_nonneg_left hL_norm (by norm_num)
+      _ ≤ (12 : ℝ)⁻¹ * (12 * (225000 * s^7)) := by
+          apply mul_le_mul_of_nonneg_left _ (by norm_num)
+          apply mul_le_mul_of_nonneg_left hK_L_le (by norm_num)
+      _ = 225000 * s ^ 7 := by ring
+  -- Bound Q_residual via 3 applications of norm_Q_form_le_aux.
+  have hQ1 : ‖V₂ * WMid * a' - V₂ * a' * WMid - WMid * a' * V₂ + a' * V₂ * WMid‖ ≤
+             4 * ‖V₂‖ * ‖WMid‖ * ‖a'‖ := norm_Q_form_le_aux V₂ WMid a'
+  have hQ2 : ‖WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂‖ ≤
+             4 * ‖WMid‖ * ‖V₂‖ * ‖a'‖ := norm_Q_form_le_aux WMid V₂ a'
+  have hQ3 : ‖WRestSept * WRestSept * a' - WRestSept * a' * WRestSept -
+             WRestSept * a' * WRestSept + a' * WRestSept * WRestSept‖ ≤
+             4 * ‖WRestSept‖ * ‖WRestSept‖ * ‖a'‖ := norm_Q_form_le_aux WRestSept WRestSept a'
+  -- Convert each Q bound to s⁷ bound.
+  have hV2_nn : (0:ℝ) ≤ ‖V₂‖ := norm_nonneg _
+  have ha'_nn : (0:ℝ) ≤ ‖a'‖ := norm_nonneg _
+  have hQ1_s7 : 4 * ‖V₂‖ * ‖WMid‖ * ‖a'‖ ≤ 25000 * s ^ 7 := by
+    calc 4 * ‖V₂‖ * ‖WMid‖ * ‖a'‖
+        ≤ 4 * (s^2/2) * (25000 * s^4) * (s/2) := by gcongr
+      _ = 25000 * s^7 := by ring
+  have hQ2_s7 : 4 * ‖WMid‖ * ‖V₂‖ * ‖a'‖ ≤ 25000 * s ^ 7 := by
+    calc 4 * ‖WMid‖ * ‖V₂‖ * ‖a'‖
+        ≤ 4 * (25000 * s^4) * (s^2/2) * (s/2) := by gcongr
+      _ = 25000 * s^7 := by ring
+  have hQ3_s7 : 4 * ‖WRestSept‖ * ‖WRestSept‖ * ‖a'‖ ≤ 72000000 * s ^ 7 := by
+    calc 4 * ‖WRestSept‖ * ‖WRestSept‖ * ‖a'‖
+        ≤ 4 * (6000 * s^3) * (6000 * s^3) * (s/2) := by gcongr
+      _ = 72000000 * s^7 := by ring
+  -- Sum the three Q pieces via triangle.
+  have hQ_sum : ‖(V₂ * WMid * a' - V₂ * a' * WMid - WMid * a' * V₂ + a' * V₂ * WMid +
+                  (WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂ +
+                  (WRestSept * WRestSept * a' - WRestSept * a' * WRestSept -
+                   WRestSept * a' * WRestSept + a' * WRestSept * WRestSept)))‖ ≤
+                 72050000 * s ^ 7 := by
+    have h2 := norm_add_le (V₂ * WMid * a' - V₂ * a' * WMid - WMid * a' * V₂ + a' * V₂ * WMid)
+                ((WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂) +
+                 (WRestSept * WRestSept * a' - WRestSept * a' * WRestSept -
+                  WRestSept * a' * WRestSept + a' * WRestSept * WRestSept))
+    have h3 := norm_add_le (WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂)
+                (WRestSept * WRestSept * a' - WRestSept * a' * WRestSept -
+                 WRestSept * a' * WRestSept + a' * WRestSept * WRestSept)
+    have hbound : ‖V₂ * WMid * a' - V₂ * a' * WMid - WMid * a' * V₂ + a' * V₂ * WMid‖ ≤ 25000*s^7 := by
+      linarith [hQ1, hQ1_s7]
+    have hbound2 : ‖WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂‖ ≤ 25000*s^7 := by
+      linarith [hQ2, hQ2_s7]
+    have hbound3 : ‖WRestSept * WRestSept * a' - WRestSept * a' * WRestSept -
+                    WRestSept * a' * WRestSept + a' * WRestSept * WRestSept‖ ≤ 72000000*s^7 := by
+      linarith [hQ3, hQ3_s7]
+    linarith
+  -- Bound (12)⁻¹·Q_residual.
+  have hQ_final : ‖(12 : 𝕂)⁻¹ • (V₂ * WMid * a' - V₂ * a' * WMid - WMid * a' * V₂ + a' * V₂ * WMid +
+                                  (WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂ +
+                                  (WRestSept * WRestSept * a' - WRestSept * a' * WRestSept -
+                                   WRestSept * a' * WRestSept + a' * WRestSept * WRestSept)))‖ ≤
+                  6004167 * s ^ 7 := by
+    calc _ ≤ ‖(12 : 𝕂)⁻¹‖ * _ := norm_smul_le _ _
+      _ = (12 : ℝ)⁻¹ * _ := by rw [h12_inv]
+      _ ≤ (12 : ℝ)⁻¹ * (72050000 * s^7) := by
+          apply mul_le_mul_of_nonneg_left hQ_sum (by norm_num)
+      _ ≤ 6004167 * s^7 := by linarith [hs7_nn]
+  -- The goal LHS structure: `(12)⁻¹ • L_expr + (12)⁻¹ • Q_expr`.
+  -- Use abel to align Q_expr's parenthesization (left-associated vs right-associated).
+  -- Triangle on the goal: ‖L + Q‖ ≤ ‖L‖ + ‖Q‖.
+  -- We need Q_expr's parenthesization in the goal to match hQ_final's form.
+  -- The decomp's RHS Q part has form:
+  -- (V₂ * WMid * a' - V₂ * a' * WMid - WMid * a' * V₂ + a' * V₂ * WMid +
+  --  (WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂) +
+  --  ...) — this needs abel-rearrangement to match hQ_sum's form.
+  have habs_eq : ((V₂ * WMid * a' - V₂ * a' * WMid - WMid * a' * V₂ + a' * V₂ * WMid +
+                   WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂ +
+                   WRestSept * WRestSept * a' - WRestSept * a' * WRestSept -
+                   WRestSept * a' * WRestSept + a' * WRestSept * WRestSept) : 𝔸) =
+                 (V₂ * WMid * a' - V₂ * a' * WMid - WMid * a' * V₂ + a' * V₂ * WMid +
+                  (WMid * V₂ * a' - WMid * a' * V₂ - V₂ * a' * WMid + a' * WMid * V₂ +
+                  (WRestSept * WRestSept * a' - WRestSept * a' * WRestSept -
+                   WRestSept * a' * WRestSept + a' * WRestSept * WRestSept))) := by abel
+  rw [habs_eq]
+  -- Now goal Q part matches hQ_sum / hQ_final form.
+  calc _ ≤ _ + _ := norm_add_le _ _
+    _ ≤ 225000 * s ^ 7 + 6004167 * s ^ 7 := add_le_add hL_final hQ_final
+    _ = 6229167 * s ^ 7 := by ring
+    _ ≤ 7000000 * s ^ 7 := by nlinarith [hs7_nn]
+
 -- Quintic Taylor bridge for the 3-factor symmetric BCH:
 -- ‖symmetric_bch_cubic(a,b) − symmetric_bch_cubic_poly(a,b)
 --   − symmetric_bch_quintic_poly(a,b)‖ ≤ 2·10¹⁰ · (‖a‖+‖b‖)⁷ for ‖a‖+‖b‖<1/4.
