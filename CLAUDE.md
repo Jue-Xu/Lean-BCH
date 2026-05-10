@@ -31,8 +31,24 @@ made public (removed `private`) so Phase E.1 can use them externally.
 **Helper lemma added**: `norm_half_smul_bracket_le`
 (`‖(2:𝕂)⁻¹ • (X*Y - Y*X)‖ ≤ ‖X‖·‖Y‖`).
 
-**Next session priority**: Phase E.2 — discharge the Group C+D sub-axiom
-via algebraic identity + 3-residual decomposition. Estimated ~1000-1500 lines.
+**Session 22 step 2 (Phase E.2 step 1, complete)**: algebraic identity
+proved. The central rearrangement of `Group C + Group D` as a sum of 3
+explicit deg-7+ residuals via Phase B + Phase C cancellation identities is
+now proved as `BCH.group_CD_eq_three_residuals`.
+
+```
+Group C + Group D = R_T5_sept + R_T6_sept + C5_diff_residual
+```
+
+The proof is 1-line: `linear_combination (norm := abel) -hB + hC` where
+hB = Phase B identity, hC = Phase C identity. ~120 lines (mostly the
+explicit residual statement).
+
+**Next session priority**: Phase E.2 steps 2-4 — bound each residual:
+- R_T5_sept (~6·10⁶·s⁷): cubic-template hT5_id extension to higher orders.
+- R_T6_sept (~10⁷·s⁷): similar for C₄ Taylor.
+- C5_diff_residual (~1.5·10⁶·s⁷): norm_bch_quintic_term_diff_le + Lipschitz on V₂.
+Then triangle inequality + sub-axiom discharge. Estimated ~800-1200 lines.
 
 **Phase E.2 plan** (algebraic decomposition + per-residual bounds):
 
