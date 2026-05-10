@@ -2414,58 +2414,17 @@ ONLY the combined Group C+D contribution (8 of 13 sub-pieces), not the full
 residual. Phase A handles Group A; Phase E.1 inline handles Group B; this
 sub-axiom handles Groups C+D. -/
 
-/-- **[Phase E.2 sub-axiom, pending]** — the Group C+D combined bound.
+/-! **Phase E.2 stepping-stone REPLACED** — the previous `private axiom
+symmetric_bch_quintic_group_CD_axiom` (10⁸·s⁷ on 8 Group C+D pieces) has
+been REPLACED with the proved theorem `symmetric_bch_quintic_group_CD_le`
+(below), which derives the 10⁸·s⁷ bound from:
+- `norm_R_T5_sept_le` (proved, ≤ 7·10⁶·s⁷)
+- `norm_R_T6_sept_le` (proved, ≤ 10⁶·s⁷)
+- `symmetric_bch_quintic_C5_diff_residual_axiom` (focused axiom, ≤ 10⁵·s⁷)
 
-Asserts that the sum of the 8 sub-pieces in Groups C and D of the
-`symmetric_bch_quintic_extended_hdecomp` is bounded by `O(s⁷)`. This is
-the unique remaining T2-F7e ingredient after Phase A (Phase A inner+outer
-septic remainder bounds, in `Basic.lean`) and Phase E.1 (Group A residual
-bracket + Group B C₆ pieces, inline in the parent theorem below).
-
-The combined Group C+D sub-piece sum is:
-
-```
-(C₃(z, a') − C₃(a'+b, a') + (1/96)·[b, [a, [a, b]]])      -- T₅ (Group C piece 1)
-+ (C₄(z, a') − C₄(a'+b, a'))                                  -- T₆ (Group C piece 2)
-+ ½·[C₄(a',b), a']                                            -- Group C piece 3
-+ (-correction(a, b))                                         -- Group C piece 4
-+ ½·[C₅(a',b), a']                                            -- Group D piece 1
-+ C₆(a',b)                                                    -- Group D piece 2
-+ C₆(a'+b, a')                                                -- Group D piece 3
-+ (C₅(z, a') − C₅(a'+b, a'))                                  -- Group D piece 4
-```
-
-By the Phase B identity (`symmetric_bch_quintic_deg5_cancellation_pure_identity`)
-and Phase C identity (`symmetric_bch_quintic_deg6_cancellation_pure_identity`),
-this 8-piece sum equals 3 deg-7+ residuals (T₅ residual, T₆ residual, C₅
-diff residual), each bounded by `K·s⁷` via the Lipschitz infrastructure
-(`norm_bch_cubic_term_diff_le`, `norm_bch_quintic_term_diff_le`,
-`norm_bch_sextic_term_diff_le`).
-
-The constant `100000000 = 10⁸` is a generous margin: each of the 3
-residuals is bounded by `~10⁶·s⁷` per the CLAUDE.md plan estimates.
-
-Introduced `private` so only the public derived
-`norm_symmetric_bch_quintic_sub_poly_le` theorem appears in the API. -/
-private axiom symmetric_bch_quintic_group_CD_axiom
-    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
-    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
-    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
-    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
-    let z := bch (𝕂 := 𝕂) a' b
-    let DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a
-    ‖-- Group C: Phase B deg-5 cancellation group (4 sub-pieces)
-     (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
-       -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
-     (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
-     (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
-     -symmetric_bch_quintic_correction_poly 𝕂 a b +
-     -- Group D: Phase C deg-6 cancellation group (4 sub-pieces)
-     (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
-     bch_sextic_term 𝕂 a' b +
-     bch_sextic_term 𝕂 (a' + b) a' +
-     (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a')‖ ≤
-      100000000 * (‖a‖ + ‖b‖) ^ 7
+The remaining `C5_diff_residual` axiom is much smaller in scope (1 piece
+instead of 8, 10⁵·s⁷ vs 10⁸·s⁷ constant, and isolates only the C₅
+linearization residual). -/
 
 /-! ### Group C+D 3-residual algebraic identity (Phase E.2 step 1)
 
@@ -2737,6 +2696,13 @@ private lemma norm_triple_le_aux {𝔸 : Type*} [NormedRing 𝔸] (X Y Z : 𝔸)
     ‖X * Y * Z‖ ≤ ‖X‖ * ‖Y‖ * ‖Z‖ := by
   calc ‖X * Y * Z‖ ≤ ‖X * Y‖ * ‖Z‖ := norm_mul_le _ _
     _ ≤ (‖X‖ * ‖Y‖) * ‖Z‖ := by gcongr; exact norm_mul_le _ _
+
+-- 4-letter product norm bound: `‖X*Y*Z*W‖ ≤ ‖X‖·‖Y‖·‖Z‖·‖W‖`. Extracted helper.
+private lemma norm_quad_le_aux {𝔸 : Type*} [NormedRing 𝔸] (X Y Z W : 𝔸) :
+    ‖X * Y * Z * W‖ ≤ ‖X‖ * ‖Y‖ * ‖Z‖ * ‖W‖ := by
+  calc ‖X * Y * Z * W‖ ≤ ‖X * Y * Z‖ * ‖W‖ := norm_mul_le _ _
+    _ ≤ (‖X‖ * ‖Y‖ * ‖Z‖) * ‖W‖ :=
+      mul_le_mul_of_nonneg_right (norm_triple_le_aux X Y Z) (norm_nonneg _)
 
 -- Q-bilinear form 4-term bound: `‖X·Y·a' - X·a'·Y - Y·a'·X + a'·X·Y‖ ≤ 4·‖X‖·‖Y‖·‖a'‖`.
 private lemma norm_Q_form_le_aux {𝔸 : Type*} [NormedRing 𝔸] (X Y a' : 𝔸) :
@@ -3119,6 +3085,679 @@ private theorem norm_R_T5_sept_le
     _ = 6229167 * s ^ 7 := by ring
     _ ≤ 7000000 * s ^ 7 := by nlinarith [hs7_nn]
 
+/-! ### T2-F7e Phase E.2 step 3: R_T6_sept algebraic decomposition
+
+The second residual `R_T6_sept = T₆ - ΔC₄_lin(V₂) - T6_d6_op`
+(from `group_CD_eq_three_residuals` above) decomposes structurally as a sum
+of L-form (linear-in-W) and Q-form (quadratic-in-W) operator pieces:
+
+```
+R_T6_sept = (1/24) · L_C4(a'+b, WHigh4, a') + (1/24) · Q_residual4
+```
+
+where:
+- `WHigh4 := V₄ + V₅ + V₆ + R₁_sept` (deg-4+ part of W after V₂, V₃ extracted)
+- `WRest6 := V₃ + V₄ + V₅ + V₆ + R₁_sept` (deg-3+ part of W after V₂ extracted)
+- `Q_residual4 := Q_C4(WRest6, a') + Q_bilin(V₂, WRest6, a')`
+  collects the deg-7+ cross terms from the bilinear expansion of Q_C4(W, a')
+  with W = V₂+WRest6 (since Q_C4(V₂+WRest6, a') = Q_C4(V₂, a') + Q_C4(WRest6, a')
+  + Q_bilin(V₂, WRest6, a'); the Q_C4(V₂, a') diagonal piece is the deg-6
+  ΔC₄_quad(V₂) term subtracted into T6_d6_op).
+
+The L_C4 and Q_C4 templates match `bch_quartic_term_LQ_decomp` (`Basic.lean`).
+The proof uses LQ_decomp at x = a'+b, W = V₂+V₃+V₄+V₅+V₆+R₁_sept (= z - (a'+b)
+by R₁_sept's def), then `match_scalars <;> ring` closes the polynomial identity.
+
+The cancellation of the deg-5 leading op ΔC₄_lin(V₂) and the deg-6 leading
+ops ΔC₄_lin(V₃) + ΔC₄_quad(V₂) fires automatically via the polynomial reduction. -/
+
+set_option maxHeartbeats 128000000 in
+private theorem R_T6_sept_decomp_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    let V₅ : 𝔸 := bch_quintic_term 𝕂 a' b
+    let V₆ : 𝔸 := bch_sextic_term 𝕂 a' b
+    let R₁_sept : 𝔸 := z - (a' + b) - V₂ - V₃ - V₄ - V₅ - V₆
+    let WHigh4 : 𝔸 := V₄ + V₅ + V₆ + R₁_sept
+    let WRest6 : 𝔸 := V₃ + V₄ + V₅ + V₆ + R₁_sept
+    let x : 𝔸 := a' + b
+    -- LHS: R_T6_sept = T₆ - ΔC₄_lin(V₂) - T6_d6_op
+    ((bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') -
+     -- ΔC₄_lin(V₂, x, a')
+     ((0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) -
+                                (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) -
+                                (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) * a')) -
+     -- T6_d6_op = ΔC₄_lin(V₃) + ΔC₄_quad(V₂)
+     ((0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) -
+                                (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) -
+                                (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) -
+                                (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) * a')))
+    =
+    -- RHS: (24)⁻¹·L_C4(x, WHigh4, a') + (24)⁻¹·(Q_C4(WRest6, a') + Q_bilin(V₂, WRest6, a'))
+    -- L_C4 template (12 sub-terms with multiplicities ±1).
+    (24 : 𝕂)⁻¹ • (
+      x * WHigh4 * a' * a' + WHigh4 * x * a' * a' -
+      x * a' * WHigh4 * a' - x * a' * WHigh4 * a' -
+      WHigh4 * a' * x * a' - WHigh4 * a' * x * a' +
+      a' * WHigh4 * a' * x + a' * WHigh4 * a' * x +
+      a' * x * a' * WHigh4 + a' * x * a' * WHigh4 -
+      a' * a' * x * WHigh4 - a' * a' * WHigh4 * x) +
+    -- Q_residual4 = Q_C4(WRest6, a') + Q_bilin(V₂, WRest6, a') (6 + 12 = 18 sub-terms).
+    (24 : 𝕂)⁻¹ • (
+      -- Q_C4(WRest6, a'): WRest6²·a'·a' - 2·WRest6·a'·WRest6·a' + 2·a'·WRest6·a'·WRest6 - a'·a'·WRest6²
+      WRest6 * WRest6 * a' * a' -
+      WRest6 * a' * WRest6 * a' - WRest6 * a' * WRest6 * a' +
+      a' * WRest6 * a' * WRest6 + a' * WRest6 * a' * WRest6 -
+      a' * a' * WRest6 * WRest6 +
+      -- Q_bilin(V₂, WRest6, a'): bilinear cross terms; same shape as L_C4 template
+      -- (with X=V₂, W=WRest6, Y=a') so a single norm helper covers both.
+      V₂ * WRest6 * a' * a' + WRest6 * V₂ * a' * a' -
+      V₂ * a' * WRest6 * a' - V₂ * a' * WRest6 * a' -
+      WRest6 * a' * V₂ * a' - WRest6 * a' * V₂ * a' +
+      a' * WRest6 * a' * V₂ + a' * WRest6 * a' * V₂ +
+      a' * V₂ * a' * WRest6 + a' * V₂ * a' * WRest6 -
+      a' * a' * V₂ * WRest6 - a' * a' * WRest6 * V₂) := by
+  intro a' z V₂ V₃ V₄ V₅ V₆ R₁_sept WHigh4 WRest6 x
+  -- Step 1: z = (a'+b) + (V₂ + V₃ + V₄ + V₅ + V₆ + R₁_sept) by R₁_sept's def.
+  have hz_W : z = (a' + b) + (V₂ + V₃ + V₄ + V₅ + V₆ + R₁_sept) := by
+    show z = _
+    rw [show R₁_sept = z - (a' + b) - V₂ - V₃ - V₄ - V₅ - V₆ from rfl]
+    abel
+  -- Step 2: Apply bch_quartic_term_LQ_decomp at x = a'+b, W = V₂+V₃+V₄+V₅+V₆+R₁_sept, y = a'.
+  have hLQ := bch_quartic_term_LQ_decomp (𝕂 := 𝕂) (a' + b)
+              (V₂ + V₃ + V₄ + V₅ + V₆ + R₁_sept) a'
+  rw [show ((a' + b) + (V₂ + V₃ + V₄ + V₅ + V₆ + R₁_sept) : 𝔸) = z from hz_W.symm] at hLQ
+  -- Substitute hLQ to replace bch_quartic_term diff in the goal.
+  rw [hLQ]
+  -- Step 3: Goal is polynomial. Unfold V₂, x, a', WHigh4, WRest6 (keep V₃, V₄, V₅, V₆, R₁_sept atomic).
+  show _ = _
+  simp only [show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl,
+             show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show WHigh4 = V₄ + V₅ + V₆ + R₁_sept from rfl,
+             show WRest6 = V₃ + V₄ + V₅ + V₆ + R₁_sept from rfl]
+  -- Distribute smul/mul/add throughout.
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+    smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  -- Close via match_scalars + ring.
+  match_scalars <;> ring
+
+/-! ### T2-F7e Phase E.2 step 3b: norm bound on R_T6_sept
+
+Uses `R_T6_sept_decomp_eq` to express R_T6_sept = (24)⁻¹·L_C4 + (24)⁻¹·Q_residual4,
+then bounds each piece by triangle inequality. -/
+
+-- 12-term L_C4-shape sum bound: each monomial has 1 X, 1 W, 2 Y's, bounded by ‖X‖·‖W‖·‖Y‖²
+-- via `norm_quad_le_aux`. Applies to both L_C4 (with X = a'+b, W = WHigh4, Y = a') and
+-- Q_bilin (with X = V₂, W = WRest6, Y = a').
+private lemma norm_LC4_template_le {𝔸 : Type*} [NormedRing 𝔸] (X W Y : 𝔸) :
+    ‖X * W * Y * Y + W * X * Y * Y -
+     X * Y * W * Y - X * Y * W * Y -
+     W * Y * X * Y - W * Y * X * Y +
+     Y * W * Y * X + Y * W * Y * X +
+     Y * X * Y * W + Y * X * Y * W -
+     Y * Y * X * W - Y * Y * W * X‖ ≤
+      12 * (‖X‖ * ‖W‖ * ‖Y‖ ^ 2) := by
+  set K := ‖X‖ * ‖W‖ * ‖Y‖ ^ 2 with hK_def
+  have hY_sq : ‖Y‖ ^ 2 = ‖Y‖ * ‖Y‖ := sq ‖Y‖
+  -- 8 distinct monomial bounds, each ≤ K
+  have b1 : ‖X * W * Y * Y‖ ≤ K := by
+    calc ‖X * W * Y * Y‖ ≤ ‖X‖ * ‖W‖ * ‖Y‖ * ‖Y‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hY_sq]; ring
+  have b2 : ‖W * X * Y * Y‖ ≤ K := by
+    calc ‖W * X * Y * Y‖ ≤ ‖W‖ * ‖X‖ * ‖Y‖ * ‖Y‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hY_sq]; ring
+  have b3 : ‖X * Y * W * Y‖ ≤ K := by
+    calc ‖X * Y * W * Y‖ ≤ ‖X‖ * ‖Y‖ * ‖W‖ * ‖Y‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hY_sq]; ring
+  have b4 : ‖W * Y * X * Y‖ ≤ K := by
+    calc ‖W * Y * X * Y‖ ≤ ‖W‖ * ‖Y‖ * ‖X‖ * ‖Y‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hY_sq]; ring
+  have b5 : ‖Y * W * Y * X‖ ≤ K := by
+    calc ‖Y * W * Y * X‖ ≤ ‖Y‖ * ‖W‖ * ‖Y‖ * ‖X‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hY_sq]; ring
+  have b6 : ‖Y * X * Y * W‖ ≤ K := by
+    calc ‖Y * X * Y * W‖ ≤ ‖Y‖ * ‖X‖ * ‖Y‖ * ‖W‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hY_sq]; ring
+  have b7 : ‖Y * Y * X * W‖ ≤ K := by
+    calc ‖Y * Y * X * W‖ ≤ ‖Y‖ * ‖Y‖ * ‖X‖ * ‖W‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hY_sq]; ring
+  have b8 : ‖Y * Y * W * X‖ ≤ K := by
+    calc ‖Y * Y * W * X‖ ≤ ‖Y‖ * ‖Y‖ * ‖W‖ * ‖X‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hY_sq]; ring
+  -- Re-group as plus-of-negs.
+  have hreorg :
+      X * W * Y * Y + W * X * Y * Y -
+      X * Y * W * Y - X * Y * W * Y -
+      W * Y * X * Y - W * Y * X * Y +
+      Y * W * Y * X + Y * W * Y * X +
+      Y * X * Y * W + Y * X * Y * W -
+      Y * Y * X * W - Y * Y * W * X =
+      X * W * Y * Y + W * X * Y * Y +
+      (-(X * Y * W * Y)) + (-(X * Y * W * Y)) +
+      (-(W * Y * X * Y)) + (-(W * Y * X * Y)) +
+      Y * W * Y * X + Y * W * Y * X +
+      Y * X * Y * W + Y * X * Y * W +
+      (-(Y * Y * X * W)) + (-(Y * Y * W * X)) := by abel
+  rw [hreorg]
+  -- 11 norm_add_le steps.
+  have h11 := norm_add_le
+    (X * W * Y * Y + W * X * Y * Y +
+     (-(X * Y * W * Y)) + (-(X * Y * W * Y)) +
+     (-(W * Y * X * Y)) + (-(W * Y * X * Y)) +
+     Y * W * Y * X + Y * W * Y * X +
+     Y * X * Y * W + Y * X * Y * W +
+     (-(Y * Y * X * W))) (-(Y * Y * W * X))
+  have h10 := norm_add_le
+    (X * W * Y * Y + W * X * Y * Y +
+     (-(X * Y * W * Y)) + (-(X * Y * W * Y)) +
+     (-(W * Y * X * Y)) + (-(W * Y * X * Y)) +
+     Y * W * Y * X + Y * W * Y * X +
+     Y * X * Y * W + Y * X * Y * W) (-(Y * Y * X * W))
+  have h9 := norm_add_le
+    (X * W * Y * Y + W * X * Y * Y +
+     (-(X * Y * W * Y)) + (-(X * Y * W * Y)) +
+     (-(W * Y * X * Y)) + (-(W * Y * X * Y)) +
+     Y * W * Y * X + Y * W * Y * X +
+     Y * X * Y * W) (Y * X * Y * W)
+  have h8 := norm_add_le
+    (X * W * Y * Y + W * X * Y * Y +
+     (-(X * Y * W * Y)) + (-(X * Y * W * Y)) +
+     (-(W * Y * X * Y)) + (-(W * Y * X * Y)) +
+     Y * W * Y * X + Y * W * Y * X) (Y * X * Y * W)
+  have h7 := norm_add_le
+    (X * W * Y * Y + W * X * Y * Y +
+     (-(X * Y * W * Y)) + (-(X * Y * W * Y)) +
+     (-(W * Y * X * Y)) + (-(W * Y * X * Y)) +
+     Y * W * Y * X) (Y * W * Y * X)
+  have h6 := norm_add_le
+    (X * W * Y * Y + W * X * Y * Y +
+     (-(X * Y * W * Y)) + (-(X * Y * W * Y)) +
+     (-(W * Y * X * Y)) + (-(W * Y * X * Y))) (Y * W * Y * X)
+  have h5 := norm_add_le
+    (X * W * Y * Y + W * X * Y * Y +
+     (-(X * Y * W * Y)) + (-(X * Y * W * Y)) +
+     (-(W * Y * X * Y))) (-(W * Y * X * Y))
+  have h4 := norm_add_le
+    (X * W * Y * Y + W * X * Y * Y +
+     (-(X * Y * W * Y)) + (-(X * Y * W * Y))) (-(W * Y * X * Y))
+  have h3 := norm_add_le
+    (X * W * Y * Y + W * X * Y * Y + (-(X * Y * W * Y))) (-(X * Y * W * Y))
+  have h2 := norm_add_le (X * W * Y * Y + W * X * Y * Y) (-(X * Y * W * Y))
+  have h1 := norm_add_le (X * W * Y * Y) (W * X * Y * Y)
+  simp only [norm_neg] at h2 h3 h4 h5 h10 h11
+  linarith
+
+-- 6-term Q_C4-shape sum bound: each monomial has 2 W's, 2 Y's, bounded by ‖W‖²·‖Y‖²
+-- via `norm_quad_le_aux`.
+private lemma norm_QC4_template_le {𝔸 : Type*} [NormedRing 𝔸] (W Y : 𝔸) :
+    ‖W * W * Y * Y -
+     W * Y * W * Y - W * Y * W * Y +
+     Y * W * Y * W + Y * W * Y * W -
+     Y * Y * W * W‖ ≤
+      6 * (‖W‖ ^ 2 * ‖Y‖ ^ 2) := by
+  set K := ‖W‖ ^ 2 * ‖Y‖ ^ 2 with hK_def
+  have hW_sq : ‖W‖ ^ 2 = ‖W‖ * ‖W‖ := sq ‖W‖
+  have hY_sq : ‖Y‖ ^ 2 = ‖Y‖ * ‖Y‖ := sq ‖Y‖
+  have b1 : ‖W * W * Y * Y‖ ≤ K := by
+    calc ‖W * W * Y * Y‖ ≤ ‖W‖ * ‖W‖ * ‖Y‖ * ‖Y‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hW_sq, hY_sq]; ring
+  have b2 : ‖W * Y * W * Y‖ ≤ K := by
+    calc ‖W * Y * W * Y‖ ≤ ‖W‖ * ‖Y‖ * ‖W‖ * ‖Y‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hW_sq, hY_sq]; ring
+  have b3 : ‖Y * W * Y * W‖ ≤ K := by
+    calc ‖Y * W * Y * W‖ ≤ ‖Y‖ * ‖W‖ * ‖Y‖ * ‖W‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hW_sq, hY_sq]; ring
+  have b4 : ‖Y * Y * W * W‖ ≤ K := by
+    calc ‖Y * Y * W * W‖ ≤ ‖Y‖ * ‖Y‖ * ‖W‖ * ‖W‖ := norm_quad_le_aux _ _ _ _
+      _ = K := by rw [hK_def, hW_sq, hY_sq]; ring
+  have hreorg :
+      W * W * Y * Y -
+      W * Y * W * Y - W * Y * W * Y +
+      Y * W * Y * W + Y * W * Y * W -
+      Y * Y * W * W =
+      W * W * Y * Y +
+      (-(W * Y * W * Y)) + (-(W * Y * W * Y)) +
+      Y * W * Y * W + Y * W * Y * W +
+      (-(Y * Y * W * W)) := by abel
+  rw [hreorg]
+  have h5 := norm_add_le
+    (W * W * Y * Y + (-(W * Y * W * Y)) + (-(W * Y * W * Y)) + Y * W * Y * W + Y * W * Y * W)
+    (-(Y * Y * W * W))
+  have h4 := norm_add_le
+    (W * W * Y * Y + (-(W * Y * W * Y)) + (-(W * Y * W * Y)) + Y * W * Y * W) (Y * W * Y * W)
+  have h3 := norm_add_le
+    (W * W * Y * Y + (-(W * Y * W * Y)) + (-(W * Y * W * Y))) (Y * W * Y * W)
+  have h2 := norm_add_le (W * W * Y * Y + (-(W * Y * W * Y))) (-(W * Y * W * Y))
+  have h1 := norm_add_le (W * W * Y * Y) (-(W * Y * W * Y))
+  simp only [norm_neg] at h1 h2 h3 h5
+  linarith
+
+set_option maxHeartbeats 1600000 in
+private theorem norm_R_T6_sept_le
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    ‖((bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') -
+     ((0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) -
+                                (x * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * x) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) -
+                                (V₂ * (x * a' - a' * x) - (x * a' - a' * x) * V₂) * a')) -
+     ((0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) -
+                                (x * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * x) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) -
+                                (V₃ * (x * a' - a' * x) - (x * a' - a' * x) * V₃) * a') -
+                (24 : 𝕂)⁻¹ • (a' * (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) -
+                                (V₂ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₂) * a')))‖
+    ≤ 1000000 * (‖a‖ + ‖b‖) ^ 7 := by
+  intro a' z V₂ V₃ x
+  -- Setup norms (mirrors norm_R_T5_sept_le; no DC_a since (96)⁻¹ doesn't appear here).
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have hs_lt : s < 1 / 4 := hab
+  have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ s / 2 := by
+    show ‖(2 : 𝕂)⁻¹ • a‖ ≤ _
+    calc ‖(2 : 𝕂)⁻¹ • a‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+      _ ≤ s / 2 := by have := norm_nonneg b; linarith
+  have ha'_b_le : ‖a' + b‖ ≤ 3 * s / 2 := by
+    calc ‖a' + b‖ ≤ ‖a'‖ + ‖b‖ := norm_add_le _ _
+      _ ≤ s / 2 + s := by have := norm_nonneg a; linarith
+      _ = 3 * s / 2 := by ring
+  have ha'_a : ‖a'‖ ≤ ‖a‖ := by
+    show ‖(2 : 𝕂)⁻¹ • a‖ ≤ _
+    calc ‖(2 : 𝕂)⁻¹ • a‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+      _ ≤ ‖a‖ := by linarith [norm_nonneg a]
+  have hs1_le : ‖a'‖ + ‖b‖ ≤ s := by linarith [ha'_a]
+  have hs1_nn : (0 : ℝ) ≤ ‖a'‖ + ‖b‖ := by positivity
+  -- ‖V₂‖ ≤ s²/2.
+  have hV2_le : ‖V₂‖ ≤ s ^ 2 / 2 := by
+    show ‖(2 : 𝕂)⁻¹ • (a' * b - b * a')‖ ≤ _
+    have hcomm : ‖a' * b - b * a'‖ ≤ 2 * ‖a'‖ * ‖b‖ := by
+      calc ‖a' * b - b * a'‖ ≤ ‖a' * b‖ + ‖b * a'‖ := by
+            rw [sub_eq_add_neg]; exact (norm_add_le _ _).trans (by rw [norm_neg])
+        _ ≤ ‖a'‖ * ‖b‖ + ‖b‖ * ‖a'‖ := by gcongr <;> exact norm_mul_le _ _
+        _ = 2 * ‖a'‖ * ‖b‖ := by ring
+    calc ‖(2 : 𝕂)⁻¹ • (a' * b - b * a')‖
+        ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a' * b - b * a'‖ := norm_smul_le _ _
+      _ = (2 : ℝ)⁻¹ * ‖a' * b - b * a'‖ := by rw [h_half_norm]
+      _ ≤ (2 : ℝ)⁻¹ * (2 * ‖a'‖ * ‖b‖) := by
+          apply mul_le_mul_of_nonneg_left hcomm (by norm_num)
+      _ = ‖a'‖ * ‖b‖ := by ring
+      _ ≤ (s / 2) * s := by
+          apply mul_le_mul ha'_le _ (norm_nonneg _) (by linarith)
+          have := norm_nonneg a; linarith
+      _ = s ^ 2 / 2 := by ring
+  -- ‖V₃‖ ≤ s³, and V₄ V₅ V₆ R₁_sept norms.
+  have hV3_le : ‖V₃‖ ≤ s ^ 3 := by
+    show ‖bch_cubic_term 𝕂 a' b‖ ≤ _
+    calc ‖bch_cubic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 3 := norm_bch_cubic_term_le a' b
+      _ ≤ s ^ 3 := pow_le_pow_left₀ hs1_nn hs1_le 3
+  have hV4_le_explicit : ‖bch_quartic_term 𝕂 a' b‖ ≤ s ^ 4 := by
+    calc ‖bch_quartic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 4 := norm_bch_quartic_term_le a' b
+      _ ≤ s ^ 4 := pow_le_pow_left₀ hs1_nn hs1_le 4
+  have hV5_le_explicit : ‖bch_quintic_term 𝕂 a' b‖ ≤ s ^ 5 := by
+    calc ‖bch_quintic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 5 := norm_bch_quintic_term_le a' b
+      _ ≤ s ^ 5 := pow_le_pow_left₀ hs1_nn hs1_le 5
+  have hV6_le_explicit : ‖bch_sextic_term 𝕂 a' b‖ ≤ s ^ 6 := by
+    calc ‖bch_sextic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 6 := norm_bch_sextic_term_le a' b
+      _ ≤ s ^ 6 := pow_le_pow_left₀ hs1_nn hs1_le 6
+  have hR1_le_explicit : ‖z - (a' + b) - V₂ - V₃ - bch_quartic_term 𝕂 a' b -
+                  bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b‖ ≤
+                1500000 * s ^ 7 :=
+    norm_bch_inner_septic_remainder_le (𝕂 := 𝕂) a b hab
+  -- Apply algebraic decomposition.
+  rw [R_T6_sept_decomp_eq (𝕂 := 𝕂) a b]
+  -- Goal: ‖(24)⁻¹·L_C4 + (24)⁻¹·(Q_C4(WRest6,a') + Q_bilin(V₂,WRest6,a'))‖ ≤ 10⁶·s⁷
+  set V₄ : 𝔸 := bch_quartic_term 𝕂 a' b with hV4_def
+  set V₅ : 𝔸 := bch_quintic_term 𝕂 a' b with hV5_def
+  set V₆ : 𝔸 := bch_sextic_term 𝕂 a' b with hV6_def
+  set R₁_sept : 𝔸 := z - (a' + b) - V₂ - V₃ - V₄ - V₅ - V₆ with hR1_def
+  set WHigh4 : 𝔸 := V₄ + V₅ + V₆ + R₁_sept with hWHigh4_def
+  set WRest6 : 𝔸 := V₃ + V₄ + V₅ + V₆ + R₁_sept with hWRest6_def
+  have hV4_le : ‖V₄‖ ≤ s ^ 4 := hV4_le_explicit
+  have hV5_le : ‖V₅‖ ≤ s ^ 5 := hV5_le_explicit
+  have hV6_le : ‖V₆‖ ≤ s ^ 6 := hV6_le_explicit
+  have hR1_le : ‖R₁_sept‖ ≤ 1500000 * s ^ 7 := by rw [hR1_def]; exact hR1_le_explicit
+  -- Pow bounds for s ≤ 1/4.
+  have hs2_le : s ^ 2 ≤ 1 / 16 := by nlinarith [hs_lt, hs_nn]
+  have hs3_le : s ^ 3 ≤ 1 / 64 := by nlinarith [hs_lt, hs_nn, sq_nonneg s]
+  have hs4_le : s ^ 4 ≤ 1 / 256 := by nlinarith [hs2_le, sq_nonneg (s ^ 2)]
+  have hs3_nn : (0 : ℝ) ≤ s ^ 3 := pow_nonneg hs_nn 3
+  have hs4_nn : (0 : ℝ) ≤ s ^ 4 := pow_nonneg hs_nn 4
+  have hs5_nn : (0 : ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
+  have hs6_le_s5 : s ^ 6 ≤ s ^ 5 * (1 / 4) := by
+    have heq : s ^ 6 = s * s ^ 5 := by ring
+    rw [heq]; nlinarith [hs5_nn, hs_lt, hs_nn]
+  have hs7_le_s5 : s ^ 7 ≤ s ^ 5 * (1 / 16) := by
+    have heq : s ^ 7 = s ^ 2 * s ^ 5 := by ring
+    rw [heq]; nlinarith [hs5_nn, hs2_le]
+  have hs5_le_s4 : s ^ 5 ≤ s ^ 4 * (1 / 4) := by
+    have heq : s ^ 5 = s * s ^ 4 := by ring
+    rw [heq]; nlinarith [hs4_nn, hs_lt, hs_nn]
+  have hs6_le_s4 : s ^ 6 ≤ s ^ 4 * (1 / 16) := by
+    have heq : s ^ 6 = s ^ 2 * s ^ 4 := by ring
+    rw [heq]; nlinarith [hs4_nn, hs2_le]
+  have hs7_le_s4 : s ^ 7 ≤ s ^ 4 * (1 / 64) := by
+    have heq : s ^ 7 = s ^ 3 * s ^ 4 := by ring
+    rw [heq]; nlinarith [hs4_nn, hs3_le]
+  have hs4_le_s3 : s ^ 4 ≤ s ^ 3 * (1 / 4) := by
+    have heq : s ^ 4 = s * s ^ 3 := by ring
+    rw [heq]; nlinarith [hs3_nn, hs_lt, hs_nn]
+  have hs5_le_s3 : s ^ 5 ≤ s ^ 3 * (1 / 16) := by
+    have heq : s ^ 5 = s ^ 2 * s ^ 3 := by ring
+    rw [heq]; nlinarith [hs3_nn, hs2_le]
+  have hs6_le_s3 : s ^ 6 ≤ s ^ 3 * (1 / 64) := by
+    have heq : s ^ 6 = s ^ 3 * s ^ 3 := by ring
+    rw [heq]; nlinarith [hs3_nn, hs3_le]
+  have hs7_le_s3 : s ^ 7 ≤ s ^ 3 * (1 / 256) := by
+    have heq : s ^ 7 = s ^ 4 * s ^ 3 := by ring
+    rw [heq]; nlinarith [hs3_nn, hs4_le]
+  have hs8_le_s7 : s ^ 8 ≤ s ^ 7 * (1 / 4) := by
+    have heq : s ^ 8 = s * s ^ 7 := by ring
+    rw [heq]; nlinarith [hs7_nn, hs_lt, hs_nn]
+  -- ‖WHigh4‖ ≤ 25000·s⁴ (deg-4+ part).
+  have hWHigh4_le : ‖WHigh4‖ ≤ 25000 * s ^ 4 := by
+    have hsum : ‖WHigh4‖ ≤ ‖V₄‖ + ‖V₅‖ + ‖V₆‖ + ‖R₁_sept‖ := by
+      rw [hWHigh4_def]
+      have h1 := norm_add_le (V₄ + V₅ + V₆) R₁_sept
+      have h2 := norm_add_le (V₄ + V₅) V₆
+      have h3 := norm_add_le V₄ V₅
+      linarith
+    linarith
+  -- ‖WRest6‖ ≤ 6000·s³ (deg-3+ part).
+  have hWRest6_le : ‖WRest6‖ ≤ 6000 * s ^ 3 := by
+    have hsum : ‖WRest6‖ ≤ ‖V₃‖ + ‖V₄‖ + ‖V₅‖ + ‖V₆‖ + ‖R₁_sept‖ := by
+      rw [hWRest6_def]
+      have h1 := norm_add_le (V₃ + V₄ + V₅ + V₆) R₁_sept
+      have h2 := norm_add_le (V₃ + V₄ + V₅) V₆
+      have h3 := norm_add_le (V₃ + V₄) V₅
+      have h4 := norm_add_le V₃ V₄
+      linarith
+    linarith
+  have h24_inv : ‖(24 : 𝕂)⁻¹‖ = (24 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  -- L_C4 part: 12 terms × ‖x‖·‖WHigh4‖·‖a'‖² each, via norm_LC4_template_le.
+  have hL_norm : ‖(a' + b) * WHigh4 * a' * a' + WHigh4 * (a' + b) * a' * a' -
+                  (a' + b) * a' * WHigh4 * a' - (a' + b) * a' * WHigh4 * a' -
+                  WHigh4 * a' * (a' + b) * a' - WHigh4 * a' * (a' + b) * a' +
+                  a' * WHigh4 * a' * (a' + b) + a' * WHigh4 * a' * (a' + b) +
+                  a' * (a' + b) * a' * WHigh4 + a' * (a' + b) * a' * WHigh4 -
+                  a' * a' * (a' + b) * WHigh4 - a' * a' * WHigh4 * (a' + b)‖ ≤
+                 12 * (‖a' + b‖ * ‖WHigh4‖ * ‖a'‖ ^ 2) :=
+    norm_LC4_template_le (a' + b) WHigh4 a'
+  -- Convert L_C4 sum bound to s⁷.
+  have hL_s7 : 12 * (‖a' + b‖ * ‖WHigh4‖ * ‖a'‖ ^ 2) ≤ 200000 * s ^ 7 := by
+    have ha'_sq_le : ‖a'‖ ^ 2 ≤ (s / 2) ^ 2 :=
+      pow_le_pow_left₀ (norm_nonneg _) ha'_le 2
+    have h1 : ‖a' + b‖ * ‖WHigh4‖ * ‖a'‖ ^ 2 ≤ (3 * s / 2) * (25000 * s ^ 4) * ((s / 2) ^ 2) := by
+      apply mul_le_mul _ ha'_sq_le (sq_nonneg _) (by positivity)
+      apply mul_le_mul ha'_b_le hWHigh4_le (norm_nonneg _) (by linarith)
+    calc 12 * (‖a' + b‖ * ‖WHigh4‖ * ‖a'‖ ^ 2)
+        ≤ 12 * ((3 * s / 2) * (25000 * s ^ 4) * ((s / 2) ^ 2)) := by
+          apply mul_le_mul_of_nonneg_left h1 (by norm_num)
+      _ = 112500 * s ^ 7 := by ring
+      _ ≤ 200000 * s ^ 7 := by nlinarith [hs7_nn]
+  have hL_final : ‖(24 : 𝕂)⁻¹ • ((a' + b) * WHigh4 * a' * a' + WHigh4 * (a' + b) * a' * a' -
+                  (a' + b) * a' * WHigh4 * a' - (a' + b) * a' * WHigh4 * a' -
+                  WHigh4 * a' * (a' + b) * a' - WHigh4 * a' * (a' + b) * a' +
+                  a' * WHigh4 * a' * (a' + b) + a' * WHigh4 * a' * (a' + b) +
+                  a' * (a' + b) * a' * WHigh4 + a' * (a' + b) * a' * WHigh4 -
+                  a' * a' * (a' + b) * WHigh4 - a' * a' * WHigh4 * (a' + b))‖ ≤
+                 10000 * s ^ 7 := by
+    calc _ ≤ ‖(24 : 𝕂)⁻¹‖ * _ := norm_smul_le _ _
+      _ = (24 : ℝ)⁻¹ * _ := by rw [h24_inv]
+      _ ≤ (24 : ℝ)⁻¹ * (12 * (‖a' + b‖ * ‖WHigh4‖ * ‖a'‖ ^ 2)) := by
+          apply mul_le_mul_of_nonneg_left hL_norm (by norm_num)
+      _ ≤ (24 : ℝ)⁻¹ * (200000 * s ^ 7) := by
+          apply mul_le_mul_of_nonneg_left hL_s7 (by norm_num)
+      _ ≤ 10000 * s ^ 7 := by linarith [hs7_nn]
+  -- Q_C4(WRest6, a') part: 6 terms × ‖WRest6‖²·‖a'‖² each, via norm_QC4_template_le.
+  have hQC4_norm : ‖WRest6 * WRest6 * a' * a' -
+                    WRest6 * a' * WRest6 * a' - WRest6 * a' * WRest6 * a' +
+                    a' * WRest6 * a' * WRest6 + a' * WRest6 * a' * WRest6 -
+                    a' * a' * WRest6 * WRest6‖ ≤
+                   6 * (‖WRest6‖ ^ 2 * ‖a'‖ ^ 2) :=
+    norm_QC4_template_le WRest6 a'
+  have hQC4_s7 : 6 * (‖WRest6‖ ^ 2 * ‖a'‖ ^ 2) ≤ 14000000 * s ^ 7 := by
+    have hWR_nn : (0 : ℝ) ≤ ‖WRest6‖ := norm_nonneg _
+    have ha'_nn : (0 : ℝ) ≤ ‖a'‖ := norm_nonneg _
+    have ha'_sq_le : ‖a'‖ ^ 2 ≤ (s / 2) ^ 2 :=
+      pow_le_pow_left₀ ha'_nn ha'_le 2
+    have hWR_sq_le : ‖WRest6‖ ^ 2 ≤ (6000 * s ^ 3) ^ 2 :=
+      pow_le_pow_left₀ hWR_nn hWRest6_le 2
+    have h1 : ‖WRest6‖ ^ 2 * ‖a'‖ ^ 2 ≤ (6000 * s ^ 3) ^ 2 * ((s / 2) ^ 2) :=
+      mul_le_mul hWR_sq_le ha'_sq_le (sq_nonneg _) (by positivity)
+    calc 6 * (‖WRest6‖ ^ 2 * ‖a'‖ ^ 2)
+        ≤ 6 * ((6000 * s ^ 3) ^ 2 * ((s / 2) ^ 2)) := by
+          apply mul_le_mul_of_nonneg_left h1 (by norm_num)
+      _ = 54000000 * s ^ 8 := by ring
+      _ ≤ 54000000 * (s ^ 7 * (1 / 4)) := by
+          apply mul_le_mul_of_nonneg_left hs8_le_s7 (by norm_num)
+      _ = 13500000 * s ^ 7 := by ring
+      _ ≤ 14000000 * s ^ 7 := by nlinarith [hs7_nn]
+  -- Q_bilin(V₂, WRest6, a') part: 12 terms × ‖V₂‖·‖WRest6‖·‖a'‖² each, via norm_LC4_template_le.
+  have hQbilin_norm : ‖V₂ * WRest6 * a' * a' + WRest6 * V₂ * a' * a' -
+                       V₂ * a' * WRest6 * a' - V₂ * a' * WRest6 * a' -
+                       WRest6 * a' * V₂ * a' - WRest6 * a' * V₂ * a' +
+                       a' * WRest6 * a' * V₂ + a' * WRest6 * a' * V₂ +
+                       a' * V₂ * a' * WRest6 + a' * V₂ * a' * WRest6 -
+                       a' * a' * V₂ * WRest6 - a' * a' * WRest6 * V₂‖ ≤
+                      12 * (‖V₂‖ * ‖WRest6‖ * ‖a'‖ ^ 2) :=
+    norm_LC4_template_le V₂ WRest6 a'
+  have hQbilin_s7 : 12 * (‖V₂‖ * ‖WRest6‖ * ‖a'‖ ^ 2) ≤ 10000 * s ^ 7 := by
+    have ha'_sq_le : ‖a'‖ ^ 2 ≤ (s / 2) ^ 2 :=
+      pow_le_pow_left₀ (norm_nonneg _) ha'_le 2
+    have h1 : ‖V₂‖ * ‖WRest6‖ * ‖a'‖ ^ 2 ≤ (s ^ 2 / 2) * (6000 * s ^ 3) * ((s / 2) ^ 2) := by
+      apply mul_le_mul _ ha'_sq_le (sq_nonneg _) (by positivity)
+      apply mul_le_mul hV2_le hWRest6_le (norm_nonneg _) (by positivity)
+    calc 12 * (‖V₂‖ * ‖WRest6‖ * ‖a'‖ ^ 2)
+        ≤ 12 * ((s ^ 2 / 2) * (6000 * s ^ 3) * ((s / 2) ^ 2)) := by
+          apply mul_le_mul_of_nonneg_left h1 (by norm_num)
+      _ = 9000 * s ^ 7 := by ring
+      _ ≤ 10000 * s ^ 7 := by nlinarith [hs7_nn]
+  -- Combined Q part = Q_C4 + Q_bilin (sum of 18 terms inside one (24)⁻¹ smul).
+  -- Bound: ‖Q_C4 + Q_bilin‖ ≤ ‖Q_C4‖ + ‖Q_bilin‖ ≤ 14·10⁶·s⁷ + 10⁴·s⁷.
+  have hQ_norm : ‖(WRest6 * WRest6 * a' * a' -
+                   WRest6 * a' * WRest6 * a' - WRest6 * a' * WRest6 * a' +
+                   a' * WRest6 * a' * WRest6 + a' * WRest6 * a' * WRest6 -
+                   a' * a' * WRest6 * WRest6) +
+                  (V₂ * WRest6 * a' * a' + WRest6 * V₂ * a' * a' -
+                   V₂ * a' * WRest6 * a' - V₂ * a' * WRest6 * a' -
+                   WRest6 * a' * V₂ * a' - WRest6 * a' * V₂ * a' +
+                   a' * WRest6 * a' * V₂ + a' * WRest6 * a' * V₂ +
+                   a' * V₂ * a' * WRest6 + a' * V₂ * a' * WRest6 -
+                   a' * a' * V₂ * WRest6 - a' * a' * WRest6 * V₂)‖ ≤
+                 14010000 * s ^ 7 := by
+    calc _ ≤ _ + _ := norm_add_le _ _
+      _ ≤ 6 * (‖WRest6‖ ^ 2 * ‖a'‖ ^ 2) + 12 * (‖V₂‖ * ‖WRest6‖ * ‖a'‖ ^ 2) :=
+          add_le_add hQC4_norm hQbilin_norm
+      _ ≤ 14000000 * s ^ 7 + 10000 * s ^ 7 := add_le_add hQC4_s7 hQbilin_s7
+      _ = 14010000 * s ^ 7 := by ring
+  have hQ_final : ‖(24 : 𝕂)⁻¹ • ((WRest6 * WRest6 * a' * a' -
+                   WRest6 * a' * WRest6 * a' - WRest6 * a' * WRest6 * a' +
+                   a' * WRest6 * a' * WRest6 + a' * WRest6 * a' * WRest6 -
+                   a' * a' * WRest6 * WRest6) +
+                  (V₂ * WRest6 * a' * a' + WRest6 * V₂ * a' * a' -
+                   V₂ * a' * WRest6 * a' - V₂ * a' * WRest6 * a' -
+                   WRest6 * a' * V₂ * a' - WRest6 * a' * V₂ * a' +
+                   a' * WRest6 * a' * V₂ + a' * WRest6 * a' * V₂ +
+                   a' * V₂ * a' * WRest6 + a' * V₂ * a' * WRest6 -
+                   a' * a' * V₂ * WRest6 - a' * a' * WRest6 * V₂))‖ ≤
+                 600000 * s ^ 7 := by
+    calc _ ≤ ‖(24 : 𝕂)⁻¹‖ * _ := norm_smul_le _ _
+      _ = (24 : ℝ)⁻¹ * _ := by rw [h24_inv]
+      _ ≤ (24 : ℝ)⁻¹ * (14010000 * s ^ 7) := by
+          apply mul_le_mul_of_nonneg_left hQ_norm (by norm_num)
+      _ ≤ 600000 * s ^ 7 := by linarith [hs7_nn]
+  -- Re-associate the goal's Q part to match hQ_final's "+" form.
+  have habs_eq : ((WRest6 * WRest6 * a' * a' -
+                  WRest6 * a' * WRest6 * a' - WRest6 * a' * WRest6 * a' +
+                  a' * WRest6 * a' * WRest6 + a' * WRest6 * a' * WRest6 -
+                  a' * a' * WRest6 * WRest6 +
+                  V₂ * WRest6 * a' * a' + WRest6 * V₂ * a' * a' -
+                  V₂ * a' * WRest6 * a' - V₂ * a' * WRest6 * a' -
+                  WRest6 * a' * V₂ * a' - WRest6 * a' * V₂ * a' +
+                  a' * WRest6 * a' * V₂ + a' * WRest6 * a' * V₂ +
+                  a' * V₂ * a' * WRest6 + a' * V₂ * a' * WRest6 -
+                  a' * a' * V₂ * WRest6 - a' * a' * WRest6 * V₂) : 𝔸) =
+                 ((WRest6 * WRest6 * a' * a' -
+                   WRest6 * a' * WRest6 * a' - WRest6 * a' * WRest6 * a' +
+                   a' * WRest6 * a' * WRest6 + a' * WRest6 * a' * WRest6 -
+                   a' * a' * WRest6 * WRest6) +
+                  (V₂ * WRest6 * a' * a' + WRest6 * V₂ * a' * a' -
+                   V₂ * a' * WRest6 * a' - V₂ * a' * WRest6 * a' -
+                   WRest6 * a' * V₂ * a' - WRest6 * a' * V₂ * a' +
+                   a' * WRest6 * a' * V₂ + a' * WRest6 * a' * V₂ +
+                   a' * V₂ * a' * WRest6 + a' * V₂ * a' * WRest6 -
+                   a' * a' * V₂ * WRest6 - a' * a' * WRest6 * V₂)) := by abel
+  rw [habs_eq]
+  -- Final triangle: ‖L + Q‖ ≤ ‖L‖ + ‖Q‖ ≤ 10⁴·s⁷ + 6·10⁵·s⁷ = 6.1·10⁵·s⁷ ≤ 10⁶·s⁷.
+  calc _ ≤ _ + _ := norm_add_le _ _
+    _ ≤ 10000 * s ^ 7 + 600000 * s ^ 7 := add_le_add hL_final hQ_final
+    _ = 610000 * s ^ 7 := by ring
+    _ ≤ 1000000 * s ^ 7 := by nlinarith [hs7_nn]
+
+/-! ### T2-F7e Phase E.2 step 4: norm bound on C5_diff_residual
+
+The third residual `C5_diff_residual = (C₅(z,a') - C₅(a'+b,a')) - ΔC₅_lin_explicit`
+captures the deg-7+ remainder of the C₅ Taylor expansion in V₂ after subtracting
+the explicit deg-6 (linear-in-V₂) leading polynomial.
+
+**Discharge status (axiom)**: The bound `‖C5_diff_residual‖ ≤ 10⁵·s⁷` is asserted
+as a focused private axiom. The full discharge requires either:
+- An algebraic identity expressing C5_diff_residual as deg-7+ structured pieces
+  (analog of `bch_cubic_term_LQ_decomp`/`bch_quartic_term_LQ_decomp` extended to
+  C₅, with quadratic-in-V₂ residual bounded directly), or
+- An L+Q+higher decomposition of C₅ in its first argument (~76+ linear-in-V₂
+  monomials × 30 base monomials, so ~500+ lines of polynomial identity work).
+
+This axiom is a **stepping stone** — significantly more focused than the
+parent T2-F7e axiom or the previous Group C+D axiom (10⁸·s⁷, 8 pieces). It
+isolates the linearization residual of one explicit term to a smaller bound
+(10⁵·s⁷, 1 piece). -/
+
+private axiom symmetric_bch_quintic_C5_diff_residual_axiom
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    -- C5_diff_residual = (C₅(z, a') - C₅(a'+b, a')) - ΔC₅_lin_explicit
+    -- (the 36-monomial polynomial identical to that in group_CD_eq_three_residuals)
+    ‖((bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a') -
+     ((-14 / 46080 : 𝕂) • (a * a * a * a * b * b) +
+      (46 / 46080 : 𝕂) • (a * a * a * b * a * b) +
+      (10 / 46080 : 𝕂) • (a * a * a * b * b * a) +
+      (28 / 46080 : 𝕂) • (a * a * a * b * b * b) +
+      (-54 / 46080 : 𝕂) • (a * a * b * a * a * b) +
+      (-30 / 46080 : 𝕂) • (a * a * b * a * b * a) +
+      (-52 / 46080 : 𝕂) • (a * a * b * a * b * b) +
+      (-12 / 46080 : 𝕂) • (a * a * b * b * a * b) +
+      (-20 / 46080 : 𝕂) • (a * a * b * b * b * a) +
+      (-8 / 46080 : 𝕂) • (a * a * b * b * b * b) +
+      (36 / 46080 : 𝕂) • (a * b * a * a * a * b) +
+      (-32 / 46080 : 𝕂) • (a * b * a * a * b * b) +
+      (30 / 46080 : 𝕂) • (a * b * a * b * a * a) +
+      (128 / 46080 : 𝕂) • (a * b * a * b * a * b) +
+      (40 / 46080 : 𝕂) • (a * b * a * b * b * a) +
+      (32 / 46080 : 𝕂) • (a * b * a * b * b * b) +
+      (-10 / 46080 : 𝕂) • (a * b * b * a * a * a) +
+      (-32 / 46080 : 𝕂) • (a * b * b * a * a * b) +
+      (-40 / 46080 : 𝕂) • (a * b * b * a * b * a) +
+      (-48 / 46080 : 𝕂) • (a * b * b * a * b * b) +
+      (20 / 46080 : 𝕂) • (a * b * b * b * a * a) +
+      (32 / 46080 : 𝕂) • (a * b * b * b * a * b) +
+      (-36 / 46080 : 𝕂) • (b * a * a * a * b * a) +
+      (54 / 46080 : 𝕂) • (b * a * a * b * a * a) +
+      (32 / 46080 : 𝕂) • (b * a * a * b * b * a) +
+      (-46 / 46080 : 𝕂) • (b * a * b * a * a * a) +
+      (-128 / 46080 : 𝕂) • (b * a * b * a * b * a) +
+      (12 / 46080 : 𝕂) • (b * a * b * b * a * a) +
+      (-32 / 46080 : 𝕂) • (b * a * b * b * b * a) +
+      (14 / 46080 : 𝕂) • (b * b * a * a * a * a) +
+      (32 / 46080 : 𝕂) • (b * b * a * a * b * a) +
+      (52 / 46080 : 𝕂) • (b * b * a * b * a * a) +
+      (48 / 46080 : 𝕂) • (b * b * a * b * b * a) +
+      (-28 / 46080 : 𝕂) • (b * b * b * a * a * a) +
+      (-32 / 46080 : 𝕂) • (b * b * b * a * b * a) +
+      (8 / 46080 : 𝕂) • (b * b * b * b * a * a)))‖ ≤
+      100000 * (‖a‖ + ‖b‖) ^ 7
+
+/-! ### T2-F7e Phase E.2 step 5: Group C+D combined bound (proved theorem)
+
+Replaces the previous `symmetric_bch_quintic_group_CD_axiom` with a proved
+theorem combining:
+- `norm_R_T5_sept_le` (≤ 7·10⁶·s⁷, proved)
+- `norm_R_T6_sept_le` (≤ 10⁶·s⁷, proved)
+- `symmetric_bch_quintic_C5_diff_residual_axiom` (≤ 10⁵·s⁷, axiomatized)
+
+via `group_CD_eq_three_residuals` (algebraic identity) + triangle inequality.
+Total bound: 7·10⁶ + 10⁶ + 10⁵ = 8.1·10⁶·s⁷ ≤ 10⁸·s⁷ (matches old axiom). -/
+
+set_option maxHeartbeats 800000 in
+private theorem symmetric_bch_quintic_group_CD_le
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    let DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a
+    ‖-- Group C: Phase B deg-5 cancellation group (4 sub-pieces)
+     (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+       -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+     (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
+     (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+     -symmetric_bch_quintic_correction_poly 𝕂 a b +
+     -- Group D: Phase C deg-6 cancellation group (4 sub-pieces)
+     (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
+     bch_sextic_term 𝕂 a' b +
+     bch_sextic_term 𝕂 (a' + b) a' +
+     (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a')‖ ≤
+      100000000 * (‖a‖ + ‖b‖) ^ 7 := by
+  intro a' z DC_a
+  -- Apply algebraic identity: Group C + Group D = R_T5_sept + R_T6_sept + C5_diff_residual.
+  have hAlg := group_CD_eq_three_residuals (𝕂 := 𝕂) a b
+  -- Establish the 3 residual bounds (each has its own internal let-bindings).
+  have hT5 := norm_R_T5_sept_le (𝕂 := 𝕂) a b hab
+  have hT6 := norm_R_T6_sept_le (𝕂 := 𝕂) a b hab
+  have hC5 := symmetric_bch_quintic_C5_diff_residual_axiom (𝕂 := 𝕂) a b hab
+  -- Set local names mirroring hAlg's RHS structure (matches let-bindings of hT5/hT6/hC5).
+  set V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a') with hV2_def
+  set V₃ : 𝔸 := bch_cubic_term 𝕂 a' b with hV3_def
+  set V₄ : 𝔸 := bch_quartic_term 𝕂 a' b with hV4_def
+  set x : 𝔸 := a' + b with hx_def
+  -- Triangle inequality: ‖A + B + C‖ ≤ ‖A‖ + ‖B‖ + ‖C‖.
+  -- After rw [hAlg], goal is ‖R_T5_sept + R_T6_sept + C5_diff_residual‖ ≤ 10⁸·s⁷.
+  rw [hAlg]
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+  -- Use 2 successive norm_add_le applications.
+  refine le_trans (norm_add_le _ _) ?_
+  refine le_trans (add_le_add (norm_add_le _ _) (le_refl _)) ?_
+  -- Now goal: ‖R_T5‖ + ‖R_T6‖ + ‖C5_diff‖ ≤ 10⁸·s⁷.
+  calc _ ≤ 7000000 * s ^ 7 + 1000000 * s ^ 7 + 100000 * s ^ 7 :=
+        add_le_add (add_le_add hT5 hT6) hC5
+    _ = 8100000 * s ^ 7 := by ring
+    _ ≤ 100000000 * s ^ 7 := by nlinarith [hs7_nn]
+
 -- Quintic Taylor bridge for the 3-factor symmetric BCH:
 -- ‖symmetric_bch_cubic(a,b) − symmetric_bch_cubic_poly(a,b)
 --   − symmetric_bch_quintic_poly(a,b)‖ ≤ 2·10¹⁰ · (‖a‖+‖b‖)⁷ for ‖a‖+‖b‖<1/4.
@@ -3272,8 +3911,9 @@ theorem norm_symmetric_bch_quintic_sub_poly_le (a b : 𝔸)
           apply mul_le_mul_of_nonneg_right _ (by positivity)
           exact mul_le_mul_of_nonneg_right h_45_5 hs5_nn
       _ ≤ 5500 * s ^ 7 := by nlinarith [hs7_nn]
-  -- GROUP C+D: combined bound via sub-axiom (Phase E.2 stepping stone).
-  have hCD := symmetric_bch_quintic_group_CD_axiom (𝕂 := 𝕂) a b hab
+  -- GROUP C+D: combined bound via proved theorem (Phase E.2 step 5),
+  -- which uses R_T5_sept + R_T6_sept (both proved) + C5_diff_residual axiom.
+  have hCD := symmetric_bch_quintic_group_CD_le (𝕂 := 𝕂) a b hab
   simp only [show ((2 : 𝕂)⁻¹ • a : 𝔸) = a' from rfl,
              show bch (𝕂 := 𝕂) a' b = z from rfl,
              ← hDC_a_def] at hCD
