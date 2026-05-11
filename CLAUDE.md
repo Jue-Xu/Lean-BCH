@@ -12,7 +12,7 @@ Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
 Discharge in progress; **Stages 1, 2.0, 2.1 (B1.d-septic + B2.1-septic),
 and 3.0–3.3 of the 6-stage roadmap are now complete**.
 
-**Session 25 (Stage 2.1 — B1.d-septic + B2.1-septic foundation)**:
+**Session 25 (Stage 2 — B1.d-septic, B2.1-septic, and septic-precision combined bound)**:
 
 - Added scoped private axiom `BCH.symmetric_bch_septic_sub_poly_axiom`
   in `SymmetricQuintic.lean` (new `SepticTaylorBridge` section). Asserts
@@ -39,10 +39,24 @@ and 3.0–3.3 of the 6-stage roadmap are now complete**.
   Suzuki-cubic-vanishing condition, the τ³·C₃·E term drops, leaving the
   expected `τ•V + (τ⁵·C₅)·E₅ + (τ⁷·C₇)·E₇ + O(σ⁹)` decomposition.
 
+- Added `BCH.norm_suzuki5_bch_sub_smul_sub_septic_le` in `Palindromic.lean`
+  (Stage 2 main combined bound, the septic-precision analog of
+  `norm_suzuki5_bch_sub_smul_sub_quintic_le`). Bounds the residual after
+  subtracting `τ•V + (τ³·C₃)·E + (τ⁵·C₅)·E₅ + (τ⁷·C₇)·E₇` AND the
+  `(4X, Y)` polynomial pieces `sym_E₃(4X,Y) + sym_E₅(4X,Y) + sym_E₇(4X,Y)`
+  by a σ⁹ polynomial in the three norm-sums. Direct triangle inequality
+  through M4a (`suzuki5_bch_eq_symmetric_bch`) + B2.1-septic +
+  B1.c-septic.
+
 **Net axiom shift**: 1 → 2 scoped private axioms. The new axiom is a
 stepping stone with a clear discharge path (1-degree-higher analog of
 the T2-F7e discharge); it unblocks the rest of Stage 2 + Stages 4–6 of
 the septic-axiom roadmap without further upstream changes.
+
+**Stage 2 of the 6-stage roadmap is now complete** through the Stage 2
+main combined bound. Remaining: Stage 3 (full algebraic τ⁷ matching
+identity, needs CAS pipeline analogous to `discover_quintic_alt_form.py`),
+Stages 4-6 (under_regime + polynomial RHS + assembly).
 
 **Session 24 (septic axiom discharge, Stages 1 + 3.0)**:
 

@@ -3802,6 +3802,132 @@ theorem norm_suzuki5_bch_sub_smul_sub_quintic_le (A B : 𝔸) (p τ : 𝕂)
                       ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 7 := by
         rw [hX_def, hY_def]
 
+/-! ### Septic-precision (Stage 2 main): `norm_suzuki5_bch_sub_smul_sub_septic_le`
+
+One-degree-higher analog of `norm_suzuki5_bch_sub_smul_sub_quintic_le`. Combines:
+
+* the M4a decomposition `suzuki5_bch = (4•X + Y) + symmetric_bch_cubic(4•X, Y)`;
+* the B2.1-septic per-block bound `norm_4X_plus_Y_sub_septic_target_le` on
+  `‖4•X + Y − τ•V − C₃·τ³·E − C₅·τ⁵·E₅ − C₇·τ⁷·E₇‖`;
+* the B1.c-septic Tier-2 stepping-stone theorem
+  `norm_symmetric_bch_septic_sub_poly_le` on
+  `‖symmetric_bch_cubic − sym_E₃ − sym_E₅ − sym_E₇‖`.
+
+The result bounds the residual after subtracting the explicit
+`τ•V`, `(τ³·C₃)·E`, `(τ⁵·C₅)·E₅`, `(τ⁷·C₇)·E₇` per-block targets AND
+the corresponding `(4X, Y)` polynomial pieces, by `K·σ⁹` in the three
+norm-sums.
+
+Foundation for the under-regime σ⁹ assembly (Stage 4) and the final
+septic axiom discharge. -/
+
+include 𝕂 in
+/-- **Septic-precision combined bound (Stage 2 main)**.
+See the section docstring. -/
+theorem norm_suzuki5_bch_sub_smul_sub_septic_le (A B : 𝔸) (p τ : 𝕂)
+    (hR : suzuki5ArgNormBound A B p τ < Real.log 2)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (hreg : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+            ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ < 1 / 4)
+    (hZ1 : ‖suzuki5_bch 𝕂 A B p τ‖ < Real.log 2)
+    (hZ2 : ‖bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))‖ < Real.log 2) :
+    ‖suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+          symmetric_bch_quintic_poly 𝕂 A B -
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) •
+          symmetric_bch_septic_poly 𝕂 A B -
+        symmetric_bch_cubic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+        symmetric_bch_quintic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+        symmetric_bch_septic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ)‖ ≤
+      4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+      1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 +
+      1000000000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                    ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 9 := by
+  set X := strangBlock_log 𝕂 A B p τ with hX_def
+  set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
+  -- Step 1: suzuki5_bch = bch(bch(2•X, Y), 2•X) (M4a key step).
+  have h_sym_bch :=
+    suzuki5_bch_eq_symmetric_bch (𝕂 := 𝕂) A B p τ hR hp h1m4p hreg hZ1 hZ2
+  -- Step 2: bch(bch(2•X, Y), 2•X) = (4•X + Y) + symmetric_bch_cubic(4•X, Y).
+  have h_sbc_def : bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂)
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • X)) Y) ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • X)) =
+      ((4 : 𝕂) • X + Y) + symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y := by
+    unfold symmetric_bch_cubic
+    abel
+  have h_decomp : suzuki5_bch 𝕂 A B p τ =
+      ((4 : 𝕂) • X + Y) + symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y := by
+    rw [h_sym_bch]; exact h_sbc_def
+  -- Step 3: rearrange the LHS into per-block residual + sym_bch_cubic residual.
+  have h_diff_eq :
+      suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+          (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+          (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+            symmetric_bch_quintic_poly 𝕂 A B -
+          (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) •
+            symmetric_bch_septic_poly 𝕂 A B -
+          symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
+          symmetric_bch_quintic_poly 𝕂 ((4 : 𝕂) • X) Y -
+          symmetric_bch_septic_poly 𝕂 ((4 : 𝕂) • X) Y =
+        ((4 : 𝕂) • X + Y - τ • (A + B) -
+          (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+          (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+            symmetric_bch_quintic_poly 𝕂 A B -
+          (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) •
+            symmetric_bch_septic_poly 𝕂 A B) +
+        (symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y -
+          symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
+          symmetric_bch_quintic_poly 𝕂 ((4 : 𝕂) • X) Y -
+          symmetric_bch_septic_poly 𝕂 ((4 : 𝕂) • X) Y) := by
+    rw [h_decomp]; abel
+  rw [h_diff_eq]
+  -- B2.1-septic: per-block residual bound.
+  have h_perblock := norm_4X_plus_Y_sub_septic_target_le (𝕂 := 𝕂) A B p τ hp h1m4p
+  -- B1.c-septic: symmetric_bch_cubic - poly residual bound.
+  have h_b1c := norm_symmetric_bch_septic_sub_poly_le (𝕂 := 𝕂)
+    ((4 : 𝕂) • X) Y hreg
+  -- Triangle inequality.
+  calc ‖((4 : 𝕂) • X + Y - τ • (A + B) -
+            (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+            (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+              symmetric_bch_quintic_poly 𝕂 A B -
+            (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) •
+              symmetric_bch_septic_poly 𝕂 A B) +
+        (symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_quintic_poly 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_septic_poly 𝕂 ((4 : 𝕂) • X) Y)‖
+      ≤ ‖(4 : 𝕂) • X + Y - τ • (A + B) -
+            (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+            (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+              symmetric_bch_quintic_poly 𝕂 A B -
+            (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) •
+              symmetric_bch_septic_poly 𝕂 A B‖ +
+        ‖symmetric_bch_cubic 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_cubic_poly 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_quintic_poly 𝕂 ((4 : 𝕂) • X) Y -
+            symmetric_bch_septic_poly 𝕂 ((4 : 𝕂) • X) Y‖ := norm_add_le _ _
+    _ ≤ (4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+         1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9) +
+        1000000000000 * (‖(4 : 𝕂) • X‖ + ‖Y‖) ^ 9 := by
+        linarith
+    _ = 4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+        1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 +
+        1000000000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                      ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 9 := by
+        rw [hX_def, hY_def]
+
 /-! ### M4b: cubic vanishing under IsSuzukiCubic
 
 Under the Suzuki condition `4p³ + (1-4p)³ = 0`, the cubic coefficient vanishes
