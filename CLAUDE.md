@@ -65,6 +65,16 @@ of the 6-stage roadmap are now complete**.
 These are direct analogs of the deg-5 infrastructure in B2.2.a-c, which
 was the workhorse for Stage 1's `norm_suzuki5_bch_sub_smul_sub_R5_le`.
 
+- **Stage 2.0 (complete)**: deg-7 analog of strangBlock-log target
+  infrastructure in `BCH/Palindromic.lean`:
+  * `suzuki5_bch_septic_coeff p := 4p⁷ + (1-4p)⁷`.
+  * `strangBlock_log_target_septic` (deg-1+3+5+7 truncation).
+  * `suzuki5_targets_sum_septic` + `target_septic_sum_4_form` (algebraic
+    sum identities, 1-line proofs via `match_scalars <;> ring`).
+
+  Foundation for the full Stage 2 bound `‖4X+Y - septic_target‖ ≤ K·τ⁹·tail`
+  (which would extend the existing B2.1 quintic version).
+
 **CAS pipeline (new in session 24)**:
 - `scripts/gen_lean_R7_data.py` — extracts per-word post-Suzuki coefficient
   polynomials + per-word rational K_w bounds (Σ K_w ≈ 0.0195099 vs target
