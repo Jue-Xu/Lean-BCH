@@ -287,10 +287,7 @@ theorem symmetric_bch_septic_poly_smul (a b : 𝔸) (c : 𝕂) :
     symmetric_bch_septic_poly 𝕂 (c • a) (c • b) =
       c ^ 7 • symmetric_bch_septic_poly 𝕂 a b := by
   unfold symmetric_bch_septic_poly
-  simp only [seven_fold_smul_mul c, smul_comm _ (c ^ 7 : 𝕂), ← smul_add]
-
-
-/-!
+  simp only [seven_fold_smul_mul c, smul_comm _ (c ^ 7 : 𝕂), ← smul_add]/-!
 ## Norm bound: `‖E₅(a, b)‖ ≤ (‖a‖ + ‖b‖)⁵`
 
 Proof strategy: each 5-letter word has norm ≤ `s⁵` where
@@ -4170,6 +4167,817 @@ private lemma deg9_smul_word_le
     _ ≤ cb * (s * s * s * s * s * s * s * s * s) := by
         refine mul_le_mul_of_nonneg_left ?_ hcb; gcongr
     _ = cb * s ^ 9 := by ring
+
+/-! ## Norm bound: `‖symmetric_bch_septic_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷` -/
+
+-- Per-Nat-index family of terms in `symmetric_bch_septic_poly a b`.
+-- Defined on Nat (not Fin) so `Finset.range`-based reduction works.
+set_option maxHeartbeats 1600000 in
+private noncomputable def septicTermN (a b : 𝔸) : Nat → 𝔸
+  | 0 => (-31 / 967680 : 𝕂) • (a * a * a * a * a * a * b)
+  | 1 => (186 / 967680 : 𝕂) • (a * a * a * a * a * b * a)
+  | 2 => (186 / 967680 : 𝕂) • (a * a * a * a * a * b * b)
+  | 3 => (-465 / 967680 : 𝕂) • (a * a * a * a * b * a * a)
+  | 4 => (-612 / 967680 : 𝕂) • (a * a * a * a * b * a * b)
+  | 5 => (-318 / 967680 : 𝕂) • (a * a * a * a * b * b * a)
+  | 6 => (-416 / 967680 : 𝕂) • (a * a * a * a * b * b * b)
+  | 7 => (620 / 967680 : 𝕂) • (a * a * a * b * a * a * a)
+  | 8 => (816 / 967680 : 𝕂) • (a * a * a * b * a * a * b)
+  | 9 => (816 / 967680 : 𝕂) • (a * a * a * b * a * b * a)
+  | 10 => (816 / 967680 : 𝕂) • (a * a * a * b * a * b * b)
+  | 11 => (228 / 967680 : 𝕂) • (a * a * a * b * b * a * a)
+  | 12 => (816 / 967680 : 𝕂) • (a * a * a * b * b * a * b)
+  | 13 => (32 / 967680 : 𝕂) • (a * a * a * b * b * b * a)
+  | 14 => (424 / 967680 : 𝕂) • (a * a * a * b * b * b * b)
+  | 15 => (-465 / 967680 : 𝕂) • (a * a * b * a * a * a * a)
+  | 16 => (-864 / 967680 : 𝕂) • (a * a * b * a * a * a * b)
+  | 17 => (144 / 967680 : 𝕂) • (a * a * b * a * a * b * a)
+  | 18 => (144 / 967680 : 𝕂) • (a * a * b * a * a * b * b)
+  | 19 => (-1368 / 967680 : 𝕂) • (a * a * b * a * b * a * a)
+  | 20 => (-2880 / 967680 : 𝕂) • (a * a * b * a * b * a * b)
+  | 21 => (144 / 967680 : 𝕂) • (a * a * b * a * b * b * a)
+  | 22 => (-864 / 967680 : 𝕂) • (a * a * b * a * b * b * b)
+  | 23 => (228 / 967680 : 𝕂) • (a * a * b * b * a * a * a)
+  | 24 => (144 / 967680 : 𝕂) • (a * a * b * b * a * a * b)
+  | 25 => (144 / 967680 : 𝕂) • (a * a * b * b * a * b * a)
+  | 26 => (144 / 967680 : 𝕂) • (a * a * b * b * a * b * b)
+  | 27 => (-192 / 967680 : 𝕂) • (a * a * b * b * b * a * a)
+  | 28 => (-864 / 967680 : 𝕂) • (a * a * b * b * b * a * b)
+  | 29 => (312 / 967680 : 𝕂) • (a * a * b * b * b * b * a)
+  | 30 => (-192 / 967680 : 𝕂) • (a * a * b * b * b * b * b)
+  | 31 => (186 / 967680 : 𝕂) • (a * b * a * a * a * a * a)
+  | 32 => (480 / 967680 : 𝕂) • (a * b * a * a * a * a * b)
+  | 33 => (-192 / 967680 : 𝕂) • (a * b * a * a * a * b * a)
+  | 34 => (-192 / 967680 : 𝕂) • (a * b * a * a * a * b * b)
+  | 35 => (144 / 967680 : 𝕂) • (a * b * a * a * b * a * a)
+  | 36 => (1152 / 967680 : 𝕂) • (a * b * a * a * b * a * b)
+  | 37 => (-864 / 967680 : 𝕂) • (a * b * a * a * b * b * a)
+  | 38 => (-192 / 967680 : 𝕂) • (a * b * a * a * b * b * b)
+  | 39 => (816 / 967680 : 𝕂) • (a * b * a * b * a * a * a)
+  | 40 => (1152 / 967680 : 𝕂) • (a * b * a * b * a * a * b)
+  | 41 => (1152 / 967680 : 𝕂) • (a * b * a * b * a * b * a)
+  | 42 => (1152 / 967680 : 𝕂) • (a * b * a * b * a * b * b)
+  | 43 => (144 / 967680 : 𝕂) • (a * b * a * b * b * a * a)
+  | 44 => (1152 / 967680 : 𝕂) • (a * b * a * b * b * a * b)
+  | 45 => (-192 / 967680 : 𝕂) • (a * b * a * b * b * b * a)
+  | 46 => (480 / 967680 : 𝕂) • (a * b * a * b * b * b * b)
+  | 47 => (-318 / 967680 : 𝕂) • (a * b * b * a * a * a * a)
+  | 48 => (-192 / 967680 : 𝕂) • (a * b * b * a * a * a * b)
+  | 49 => (-864 / 967680 : 𝕂) • (a * b * b * a * a * b * a)
+  | 50 => (-864 / 967680 : 𝕂) • (a * b * b * a * a * b * b)
+  | 51 => (144 / 967680 : 𝕂) • (a * b * b * a * b * a * a)
+  | 52 => (1152 / 967680 : 𝕂) • (a * b * b * a * b * a * b)
+  | 53 => (-864 / 967680 : 𝕂) • (a * b * b * a * b * b * a)
+  | 54 => (-192 / 967680 : 𝕂) • (a * b * b * a * b * b * b)
+  | 55 => (32 / 967680 : 𝕂) • (a * b * b * b * a * a * a)
+  | 56 => (-192 / 967680 : 𝕂) • (a * b * b * b * a * a * b)
+  | 57 => (-192 / 967680 : 𝕂) • (a * b * b * b * a * b * a)
+  | 58 => (-192 / 967680 : 𝕂) • (a * b * b * b * a * b * b)
+  | 59 => (312 / 967680 : 𝕂) • (a * b * b * b * b * a * a)
+  | 60 => (480 / 967680 : 𝕂) • (a * b * b * b * b * a * b)
+  | 61 => (-192 / 967680 : 𝕂) • (a * b * b * b * b * b * a)
+  | 62 => (32 / 967680 : 𝕂) • (a * b * b * b * b * b * b)
+  | 63 => (-31 / 967680 : 𝕂) • (b * a * a * a * a * a * a)
+  | 64 => (-192 / 967680 : 𝕂) • (b * a * a * a * a * a * b)
+  | 65 => (480 / 967680 : 𝕂) • (b * a * a * a * a * b * a)
+  | 66 => (480 / 967680 : 𝕂) • (b * a * a * a * a * b * b)
+  | 67 => (-864 / 967680 : 𝕂) • (b * a * a * a * b * a * a)
+  | 68 => (-1536 / 967680 : 𝕂) • (b * a * a * a * b * a * b)
+  | 69 => (-192 / 967680 : 𝕂) • (b * a * a * a * b * b * a)
+  | 70 => (-640 / 967680 : 𝕂) • (b * a * a * a * b * b * b)
+  | 71 => (816 / 967680 : 𝕂) • (b * a * a * b * a * a * a)
+  | 72 => (1152 / 967680 : 𝕂) • (b * a * a * b * a * a * b)
+  | 73 => (1152 / 967680 : 𝕂) • (b * a * a * b * a * b * a)
+  | 74 => (1152 / 967680 : 𝕂) • (b * a * a * b * a * b * b)
+  | 75 => (144 / 967680 : 𝕂) • (b * a * a * b * b * a * a)
+  | 76 => (1152 / 967680 : 𝕂) • (b * a * a * b * b * a * b)
+  | 77 => (-192 / 967680 : 𝕂) • (b * a * a * b * b * b * a)
+  | 78 => (480 / 967680 : 𝕂) • (b * a * a * b * b * b * b)
+  | 79 => (-612 / 967680 : 𝕂) • (b * a * b * a * a * a * a)
+  | 80 => (-1536 / 967680 : 𝕂) • (b * a * b * a * a * a * b)
+  | 81 => (1152 / 967680 : 𝕂) • (b * a * b * a * a * b * a)
+  | 82 => (1152 / 967680 : 𝕂) • (b * a * b * a * a * b * b)
+  | 83 => (-2880 / 967680 : 𝕂) • (b * a * b * a * b * a * a)
+  | 84 => (-6912 / 967680 : 𝕂) • (b * a * b * a * b * a * b)
+  | 85 => (1152 / 967680 : 𝕂) • (b * a * b * a * b * b * a)
+  | 86 => (-1536 / 967680 : 𝕂) • (b * a * b * a * b * b * b)
+  | 87 => (816 / 967680 : 𝕂) • (b * a * b * b * a * a * a)
+  | 88 => (1152 / 967680 : 𝕂) • (b * a * b * b * a * a * b)
+  | 89 => (1152 / 967680 : 𝕂) • (b * a * b * b * a * b * a)
+  | 90 => (1152 / 967680 : 𝕂) • (b * a * b * b * a * b * b)
+  | 91 => (-864 / 967680 : 𝕂) • (b * a * b * b * b * a * a)
+  | 92 => (-1536 / 967680 : 𝕂) • (b * a * b * b * b * a * b)
+  | 93 => (480 / 967680 : 𝕂) • (b * a * b * b * b * b * a)
+  | 94 => (-192 / 967680 : 𝕂) • (b * a * b * b * b * b * b)
+  | 95 => (186 / 967680 : 𝕂) • (b * b * a * a * a * a * a)
+  | 96 => (480 / 967680 : 𝕂) • (b * b * a * a * a * a * b)
+  | 97 => (-192 / 967680 : 𝕂) • (b * b * a * a * a * b * a)
+  | 98 => (-192 / 967680 : 𝕂) • (b * b * a * a * a * b * b)
+  | 99 => (144 / 967680 : 𝕂) • (b * b * a * a * b * a * a)
+  | 100 => (1152 / 967680 : 𝕂) • (b * b * a * a * b * a * b)
+  | 101 => (-864 / 967680 : 𝕂) • (b * b * a * a * b * b * a)
+  | 102 => (-192 / 967680 : 𝕂) • (b * b * a * a * b * b * b)
+  | 103 => (816 / 967680 : 𝕂) • (b * b * a * b * a * a * a)
+  | 104 => (1152 / 967680 : 𝕂) • (b * b * a * b * a * a * b)
+  | 105 => (1152 / 967680 : 𝕂) • (b * b * a * b * a * b * a)
+  | 106 => (1152 / 967680 : 𝕂) • (b * b * a * b * a * b * b)
+  | 107 => (144 / 967680 : 𝕂) • (b * b * a * b * b * a * a)
+  | 108 => (1152 / 967680 : 𝕂) • (b * b * a * b * b * a * b)
+  | 109 => (-192 / 967680 : 𝕂) • (b * b * a * b * b * b * a)
+  | 110 => (480 / 967680 : 𝕂) • (b * b * a * b * b * b * b)
+  | 111 => (-416 / 967680 : 𝕂) • (b * b * b * a * a * a * a)
+  | 112 => (-640 / 967680 : 𝕂) • (b * b * b * a * a * a * b)
+  | 113 => (-192 / 967680 : 𝕂) • (b * b * b * a * a * b * a)
+  | 114 => (-192 / 967680 : 𝕂) • (b * b * b * a * a * b * b)
+  | 115 => (-864 / 967680 : 𝕂) • (b * b * b * a * b * a * a)
+  | 116 => (-1536 / 967680 : 𝕂) • (b * b * b * a * b * a * b)
+  | 117 => (-192 / 967680 : 𝕂) • (b * b * b * a * b * b * a)
+  | 118 => (-640 / 967680 : 𝕂) • (b * b * b * a * b * b * b)
+  | 119 => (424 / 967680 : 𝕂) • (b * b * b * b * a * a * a)
+  | 120 => (480 / 967680 : 𝕂) • (b * b * b * b * a * a * b)
+  | 121 => (480 / 967680 : 𝕂) • (b * b * b * b * a * b * a)
+  | 122 => (480 / 967680 : 𝕂) • (b * b * b * b * a * b * b)
+  | 123 => (-192 / 967680 : 𝕂) • (b * b * b * b * b * a * a)
+  | 124 => (-192 / 967680 : 𝕂) • (b * b * b * b * b * a * b)
+  | 125 => (32 / 967680 : 𝕂) • (b * b * b * b * b * b * a)
+  | _ => 0
+
+/-- `Fin 126`-indexed wrapper around `septicTermN`. -/
+private noncomputable def septicTerm (a b : 𝔸) (i : Fin 126) : 𝔸 := septicTermN (𝕂 := 𝕂) a b i.val
+
+-- `symmetric_bch_septic_poly` equals the `Finset.sum` over `Fin 126` of
+-- `septicTerm`. Used in the norm bound via `norm_sum_le`.
+set_option maxHeartbeats 16000000 in
+set_option maxRecDepth 2000 in
+private theorem symmetric_bch_septic_poly_eq_sum (a b : 𝔸) :
+    symmetric_bch_septic_poly 𝕂 a b = ∑ i : Fin 126, septicTerm (𝕂 := 𝕂) a b i := by
+  unfold symmetric_bch_septic_poly septicTerm
+  rw [Fin.sum_univ_eq_sum_range (fun k => septicTermN (𝕂 := 𝕂) a b k)]
+  simp only [Finset.sum_range_succ, Finset.sum_range_zero, septicTermN, zero_add]
+  try abel
+
+-- Per-index norm bound: `‖septicTerm a b i‖ ≤ (6912/967680) · s^7`
+-- (uniform: 6912 is the max `|scaled_num|` over all 126 entries).
+set_option maxHeartbeats 32000000 in
+private lemma septicTerm_norm_le (a b : 𝔸) (s : ℝ) (ha : ‖a‖ ≤ s) (hb : ‖b‖ ≤ s) (hs : 0 ≤ s) :
+    ∀ i : Fin 126, ‖septicTerm (𝕂 := 𝕂) a b i‖ ≤ (6912 / 967680 : ℝ) * s^7 := fun i =>
+  match i with
+  | ⟨0, _⟩ =>
+    show ‖(-31 / 967680 : 𝕂) • (a * a * a * a * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-31 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a a a a b s ha ha ha ha ha ha hb (by norm_num) hs
+  | ⟨1, _⟩ =>
+    show ‖(186 / 967680 : 𝕂) • (a * a * a * a * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (186 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a a a b a s ha ha ha ha ha hb ha (by norm_num) hs
+  | ⟨2, _⟩ =>
+    show ‖(186 / 967680 : 𝕂) • (a * a * a * a * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (186 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a a a b b s ha ha ha ha ha hb hb (by norm_num) hs
+  | ⟨3, _⟩ =>
+    show ‖(-465 / 967680 : 𝕂) • (a * a * a * a * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-465 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a a b a a s ha ha ha ha hb ha ha (by norm_num) hs
+  | ⟨4, _⟩ =>
+    show ‖(-612 / 967680 : 𝕂) • (a * a * a * a * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-612 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a a b a b s ha ha ha ha hb ha hb (by norm_num) hs
+  | ⟨5, _⟩ =>
+    show ‖(-318 / 967680 : 𝕂) • (a * a * a * a * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-318 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a a b b a s ha ha ha ha hb hb ha (by norm_num) hs
+  | ⟨6, _⟩ =>
+    show ‖(-416 / 967680 : 𝕂) • (a * a * a * a * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-416 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a a b b b s ha ha ha ha hb hb hb (by norm_num) hs
+  | ⟨7, _⟩ =>
+    show ‖(620 / 967680 : 𝕂) • (a * a * a * b * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (620 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a b a a a s ha ha ha hb ha ha ha (by norm_num) hs
+  | ⟨8, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • (a * a * a * b * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a b a a b s ha ha ha hb ha ha hb (by norm_num) hs
+  | ⟨9, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • (a * a * a * b * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a b a b a s ha ha ha hb ha hb ha (by norm_num) hs
+  | ⟨10, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • (a * a * a * b * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a b a b b s ha ha ha hb ha hb hb (by norm_num) hs
+  | ⟨11, _⟩ =>
+    show ‖(228 / 967680 : 𝕂) • (a * a * a * b * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (228 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a b b a a s ha ha ha hb hb ha ha (by norm_num) hs
+  | ⟨12, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • (a * a * a * b * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a b b a b s ha ha ha hb hb ha hb (by norm_num) hs
+  | ⟨13, _⟩ =>
+    show ‖(32 / 967680 : 𝕂) • (a * a * a * b * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (32 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a b b b a s ha ha ha hb hb hb ha (by norm_num) hs
+  | ⟨14, _⟩ =>
+    show ‖(424 / 967680 : 𝕂) • (a * a * a * b * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (424 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a a b b b b s ha ha ha hb hb hb hb (by norm_num) hs
+  | ⟨15, _⟩ =>
+    show ‖(-465 / 967680 : 𝕂) • (a * a * b * a * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-465 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b a a a a s ha ha hb ha ha ha ha (by norm_num) hs
+  | ⟨16, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (a * a * b * a * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b a a a b s ha ha hb ha ha ha hb (by norm_num) hs
+  | ⟨17, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (a * a * b * a * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b a a b a s ha ha hb ha ha hb ha (by norm_num) hs
+  | ⟨18, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (a * a * b * a * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b a a b b s ha ha hb ha ha hb hb (by norm_num) hs
+  | ⟨19, _⟩ =>
+    show ‖(-1368 / 967680 : 𝕂) • (a * a * b * a * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-1368 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b a b a a s ha ha hb ha hb ha ha (by norm_num) hs
+  | ⟨20, _⟩ =>
+    show ‖(-2880 / 967680 : 𝕂) • (a * a * b * a * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-2880 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b a b a b s ha ha hb ha hb ha hb (by norm_num) hs
+  | ⟨21, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (a * a * b * a * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b a b b a s ha ha hb ha hb hb ha (by norm_num) hs
+  | ⟨22, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (a * a * b * a * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b a b b b s ha ha hb ha hb hb hb (by norm_num) hs
+  | ⟨23, _⟩ =>
+    show ‖(228 / 967680 : 𝕂) • (a * a * b * b * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (228 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b b a a a s ha ha hb hb ha ha ha (by norm_num) hs
+  | ⟨24, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (a * a * b * b * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b b a a b s ha ha hb hb ha ha hb (by norm_num) hs
+  | ⟨25, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (a * a * b * b * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b b a b a s ha ha hb hb ha hb ha (by norm_num) hs
+  | ⟨26, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (a * a * b * b * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b b a b b s ha ha hb hb ha hb hb (by norm_num) hs
+  | ⟨27, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * a * b * b * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b b b a a s ha ha hb hb hb ha ha (by norm_num) hs
+  | ⟨28, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (a * a * b * b * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b b b a b s ha ha hb hb hb ha hb (by norm_num) hs
+  | ⟨29, _⟩ =>
+    show ‖(312 / 967680 : 𝕂) • (a * a * b * b * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (312 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b b b b a s ha ha hb hb hb hb ha (by norm_num) hs
+  | ⟨30, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * a * b * b * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a a b b b b b s ha ha hb hb hb hb hb (by norm_num) hs
+  | ⟨31, _⟩ =>
+    show ‖(186 / 967680 : 𝕂) • (a * b * a * a * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (186 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a a a a a s ha hb ha ha ha ha ha (by norm_num) hs
+  | ⟨32, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (a * b * a * a * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a a a a b s ha hb ha ha ha ha hb (by norm_num) hs
+  | ⟨33, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * a * a * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a a a b a s ha hb ha ha ha hb ha (by norm_num) hs
+  | ⟨34, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * a * a * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a a a b b s ha hb ha ha ha hb hb (by norm_num) hs
+  | ⟨35, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (a * b * a * a * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a a b a a s ha hb ha ha hb ha ha (by norm_num) hs
+  | ⟨36, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (a * b * a * a * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a a b a b s ha hb ha ha hb ha hb (by norm_num) hs
+  | ⟨37, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (a * b * a * a * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a a b b a s ha hb ha ha hb hb ha (by norm_num) hs
+  | ⟨38, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * a * a * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a a b b b s ha hb ha ha hb hb hb (by norm_num) hs
+  | ⟨39, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • (a * b * a * b * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a b a a a s ha hb ha hb ha ha ha (by norm_num) hs
+  | ⟨40, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (a * b * a * b * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a b a a b s ha hb ha hb ha ha hb (by norm_num) hs
+  | ⟨41, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (a * b * a * b * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a b a b a s ha hb ha hb ha hb ha (by norm_num) hs
+  | ⟨42, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (a * b * a * b * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a b a b b s ha hb ha hb ha hb hb (by norm_num) hs
+  | ⟨43, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (a * b * a * b * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a b b a a s ha hb ha hb hb ha ha (by norm_num) hs
+  | ⟨44, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (a * b * a * b * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a b b a b s ha hb ha hb hb ha hb (by norm_num) hs
+  | ⟨45, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * a * b * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a b b b a s ha hb ha hb hb hb ha (by norm_num) hs
+  | ⟨46, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (a * b * a * b * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b a b b b b s ha hb ha hb hb hb hb (by norm_num) hs
+  | ⟨47, _⟩ =>
+    show ‖(-318 / 967680 : 𝕂) • (a * b * b * a * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-318 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b a a a a s ha hb hb ha ha ha ha (by norm_num) hs
+  | ⟨48, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * b * a * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b a a a b s ha hb hb ha ha ha hb (by norm_num) hs
+  | ⟨49, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (a * b * b * a * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b a a b a s ha hb hb ha ha hb ha (by norm_num) hs
+  | ⟨50, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (a * b * b * a * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b a a b b s ha hb hb ha ha hb hb (by norm_num) hs
+  | ⟨51, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (a * b * b * a * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b a b a a s ha hb hb ha hb ha ha (by norm_num) hs
+  | ⟨52, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (a * b * b * a * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b a b a b s ha hb hb ha hb ha hb (by norm_num) hs
+  | ⟨53, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (a * b * b * a * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b a b b a s ha hb hb ha hb hb ha (by norm_num) hs
+  | ⟨54, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * b * a * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b a b b b s ha hb hb ha hb hb hb (by norm_num) hs
+  | ⟨55, _⟩ =>
+    show ‖(32 / 967680 : 𝕂) • (a * b * b * b * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (32 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b b a a a s ha hb hb hb ha ha ha (by norm_num) hs
+  | ⟨56, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * b * b * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b b a a b s ha hb hb hb ha ha hb (by norm_num) hs
+  | ⟨57, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * b * b * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b b a b a s ha hb hb hb ha hb ha (by norm_num) hs
+  | ⟨58, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * b * b * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b b a b b s ha hb hb hb ha hb hb (by norm_num) hs
+  | ⟨59, _⟩ =>
+    show ‖(312 / 967680 : 𝕂) • (a * b * b * b * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (312 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b b b a a s ha hb hb hb hb ha ha (by norm_num) hs
+  | ⟨60, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (a * b * b * b * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b b b a b s ha hb hb hb hb ha hb (by norm_num) hs
+  | ⟨61, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (a * b * b * b * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b b b b a s ha hb hb hb hb hb ha (by norm_num) hs
+  | ⟨62, _⟩ =>
+    show ‖(32 / 967680 : 𝕂) • (a * b * b * b * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (32 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        a b b b b b b s ha hb hb hb hb hb hb (by norm_num) hs
+  | ⟨63, _⟩ =>
+    show ‖(-31 / 967680 : 𝕂) • (b * a * a * a * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-31 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a a a a a s hb ha ha ha ha ha ha (by norm_num) hs
+  | ⟨64, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * a * a * a * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a a a a b s hb ha ha ha ha ha hb (by norm_num) hs
+  | ⟨65, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (b * a * a * a * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a a a b a s hb ha ha ha ha hb ha (by norm_num) hs
+  | ⟨66, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (b * a * a * a * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a a a b b s hb ha ha ha ha hb hb (by norm_num) hs
+  | ⟨67, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (b * a * a * a * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a a b a a s hb ha ha ha hb ha ha (by norm_num) hs
+  | ⟨68, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • (b * a * a * a * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a a b a b s hb ha ha ha hb ha hb (by norm_num) hs
+  | ⟨69, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * a * a * a * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a a b b a s hb ha ha ha hb hb ha (by norm_num) hs
+  | ⟨70, _⟩ =>
+    show ‖(-640 / 967680 : 𝕂) • (b * a * a * a * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-640 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a a b b b s hb ha ha ha hb hb hb (by norm_num) hs
+  | ⟨71, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • (b * a * a * b * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a b a a a s hb ha ha hb ha ha ha (by norm_num) hs
+  | ⟨72, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * a * b * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a b a a b s hb ha ha hb ha ha hb (by norm_num) hs
+  | ⟨73, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * a * b * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a b a b a s hb ha ha hb ha hb ha (by norm_num) hs
+  | ⟨74, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * a * b * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a b a b b s hb ha ha hb ha hb hb (by norm_num) hs
+  | ⟨75, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (b * a * a * b * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a b b a a s hb ha ha hb hb ha ha (by norm_num) hs
+  | ⟨76, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * a * b * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a b b a b s hb ha ha hb hb ha hb (by norm_num) hs
+  | ⟨77, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * a * a * b * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a b b b a s hb ha ha hb hb hb ha (by norm_num) hs
+  | ⟨78, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (b * a * a * b * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a a b b b b s hb ha ha hb hb hb hb (by norm_num) hs
+  | ⟨79, _⟩ =>
+    show ‖(-612 / 967680 : 𝕂) • (b * a * b * a * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-612 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b a a a a s hb ha hb ha ha ha ha (by norm_num) hs
+  | ⟨80, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • (b * a * b * a * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b a a a b s hb ha hb ha ha ha hb (by norm_num) hs
+  | ⟨81, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * b * a * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b a a b a s hb ha hb ha ha hb ha (by norm_num) hs
+  | ⟨82, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * b * a * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b a a b b s hb ha hb ha ha hb hb (by norm_num) hs
+  | ⟨83, _⟩ =>
+    show ‖(-2880 / 967680 : 𝕂) • (b * a * b * a * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-2880 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b a b a a s hb ha hb ha hb ha ha (by norm_num) hs
+  | ⟨84, _⟩ =>
+    show ‖(-6912 / 967680 : 𝕂) • (b * a * b * a * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-6912 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b a b a b s hb ha hb ha hb ha hb (by norm_num) hs
+  | ⟨85, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * b * a * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b a b b a s hb ha hb ha hb hb ha (by norm_num) hs
+  | ⟨86, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • (b * a * b * a * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b a b b b s hb ha hb ha hb hb hb (by norm_num) hs
+  | ⟨87, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • (b * a * b * b * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b b a a a s hb ha hb hb ha ha ha (by norm_num) hs
+  | ⟨88, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * b * b * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b b a a b s hb ha hb hb ha ha hb (by norm_num) hs
+  | ⟨89, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * b * b * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b b a b a s hb ha hb hb ha hb ha (by norm_num) hs
+  | ⟨90, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * a * b * b * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b b a b b s hb ha hb hb ha hb hb (by norm_num) hs
+  | ⟨91, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (b * a * b * b * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b b b a a s hb ha hb hb hb ha ha (by norm_num) hs
+  | ⟨92, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • (b * a * b * b * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b b b a b s hb ha hb hb hb ha hb (by norm_num) hs
+  | ⟨93, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (b * a * b * b * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b b b b a s hb ha hb hb hb hb ha (by norm_num) hs
+  | ⟨94, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * a * b * b * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b a b b b b b s hb ha hb hb hb hb hb (by norm_num) hs
+  | ⟨95, _⟩ =>
+    show ‖(186 / 967680 : 𝕂) • (b * b * a * a * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (186 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a a a a a s hb hb ha ha ha ha ha (by norm_num) hs
+  | ⟨96, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (b * b * a * a * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a a a a b s hb hb ha ha ha ha hb (by norm_num) hs
+  | ⟨97, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * b * a * a * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a a a b a s hb hb ha ha ha hb ha (by norm_num) hs
+  | ⟨98, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * b * a * a * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a a a b b s hb hb ha ha ha hb hb (by norm_num) hs
+  | ⟨99, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (b * b * a * a * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a a b a a s hb hb ha ha hb ha ha (by norm_num) hs
+  | ⟨100, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * b * a * a * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a a b a b s hb hb ha ha hb ha hb (by norm_num) hs
+  | ⟨101, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (b * b * a * a * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a a b b a s hb hb ha ha hb hb ha (by norm_num) hs
+  | ⟨102, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * b * a * a * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a a b b b s hb hb ha ha hb hb hb (by norm_num) hs
+  | ⟨103, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • (b * b * a * b * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a b a a a s hb hb ha hb ha ha ha (by norm_num) hs
+  | ⟨104, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * b * a * b * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a b a a b s hb hb ha hb ha ha hb (by norm_num) hs
+  | ⟨105, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * b * a * b * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a b a b a s hb hb ha hb ha hb ha (by norm_num) hs
+  | ⟨106, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * b * a * b * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a b a b b s hb hb ha hb ha hb hb (by norm_num) hs
+  | ⟨107, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • (b * b * a * b * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a b b a a s hb hb ha hb hb ha ha (by norm_num) hs
+  | ⟨108, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • (b * b * a * b * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a b b a b s hb hb ha hb hb ha hb (by norm_num) hs
+  | ⟨109, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * b * a * b * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a b b b a s hb hb ha hb hb hb ha (by norm_num) hs
+  | ⟨110, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (b * b * a * b * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b a b b b b s hb hb ha hb hb hb hb (by norm_num) hs
+  | ⟨111, _⟩ =>
+    show ‖(-416 / 967680 : 𝕂) • (b * b * b * a * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-416 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b a a a a s hb hb hb ha ha ha ha (by norm_num) hs
+  | ⟨112, _⟩ =>
+    show ‖(-640 / 967680 : 𝕂) • (b * b * b * a * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-640 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b a a a b s hb hb hb ha ha ha hb (by norm_num) hs
+  | ⟨113, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * b * b * a * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b a a b a s hb hb hb ha ha hb ha (by norm_num) hs
+  | ⟨114, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * b * b * a * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b a a b b s hb hb hb ha ha hb hb (by norm_num) hs
+  | ⟨115, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • (b * b * b * a * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b a b a a s hb hb hb ha hb ha ha (by norm_num) hs
+  | ⟨116, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • (b * b * b * a * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b a b a b s hb hb hb ha hb ha hb (by norm_num) hs
+  | ⟨117, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * b * b * a * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b a b b a s hb hb hb ha hb hb ha (by norm_num) hs
+  | ⟨118, _⟩ =>
+    show ‖(-640 / 967680 : 𝕂) • (b * b * b * a * b * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-640 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b a b b b s hb hb hb ha hb hb hb (by norm_num) hs
+  | ⟨119, _⟩ =>
+    show ‖(424 / 967680 : 𝕂) • (b * b * b * b * a * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (424 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b b a a a s hb hb hb hb ha ha ha (by norm_num) hs
+  | ⟨120, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (b * b * b * b * a * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b b a a b s hb hb hb hb ha ha hb (by norm_num) hs
+  | ⟨121, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (b * b * b * b * a * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b b a b a s hb hb hb hb ha hb ha (by norm_num) hs
+  | ⟨122, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • (b * b * b * b * a * b * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b b a b b s hb hb hb hb ha hb hb (by norm_num) hs
+  | ⟨123, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * b * b * b * b * a * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b b b a a s hb hb hb hb hb ha ha (by norm_num) hs
+  | ⟨124, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • (b * b * b * b * b * a * b)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b b b a b s hb hb hb hb hb ha hb (by norm_num) hs
+  | ⟨125, _⟩ =>
+    show ‖(32 / 967680 : 𝕂) • (b * b * b * b * b * b * a)‖ ≤ (6912 / 967680 : ℝ) * s^7 from
+      deg7_smul_word_le (32 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        b b b b b b a s hb hb hb hb hb hb ha (by norm_num) hs
+  | ⟨_ + 126, h⟩ => absurd h (by omega)
+
+set_option maxHeartbeats 800000 in
+/-- **Norm bound for `symmetric_bch_septic_poly`**:
+`‖E₇(a, b)‖ ≤ (‖a‖+‖b‖)⁷`.
+
+The actual Σ|coef|/967680 ≈ 0.086 (tight). The proof uses a uniform
+per-i bound `6912/967680` (max |scaled coef|), giving
+`Σ ≤ 126·6912/967680 = 870912/967680 ≤ 1`. -/
+theorem norm_symmetric_bch_septic_poly_le (a b : 𝔸) :
+    ‖symmetric_bch_septic_poly 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 7 := by
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have ha_le : ‖a‖ ≤ s := by linarith [norm_nonneg b]
+  have hb_le : ‖b‖ ≤ s := by linarith [norm_nonneg a]
+  have hs7_nn : 0 ≤ s ^ 7 := pow_nonneg hs_nn 7
+  rw [symmetric_bch_septic_poly_eq_sum]
+  calc ‖∑ i : Fin 126, septicTerm (𝕂 := 𝕂) a b i‖
+      ≤ ∑ i : Fin 126, ‖septicTerm (𝕂 := 𝕂) a b i‖ := norm_sum_le _ _
+    _ ≤ ∑ _i : Fin 126, (6912 / 967680 : ℝ) * s^7 :=
+        Finset.sum_le_sum (fun i _ => septicTerm_norm_le (𝕂 := 𝕂) a b s ha_le hb_le hs_nn i)
+    _ = 126 * ((6912 / 967680 : ℝ) * s^7) := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring
+    _ ≤ 1 * s^7 := by nlinarith [hs7_nn]
+    _ = s ^ 7 := one_mul _
+
 
 /-- Per-index family: the 79 deg-7 terms of `C5_LinResidual_polynomial`. -/
 private noncomputable def linResTerm7 (a b : 𝔸) : Fin 79 → 𝔸

@@ -2,9 +2,12 @@
 """Generate the Lean code for `norm_symmetric_bch_septic_poly_le`:
 the bound `‖symmetric_bch_septic_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`.
 
-Uses the session 23 Finset.sum pattern: define `septicTerm : Fin 126 → 𝔸`,
-prove per-i norm bound via `deg7_smul_word_le`, sum via `Finset.sum_const`
-with uniform max bound (6912/967680, giving 126 · 6912 / 967680 = 870912/967680 ≤ 1).
+Uses the session 23 Finset.sum pattern with the session 24 Nat-indexing trick:
+- `septicTermN : Nat → 𝔸` (pattern match on Nat for `Finset.range`-reduction).
+- `septicTerm (i : Fin 126) := septicTermN i.val` (Fin wrapper for per-i bounds).
+- Per-i norm bound via `deg7_smul_word_le`.
+- Sum via `Finset.sum_const` with uniform max bound (6912/967680, giving
+  126 · 6912 / 967680 = 870912/967680 ≤ 1).
 """
 import sys, os
 import sympy as sp
@@ -29,7 +32,6 @@ def main():
     lcm = 967680
     UNIFORM_MAX_NUM = 6912  # = max(|c| · lcm) over all 126 terms
 
-    # Build entries: (idx, word, scaled_num, abs_num)
     entries = []
     for idx, (w, c) in enumerate(items):
         num = c.p if hasattr(c, 'p') else c.as_numer_denom()[0]
@@ -37,31 +39,35 @@ def main():
         scaled_num = int(num) * (lcm // int(denom))
         entries.append((idx, w, scaled_num, abs(scaled_num)))
 
-    # ---------- Emit septicTerm definition ----------
-    print("-- Per-index family: 126 terms of `symmetric_bch_septic_poly a b`.")
-    print("-- Each is `(scaled_num/967680 : 𝕂) • word_product`. Used in the")
-    print("-- Finset.sum form of the norm bound below.")
+    # ---------- Emit septicTermN (Nat-indexed) ----------
+    print("-- Per-Nat-index family of terms in `symmetric_bch_septic_poly a b`.")
+    print("-- Defined on Nat (not Fin) so `Finset.range`-based reduction works.")
     print("set_option maxHeartbeats 1600000 in")
-    print("private noncomputable def septicTerm (a b : 𝔸) : Fin 126 → 𝔸")
+    print("private noncomputable def septicTermN (a b : 𝔸) : Nat → 𝔸")
     for idx, w, sn, _ in entries:
         word = ' * '.join('a' if x == 0 else 'b' for x in w)
-        print(f'  | ⟨{idx}, _⟩ => ({sn} / 967680 : 𝕂) • ({word})')
-    print('  | ⟨_ + 126, h⟩ => absurd h (by omega)')
+        print(f'  | {idx} => ({sn} / 967680 : 𝕂) • ({word})')
+    print('  | _ => 0')
+    print()
+    print("/-- `Fin 126`-indexed wrapper around `septicTermN`. -/")
+    print("private noncomputable def septicTerm (a b : 𝔸) (i : Fin 126) : 𝔸 := septicTermN (𝕂 := 𝕂) a b i.val")
     print()
 
-    # ---------- Emit polynomial identity ----------
-    print("/-- `symmetric_bch_septic_poly` equals the `Finset.sum` over `Fin 126`")
-    print("of `septicTerm`. Used in the norm bound via `norm_sum_le`. -/")
-    print("set_option maxHeartbeats 8000000 in")
+    # ---------- Emit Finset.sum identity ----------
+    print("-- `symmetric_bch_septic_poly` equals the `Finset.sum` over `Fin 126` of")
+    print("-- `septicTerm`. Used in the norm bound via `norm_sum_le`.")
+    print("set_option maxHeartbeats 16000000 in")
+    print("set_option maxRecDepth 2000 in")
     print("private theorem symmetric_bch_septic_poly_eq_sum (a b : 𝔸) :")
     print("    symmetric_bch_septic_poly 𝕂 a b = ∑ i : Fin 126, septicTerm (𝕂 := 𝕂) a b i := by")
-    print("  unfold symmetric_bch_septic_poly")
-    print("  simp only [Fin.sum_univ_succ, Fin.sum_univ_zero, septicTerm, add_zero]")
-    print("  abel")
+    print("  unfold symmetric_bch_septic_poly septicTerm")
+    print("  rw [Fin.sum_univ_eq_sum_range (fun k => septicTermN (𝕂 := 𝕂) a b k)]")
+    print("  simp only [Finset.sum_range_succ, Finset.sum_range_zero, septicTermN, zero_add]")
+    print("  try abel")
     print()
 
     # ---------- Emit per-i norm bound ----------
-    print("-- Per-index norm bound: `‖septicTerm i‖ ≤ (6912/967680) · s^7`")
+    print("-- Per-index norm bound: `‖septicTerm a b i‖ ≤ (6912/967680) · s^7`")
     print("-- (uniform: 6912 is the max `|scaled_num|` over all 126 entries).")
     print("set_option maxHeartbeats 32000000 in")
     print("private lemma septicTerm_norm_le (a b : 𝔸) (s : ℝ) (ha : ‖a‖ ≤ s) (hb : ‖b‖ ≤ s) (hs : 0 ≤ s) :")
@@ -69,27 +75,24 @@ def main():
     print("  match i with")
     for idx, w, sn, abs_sn in entries:
         word_args = ' '.join('a' if x == 0 else 'b' for x in w)
+        word_prod = ' * '.join('a' if x == 0 else 'b' for x in w)
         h_args = ' '.join(f'h{"a" if x == 0 else "b"}' for x in w)
-        # Goal: ‖(sn/lcm) • word‖ ≤ (6912/lcm) · s^7
-        # Use deg7_smul_word_le with c = sn/lcm and cb = 6912/lcm.
-        # Coefficient bound: ‖sn/lcm‖ = |sn|/lcm ≤ 6912/lcm.
-        # Use `by rw [norm_div]; simp [RCLike.norm_intCast]; norm_num` or simpler.
         print(f'  | ⟨{idx}, _⟩ =>')
-        print(f'    show ‖({sn} / 967680 : 𝕂) • ({word_args.replace(" ", " * ")})‖ ≤ ({UNIFORM_MAX_NUM} / 967680 : ℝ) * s^7 from')
+        print(f'    show ‖({sn} / 967680 : 𝕂) • ({word_prod})‖ ≤ ({UNIFORM_MAX_NUM} / 967680 : ℝ) * s^7 from')
         print(f'      deg7_smul_word_le ({sn} / 967680 : 𝕂) ({UNIFORM_MAX_NUM} / 967680 : ℝ)')
-        print(f'        (by rw [norm_div]; simp [RCLike.norm_intCast]; norm_num)')
+        print(f'        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)')
         print(f'        {word_args} s {h_args} (by norm_num) hs')
     print('  | ⟨_ + 126, h⟩ => absurd h (by omega)')
     print()
 
     # ---------- Emit the norm bound theorem ----------
+    print("set_option maxHeartbeats 800000 in")
     print(f"/-- **Norm bound for `symmetric_bch_septic_poly`**:")
     print(f"`‖E₇(a, b)‖ ≤ (‖a‖+‖b‖)⁷`.")
     print(f"")
     print(f"The actual Σ|coef|/967680 ≈ 0.086 (tight). The proof uses a uniform")
     print(f"per-i bound `6912/967680` (max |scaled coef|), giving")
     print(f"`Σ ≤ 126·6912/967680 = 870912/967680 ≤ 1`. -/")
-    print("set_option maxHeartbeats 800000 in")
     print("theorem norm_symmetric_bch_septic_poly_le (a b : 𝔸) :")
     print("    ‖symmetric_bch_septic_poly 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 7 := by")
     print("  set s := ‖a‖ + ‖b‖ with hs_def")
