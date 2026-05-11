@@ -3928,6 +3928,90 @@ theorem norm_suzuki5_bch_sub_smul_sub_septic_le (A B : 𝔸) (p τ : 𝕂)
                       ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 9 := by
         rw [hX_def, hY_def]
 
+include 𝕂 in
+/-- **Stage 2 main under `IsSuzukiCubic` p**: cubic-term-suppressed septic
+combined bound. Under the Suzuki cubic-cancellation condition (`4p³ +
+(1-4p)³ = 0`), the τ³·C₃(p)·E term drops out of the Stage 2 main bound,
+leaving the cleaner form
+
+```
+‖suzuki5_bch - τ•V - (τ⁵·C₅)·E₅ - (τ⁷·C₇)·E₇ - sym_E₃(4X,Y) -
+   sym_E₅(4X,Y) - sym_E₇(4X,Y)‖ ≤ K·σ⁹
+```
+
+Direct corollary of `norm_suzuki5_bch_sub_smul_sub_septic_le`. -/
+theorem norm_suzuki5_bch_sub_smul_sub_septic_of_IsSuzukiCubic_le
+    (A B : 𝔸) (p τ : 𝕂) (hSuzuki : IsSuzukiCubic p)
+    (hR : suzuki5ArgNormBound A B p τ < Real.log 2)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (hreg : ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+            ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖ < 1 / 4)
+    (hZ1 : ‖suzuki5_bch 𝕂 A B p τ‖ < Real.log 2)
+    (hZ2 : ‖bch (𝕂 := 𝕂)
+      (bch (𝕂 := 𝕂)
+        ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))
+        (strangBlock_log 𝕂 A B (1 - 4 * p) τ))
+      ((2 : 𝕂)⁻¹ • ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ))‖ < Real.log 2) :
+    ‖suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+          symmetric_bch_quintic_poly 𝕂 A B -
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) •
+          symmetric_bch_septic_poly 𝕂 A B -
+        symmetric_bch_cubic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+        symmetric_bch_quintic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+        symmetric_bch_septic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ)‖ ≤
+      4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+      1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 +
+      1000000000000 * (‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ‖ +
+                    ‖strangBlock_log 𝕂 A B (1 - 4 * p) τ‖) ^ 9 := by
+  have h_main := norm_suzuki5_bch_sub_smul_sub_septic_le (𝕂 := 𝕂)
+    A B p τ hR hp h1m4p hreg hZ1 hZ2
+  have h_coef_zero : suzuki5_bch_cubic_coeff 𝕂 p = 0 :=
+    suzuki5_bch_cubic_coeff_eq_zero_of_IsSuzukiCubic hSuzuki
+  have h_cubic_zero :
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B = 0 := by
+    rw [h_coef_zero, mul_zero, zero_smul]
+  have h_rearrange :
+      suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+          symmetric_bch_quintic_poly 𝕂 A B -
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) •
+          symmetric_bch_septic_poly 𝕂 A B -
+        symmetric_bch_cubic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+        symmetric_bch_quintic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+        symmetric_bch_septic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) =
+      suzuki5_bch 𝕂 A B p τ - τ • (A + B) -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) •
+          symmetric_bch_quintic_poly 𝕂 A B -
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) •
+          symmetric_bch_septic_poly 𝕂 A B -
+        symmetric_bch_cubic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+        symmetric_bch_quintic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) -
+        symmetric_bch_septic_poly 𝕂
+          ((4 : 𝕂) • strangBlock_log 𝕂 A B p τ)
+          (strangBlock_log 𝕂 A B (1 - 4 * p) τ) := by
+    rw [h_cubic_zero]; abel
+  rw [h_rearrange] at h_main
+  exact h_main
+
 /-! ### M4b: cubic vanishing under IsSuzukiCubic
 
 Under the Suzuki condition `4p³ + (1-4p)³ = 0`, the cubic coefficient vanishes
