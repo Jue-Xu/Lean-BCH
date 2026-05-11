@@ -5192,6 +5192,1610 @@ theorem norm_symmetric_bch_septic_poly_le (a b : 𝔸) :
     _ ≤ 1 * s^7 := by nlinarith [hs7_nn]
     _ = s ^ 7 := one_mul _
 
+/-! ## Lipschitz bound: `‖E₇(α•V + δa, β•V + δb)‖ ≤ 7·N⁶·D` -/
+
+-- Helper: `‖c • (x₁·…·x₇) - c • (y₁·…·y₇)‖ ≤ cb · 7·N⁶·D` given
+-- `‖c‖ ≤ cb`, all `‖xᵢ‖, ‖yᵢ‖ ≤ N`, all `‖xᵢ - yᵢ‖ ≤ D`.
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma deg7_smul_word_diff_le
+    (c : 𝕂) (cb : ℝ) (hc : ‖c‖ ≤ cb)
+    (x₁ x₂ x₃ x₄ x₅ x₆ x₇ y₁ y₂ y₃ y₄ y₅ y₆ y₇ : 𝔸) (N D : ℝ)
+    (hx₁ : ‖x₁‖ ≤ N) (hx₂ : ‖x₂‖ ≤ N) (hx₃ : ‖x₃‖ ≤ N) (hx₄ : ‖x₄‖ ≤ N) (hx₅ : ‖x₅‖ ≤ N) (hx₆ : ‖x₆‖ ≤ N) (hx₇ : ‖x₇‖ ≤ N)
+    (hy₁ : ‖y₁‖ ≤ N) (hy₂ : ‖y₂‖ ≤ N) (hy₃ : ‖y₃‖ ≤ N) (hy₄ : ‖y₄‖ ≤ N) (hy₅ : ‖y₅‖ ≤ N) (hy₆ : ‖y₆‖ ≤ N) (hy₇ : ‖y₇‖ ≤ N)
+    (hd₁ : ‖x₁ - y₁‖ ≤ D) (hd₂ : ‖x₂ - y₂‖ ≤ D) (hd₃ : ‖x₃ - y₃‖ ≤ D) (hd₄ : ‖x₄ - y₄‖ ≤ D) (hd₅ : ‖x₅ - y₅‖ ≤ D) (hd₆ : ‖x₆ - y₆‖ ≤ D) (hd₇ : ‖x₇ - y₇‖ ≤ D)
+    (hcb : 0 ≤ cb) (hN_nn : 0 ≤ N) (hD_nn : 0 ≤ D) :
+    ‖c • (x₁ * x₂ * x₃ * x₄ * x₅ * x₆ * x₇) - c • (y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * y₇)‖ ≤
+      cb * 7 * N^6 * D := by
+  rw [← smul_sub]
+  have hwd : ‖x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇‖ ≤
+             N^6 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖ + ‖x₆ - y₆‖ + ‖x₇ - y₇‖) :=
+    word_7_diff_le x₁ x₂ x₃ x₄ x₅ x₆ x₇ y₁ y₂ y₃ y₄ y₅ y₆ y₇ N hx₁ hx₂ hx₃ hx₄ hx₅ hx₆ hx₇ hy₁ hy₂ hy₃ hy₄ hy₅ hy₆ hy₇ hN_nn
+  have hwd_bound : N^6 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖ + ‖x₆ - y₆‖ + ‖x₇ - y₇‖) ≤
+             7 * N^6 * D := by
+    have hN6_nn : 0 ≤ N^6 := pow_nonneg hN_nn 6
+    nlinarith [hd₁, hd₂, hd₃, hd₄, hd₅, hd₆, hd₇, hN6_nn]
+  have hwd2 : ‖x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇‖ ≤ 7 * N^6 * D := le_trans hwd hwd_bound
+  have h_pos : 0 ≤ 7 * N^6 * D := by positivity
+  calc ‖c • (x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇)‖
+      ≤ ‖c‖ * ‖x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇‖ := norm_smul_le _ _
+    _ ≤ cb * ‖x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇‖ := mul_le_mul_of_nonneg_right hc (norm_nonneg _)
+    _ ≤ cb * (7 * N^6 * D) := mul_le_mul_of_nonneg_left hwd2 hcb
+    _ = cb * 7 * N^6 * D := by ring
+
+-- Per-i bound: `‖septicTerm fA fB i - septicTerm lA lB i‖ ≤ (6912/967680) · 7 · N⁶ · D`
+-- uniform over all 126 indices.
+set_option maxHeartbeats 64000000 in
+private lemma septicTerm_diff_norm_le (V : 𝔸) (α β : 𝕂) (δa δb : 𝔸) (N : ℝ)
+    (hα_le : ‖α • V‖ ≤ N) (hβ_le : ‖β • V‖ ≤ N)
+    (hα_δa_le : ‖α • V + δa‖ ≤ N) (hβ_δb_le : ‖β • V + δb‖ ≤ N)
+    (hN_nn : 0 ≤ N) :
+    ∀ i : Fin 126, ‖septicTerm (𝕂 := 𝕂) (α • V + δa) (β • V + δb) i -
+                     septicTerm (𝕂 := 𝕂) (α • V) (β • V) i‖ ≤
+      (6912 / 967680 : ℝ) * 7 * N^6 * (‖δa‖ + ‖δb‖) := by
+  intro i
+  set D := ‖δa‖ + ‖δb‖ with hD_def
+  have hD_nn : 0 ≤ D := by positivity
+  have hdA_eq : ‖(α • V + δa) - (α • V)‖ = ‖δa‖ := by congr 1; abel
+  have hdB_eq : ‖(β • V + δb) - (β • V)‖ = ‖δb‖ := by congr 1; abel
+  have hδa_le_D : ‖δa‖ ≤ D := by rw [hD_def]; linarith [norm_nonneg δb]
+  have hδb_le_D : ‖δb‖ ≤ D := by rw [hD_def]; linarith [norm_nonneg δa]
+  have hdA_le : ‖(α • V + δa) - (α • V)‖ ≤ D := hdA_eq ▸ hδa_le_D
+  have hdB_le : ‖(β • V + δb) - (β • V)‖ ≤ D := hdB_eq ▸ hδb_le_D
+  match i with
+  | ⟨0, _⟩ =>
+    show ‖(-31 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (-31 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (α • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-31 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb)
+        (α • V) (α • V) (α • V) (α • V) (α • V) (α • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le
+        hα_le hα_le hα_le hα_le hα_le hα_le hβ_le
+        hdA_le hdA_le hdA_le hdA_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨1, _⟩ =>
+    show ‖(186 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (186 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (α • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (186 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa)
+        (α • V) (α • V) (α • V) (α • V) (α • V) (β • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le
+        hα_le hα_le hα_le hα_le hα_le hβ_le hα_le
+        hdA_le hdA_le hdA_le hdA_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨2, _⟩ =>
+    show ‖(186 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (186 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (α • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (186 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb)
+        (α • V) (α • V) (α • V) (α • V) (α • V) (β • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le
+        hα_le hα_le hα_le hα_le hα_le hβ_le hβ_le
+        hdA_le hdA_le hdA_le hdA_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨3, _⟩ =>
+    show ‖(-465 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (-465 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (α • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-465 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa)
+        (α • V) (α • V) (α • V) (α • V) (β • V) (α • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le
+        hα_le hα_le hα_le hα_le hβ_le hα_le hα_le
+        hdA_le hdA_le hdA_le hdA_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨4, _⟩ =>
+    show ‖(-612 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (-612 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (α • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-612 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb)
+        (α • V) (α • V) (α • V) (α • V) (β • V) (α • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le
+        hα_le hα_le hα_le hα_le hβ_le hα_le hβ_le
+        hdA_le hdA_le hdA_le hdA_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨5, _⟩ =>
+    show ‖(-318 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-318 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (α • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-318 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa)
+        (α • V) (α • V) (α • V) (α • V) (β • V) (β • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le
+        hα_le hα_le hα_le hα_le hβ_le hβ_le hα_le
+        hdA_le hdA_le hdA_le hdA_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨6, _⟩ =>
+    show ‖(-416 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-416 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (α • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-416 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb)
+        (α • V) (α • V) (α • V) (α • V) (β • V) (β • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hα_le hα_le hα_le hα_le hβ_le hβ_le hβ_le
+        hdA_le hdA_le hdA_le hdA_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨7, _⟩ =>
+    show ‖(620 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (620 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (β • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (620 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa)
+        (α • V) (α • V) (α • V) (β • V) (α • V) (α • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le
+        hα_le hα_le hα_le hβ_le hα_le hα_le hα_le
+        hdA_le hdA_le hdA_le hdB_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨8, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (816 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (β • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb)
+        (α • V) (α • V) (α • V) (β • V) (α • V) (α • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le
+        hα_le hα_le hα_le hβ_le hα_le hα_le hβ_le
+        hdA_le hdA_le hdA_le hdB_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨9, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (816 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (β • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa)
+        (α • V) (α • V) (α • V) (β • V) (α • V) (β • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le
+        hα_le hα_le hα_le hβ_le hα_le hβ_le hα_le
+        hdA_le hdA_le hdA_le hdB_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨10, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (816 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (β • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb)
+        (α • V) (α • V) (α • V) (β • V) (α • V) (β • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le
+        hα_le hα_le hα_le hβ_le hα_le hβ_le hβ_le
+        hdA_le hdA_le hdA_le hdB_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨11, _⟩ =>
+    show ‖(228 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (228 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (β • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (228 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa)
+        (α • V) (α • V) (α • V) (β • V) (β • V) (α • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le
+        hα_le hα_le hα_le hβ_le hβ_le hα_le hα_le
+        hdA_le hdA_le hdA_le hdB_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨12, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (816 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (β • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb)
+        (α • V) (α • V) (α • V) (β • V) (β • V) (α • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le
+        hα_le hα_le hα_le hβ_le hβ_le hα_le hβ_le
+        hdA_le hdA_le hdA_le hdB_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨13, _⟩ =>
+    show ‖(32 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (32 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (β • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (32 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa)
+        (α • V) (α • V) (α • V) (β • V) (β • V) (β • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le
+        hα_le hα_le hα_le hβ_le hβ_le hβ_le hα_le
+        hdA_le hdA_le hdA_le hdB_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨14, _⟩ =>
+    show ‖(424 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (424 / 967680 : 𝕂) • ((α • V) * (α • V) * (α • V) * (β • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (424 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb)
+        (α • V) (α • V) (α • V) (β • V) (β • V) (β • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hα_le hα_le hα_le hβ_le hβ_le hβ_le hβ_le
+        hdA_le hdA_le hdA_le hdB_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨15, _⟩ =>
+    show ‖(-465 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (-465 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (α • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-465 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa)
+        (α • V) (α • V) (β • V) (α • V) (α • V) (α • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le
+        hα_le hα_le hβ_le hα_le hα_le hα_le hα_le
+        hdA_le hdA_le hdB_le hdA_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨16, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (-864 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (α • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb)
+        (α • V) (α • V) (β • V) (α • V) (α • V) (α • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le
+        hα_le hα_le hβ_le hα_le hα_le hα_le hβ_le
+        hdA_le hdA_le hdB_le hdA_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨17, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (144 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (α • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa)
+        (α • V) (α • V) (β • V) (α • V) (α • V) (β • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le
+        hα_le hα_le hβ_le hα_le hα_le hβ_le hα_le
+        hdA_le hdA_le hdB_le hdA_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨18, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (144 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (α • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb)
+        (α • V) (α • V) (β • V) (α • V) (α • V) (β • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le
+        hα_le hα_le hβ_le hα_le hα_le hβ_le hβ_le
+        hdA_le hdA_le hdB_le hdA_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨19, _⟩ =>
+    show ‖(-1368 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (-1368 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (α • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-1368 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa)
+        (α • V) (α • V) (β • V) (α • V) (β • V) (α • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le
+        hα_le hα_le hβ_le hα_le hβ_le hα_le hα_le
+        hdA_le hdA_le hdB_le hdA_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨20, _⟩ =>
+    show ‖(-2880 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (-2880 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (α • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-2880 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb)
+        (α • V) (α • V) (β • V) (α • V) (β • V) (α • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le
+        hα_le hα_le hβ_le hα_le hβ_le hα_le hβ_le
+        hdA_le hdA_le hdB_le hdA_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨21, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (144 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (α • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa)
+        (α • V) (α • V) (β • V) (α • V) (β • V) (β • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le
+        hα_le hα_le hβ_le hα_le hβ_le hβ_le hα_le
+        hdA_le hdA_le hdB_le hdA_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨22, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-864 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (α • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb)
+        (α • V) (α • V) (β • V) (α • V) (β • V) (β • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hα_le hα_le hβ_le hα_le hβ_le hβ_le hβ_le
+        hdA_le hdA_le hdB_le hdA_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨23, _⟩ =>
+    show ‖(228 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (228 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (β • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (228 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa)
+        (α • V) (α • V) (β • V) (β • V) (α • V) (α • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le
+        hα_le hα_le hβ_le hβ_le hα_le hα_le hα_le
+        hdA_le hdA_le hdB_le hdB_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨24, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (144 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (β • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb)
+        (α • V) (α • V) (β • V) (β • V) (α • V) (α • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le
+        hα_le hα_le hβ_le hβ_le hα_le hα_le hβ_le
+        hdA_le hdA_le hdB_le hdB_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨25, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (144 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (β • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa)
+        (α • V) (α • V) (β • V) (β • V) (α • V) (β • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le
+        hα_le hα_le hβ_le hβ_le hα_le hβ_le hα_le
+        hdA_le hdA_le hdB_le hdB_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨26, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (144 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (β • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb)
+        (α • V) (α • V) (β • V) (β • V) (α • V) (β • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le
+        hα_le hα_le hβ_le hβ_le hα_le hβ_le hβ_le
+        hdA_le hdA_le hdB_le hdB_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨27, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (β • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa)
+        (α • V) (α • V) (β • V) (β • V) (β • V) (α • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le
+        hα_le hα_le hβ_le hβ_le hβ_le hα_le hα_le
+        hdA_le hdA_le hdB_le hdB_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨28, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (-864 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (β • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb)
+        (α • V) (α • V) (β • V) (β • V) (β • V) (α • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le
+        hα_le hα_le hβ_le hβ_le hβ_le hα_le hβ_le
+        hdA_le hdA_le hdB_le hdB_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨29, _⟩ =>
+    show ‖(312 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (312 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (β • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (312 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa)
+        (α • V) (α • V) (β • V) (β • V) (β • V) (β • V) (α • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le
+        hα_le hα_le hβ_le hβ_le hβ_le hβ_le hα_le
+        hdA_le hdA_le hdB_le hdB_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨30, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((α • V) * (α • V) * (β • V) * (β • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb)
+        (α • V) (α • V) (β • V) (β • V) (β • V) (β • V) (β • V)
+        N D
+        hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hα_le hα_le hβ_le hβ_le hβ_le hβ_le hβ_le
+        hdA_le hdA_le hdB_le hdB_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨31, _⟩ =>
+    show ‖(186 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (186 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (α • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (186 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa)
+        (α • V) (β • V) (α • V) (α • V) (α • V) (α • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le
+        hα_le hβ_le hα_le hα_le hα_le hα_le hα_le
+        hdA_le hdB_le hdA_le hdA_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨32, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (480 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (α • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb)
+        (α • V) (β • V) (α • V) (α • V) (α • V) (α • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le
+        hα_le hβ_le hα_le hα_le hα_le hα_le hβ_le
+        hdA_le hdB_le hdA_le hdA_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨33, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (α • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa)
+        (α • V) (β • V) (α • V) (α • V) (α • V) (β • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le
+        hα_le hβ_le hα_le hα_le hα_le hβ_le hα_le
+        hdA_le hdB_le hdA_le hdA_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨34, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (α • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb)
+        (α • V) (β • V) (α • V) (α • V) (α • V) (β • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le
+        hα_le hβ_le hα_le hα_le hα_le hβ_le hβ_le
+        hdA_le hdB_le hdA_le hdA_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨35, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (144 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (α • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa)
+        (α • V) (β • V) (α • V) (α • V) (β • V) (α • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le
+        hα_le hβ_le hα_le hα_le hβ_le hα_le hα_le
+        hdA_le hdB_le hdA_le hdA_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨36, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (α • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb)
+        (α • V) (β • V) (α • V) (α • V) (β • V) (α • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le
+        hα_le hβ_le hα_le hα_le hβ_le hα_le hβ_le
+        hdA_le hdB_le hdA_le hdA_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨37, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-864 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (α • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa)
+        (α • V) (β • V) (α • V) (α • V) (β • V) (β • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le
+        hα_le hβ_le hα_le hα_le hβ_le hβ_le hα_le
+        hdA_le hdB_le hdA_le hdA_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨38, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (α • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb)
+        (α • V) (β • V) (α • V) (α • V) (β • V) (β • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hα_le hβ_le hα_le hα_le hβ_le hβ_le hβ_le
+        hdA_le hdB_le hdA_le hdA_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨39, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (816 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (β • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa)
+        (α • V) (β • V) (α • V) (β • V) (α • V) (α • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le
+        hα_le hβ_le hα_le hβ_le hα_le hα_le hα_le
+        hdA_le hdB_le hdA_le hdB_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨40, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (β • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb)
+        (α • V) (β • V) (α • V) (β • V) (α • V) (α • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le
+        hα_le hβ_le hα_le hβ_le hα_le hα_le hβ_le
+        hdA_le hdB_le hdA_le hdB_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨41, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (1152 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (β • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa)
+        (α • V) (β • V) (α • V) (β • V) (α • V) (β • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le
+        hα_le hβ_le hα_le hβ_le hα_le hβ_le hα_le
+        hdA_le hdB_le hdA_le hdB_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨42, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (β • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb)
+        (α • V) (β • V) (α • V) (β • V) (α • V) (β • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le
+        hα_le hβ_le hα_le hβ_le hα_le hβ_le hβ_le
+        hdA_le hdB_le hdA_le hdB_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨43, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (144 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (β • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa)
+        (α • V) (β • V) (α • V) (β • V) (β • V) (α • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le
+        hα_le hβ_le hα_le hβ_le hβ_le hα_le hα_le
+        hdA_le hdB_le hdA_le hdB_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨44, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (β • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb)
+        (α • V) (β • V) (α • V) (β • V) (β • V) (α • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le
+        hα_le hβ_le hα_le hβ_le hβ_le hα_le hβ_le
+        hdA_le hdB_le hdA_le hdB_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨45, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (β • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa)
+        (α • V) (β • V) (α • V) (β • V) (β • V) (β • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le
+        hα_le hβ_le hα_le hβ_le hβ_le hβ_le hα_le
+        hdA_le hdB_le hdA_le hdB_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨46, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (480 / 967680 : 𝕂) • ((α • V) * (β • V) * (α • V) * (β • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb)
+        (α • V) (β • V) (α • V) (β • V) (β • V) (β • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hα_le hβ_le hα_le hβ_le hβ_le hβ_le hβ_le
+        hdA_le hdB_le hdA_le hdB_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨47, _⟩ =>
+    show ‖(-318 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (-318 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (α • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-318 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa)
+        (α • V) (β • V) (β • V) (α • V) (α • V) (α • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le
+        hα_le hβ_le hβ_le hα_le hα_le hα_le hα_le
+        hdA_le hdB_le hdB_le hdA_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨48, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (α • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb)
+        (α • V) (β • V) (β • V) (α • V) (α • V) (α • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le
+        hα_le hβ_le hβ_le hα_le hα_le hα_le hβ_le
+        hdA_le hdB_le hdB_le hdA_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨49, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (-864 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (α • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa)
+        (α • V) (β • V) (β • V) (α • V) (α • V) (β • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le
+        hα_le hβ_le hβ_le hα_le hα_le hβ_le hα_le
+        hdA_le hdB_le hdB_le hdA_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨50, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (-864 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (α • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb)
+        (α • V) (β • V) (β • V) (α • V) (α • V) (β • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le
+        hα_le hβ_le hβ_le hα_le hα_le hβ_le hβ_le
+        hdA_le hdB_le hdB_le hdA_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨51, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (144 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (α • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa)
+        (α • V) (β • V) (β • V) (α • V) (β • V) (α • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le
+        hα_le hβ_le hβ_le hα_le hβ_le hα_le hα_le
+        hdA_le hdB_le hdB_le hdA_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨52, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (α • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb)
+        (α • V) (β • V) (β • V) (α • V) (β • V) (α • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le
+        hα_le hβ_le hβ_le hα_le hβ_le hα_le hβ_le
+        hdA_le hdB_le hdB_le hdA_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨53, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-864 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (α • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa)
+        (α • V) (β • V) (β • V) (α • V) (β • V) (β • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le
+        hα_le hβ_le hβ_le hα_le hβ_le hβ_le hα_le
+        hdA_le hdB_le hdB_le hdA_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨54, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (α • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb)
+        (α • V) (β • V) (β • V) (α • V) (β • V) (β • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hα_le hβ_le hβ_le hα_le hβ_le hβ_le hβ_le
+        hdA_le hdB_le hdB_le hdA_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨55, _⟩ =>
+    show ‖(32 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (32 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (β • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (32 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa)
+        (α • V) (β • V) (β • V) (β • V) (α • V) (α • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le
+        hα_le hβ_le hβ_le hβ_le hα_le hα_le hα_le
+        hdA_le hdB_le hdB_le hdB_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨56, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (β • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb)
+        (α • V) (β • V) (β • V) (β • V) (α • V) (α • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le
+        hα_le hβ_le hβ_le hβ_le hα_le hα_le hβ_le
+        hdA_le hdB_le hdB_le hdB_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨57, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (β • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa)
+        (α • V) (β • V) (β • V) (β • V) (α • V) (β • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le
+        hα_le hβ_le hβ_le hβ_le hα_le hβ_le hα_le
+        hdA_le hdB_le hdB_le hdB_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨58, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (β • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb)
+        (α • V) (β • V) (β • V) (β • V) (α • V) (β • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le
+        hα_le hβ_le hβ_le hβ_le hα_le hβ_le hβ_le
+        hdA_le hdB_le hdB_le hdB_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨59, _⟩ =>
+    show ‖(312 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (312 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (β • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (312 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa)
+        (α • V) (β • V) (β • V) (β • V) (β • V) (α • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le
+        hα_le hβ_le hβ_le hβ_le hβ_le hα_le hα_le
+        hdA_le hdB_le hdB_le hdB_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨60, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (480 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (β • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb)
+        (α • V) (β • V) (β • V) (β • V) (β • V) (α • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le
+        hα_le hβ_le hβ_le hβ_le hβ_le hα_le hβ_le
+        hdA_le hdB_le hdB_le hdB_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨61, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (β • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa)
+        (α • V) (β • V) (β • V) (β • V) (β • V) (β • V) (α • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le
+        hα_le hβ_le hβ_le hβ_le hβ_le hβ_le hα_le
+        hdA_le hdB_le hdB_le hdB_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨62, _⟩ =>
+    show ‖(32 / 967680 : 𝕂) • ((α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (32 / 967680 : 𝕂) • ((α • V) * (β • V) * (β • V) * (β • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (32 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb)
+        (α • V) (β • V) (β • V) (β • V) (β • V) (β • V) (β • V)
+        N D
+        hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hα_le hβ_le hβ_le hβ_le hβ_le hβ_le hβ_le
+        hdA_le hdB_le hdB_le hdB_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨63, _⟩ =>
+    show ‖(-31 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (-31 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (α • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-31 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa)
+        (β • V) (α • V) (α • V) (α • V) (α • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le
+        hβ_le hα_le hα_le hα_le hα_le hα_le hα_le
+        hdB_le hdA_le hdA_le hdA_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨64, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (α • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb)
+        (β • V) (α • V) (α • V) (α • V) (α • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le
+        hβ_le hα_le hα_le hα_le hα_le hα_le hβ_le
+        hdB_le hdA_le hdA_le hdA_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨65, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (480 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (α • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa)
+        (β • V) (α • V) (α • V) (α • V) (α • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le
+        hβ_le hα_le hα_le hα_le hα_le hβ_le hα_le
+        hdB_le hdA_le hdA_le hdA_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨66, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (480 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (α • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb)
+        (β • V) (α • V) (α • V) (α • V) (α • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le
+        hβ_le hα_le hα_le hα_le hα_le hβ_le hβ_le
+        hdB_le hdA_le hdA_le hdA_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨67, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (-864 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (α • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa)
+        (β • V) (α • V) (α • V) (α • V) (β • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le
+        hβ_le hα_le hα_le hα_le hβ_le hα_le hα_le
+        hdB_le hdA_le hdA_le hdA_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨68, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (-1536 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (α • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb)
+        (β • V) (α • V) (α • V) (α • V) (β • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le
+        hβ_le hα_le hα_le hα_le hβ_le hα_le hβ_le
+        hdB_le hdA_le hdA_le hdA_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨69, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (α • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa)
+        (β • V) (α • V) (α • V) (α • V) (β • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le
+        hβ_le hα_le hα_le hα_le hβ_le hβ_le hα_le
+        hdB_le hdA_le hdA_le hdA_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨70, _⟩ =>
+    show ‖(-640 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-640 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (α • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-640 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb)
+        (β • V) (α • V) (α • V) (α • V) (β • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hβ_le hα_le hα_le hα_le hβ_le hβ_le hβ_le
+        hdB_le hdA_le hdA_le hdA_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨71, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (816 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (β • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa)
+        (β • V) (α • V) (α • V) (β • V) (α • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le
+        hβ_le hα_le hα_le hβ_le hα_le hα_le hα_le
+        hdB_le hdA_le hdA_le hdB_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨72, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (β • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb)
+        (β • V) (α • V) (α • V) (β • V) (α • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le
+        hβ_le hα_le hα_le hβ_le hα_le hα_le hβ_le
+        hdB_le hdA_le hdA_le hdB_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨73, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (β • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa)
+        (β • V) (α • V) (α • V) (β • V) (α • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le
+        hβ_le hα_le hα_le hβ_le hα_le hβ_le hα_le
+        hdB_le hdA_le hdA_le hdB_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨74, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (β • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb)
+        (β • V) (α • V) (α • V) (β • V) (α • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le
+        hβ_le hα_le hα_le hβ_le hα_le hβ_le hβ_le
+        hdB_le hdA_le hdA_le hdB_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨75, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (144 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (β • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa)
+        (β • V) (α • V) (α • V) (β • V) (β • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le
+        hβ_le hα_le hα_le hβ_le hβ_le hα_le hα_le
+        hdB_le hdA_le hdA_le hdB_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨76, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (β • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb)
+        (β • V) (α • V) (α • V) (β • V) (β • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le
+        hβ_le hα_le hα_le hβ_le hβ_le hα_le hβ_le
+        hdB_le hdA_le hdA_le hdB_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨77, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (β • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa)
+        (β • V) (α • V) (α • V) (β • V) (β • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le
+        hβ_le hα_le hα_le hβ_le hβ_le hβ_le hα_le
+        hdB_le hdA_le hdA_le hdB_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨78, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (480 / 967680 : 𝕂) • ((β • V) * (α • V) * (α • V) * (β • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb)
+        (β • V) (α • V) (α • V) (β • V) (β • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hβ_le hα_le hα_le hβ_le hβ_le hβ_le hβ_le
+        hdB_le hdA_le hdA_le hdB_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨79, _⟩ =>
+    show ‖(-612 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (-612 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (α • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-612 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa)
+        (β • V) (α • V) (β • V) (α • V) (α • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le
+        hβ_le hα_le hβ_le hα_le hα_le hα_le hα_le
+        hdB_le hdA_le hdB_le hdA_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨80, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (-1536 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (α • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb)
+        (β • V) (α • V) (β • V) (α • V) (α • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le
+        hβ_le hα_le hβ_le hα_le hα_le hα_le hβ_le
+        hdB_le hdA_le hdB_le hdA_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨81, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (α • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa)
+        (β • V) (α • V) (β • V) (α • V) (α • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le
+        hβ_le hα_le hβ_le hα_le hα_le hβ_le hα_le
+        hdB_le hdA_le hdB_le hdA_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨82, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (α • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb)
+        (β • V) (α • V) (β • V) (α • V) (α • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le
+        hβ_le hα_le hβ_le hα_le hα_le hβ_le hβ_le
+        hdB_le hdA_le hdB_le hdA_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨83, _⟩ =>
+    show ‖(-2880 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (-2880 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (α • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-2880 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa)
+        (β • V) (α • V) (β • V) (α • V) (β • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le
+        hβ_le hα_le hβ_le hα_le hβ_le hα_le hα_le
+        hdB_le hdA_le hdB_le hdA_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨84, _⟩ =>
+    show ‖(-6912 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (-6912 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (α • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-6912 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb)
+        (β • V) (α • V) (β • V) (α • V) (β • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le
+        hβ_le hα_le hβ_le hα_le hβ_le hα_le hβ_le
+        hdB_le hdA_le hdB_le hdA_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨85, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (α • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa)
+        (β • V) (α • V) (β • V) (α • V) (β • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le
+        hβ_le hα_le hβ_le hα_le hβ_le hβ_le hα_le
+        hdB_le hdA_le hdB_le hdA_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨86, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-1536 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (α • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb)
+        (β • V) (α • V) (β • V) (α • V) (β • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hβ_le hα_le hβ_le hα_le hβ_le hβ_le hβ_le
+        hdB_le hdA_le hdB_le hdA_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨87, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (816 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (β • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa)
+        (β • V) (α • V) (β • V) (β • V) (α • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le
+        hβ_le hα_le hβ_le hβ_le hα_le hα_le hα_le
+        hdB_le hdA_le hdB_le hdB_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨88, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (β • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb)
+        (β • V) (α • V) (β • V) (β • V) (α • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le
+        hβ_le hα_le hβ_le hβ_le hα_le hα_le hβ_le
+        hdB_le hdA_le hdB_le hdB_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨89, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (β • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa)
+        (β • V) (α • V) (β • V) (β • V) (α • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le
+        hβ_le hα_le hβ_le hβ_le hα_le hβ_le hα_le
+        hdB_le hdA_le hdB_le hdB_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨90, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (β • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb)
+        (β • V) (α • V) (β • V) (β • V) (α • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le
+        hβ_le hα_le hβ_le hβ_le hα_le hβ_le hβ_le
+        hdB_le hdA_le hdB_le hdB_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨91, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (-864 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (β • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa)
+        (β • V) (α • V) (β • V) (β • V) (β • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le
+        hβ_le hα_le hβ_le hβ_le hβ_le hα_le hα_le
+        hdB_le hdA_le hdB_le hdB_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨92, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (-1536 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (β • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb)
+        (β • V) (α • V) (β • V) (β • V) (β • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le
+        hβ_le hα_le hβ_le hβ_le hβ_le hα_le hβ_le
+        hdB_le hdA_le hdB_le hdB_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨93, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (480 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (β • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa)
+        (β • V) (α • V) (β • V) (β • V) (β • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le
+        hβ_le hα_le hβ_le hβ_le hβ_le hβ_le hα_le
+        hdB_le hdA_le hdB_le hdB_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨94, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((β • V) * (α • V) * (β • V) * (β • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb)
+        (β • V) (α • V) (β • V) (β • V) (β • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hβ_le hα_le hβ_le hβ_le hβ_le hβ_le hβ_le
+        hdB_le hdA_le hdB_le hdB_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨95, _⟩ =>
+    show ‖(186 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (186 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (α • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (186 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa)
+        (β • V) (β • V) (α • V) (α • V) (α • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le
+        hβ_le hβ_le hα_le hα_le hα_le hα_le hα_le
+        hdB_le hdB_le hdA_le hdA_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨96, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (480 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (α • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb)
+        (β • V) (β • V) (α • V) (α • V) (α • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le
+        hβ_le hβ_le hα_le hα_le hα_le hα_le hβ_le
+        hdB_le hdB_le hdA_le hdA_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨97, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (α • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa)
+        (β • V) (β • V) (α • V) (α • V) (α • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le
+        hβ_le hβ_le hα_le hα_le hα_le hβ_le hα_le
+        hdB_le hdB_le hdA_le hdA_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨98, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (α • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb)
+        (β • V) (β • V) (α • V) (α • V) (α • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le
+        hβ_le hβ_le hα_le hα_le hα_le hβ_le hβ_le
+        hdB_le hdB_le hdA_le hdA_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨99, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (144 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (α • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa)
+        (β • V) (β • V) (α • V) (α • V) (β • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le
+        hβ_le hβ_le hα_le hα_le hβ_le hα_le hα_le
+        hdB_le hdB_le hdA_le hdA_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨100, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (α • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb)
+        (β • V) (β • V) (α • V) (α • V) (β • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le
+        hβ_le hβ_le hα_le hα_le hβ_le hα_le hβ_le
+        hdB_le hdB_le hdA_le hdA_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨101, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-864 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (α • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa)
+        (β • V) (β • V) (α • V) (α • V) (β • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le
+        hβ_le hβ_le hα_le hα_le hβ_le hβ_le hα_le
+        hdB_le hdB_le hdA_le hdA_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨102, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (α • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb)
+        (β • V) (β • V) (α • V) (α • V) (β • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hβ_le hβ_le hα_le hα_le hβ_le hβ_le hβ_le
+        hdB_le hdB_le hdA_le hdA_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨103, _⟩ =>
+    show ‖(816 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (816 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (β • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (816 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa)
+        (β • V) (β • V) (α • V) (β • V) (α • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le
+        hβ_le hβ_le hα_le hβ_le hα_le hα_le hα_le
+        hdB_le hdB_le hdA_le hdB_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨104, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (β • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb)
+        (β • V) (β • V) (α • V) (β • V) (α • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le
+        hβ_le hβ_le hα_le hβ_le hα_le hα_le hβ_le
+        hdB_le hdB_le hdA_le hdB_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨105, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (1152 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (β • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa)
+        (β • V) (β • V) (α • V) (β • V) (α • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le
+        hβ_le hβ_le hα_le hβ_le hα_le hβ_le hα_le
+        hdB_le hdB_le hdA_le hdB_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨106, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (β • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb)
+        (β • V) (β • V) (α • V) (β • V) (α • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le
+        hβ_le hβ_le hα_le hβ_le hα_le hβ_le hβ_le
+        hdB_le hdB_le hdA_le hdB_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨107, _⟩ =>
+    show ‖(144 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (144 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (β • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (144 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa)
+        (β • V) (β • V) (α • V) (β • V) (β • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le
+        hβ_le hβ_le hα_le hβ_le hβ_le hα_le hα_le
+        hdB_le hdB_le hdA_le hdB_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨108, _⟩ =>
+    show ‖(1152 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (1152 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (β • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (1152 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb)
+        (β • V) (β • V) (α • V) (β • V) (β • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le
+        hβ_le hβ_le hα_le hβ_le hβ_le hα_le hβ_le
+        hdB_le hdB_le hdA_le hdB_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨109, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (β • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa)
+        (β • V) (β • V) (α • V) (β • V) (β • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le
+        hβ_le hβ_le hα_le hβ_le hβ_le hβ_le hα_le
+        hdB_le hdB_le hdA_le hdB_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨110, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (480 / 967680 : 𝕂) • ((β • V) * (β • V) * (α • V) * (β • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb)
+        (β • V) (β • V) (α • V) (β • V) (β • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hβ_le hβ_le hα_le hβ_le hβ_le hβ_le hβ_le
+        hdB_le hdB_le hdA_le hdB_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨111, _⟩ =>
+    show ‖(-416 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (-416 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (α • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-416 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (α • V + δa)
+        (β • V) (β • V) (β • V) (α • V) (α • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hα_δa_le
+        hβ_le hβ_le hβ_le hα_le hα_le hα_le hα_le
+        hdB_le hdB_le hdB_le hdA_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨112, _⟩ =>
+    show ‖(-640 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (-640 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (α • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-640 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa) (β • V + δb)
+        (β • V) (β • V) (β • V) (α • V) (α • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le hβ_δb_le
+        hβ_le hβ_le hβ_le hα_le hα_le hα_le hβ_le
+        hdB_le hdB_le hdB_le hdA_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨113, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (α • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (α • V + δa)
+        (β • V) (β • V) (β • V) (α • V) (α • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hα_δa_le
+        hβ_le hβ_le hβ_le hα_le hα_le hβ_le hα_le
+        hdB_le hdB_le hdB_le hdA_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨114, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (α • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb) (β • V + δb)
+        (β • V) (β • V) (β • V) (α • V) (α • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le hβ_δb_le
+        hβ_le hβ_le hβ_le hα_le hα_le hβ_le hβ_le
+        hdB_le hdB_le hdB_le hdA_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨115, _⟩ =>
+    show ‖(-864 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (-864 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (α • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-864 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (α • V + δa)
+        (β • V) (β • V) (β • V) (α • V) (β • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hα_δa_le
+        hβ_le hβ_le hβ_le hα_le hβ_le hα_le hα_le
+        hdB_le hdB_le hdB_le hdA_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨116, _⟩ =>
+    show ‖(-1536 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (-1536 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (α • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-1536 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa) (β • V + δb)
+        (β • V) (β • V) (β • V) (α • V) (β • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le hβ_δb_le
+        hβ_le hβ_le hβ_le hα_le hβ_le hα_le hβ_le
+        hdB_le hdB_le hdB_le hdA_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨117, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (α • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (α • V + δa)
+        (β • V) (β • V) (β • V) (α • V) (β • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hα_δa_le
+        hβ_le hβ_le hβ_le hα_le hβ_le hβ_le hα_le
+        hdB_le hdB_le hdB_le hdA_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨118, _⟩ =>
+    show ‖(-640 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb) * (β • V + δb)) - (-640 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (α • V) * (β • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-640 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb) (β • V + δb)
+        (β • V) (β • V) (β • V) (α • V) (β • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le hβ_δb_le
+        hβ_le hβ_le hβ_le hα_le hβ_le hβ_le hβ_le
+        hdB_le hdB_le hdB_le hdA_le hdB_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨119, _⟩ =>
+    show ‖(424 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (α • V + δa)) - (424 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (β • V) * (α • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (424 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (α • V + δa)
+        (β • V) (β • V) (β • V) (β • V) (α • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hα_δa_le
+        hβ_le hβ_le hβ_le hβ_le hα_le hα_le hα_le
+        hdB_le hdB_le hdB_le hdB_le hdA_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨120, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa) * (β • V + δb)) - (480 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (β • V) * (α • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa) (β • V + δb)
+        (β • V) (β • V) (β • V) (β • V) (α • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le hβ_δb_le
+        hβ_le hβ_le hβ_le hβ_le hα_le hα_le hβ_le
+        hdB_le hdB_le hdB_le hdB_le hdA_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨121, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (α • V + δa)) - (480 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (β • V) * (α • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (α • V + δa)
+        (β • V) (β • V) (β • V) (β • V) (α • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hα_δa_le
+        hβ_le hβ_le hβ_le hβ_le hα_le hβ_le hα_le
+        hdB_le hdB_le hdB_le hdB_le hdA_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨122, _⟩ =>
+    show ‖(480 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb) * (β • V + δb)) - (480 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (β • V) * (α • V) * (β • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (480 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb) (β • V + δb)
+        (β • V) (β • V) (β • V) (β • V) (α • V) (β • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le hβ_δb_le
+        hβ_le hβ_le hβ_le hβ_le hα_le hβ_le hβ_le
+        hdB_le hdB_le hdB_le hdB_le hdA_le hdB_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨123, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (α • V + δa)) - (-192 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (β • V) * (β • V) * (α • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (α • V + δa)
+        (β • V) (β • V) (β • V) (β • V) (β • V) (α • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hα_δa_le
+        hβ_le hβ_le hβ_le hβ_le hβ_le hα_le hα_le
+        hdB_le hdB_le hdB_le hdB_le hdB_le hdA_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨124, _⟩ =>
+    show ‖(-192 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa) * (β • V + δb)) - (-192 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (β • V) * (β • V) * (α • V) * (β • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (-192 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa) (β • V + δb)
+        (β • V) (β • V) (β • V) (β • V) (β • V) (α • V) (β • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le hβ_δb_le
+        hβ_le hβ_le hβ_le hβ_le hβ_le hα_le hβ_le
+        hdB_le hdB_le hdB_le hdB_le hdB_le hdA_le hdB_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨125, _⟩ =>
+    show ‖(32 / 967680 : 𝕂) • ((β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (β • V + δb) * (α • V + δa)) - (32 / 967680 : 𝕂) • ((β • V) * (β • V) * (β • V) * (β • V) * (β • V) * (β • V) * (α • V))‖ ≤
+         (6912 / 967680 : ℝ) * 7 * N^6 * D
+    exact deg7_smul_word_diff_le (32 / 967680 : 𝕂) (6912 / 967680 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (β • V + δb) (α • V + δa)
+        (β • V) (β • V) (β • V) (β • V) (β • V) (β • V) (α • V)
+        N D
+        hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hβ_δb_le hα_δa_le
+        hβ_le hβ_le hβ_le hβ_le hβ_le hβ_le hα_le
+        hdB_le hdB_le hdB_le hdB_le hdB_le hdB_le hdA_le
+        (by norm_num) hN_nn hD_nn
+  | ⟨_ + 126, h⟩ => exact absurd h (by omega)
+
+set_option maxHeartbeats 16000000 in
+/-- **Lipschitz bound at deg-7** (analog of `norm_symmetric_bch_quintic_poly_apply_smul_add_smul_add_le`):
+`‖sym_E₇(α•V + δa, β•V + δb)‖ ≤ 7·N⁶·(‖δa‖+‖δb‖)`.
+
+Combined with the vanishing on scalar•V inputs (Stage 3.1), this gives
+a `O(N⁶·D)` bound rather than the trivial `(2N)⁷`. Used in Stage 2's
+5-factor BCH septic remainder decomposition. -/
+theorem norm_symmetric_bch_septic_poly_apply_smul_add_smul_add_le
+    (V : 𝔸) (α β : 𝕂) (δa δb : 𝔸) (N : ℝ)
+    (hα_le : ‖α • V‖ ≤ N) (hβ_le : ‖β • V‖ ≤ N)
+    (hα_δa_le : ‖α • V + δa‖ ≤ N) (hβ_δb_le : ‖β • V + δb‖ ≤ N)
+    (hN_nn : 0 ≤ N) :
+    ‖symmetric_bch_septic_poly 𝕂 (α • V + δa) (β • V + δb)‖ ≤
+      7 * N ^ 6 * (‖δa‖ + ‖δb‖) := by
+  set D := ‖δa‖ + ‖δb‖ with hD_def
+  have hD_nn : 0 ≤ D := by positivity
+  have hN6_nn : (0 : ℝ) ≤ N ^ 6 := pow_nonneg hN_nn 6
+  have h0 : symmetric_bch_septic_poly 𝕂 (α • V) (β • V) = 0 :=
+    symmetric_bch_septic_poly_apply_smul_smul V α β
+  have h_diff_eq : symmetric_bch_septic_poly 𝕂 (α • V + δa) (β • V + δb) -
+                    symmetric_bch_septic_poly 𝕂 (α • V) (β • V) =
+      ∑ i : Fin 126, (septicTerm (𝕂 := 𝕂) (α • V + δa) (β • V + δb) i -
+                       septicTerm (𝕂 := 𝕂) (α • V) (β • V) i) := by
+    rw [symmetric_bch_septic_poly_eq_sum, symmetric_bch_septic_poly_eq_sum,
+        ← Finset.sum_sub_distrib]
+  have h_per_i := septicTerm_diff_norm_le (𝕂 := 𝕂) V α β δa δb N hα_le hβ_le hα_δa_le hβ_δb_le hN_nn
+  calc ‖symmetric_bch_septic_poly 𝕂 (α • V + δa) (β • V + δb)‖
+      = ‖symmetric_bch_septic_poly 𝕂 (α • V + δa) (β • V + δb) - 0‖ := by rw [sub_zero]
+    _ = ‖symmetric_bch_septic_poly 𝕂 (α • V + δa) (β • V + δb) -
+          symmetric_bch_septic_poly 𝕂 (α • V) (β • V)‖ := by rw [h0]
+    _ = ‖∑ i : Fin 126, (septicTerm (𝕂 := 𝕂) (α • V + δa) (β • V + δb) i -
+                          septicTerm (𝕂 := 𝕂) (α • V) (β • V) i)‖ := by rw [h_diff_eq]
+    _ ≤ ∑ i : Fin 126, ‖septicTerm (𝕂 := 𝕂) (α • V + δa) (β • V + δb) i -
+                         septicTerm (𝕂 := 𝕂) (α • V) (β • V) i‖ := norm_sum_le _ _
+    _ ≤ ∑ _i : Fin 126, (6912 / 967680 : ℝ) * 7 * N^6 * D :=
+        Finset.sum_le_sum (fun i _ => h_per_i i)
+    _ = 126 * ((6912 / 967680 : ℝ) * 7 * N^6 * D) := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring
+    _ ≤ 7 * N^6 * D := by nlinarith [hN6_nn, hD_nn]
+
 
 /-- Per-index family: the 79 deg-7 terms of `C5_LinResidual_polynomial`. -/
 private noncomputable def linResTerm7 (a b : 𝔸) : Fin 79 → 𝔸
