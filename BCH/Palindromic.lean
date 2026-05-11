@@ -3161,6 +3161,64 @@ theorem target_quintic_sum_4_form (A B : 𝔸) (p τ : 𝕂) :
     · congr 1; ring   -- (4·(p·τ)³) + ((1-4p)·τ)³ = τ³ · (4p³ + (1-4p)³)
   · congr 1; ring     -- (4·(p·τ)⁵) + ((1-4p)·τ)⁵ = τ⁵ · (4p⁵ + (1-4p)⁵)
 
+/-! ### Septic-precision target (Stage 2 foundation)
+
+Deg-7 analog of `strangBlock_log_target_quintic`. Used in Stage 2's
+5-factor BCH septic remainder bound (the analog of B2.1 at one degree higher).
+-/
+
+/-- The τ⁷ scalar coefficient of `suzuki5_bch`: `C₇(p) := 4p⁷ + (1-4p)⁷`.
+Sum of seventh powers of the 5 Strang coefficients `(p, p, 1-4p, p, p)`. -/
+def suzuki5_bch_septic_coeff (𝕂 : Type*) [Field 𝕂] (p : 𝕂) : 𝕂 :=
+  4 * p ^ 7 + (1 - 4 * p) ^ 7
+
+/-- The "ideal" τ⁷-precision log of a Strang block: extends `strangBlock_log_target_quintic`
+by one degree, adding `(cτ)⁷•E₇_sym`. -/
+noncomputable def strangBlock_log_target_septic (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (A B : 𝔸) (c τ : 𝕂) : 𝔸 :=
+  (c * τ) • (A + B) + (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B
+    + (c * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B
+    + (c * τ) ^ 7 • symmetric_bch_septic_poly 𝕂 A B
+
+include 𝕂 in
+/-- Per-block septic targets sum to the τ⁷-precision target.
+
+Septic sum: `Σc_i⁷ = 4p⁷ + (1-4p)⁷ = C₇(p)`, giving the new `τ⁷·C₇·E₇` term. -/
+theorem suzuki5_targets_sum_septic (A B : 𝔸) (p τ : 𝕂) :
+    strangBlock_log_target_septic 𝕂 A B p τ +
+    strangBlock_log_target_septic 𝕂 A B p τ +
+    strangBlock_log_target_septic 𝕂 A B (1 - 4 * p) τ +
+    strangBlock_log_target_septic 𝕂 A B p τ +
+    strangBlock_log_target_septic 𝕂 A B p τ =
+    τ • (A + B) +
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B +
+      (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B +
+      (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B := by
+  unfold strangBlock_log_target_septic suzuki5_bch_cubic_coeff suzuki5_bch_quintic_coeff
+    suzuki5_bch_septic_coeff
+  set V := A + B with hV_def
+  set E := symmetric_bch_cubic_poly 𝕂 A B with hE_def
+  set E5 := symmetric_bch_quintic_poly 𝕂 A B with hE5_def
+  set E7 := symmetric_bch_septic_poly 𝕂 A B with hE7_def
+  match_scalars <;> ring
+
+include 𝕂 in
+/-- Septic target decomposition: `4•T_p^s + T_{1-4p}^s = τ•V + C₃·τ³•E + C₅·τ⁵•E5 + C₇·τ⁷·E7`. -/
+theorem target_septic_sum_4_form (A B : 𝔸) (p τ : 𝕂) :
+    (4 : 𝕂) • strangBlock_log_target_septic 𝕂 A B p τ +
+      strangBlock_log_target_septic 𝕂 A B (1 - 4 * p) τ =
+    τ • (A + B) +
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B +
+      (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B +
+      (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B := by
+  unfold strangBlock_log_target_septic suzuki5_bch_cubic_coeff suzuki5_bch_quintic_coeff
+    suzuki5_bch_septic_coeff
+  set V := A + B with hV_def
+  set E := symmetric_bch_cubic_poly 𝕂 A B with hE_def
+  set E5 := symmetric_bch_quintic_poly 𝕂 A B with hE5_def
+  set E7 := symmetric_bch_septic_poly 𝕂 A B with hE7_def
+  match_scalars <;> ring
+
 include 𝕂 in
 /-- **Per-block decomposition at quintic precision (B2.1)**: bound on
 `‖4•X + Y − τ•V − C₃·τ³•E_sym − C₅·τ⁵•E_quintic_sym‖`.
