@@ -3663,26 +3663,24 @@ The bound `‖C5_diff_residual‖ ≤ 5·10⁶·s⁷` is decomposed as `LipPiece
   `C5_LinResidual_at_V2_eq_polynomial` below.
   Norm bound: ‖C5_LinResidual_polynomial 𝕂 a b‖ ≤ K·s⁷ where K = Σ|coef| ≈ 0.027.
 
-**Status (this session)**:
+**Status (session 23, fully closed)**:
 - ✅ `C5_LinResidual_polynomial` def (205 explicit deg-7+ monomials, denoms in
   {92160, 184320, 368640}).
 - ✅ `C5_LinResidual_at_V2_eq_polynomial` algebraic identity (proved via
   `match_scalars + ring`, using 1024M heartbeats).
-- ❌ `norm_C5_LinResidual_polynomial_le` (the 205-term triangle inequality;
-  Σ|coef|·s^7 ≤ 1·s⁷). Estimated 1500+ lines of Lean code (linear in n via
-  `set` for prefix sums + per-term bounds + chained `norm_add_le`).
-- ❌ Main theorem `symmetric_bch_quintic_C5_diff_residual_le` discharging the
-  axiom (combines algebraic identity + LinResidual bound + LipPiece bound).
+- ✅ `norm_C5_LinResidual_polynomial_le` (proved theorem; the 205-term triangle
+  inequality discharged via the per-degree Finset.sum refactor below).
+- ✅ Main theorem `symmetric_bch_quintic_C5_diff_residual_le` (proved theorem;
+  combines algebraic identity + LinResidual bound + LipPiece bound).
 
 The algebraic identity is the **core technical contribution** for the discharge —
 it isolates the deg-6 cancellation between the linearization of C₅ and
 ΔC₅_lin_explicit, leaving only deg-7+ residuals that are easy to bound.
 
-The remaining work (norm bound) is mechanical but verbose due to the 205-term
-sum. Future sessions should:
-1. Either generate the norm bound proof via Python (clean Σ|coef| approach), or
-2. Refactor to reduce the per-term verbosity (e.g., via a generic helper
-   `norm_word_le_pow_s` for d-letter words in {a, b}).
+The polynomial-norm bound is discharged via a Finset.sum refactor:
+per-degree `linResTerm{7,8,9}` / `linResBound{7,8,9}` functions on `Fin {79,78,48}`,
+uniform per-i bound (max coefficient per degree) + `Finset.sum_const`, combined
+through triangle inequality. Total ≈ 0.10·s⁷ ≪ 1·s⁷.
 -/
 
 -- Explicit deg-7+ polynomial form of LinResidual (CAS-verified, 205 monomials).
