@@ -4837,46 +4837,220 @@ private lemma suzuki5_bch_sub_R5_sub_R7_septic_RHS_le_aux
   linarith [h_sum_le, h_final]
 
 
-/-- **Septic identification axiom** (Tier-2 status, awaiting full
-discharge analogous to the P1 chain). Asserts that the τ⁷ leading
-coefficient of `suzuki5_bch ℝ A B suzukiP τ − τ • (A + B)` is bounded
-by `bchR7Bound A B = K · max(‖A‖, ‖B‖) ^ 7` (with `K` from CAS), modulo
-an `O(τ⁸)` tail.
+/-! ### Stage 6: assembly + bridge at Suzuki p
 
-Specifically: there exist `δ > 0` and `M ≥ 0` such that for all
-`τ ∈ [0, δ)`,
+Combines Stage 3 main bound + Stage 5 polynomial RHS conversion with the
+6 regime helpers (reused from the quintic case) to derive the final
+|τ|⁸ bound:
+
 ```
+∃ δ > 0, ∃ K ≥ 0, ∀ τ, ‖τ‖ < δ →
+  ‖suzuki5_bch ℝ A B p τ − τ•(A+B) − τ⁵•R₅ − τ⁷•R₇‖ ≤ K·‖τ‖⁸
+```
+
+The deg-7 analog of `norm_suzuki5_bch_sub_smul_sub_R5_le`. After triangle
+inequality with the R₅ and R₇ norm bounds, this yields the headline
+septic identification:
+
+```
+‖suzuki5_bch − τ•(A+B)‖ ≤ τ⁵·boundSum + τ⁷·bchR7Bound + K·τ⁸
+```
+
+which is exactly the form needed by Lean-Trotter's `bch_uniform_integrated`. -/
+
+-- **Stage 6 step 1: σ⁹ → |τ|⁸ assembly under regime hypotheses**.
+--
+-- Combines Stage 3 main bound (σ⁹ form) + Stage 5 polynomial RHS conversion
+-- + 6 regime helpers (reused from quintic infrastructure) to give the |τ|⁸
+-- bound. Choose `δ = 1/(10¹¹·pn·qn·s)` (ensures both regime AND `|τ| ≤ 1`,
+-- so `|τ|⁹ ≤ |τ|⁸`).
+set_option maxHeartbeats 4000000 in
+theorem norm_suzuki5_bch_sub_smul_sub_R5_sub_R7_le
+    (A B : 𝔸) (p : ℝ) (hcubic : IsSuzukiCubic p) :
+    ∃ δ > (0 : ℝ), ∃ K ≥ (0 : ℝ), ∀ τ : ℝ, ‖τ‖ < δ →
+      ‖suzuki5_bch ℝ A B p τ - τ • (A + B) -
+          τ ^ 5 • suzuki5_R5 A B p - τ ^ 7 • suzuki5_R7 A B p‖ ≤
+        K * ‖τ‖ ^ 8 := by
+  set pn : ℝ := ‖p‖ + 1 with hpn_def
+  set qn : ℝ := ‖((1 : ℝ) - 4 * p)‖ + 1 with hqn_def
+  set s : ℝ := ‖A‖ + ‖B‖ + 1 with hs_def
+  have hpn_ge : (1 : ℝ) ≤ pn := by rw [hpn_def]; linarith [norm_nonneg p]
+  have hqn_ge : (1 : ℝ) ≤ qn := by
+    rw [hqn_def]; linarith [norm_nonneg ((1 : ℝ) - 4 * p)]
+  have hs_ge : (1 : ℝ) ≤ s := by
+    rw [hs_def]; linarith [norm_nonneg A, norm_nonneg B]
+  have hp_le : ‖p‖ ≤ pn := by rw [hpn_def]; linarith
+  have hq_le : ‖((1 : ℝ) - 4 * p)‖ ≤ qn := by rw [hqn_def]; linarith
+  have hAB_le : ‖A‖ + ‖B‖ ≤ s := by rw [hs_def]; linarith
+  have hpn_pos : (0 : ℝ) < pn := by linarith
+  have hqn_pos : (0 : ℝ) < qn := by linarith
+  have hs_pos : (0 : ℝ) < s := by linarith
+  refine ⟨1 / (10 ^ 11 * pn * qn * s), by positivity,
+          (10 : ℝ) ^ 67 * pn ^ 9 * qn ^ 9 * s ^ 9, by positivity, ?_⟩
+  intro τ hτ_lt
+  -- Derive 6 regime hypotheses.
+  have hp_reg := p_regime_of_tau_small A B p τ pn qn s
+                   hpn_ge hqn_ge hs_ge hp_le hAB_le hτ_lt
+  have hq_reg := q_regime_of_tau_small A B p τ pn qn s
+                   hpn_ge hqn_ge hs_ge hq_le hAB_le hτ_lt
+  have hreg := reg_lt_quarter_of_tau_small A B p τ pn qn s
+                 hpn_ge hqn_ge hs_ge hp_le hq_le hAB_le hτ_lt
+  have hR := R_lt_log_two_of_tau_small A B p τ pn qn s
+               hpn_ge hqn_ge hs_ge hp_le hq_le hAB_le hτ_lt
+  have hZ1 := Z1_lt_log_two_of_tau_small A B p τ pn qn s
+                hpn_ge hqn_ge hs_ge hp_le hq_le hAB_le hτ_lt
+  have hZ2 := Z2_lt_log_two_of_tau_small A B p τ pn qn s
+                hpn_ge hqn_ge hs_ge hp_le hq_le hAB_le hτ_lt
+  -- Apply Stage 3 main bound (σ⁹ form).
+  have h_stage3 :=
+    norm_suzuki5_bch_sub_smul_sub_R5_sub_R7_le_of_IsSuzukiCubic A B p τ hcubic
+      hR hp_reg hq_reg hreg hZ1 hZ2
+  -- Apply Stage 5 RHS conversion (σ⁹ → 10⁶⁷·pn⁹·qn⁹·s⁹·|τ|⁹).
+  have h_rhs :=
+    suzuki5_bch_sub_R5_sub_R7_septic_RHS_le_aux A B p τ pn qn s
+      hpn_ge hqn_ge hs_ge hp_le hq_le hAB_le hp_reg hq_reg
+  -- |τ|⁹ ≤ |τ|⁸ under |τ| < δ ≤ 1.
+  have hτ_nn : 0 ≤ ‖τ‖ := norm_nonneg _
+  have hτ8_nn : 0 ≤ ‖τ‖ ^ 8 := by positivity
+  -- Direct: 10^11·pn·qn·s ≥ 10^11 ≥ 1, so 1/(10^11·pn·qn·s) ≤ 1.
+  have h_pn_qn : (1 : ℝ) ≤ pn * qn := by
+    calc (1 : ℝ) = 1 * 1 := by ring
+      _ ≤ pn * 1 := by gcongr
+      _ ≤ pn * qn := by gcongr
+  have h_pqs : (1 : ℝ) ≤ pn * qn * s := by
+    calc (1 : ℝ) = 1 * 1 := by ring
+      _ ≤ pn * qn * 1 := by gcongr
+      _ ≤ pn * qn * s := by gcongr
+  have h_10_ge : (1 : ℝ) ≤ 10 ^ 11 := by norm_num
+  have h_denom_ge : (1 : ℝ) ≤ 10 ^ 11 * pn * qn * s := by
+    calc (1 : ℝ) = 1 * 1 := by ring
+      _ ≤ 10 ^ 11 * 1 := by gcongr
+      _ = 10 ^ 11 := by ring
+      _ ≤ 10 ^ 11 * (pn * qn * s) := by
+          have h10_nn : (0 : ℝ) ≤ 10 ^ 11 := by norm_num
+          calc 10 ^ 11 = 10 ^ 11 * 1 := by ring
+            _ ≤ 10 ^ 11 * (pn * qn * s) := by gcongr
+      _ = 10 ^ 11 * pn * qn * s := by ring
+  have h_δ_le_one : (1 : ℝ) / (10 ^ 11 * pn * qn * s) ≤ 1 := by
+    apply div_le_one_of_le₀ h_denom_ge (by positivity)
+  have hτ_le_one : ‖τ‖ ≤ 1 := le_trans (le_of_lt hτ_lt) h_δ_le_one
+  have hτ_pow9_le : ‖τ‖ ^ 9 ≤ ‖τ‖ ^ 8 := by
+    have h_step : ‖τ‖ ^ 9 = ‖τ‖ * ‖τ‖ ^ 8 := by ring
+    rw [h_step]
+    calc ‖τ‖ * ‖τ‖ ^ 8 ≤ 1 * ‖τ‖ ^ 8 := mul_le_mul_of_nonneg_right hτ_le_one hτ8_nn
+      _ = ‖τ‖ ^ 8 := one_mul _
+  -- 10^67·pn^9·qn^9·s^9·|τ|^9 ≤ 10^67·pn^9·qn^9·s^9·|τ|^8.
+  have h_poly_nn : (0 : ℝ) ≤ (10 : ℝ) ^ 67 * pn ^ 9 * qn ^ 9 * s ^ 9 := by positivity
+  have h_rhs_le :
+      (10 : ℝ) ^ 67 * pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 ≤
+      (10 : ℝ) ^ 67 * pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 8 :=
+    mul_le_mul_of_nonneg_left hτ_pow9_le h_poly_nn
+  -- Chain via le_trans to avoid linarith SIGABRT on huge expressions.
+  exact le_trans h_stage3 (le_trans h_rhs h_rhs_le)
+
+
+/-- **Septic identification bridge** (Stage 6 step 2, FULLY PROVED — no
+longer axiom). Matches Lean-Trotter's `bch_uniform_integrated` shape:
+
+```
+∃ δ > 0, ∃ M ≥ 0, ∀ τ ∈ [0, δ),
   ‖suzuki5_bch ℝ A B suzukiP τ − τ • (A + B)‖ ≤
     τ⁵ · bchTightPrefactors.boundSum A B +
     τ⁷ · bchR7Bound A B +
     M · τ⁸
 ```
 
-Combines the existing τ⁵ identification (`suzuki5_R5_decomp`) with the
-τ⁷ Childs-basis identification (`R₇`) and a sextic-BCH-remainder tail
-bound. The discharge roadmap mirrors the P1 axiom chain (regime
-helpers + per-term bounds + `under_regime` assembly); estimated
-~2-3 weeks of Lean work.
+**Discharge structure**: Combines:
+* `norm_suzuki5_bch_sub_smul_sub_R5_sub_R7_le` (Stage 6 step 1, the |τ|⁸
+  bound on the R₅+R₇-subtracted residual).
+* `norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum` (tight R₅
+  bound at Suzuki p).
+* `norm_suzuki5_R7_le_bchR7Bound` (R₇ bound at Suzuki p).
+* Triangle inequality + `0 ≤ τ` to convert `‖τ‖^k` to `τ^k`.
 
-Used downstream by `suzuki5_log_product_septic_at_suzukiP` (the public
-bridge), which feeds Lean-Trotter's `bch_uniform_integrated`. -/
-private axiom suzuki5_log_product_septic_at_suzukiP_axiom (A B : 𝔸) :
-    ∃ δ > (0 : ℝ), ∃ M ≥ (0 : ℝ), ∀ τ : ℝ, 0 ≤ τ → τ < δ →
-      ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B)‖ ≤
-        τ ^ 5 * bchTightPrefactors.boundSum A B +
-        τ ^ 7 * bchR7Bound A B +
-        M * τ ^ 8
-
-/-- **Public bridge** matching Lean-Trotter's `bch_uniform_integrated`
-shape. Direct re-export of the axiom; provided as a `theorem` so that
-downstream `#print axioms` traces the axiom dependency cleanly. -/
+**Axiom dependency**: only the two stepping-stone axioms
+(`symmetric_bch_septic_sub_poly_axiom` Stage 2,
+`norm_septic_match_residual_le_axiom` Stage 3) — the original headline
+axiom `suzuki5_log_product_septic_at_suzukiP_axiom` is now DISCHARGED. -/
 theorem suzuki5_log_product_septic_at_suzukiP (A B : 𝔸) :
     ∃ δ > (0 : ℝ), ∃ M ≥ (0 : ℝ), ∀ τ : ℝ, 0 ≤ τ → τ < δ →
       ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B)‖ ≤
         τ ^ 5 * bchTightPrefactors.boundSum A B +
         τ ^ 7 * bchR7Bound A B +
-        M * τ ^ 8 :=
-  suzuki5_log_product_septic_at_suzukiP_axiom A B
+        M * τ ^ 8 := by
+  obtain ⟨δ, hδ_pos, K, hK_nn, hbound⟩ :=
+    norm_suzuki5_bch_sub_smul_sub_R5_sub_R7_le A B suzukiP IsSuzukiCubic_suzukiP
+  refine ⟨δ, hδ_pos, K, hK_nn, ?_⟩
+  intro τ hτ_nn hτ_lt
+  -- Convert τ < δ under 0 ≤ τ to ‖τ‖ < δ.
+  have hτ_norm : ‖τ‖ < δ := by
+    rw [Real.norm_eq_abs, abs_of_nonneg hτ_nn]; exact hτ_lt
+  -- The O(τ⁸) bound on the (R₅, R₇)-subtracted residual.
+  have h_resid :
+      ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B) -
+          τ ^ 5 • suzuki5_R5 A B suzukiP - τ ^ 7 • suzuki5_R7 A B suzukiP‖ ≤
+        K * ‖τ‖ ^ 8 := hbound τ hτ_norm
+  -- R5 and R7 norm bounds at Suzuki p.
+  have hR5_bnd : ‖suzuki5_R5 A B suzukiP‖ ≤ bchTightPrefactors.boundSum A B :=
+    norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum A B
+  have hR7_bnd : ‖suzuki5_R7 A B suzukiP‖ ≤ bchR7Bound A B :=
+    norm_suzuki5_R7_le_bchR7Bound A B
+  -- Bound ‖τ⁵•R₅‖ and ‖τ⁷•R₇‖.
+  have hτ5_nn : 0 ≤ τ ^ 5 := pow_nonneg hτ_nn 5
+  have hτ7_nn : 0 ≤ τ ^ 7 := pow_nonneg hτ_nn 7
+  have hτ5_norm : ‖(τ ^ 5 : ℝ)‖ = τ ^ 5 := by
+    rw [Real.norm_eq_abs, abs_of_nonneg hτ5_nn]
+  have hτ7_norm : ‖(τ ^ 7 : ℝ)‖ = τ ^ 7 := by
+    rw [Real.norm_eq_abs, abs_of_nonneg hτ7_nn]
+  have hboundSum_nn : 0 ≤ bchTightPrefactors.boundSum A B := by
+    have := norm_nonneg (suzuki5_R5 A B suzukiP); linarith [hR5_bnd]
+  have hR7Bound_nn : 0 ≤ bchR7Bound A B := bchR7Bound_nonneg A B
+  have h_R5_smul_bnd :
+      ‖τ ^ 5 • suzuki5_R5 A B suzukiP‖ ≤ τ ^ 5 * bchTightPrefactors.boundSum A B := by
+    calc ‖τ ^ 5 • suzuki5_R5 A B suzukiP‖
+        ≤ ‖(τ ^ 5 : ℝ)‖ * ‖suzuki5_R5 A B suzukiP‖ := norm_smul_le _ _
+      _ = τ ^ 5 * ‖suzuki5_R5 A B suzukiP‖ := by rw [hτ5_norm]
+      _ ≤ τ ^ 5 * bchTightPrefactors.boundSum A B := by gcongr
+  have h_R7_smul_bnd :
+      ‖τ ^ 7 • suzuki5_R7 A B suzukiP‖ ≤ τ ^ 7 * bchR7Bound A B := by
+    calc ‖τ ^ 7 • suzuki5_R7 A B suzukiP‖
+        ≤ ‖(τ ^ 7 : ℝ)‖ * ‖suzuki5_R7 A B suzukiP‖ := norm_smul_le _ _
+      _ = τ ^ 7 * ‖suzuki5_R7 A B suzukiP‖ := by rw [hτ7_norm]
+      _ ≤ τ ^ 7 * bchR7Bound A B := by gcongr
+  -- ‖τ‖^8 = τ^8 under 0 ≤ τ.
+  have hτ8_eq : ‖τ‖ ^ 8 = τ ^ 8 := by
+    rw [Real.norm_eq_abs, abs_of_nonneg hτ_nn]
+  have h_resid' :
+      ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B) -
+          τ ^ 5 • suzuki5_R5 A B suzukiP - τ ^ 7 • suzuki5_R7 A B suzukiP‖ ≤
+        K * τ ^ 8 := by rw [← hτ8_eq]; exact h_resid
+  -- Triangle inequality:
+  --   ‖suzuki5_bch - τ•V‖ ≤ ‖(suzuki5_bch - τ•V - τ⁵•R₅ - τ⁷•R₇)‖ + ‖τ⁵•R₅‖ + ‖τ⁷•R₇‖.
+  have h_triangle :
+      ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B)‖ ≤
+        ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B) -
+            τ ^ 5 • suzuki5_R5 A B suzukiP - τ ^ 7 • suzuki5_R7 A B suzukiP‖ +
+        ‖τ ^ 5 • suzuki5_R5 A B suzukiP‖ +
+        ‖τ ^ 7 • suzuki5_R7 A B suzukiP‖ := by
+    calc ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B)‖
+        = ‖(suzuki5_bch ℝ A B suzukiP τ - τ • (A + B) -
+            τ ^ 5 • suzuki5_R5 A B suzukiP - τ ^ 7 • suzuki5_R7 A B suzukiP) +
+          (τ ^ 5 • suzuki5_R5 A B suzukiP) +
+          (τ ^ 7 • suzuki5_R7 A B suzukiP)‖ := by congr 1; abel
+      _ ≤ ‖(suzuki5_bch ℝ A B suzukiP τ - τ • (A + B) -
+              τ ^ 5 • suzuki5_R5 A B suzukiP - τ ^ 7 • suzuki5_R7 A B suzukiP) +
+            (τ ^ 5 • suzuki5_R5 A B suzukiP)‖ +
+            ‖τ ^ 7 • suzuki5_R7 A B suzukiP‖ := norm_add_le _ _
+      _ ≤ ‖suzuki5_bch ℝ A B suzukiP τ - τ • (A + B) -
+              τ ^ 5 • suzuki5_R5 A B suzukiP - τ ^ 7 • suzuki5_R7 A B suzukiP‖ +
+            ‖τ ^ 5 • suzuki5_R5 A B suzukiP‖ +
+            ‖τ ^ 7 • suzuki5_R7 A B suzukiP‖ := by
+          have := norm_add_le
+            (suzuki5_bch ℝ A B suzukiP τ - τ • (A + B) -
+              τ ^ 5 • suzuki5_R5 A B suzukiP - τ ^ 7 • suzuki5_R7 A B suzukiP)
+            (τ ^ 5 • suzuki5_R5 A B suzukiP)
+          linarith
+  linarith [h_triangle, h_resid', h_R5_smul_bnd, h_R7_smul_bnd]
 
 end SepticBridge
 

@@ -1,20 +1,37 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 26, 2026-05-11)
+## Status (session 26, 2026-05-12)
 
-Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
-* `suzuki5_log_product_septic_at_suzukiP_axiom` (Lean-Trotter interface
-  axiom 3, the eventual discharge target for the 6-stage roadmap).
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
 * `symmetric_bch_septic_sub_poly_axiom` (Stage 2 stepping-stone,
   introduced session 25; mirrors `symmetric_bch_quintic_sub_poly_axiom`).
-* `norm_septic_match_residual_le_axiom` (NEW: Stage 3 stepping-stone;
-  bounds the σ⁹ residual of the deg-7 matching identity).
+* `norm_septic_match_residual_le_axiom` (Stage 3 stepping-stone,
+  introduced session 26; bounds the σ⁹ residual of the deg-7 matching
+  identity).
 
-Discharge in progress; **Stages 1, 2.0, 2.1 (B1.d-septic + B2.1-septic),
-2 main combined bound, 3.0–3.3, and 3 algebraic backbone are now
-complete**.
+**Major session-26 milestone: `suzuki5_log_product_septic_at_suzukiP_axiom`
+(the Lean-Trotter interface axiom 3 / headline axiom) is now DISCHARGED!**
+It is now a proved theorem `BCH.suzuki5_log_product_septic_at_suzukiP`
+that depends only on the two stepping-stones above plus Lean's foundational
+axioms. The 6-stage septic-axiom discharge roadmap is complete.
 
-**Session 26 (Stage 3 algebraic decomposition backbone)**:
+**All 6 stages of the septic-axiom roadmap are now complete**:
+* Stage 1: `suzuki5_R7` + norm bound (session 24).
+* Stage 2.0: deg-7 algebraic identity infrastructure (session 24).
+* Stage 2.1: B1.d-septic + B2.1-septic per-block bounds (session 25).
+* Stage 2 main: combined σ⁹ bound (session 25).
+* Stage 3.0–3.3: `symmetric_bch_septic_poly` infrastructure (session 24).
+* Stage 3 main: algebraic backbone (session 26, stepping-stone axiom).
+* Stage 5: σ⁹ → |τ|⁹·polynomial conversion (session 26, this commit).
+* Stage 6 step 1: |τ|⁹ → |τ|⁸ assembly via small-τ regime (session 26).
+* Stage 6 step 2: triangle inequality with R₅, R₇ bounds → headline
+  axiom replaced with theorem (session 26).
+
+**Session 26 (full septic-axiom discharge, Stages 3 + 5 + 6)**:
+
+Three major commits in this session:
+
+### Commit 1: Stage 3 algebraic decomposition backbone (`4e0673c`)
 
 - Added scoped private axiom `BCH.norm_septic_match_residual_le_axiom`
   in `Suzuki5Quintic.lean` (new "Stage 3 algebraic decomposition
@@ -64,10 +81,65 @@ identity); much more concrete than the headline axiom (which mixes
 analytic small-τ regime + matching identity + polynomial RHS bound).
 Discharging it is a clean, well-defined CAS+Lean task.
 
-**Stage 3 algebraic backbone is now complete**. Remaining:
-* Stage 4: under_regime septic bound (mirrors `norm_suzuki5_bch_sub_smul_sub_R5_le_under_regime`).
-* Stage 5: polynomial RHS bound (mirrors `suzuki5_bch_sub_R5_RHS_le_aux` chain).
-* Stage 6: assembly + bridge at Suzuki p (replaces `suzuki5_log_product_septic_at_suzukiP_axiom` with theorem).
+### Commit 2: Stage 5 — σ⁹ → polynomial-in-|τ|⁹ conversion (`ace67d1`)
+
+Added the polynomial RHS bound infrastructure that converts the σ⁹ form
+to a polynomial-in-|τ|⁹ form in (pn, qn, s, ‖τ‖):
+
+- Three per-piece bounds (~120 lines):
+  * `sigma_p_pow_nine_le`: σ_p⁹ ≤ pn⁹·s⁹·‖τ‖⁹.
+  * `sigma_q_pow_nine_le`: σ_q⁹ ≤ qn⁹·s⁹·‖τ‖⁹.
+  * `sigma_reg_pow_nine_le`: σ_reg⁹ ≤ 200010⁹·pn⁹·qn⁹·s⁹·‖τ‖⁹ (via
+    `norm_strangBlock_log_linear` per block, reusing the existing
+    quintic-case pattern).
+- Combined `suzuki5_bch_sub_R5_sub_R7_septic_RHS_le_aux` (~120 lines):
+  bounds the Stage 3 RHS by 10⁶⁷·pn⁹·qn⁹·s⁹·‖τ‖⁹. The constant is loose;
+  tight value is ~10⁶⁰ (dominated by 2·10¹²·200010⁹).
+
+Net axiom count unchanged (still 3 — Stage 5 is just polynomial bounds).
+
+### Commit 3: Stage 6 — full discharge of `suzuki5_log_product_septic_at_suzukiP_axiom` (this commit)
+
+**This is the major milestone**: the headline axiom is now a proved theorem.
+
+- `norm_suzuki5_bch_sub_smul_sub_R5_sub_R7_le` (Stage 6 step 1, ~80 lines):
+  the |τ|⁸ bound on `‖suzuki5_bch − τ•V − τ⁵•R₅ − τ⁷•R₇‖`. Uses:
+  * Stage 3 main combined bound (σ⁹ form).
+  * 6 regime helpers (REUSED from quintic case: `p_regime_of_tau_small`,
+    `q_regime_of_tau_small`, `reg_lt_quarter_of_tau_small`,
+    `R_lt_log_two_of_tau_small`, `Z1_lt_log_two_of_tau_small`,
+    `Z2_lt_log_two_of_tau_small`).
+  * Stage 5 RHS conversion (σ⁹ → 10⁶⁷·pn⁹·qn⁹·s⁹·‖τ‖⁹).
+  * Conversion `‖τ‖⁹ ≤ ‖τ‖⁸` under `‖τ‖ < δ ≤ 1`.
+
+  Proof uses `set_option maxHeartbeats 4000000` + `le_trans` chain (NOT
+  `linarith`, which crashes with SIGABRT on the huge 10⁶⁷ expressions).
+
+- `suzuki5_log_product_septic_at_suzukiP` (Stage 6 step 2, ~80 lines):
+  REPLACES the original headline axiom with a proved theorem. Triangle
+  inequality:
+  ```
+  ‖suzuki5_bch − τ•V‖ ≤
+     ‖suzuki5_bch − τ•V − τ⁵•R₅ − τ⁷•R₇‖ + ‖τ⁵•R₅‖ + ‖τ⁷•R₇‖
+  ≤ K·τ⁸ + τ⁵·boundSum + τ⁷·bchR7Bound
+  ```
+
+  Uses `norm_suzuki5_R5_at_suzukiP_le_bchTightPrefactors_boundSum` (P2
+  tight bound) and `norm_suzuki5_R7_le_bchR7Bound` (Stage 1).
+
+**Net session-26 axiom shift**: 2 → 3 (intro Stage 3 axiom) → 2 (discharge
+headline axiom). End state matches CLAUDE.md.
+
+**Axiom dependency check** (verified via `#print axioms`):
+`BCH.suzuki5_log_product_septic_at_suzukiP` depends ONLY on:
+- Lean foundational: `propext`, `Classical.choice`, `Quot.sound`.
+- Stepping stones: `BCH.symmetric_bch_septic_sub_poly_axiom`,
+  `BCH.norm_septic_match_residual_le_axiom`.
+
+Both stepping stones are independently dischargeable via the documented
+roadmaps in their docstrings (Stage 2: T2-F7e-style discharge; Stage 3:
+deg-7 analog of `L_leading_plus_E5_eq_R5` via L+Q decompositions + Hall
+basis projections).
 
 **Session 25 (Stage 2 — B1.d-septic, B2.1-septic, and septic-precision combined bound)**:
 
