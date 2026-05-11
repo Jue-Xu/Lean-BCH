@@ -880,6 +880,178 @@ private lemma word_5_diff_le (x₁ x₂ x₃ x₄ x₅ y₁ y₂ y₃ y₄ y₅ 
         N ^ 4 * ‖x₄ - y₄‖ + N ^ 4 * ‖x₅ - y₅‖ := by linarith
     _ = N ^ 4 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖) := by ring
 
+-- **7-letter product Lipschitz**: `‖x₁x₂x₃x₄x₅x₆x₇ − y₁y₂y₃y₄y₅y₆y₇‖ ≤ N⁶·Σᵢ ‖xᵢ−yᵢ‖`
+-- when `‖xᵢ‖, ‖yᵢ‖ ≤ N`. Telescoping identity + triangle inequality.
+set_option maxHeartbeats 1600000 in
+private lemma word_7_diff_le (x₁ x₂ x₃ x₄ x₅ x₆ x₇ y₁ y₂ y₃ y₄ y₅ y₆ y₇ : 𝔸) (N : ℝ)
+    (hx₁ : ‖x₁‖ ≤ N) (hx₂ : ‖x₂‖ ≤ N) (hx₃ : ‖x₃‖ ≤ N) (hx₄ : ‖x₄‖ ≤ N) (hx₅ : ‖x₅‖ ≤ N) (hx₆ : ‖x₆‖ ≤ N) (hx₇ : ‖x₇‖ ≤ N)
+    (hy₁ : ‖y₁‖ ≤ N) (hy₂ : ‖y₂‖ ≤ N) (hy₃ : ‖y₃‖ ≤ N) (hy₄ : ‖y₄‖ ≤ N) (hy₅ : ‖y₅‖ ≤ N) (hy₆ : ‖y₆‖ ≤ N) (hy₇ : ‖y₇‖ ≤ N)
+    (hN_nn : 0 ≤ N) :
+    ‖x₁ * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ - y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * y₇‖ ≤
+      N ^ 6 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖ + ‖x₆ - y₆‖ + ‖x₇ - y₇‖) := by
+  -- Telescoping identity.
+  have hid : x₁ * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ - y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * y₇ =
+      (x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ +
+      y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ +
+      y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ +
+      y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇ +
+      y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇ +
+      y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇ +
+      y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇) := by noncomm_ring
+  rw [hid]
+  have hN_pow_nn : (0 : ℝ) ≤ N ^ 6 := pow_nonneg hN_nn 6
+  have hd₁_nn : 0 ≤ ‖x₁ - y₁‖ := norm_nonneg _
+  have hd₂_nn : 0 ≤ ‖x₂ - y₂‖ := norm_nonneg _
+  have hd₃_nn : 0 ≤ ‖x₃ - y₃‖ := norm_nonneg _
+  have hd₄_nn : 0 ≤ ‖x₄ - y₄‖ := norm_nonneg _
+  have hd₅_nn : 0 ≤ ‖x₅ - y₅‖ := norm_nonneg _
+  have hd₆_nn : 0 ≤ ‖x₆ - y₆‖ := norm_nonneg _
+  have hd₇_nn : 0 ≤ ‖x₇ - y₇‖ := norm_nonneg _
+  have ht₁ : ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇‖ ≤ N ^ 6 * ‖x₁ - y₁‖ := by
+    calc ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇‖
+        ≤ ‖x₁ - y₁‖ * ‖x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+          calc _ ≤ ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆‖ * ‖x₇‖ := norm_mul_le _ _
+            _ ≤ ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖(x₁ - y₁) * x₂ * x₃ * x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖(x₁ - y₁) * x₂ * x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖(x₁ - y₁) * x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖(x₁ - y₁)‖ * ‖x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ ‖x₁ - y₁‖ * N * N * N * N * N * N := by gcongr
+      _ = N ^ 6 * ‖x₁ - y₁‖ := by ring
+  have ht₂ : ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇‖ ≤ N ^ 6 * ‖x₂ - y₂‖ := by
+    calc ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇‖
+        ≤ ‖y₁‖ * ‖x₂ - y₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+          calc _ ≤ ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆‖ * ‖x₇‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * (x₂ - y₂) * x₃ * x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * (x₂ - y₂) * x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * (x₂ - y₂)‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖(x₂ - y₂)‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * ‖x₂ - y₂‖ * N * N * N * N * N := by gcongr
+      _ = N ^ 6 * ‖x₂ - y₂‖ := by ring
+  have ht₃ : ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇‖ ≤ N ^ 6 * ‖x₃ - y₃‖ := by
+    calc ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖x₃ - y₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+          calc _ ≤ ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆‖ * ‖x₇‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * (x₃ - y₃) * x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * (x₃ - y₃)‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂‖ * ‖(x₃ - y₃)‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖y₂‖ * ‖(x₃ - y₃)‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * N * ‖x₃ - y₃‖ * N * N * N * N := by gcongr
+      _ = N ^ 6 * ‖x₃ - y₃‖ := by ring
+  have ht₄ : ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇‖ ≤ N ^ 6 * ‖x₄ - y₄‖ := by
+    calc ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖x₄ - y₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+          calc _ ≤ ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆‖ * ‖x₇‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃ * (x₄ - y₄)‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃‖ * ‖(x₄ - y₄)‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂‖ * ‖y₃‖ * ‖(x₄ - y₄)‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖(x₄ - y₄)‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * N * N * ‖x₄ - y₄‖ * N * N * N := by gcongr
+      _ = N ^ 6 * ‖x₄ - y₄‖ := by ring
+  have ht₅ : ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇‖ ≤ N ^ 6 * ‖x₅ - y₅‖ := by
+    calc ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖x₅ - y₅‖ * ‖x₆‖ * ‖x₇‖ := by
+          calc _ ≤ ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆‖ * ‖x₇‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅)‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃ * y₄‖ * ‖(x₅ - y₅)‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃‖ * ‖y₄‖ * ‖(x₅ - y₅)‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖(x₅ - y₅)‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖(x₅ - y₅)‖ * ‖x₆‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * N * N * N * ‖x₅ - y₅‖ * N * N := by gcongr
+      _ = N ^ 6 * ‖x₅ - y₅‖ := by ring
+  have ht₆ : ‖y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇‖ ≤ N ^ 6 * ‖x₆ - y₆‖ := by
+    calc ‖y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖x₆ - y₆‖ * ‖x₇‖ := by
+          calc _ ≤ ‖y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆)‖ * ‖x₇‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃ * y₄ * y₅‖ * ‖(x₆ - y₆)‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃ * y₄‖ * ‖y₅‖ * ‖(x₆ - y₆)‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖(x₆ - y₆)‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖(x₆ - y₆)‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖(x₆ - y₆)‖ * ‖x₇‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * N * N * N * N * ‖x₆ - y₆‖ * N := by gcongr
+      _ = N ^ 6 * ‖x₆ - y₆‖ := by ring
+  have ht₇ : ‖y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇)‖ ≤ N ^ 6 * ‖x₇ - y₇‖ := by
+    calc ‖y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇)‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖y₆‖ * ‖x₇ - y₇‖ := by
+          calc _ ≤ ‖y₁ * y₂ * y₃ * y₄ * y₅ * y₆‖ * ‖(x₇ - y₇)‖ := norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃ * y₄ * y₅‖ * ‖y₆‖ * ‖(x₇ - y₇)‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃ * y₄‖ * ‖y₅‖ * ‖y₆‖ * ‖(x₇ - y₇)‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂ * y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖y₆‖ * ‖(x₇ - y₇)‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁ * y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖y₆‖ * ‖(x₇ - y₇)‖ := by
+                gcongr; exact norm_mul_le _ _
+            _ ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖y₆‖ * ‖(x₇ - y₇)‖ := by
+                gcongr; exact norm_mul_le _ _
+      _ ≤ N * N * N * N * N * N * ‖x₇ - y₇‖ := by gcongr
+      _ = N ^ 6 * ‖x₇ - y₇‖ := by ring
+  -- Sum the 7 bounds.
+  calc ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ +
+        y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ +
+        y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ +
+        y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇ +
+        y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇ +
+        y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇ +
+        y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇)‖
+      ≤ ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇‖ + ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇‖ + ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇‖ + ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇‖ + ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇‖ + ‖y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇‖ + ‖y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇)‖ := by
+        have := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇ + y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇)
+              (y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇))
+        have := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇)
+              (y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇)
+        have := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇)
+              (y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇)
+        have := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇)
+              (y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇)
+        have := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇)
+              (y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇)
+        have := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇)
+              (y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇)
+        linarith
+    _ ≤ N ^ 6 * ‖x₁ - y₁‖ + N ^ 6 * ‖x₂ - y₂‖ + N ^ 6 * ‖x₃ - y₃‖ + N ^ 6 * ‖x₄ - y₄‖ + N ^ 6 * ‖x₅ - y₅‖ + N ^ 6 * ‖x₆ - y₆‖ + N ^ 6 * ‖x₇ - y₇‖ := by
+        linarith [ht₁, ht₂, ht₃, ht₄, ht₅, ht₆, ht₇]
+    _ = N ^ 6 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖ + ‖x₆ - y₆‖ + ‖x₇ - y₇‖) := by ring
+
+
 /-- **Vanishing of `sym_cubic_poly` on scalar•V inputs (B2.2.b)**:
 `symmetric_bch_cubic_poly 𝕂 (α • V) (β • V) = 0` for any `α, β : 𝕂` and
 `V : 𝔸`. Proof is immediate from `(α•V)·(β•V) - (β•V)·(α•V) = 0` (both
