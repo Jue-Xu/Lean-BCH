@@ -287,7 +287,49 @@ theorem symmetric_bch_septic_poly_smul (a b : 𝔸) (c : 𝕂) :
     symmetric_bch_septic_poly 𝕂 (c • a) (c • b) =
       c ^ 7 • symmetric_bch_septic_poly 𝕂 a b := by
   unfold symmetric_bch_septic_poly
-  simp only [seven_fold_smul_mul c, smul_comm _ (c ^ 7 : 𝕂), ← smul_add]/-!
+  simp only [seven_fold_smul_mul c, smul_comm _ (c ^ 7 : 𝕂), ← smul_add]
+
+/-! ## Vanishing on `(α•V, β•V)` (B2.2.a analog at deg-7)
+
+`symmetric_bch_septic_poly` evaluated at scalar multiples of a single element
+`V : 𝔸` is identically zero:
+
+  `E₇(α•V, β•V) = 0`  for any  `α, β : 𝕂, V : 𝔸`.
+
+Same structural argument as the deg-5 case: each 7-letter word `xᵢ ∈ {α•V, β•V}`
+collapses to `(α^k · β^(7−k)) • V⁷` where `k = #(α•V slots)`. Summing the 126
+word coefficients gives a polynomial in `(α, β)` whose coefficient at each
+`α^k · β^(7−k)` is identically zero (since `log(exp((α/2)V)·exp(βV)·exp((α/2)V))
+= (α+β)V` for any α, β when V·V·V·... commutes with itself — so all τ⁷ content
+must vanish). -/
+
+/-- **7-fold smul-mul absorption (single element)**: 7 factors each of the
+form `sᵢ • V` collapse to `(s₁·…·s₇) • (V·V·V·V·V·V·V)`. -/
+private lemma seven_fold_smul_mul_eq (V : 𝔸) (s₁ s₂ s₃ s₄ s₅ s₆ s₇ : 𝕂) :
+    (s₁ • V) * (s₂ • V) * (s₃ • V) * (s₄ • V) * (s₅ • V) * (s₆ • V) * (s₇ • V) =
+      (s₁ * s₂ * s₃ * s₄ * s₅ * s₆ * s₇) • (V * V * V * V * V * V * V) := by
+  simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
+  congr 1; ring
+
+set_option maxHeartbeats 4000000 in
+/-- **Vanishing on scalar•V inputs**:
+`symmetric_bch_septic_poly 𝕂 (α • V) (β • V) = 0` for any `α, β : 𝕂` and
+`V : 𝔸`.
+
+Source: `log(exp((α/2)V)·exp(βV)·exp((α/2)V)) = (α+β)V` for any commuting
+content, so all deg-7 Taylor content must vanish. -/
+theorem symmetric_bch_septic_poly_apply_smul_smul (V : 𝔸) (α β : 𝕂) :
+    symmetric_bch_septic_poly 𝕂 (α • V) (β • V) = 0 := by
+  unfold symmetric_bch_septic_poly
+  -- Step 1: collapse each 7-fold product to (scalar) • V⁷; combine outer scalars.
+  simp only [seven_fold_smul_mul_eq, smul_smul, ← add_smul]
+  -- Step 2: goal is now `(big_polynomial in α, β) • V⁷ = 0`.
+  conv_rhs => rw [show (0 : 𝔸) = (0 : 𝕂) • (V * V * V * V * V * V * V) from (zero_smul _ _).symm]
+  congr 1
+  -- Polynomial-in-(α, β) identity: each (k, 7−k) coefficient group sums to 0.
+  ring
+
+/-!
 ## Norm bound: `‖E₅(a, b)‖ ≤ (‖a‖ + ‖b‖)⁵`
 
 Proof strategy: each 5-letter word has norm ≤ `s⁵` where
