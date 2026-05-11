@@ -1,13 +1,39 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 22, 2026-05-10)
+## Status (session 23, 2026-05-11)
 
-Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**.
-Net axiom count unchanged from session 21 (still 2), but Phase E.2 of
-T2-F7e is now complete modulo a much smaller, more focused **C5_diff_residual
-sub-axiom** (10⁵·s⁷ on a single deg-7+ piece). This replaces the previous
-Group C+D sub-axiom (10⁸·s⁷ on 8 pieces) — a 1000× tighter constant on a
-single isolated deg-7+ residual.
+Branch: `main`. Repository is **0 sorries**, **1 scoped private axiom** —
+the polynomial-norm axiom `norm_C5_LinResidual_polynomial_le` from session 22
+has been DISCHARGED via the Finset.sum refactor. Net axiom count: 2 → 1.
+
+T2-F7e is now FULLY PROVED. The only remaining axiom in the whole project is
+`suzuki5_log_product_septic_at_suzukiP_axiom` (Lean-Trotter interface axiom 3).
+
+**Session 23 (T2-F7e closure, complete)**: the per-term polynomial bound
+`norm_C5_LinResidual_polynomial_le` (the only remaining axiom from session 22's
+Phase E.2 stage 3b) is replaced with a proved theorem via:
+- Refactor of `C5_LinResidual_polynomial` into a `Finset.sum` over `Fin 79/78/48`
+  per-degree (`linResTerm7/8/9 : Fin n → 𝔸`, `linResBound7/8/9 : ℝ → Fin n → ℝ`).
+- Per-degree algebraic identity (`C5_LinResidual_polynomial_eq_parts` +
+  `C5_LinResidual_deg{N}_eq_sum`) proved by `unfold + abel`.
+- Per-term norm bound (`linResTerm{N}_norm_le`) proved by `match i with | ⟨k, _⟩
+  => show ... from deg{N}_smul_word_le ...` term-mode pattern matching.
+- Per-degree sum bound (`sum_linResBound{N}_le`) via uniform per-i bound
+  (max coefficient) + `Finset.sum_const`. Total bound: ~0.1·s⁷ ≪ 1·s⁷.
+- ~1700 lines of generated Lean (script: `scripts/gen_lean_finset_norm_bound.py`).
+
+**Key Lean-tactic lessons added in session 23**:
+- `/-- doc -/` BEFORE `set_option ... in <lemma>` breaks Lean's doc-attachment
+  parser. Use `--` regular comments instead for set_option'd declarations.
+- For `match i : Fin n with | ⟨k, _⟩ => ...`, use term-mode `:= fun i => match i with`
+  to avoid tactic-mode `=> by ...` parsing issues.
+- `Finset.sum` of `Fin n` with `noncomputable def`s defined by pattern matching
+  does not fully reduce via `simp only [Fin.sum_univ_succ, def_name]`. The
+  `Fin.succ` chains aren't normalized, leaving `match Fin.succ 0 with ...`
+  expressions. Workaround: use uniform per-i bound + `Finset.sum_const`
+  (looser but provable bound).
+- `private def` of a function returning `ℝ` (e.g., `linResBound{N} (s : ℝ) :
+  Fin n → ℝ`) must be marked `noncomputable` due to `Real.instDivInvMonoid`.
 
 **Session 22 (Phase E.1 of T2-F7e discharge, complete)**: parent axiom
 discharged modulo the Group C+D sub-axiom. The parent theorem
@@ -681,21 +707,16 @@ I1 RHS ≤ 21·s⁷.
   before triangle inequality). hS2_inner_eq's y3_6 ordering re-aligned to
   match pieceB's (T₂zT₃ + T₂T₃z + T₃zT₂ + T₃T₂z), proved via `noncomm_ring`.
 
-**Axiom count: 2 scoped `private axiom`s + Lean's 3 standard** (unchanged in
-total count from session 19 final, but the parent axioms have been
-progressively narrowed).
-- `BCH.norm_C5_LinResidual_polynomial_le` — Phase E.2 step 4 polynomial
-  bound axiom (1 piece, 1·s⁷ on a 205-term explicit polynomial in (a, b)),
-  in `SymmetricQuintic.lean`. Asserts a triangle-trivial bound: the polynomial
-  has Σ|coef|·s^d ≤ 0.022·s⁷ for s ≤ 1/4 (CAS-verified). The discharge
-  requires ~3000-4400 lines of mechanical per-term Lean code, deferred for
-  efficiency. The full algebraic foundation
-  (`C5_LinResidual_at_V2_eq_polynomial` + `symmetric_bch_quintic_C5_diff_residual_le`)
-  is PROVED, using this axiom as the only remaining gap.
+**Axiom count: 1 scoped `private axiom` + Lean's 3 standard** (reduced from
+2 to 1 in session 23 via the Finset.sum refactor that discharged
+`norm_C5_LinResidual_polynomial_le`). T2-F7e is fully proved.
 - `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` — axiom 3 (septic at Suzuki p)
-  in `Suzuki5Quintic.lean`.
+  in `Suzuki5Quintic.lean`. The only remaining axiom in the entire project.
 
-(`BCH.norm_bch_septic_remainder_small_s_axiom` was discharged in step 22
+(`BCH.norm_C5_LinResidual_polynomial_le` was discharged in session 23 via a
+Finset.sum refactor of the polynomial; per-degree `linResTerm{N}` / `linResBound{N}`
+functions + uniform per-i bound + `Finset.sum_const`. Now a proved theorem.
+`BCH.norm_bch_septic_remainder_small_s_axiom` was discharged in session 19 step 22
 and is now the public theorem `norm_bch_septic_remainder_small_s_le`.)
 
 **Session 18 highlights (`match_scalars <;> ring` methodology)**:
