@@ -4534,6 +4534,308 @@ theorem norm_suzuki5_bch_sub_smul_sub_R5_sub_R7_le_of_IsSuzukiCubic
   refine le_trans (norm_add_le _ _) ?_
   linarith
 
+/-! ### Stage 5: σ⁹ → |τ|⁹·polynomial bound
+
+Converts the Stage 3 σ⁹ form bound to a polynomial-in-|τ| bound, paving the
+way for Stage 6 (final |τ|⁸ assembly). Mirrors the quintic
+`suzuki5_bch_sub_R5_RHS_le_aux` (which converts the σ⁷ form to |τ|⁶·polynomial)
+at one degree higher.
+
+Three per-piece bounds:
+* σ_p ≤ pn·s·|τ| (direct from `|p|·|τ|·(‖A‖+‖B‖)`).
+* σ_q ≤ qn·s·|τ| (similar).
+* σ_reg ≤ 200010·pn·qn·s·|τ| (via `norm_strangBlock_log_linear` under regime).
+
+Raised to 9th power and combined gives `K_total·pn⁹·qn⁹·s⁹·|τ|⁹` for explicit
+`K_total ≤ 10⁶²` (dominated by `2·10¹²·200010⁹` from the σ_reg piece). -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **σ_p⁹ polynomial bound**: under `‖p‖ ≤ pn` and `‖A‖+‖B‖ ≤ s`,
+`(‖(p*τ)•A‖+‖(p*τ)•B‖)⁹ ≤ pn⁹·s⁹·‖τ‖⁹`. -/
+private lemma sigma_p_pow_nine_le (A B : 𝔸) (p τ : ℝ) (pn s : ℝ)
+    (hpn_ge : (1 : ℝ) ≤ pn) (hs_ge : (1 : ℝ) ≤ s)
+    (hp_le : ‖p‖ ≤ pn) (hAB_le : ‖A‖ + ‖B‖ ≤ s) :
+    (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9 ≤ pn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by
+  have hp_nn : 0 ≤ ‖p‖ := norm_nonneg _
+  have hτ_nn : 0 ≤ ‖τ‖ := norm_nonneg _
+  have hAB_nn : 0 ≤ ‖A‖ + ‖B‖ := by positivity
+  have hpn_pos : (0 : ℝ) < pn := by linarith
+  have hs_pos : (0 : ℝ) < s := by linarith
+  -- σ_p = ‖p·τ‖·(‖A‖+‖B‖)
+  have hpτ_norm : ‖(p * τ : ℝ)‖ = ‖p‖ * ‖τ‖ := norm_mul _ _
+  have hσp_eq : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ =
+                 ‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by
+    rw [norm_smul, norm_smul, hpτ_norm]; ring
+  rw [hσp_eq]
+  -- σ_p ≤ pn·‖τ‖·s
+  have hσp_le : ‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖) ≤ pn * ‖τ‖ * s := by
+    have h_τAB_nn : 0 ≤ ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+    have h_pn_τ_nn : 0 ≤ pn * ‖τ‖ := by positivity
+    calc ‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖)
+        = ‖p‖ * (‖τ‖ * (‖A‖ + ‖B‖)) := by ring
+      _ ≤ pn * (‖τ‖ * (‖A‖ + ‖B‖)) := mul_le_mul_of_nonneg_right hp_le h_τAB_nn
+      _ = pn * ‖τ‖ * (‖A‖ + ‖B‖) := by ring
+      _ ≤ pn * ‖τ‖ * s := mul_le_mul_of_nonneg_left hAB_le h_pn_τ_nn
+  have hσp_nn : 0 ≤ ‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+  calc (‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖)) ^ 9
+      ≤ (pn * ‖τ‖ * s) ^ 9 := pow_le_pow_left₀ hσp_nn hσp_le 9
+    _ = pn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **σ_q⁹ polynomial bound**: under `‖1-4p‖ ≤ qn` and `‖A‖+‖B‖ ≤ s`,
+`(‖((1-4p)*τ)•A‖+‖((1-4p)*τ)•B‖)⁹ ≤ qn⁹·s⁹·‖τ‖⁹`. -/
+private lemma sigma_q_pow_nine_le (A B : 𝔸) (p τ : ℝ) (qn s : ℝ)
+    (hqn_ge : (1 : ℝ) ≤ qn) (hs_ge : (1 : ℝ) ≤ s)
+    (hq_le : ‖((1 : ℝ) - 4 * p)‖ ≤ qn) (hAB_le : ‖A‖ + ‖B‖ ≤ s) :
+    (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 ≤
+      qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by
+  have hq_nn : 0 ≤ ‖((1 : ℝ) - 4 * p)‖ := norm_nonneg _
+  have hτ_nn : 0 ≤ ‖τ‖ := norm_nonneg _
+  have hAB_nn : 0 ≤ ‖A‖ + ‖B‖ := by positivity
+  have hqn_pos : (0 : ℝ) < qn := by linarith
+  have hs_pos : (0 : ℝ) < s := by linarith
+  have hqτ_norm : ‖((1 - 4 * p) * τ : ℝ)‖ = ‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ := norm_mul _ _
+  have hσq_eq : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ =
+                 ‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by
+    rw [norm_smul, norm_smul, hqτ_norm]; ring
+  rw [hσq_eq]
+  have hσq_le : ‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖) ≤ qn * ‖τ‖ * s := by
+    have h_τAB_nn : 0 ≤ ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+    have h_qn_τ_nn : 0 ≤ qn * ‖τ‖ := by positivity
+    calc ‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖)
+        = ‖((1 : ℝ) - 4 * p)‖ * (‖τ‖ * (‖A‖ + ‖B‖)) := by ring
+      _ ≤ qn * (‖τ‖ * (‖A‖ + ‖B‖)) := mul_le_mul_of_nonneg_right hq_le h_τAB_nn
+      _ = qn * ‖τ‖ * (‖A‖ + ‖B‖) := by ring
+      _ ≤ qn * ‖τ‖ * s := mul_le_mul_of_nonneg_left hAB_le h_qn_τ_nn
+  have hσq_nn : 0 ≤ ‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+  calc (‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖)) ^ 9
+      ≤ (qn * ‖τ‖ * s) ^ 9 := pow_le_pow_left₀ hσq_nn hσq_le 9
+    _ = qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by ring
+
+/-- **σ_reg⁹ polynomial bound**: under regime hypotheses `σ_p < 1/4` and
+`σ_q < 1/4`, `(‖4·strangBlock_log p τ‖ + ‖strangBlock_log (1-4p) τ‖)⁹ ≤
+200010⁹ · pn⁹·qn⁹·s⁹ · ‖τ‖⁹`. Uses `norm_strangBlock_log_linear` per block. -/
+private lemma sigma_reg_pow_nine_le (A B : 𝔸) (p τ : ℝ) (pn qn s : ℝ)
+    (hpn_ge : (1 : ℝ) ≤ pn) (hqn_ge : (1 : ℝ) ≤ qn) (hs_ge : (1 : ℝ) ≤ s)
+    (hp_le : ‖p‖ ≤ pn) (hq_le : ‖((1 : ℝ) - 4 * p)‖ ≤ qn)
+    (hAB_le : ‖A‖ + ‖B‖ ≤ s)
+    (hp_reg : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (hq_reg : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4) :
+    (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+        ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 9 ≤
+      200010 ^ 9 * pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by
+  have hpn_pos : (0 : ℝ) < pn := by linarith
+  have hqn_pos : (0 : ℝ) < qn := by linarith
+  have hs_pos : (0 : ℝ) < s := by linarith
+  have hτ_nn : 0 ≤ ‖τ‖ := norm_nonneg _
+  have hAB_nn : 0 ≤ ‖A‖ + ‖B‖ := by positivity
+  -- Per-block linear bounds.
+  have hX_bound := norm_strangBlock_log_linear (𝕂 := ℝ) A B p τ hp_reg
+  have hY_bound := norm_strangBlock_log_linear (𝕂 := ℝ) A B (1 - 4 * p) τ hq_reg
+  have h4_norm : ‖(4 : ℝ)‖ = 4 := by simp
+  have h4X_eq : ‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ =
+                4 * ‖strangBlock_log ℝ A B p τ‖ := by
+    rw [norm_smul, h4_norm]
+  -- η_p, η_q bounds
+  have hpτ_norm : ‖(p * τ : ℝ)‖ = ‖p‖ * ‖τ‖ := norm_mul _ _
+  have hqτ_norm : ‖((1 - 4 * p) * τ : ℝ)‖ = ‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ := norm_mul _ _
+  have hp_nn : 0 ≤ ‖p‖ := norm_nonneg _
+  have hq_nn : 0 ≤ ‖((1 : ℝ) - 4 * p)‖ := norm_nonneg _
+  have hηp_le : ‖(p * τ : ℝ)‖ * (‖A‖ + ‖B‖) ≤ pn * s * ‖τ‖ := by
+    rw [hpτ_norm]
+    have h_τAB_nn : 0 ≤ ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+    have h_pn_τ_nn : 0 ≤ pn * ‖τ‖ := by positivity
+    calc ‖p‖ * ‖τ‖ * (‖A‖ + ‖B‖)
+        = ‖p‖ * (‖τ‖ * (‖A‖ + ‖B‖)) := by ring
+      _ ≤ pn * (‖τ‖ * (‖A‖ + ‖B‖)) := mul_le_mul_of_nonneg_right hp_le h_τAB_nn
+      _ = pn * ‖τ‖ * (‖A‖ + ‖B‖) := by ring
+      _ ≤ pn * ‖τ‖ * s := mul_le_mul_of_nonneg_left hAB_le h_pn_τ_nn
+      _ = pn * s * ‖τ‖ := by ring
+  have hηq_le : ‖((1 - 4 * p) * τ : ℝ)‖ * (‖A‖ + ‖B‖) ≤ qn * s * ‖τ‖ := by
+    rw [hqτ_norm]
+    have h_τAB_nn : 0 ≤ ‖τ‖ * (‖A‖ + ‖B‖) := by positivity
+    have h_qn_τ_nn : 0 ≤ qn * ‖τ‖ := by positivity
+    calc ‖((1 : ℝ) - 4 * p)‖ * ‖τ‖ * (‖A‖ + ‖B‖)
+        = ‖((1 : ℝ) - 4 * p)‖ * (‖τ‖ * (‖A‖ + ‖B‖)) := by ring
+      _ ≤ qn * (‖τ‖ * (‖A‖ + ‖B‖)) := mul_le_mul_of_nonneg_right hq_le h_τAB_nn
+      _ = qn * ‖τ‖ * (‖A‖ + ‖B‖) := by ring
+      _ ≤ qn * ‖τ‖ * s := mul_le_mul_of_nonneg_left hAB_le h_qn_τ_nn
+      _ = qn * s * ‖τ‖ := by ring
+  -- Combine into σ_reg ≤ 200010·pn·qn·s·|τ|.
+  have h4X_le : ‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ ≤
+                4 * (40002 * (pn * s * ‖τ‖)) := by
+    rw [h4X_eq]
+    nlinarith [hX_bound, hηp_le, norm_nonneg (strangBlock_log ℝ A B p τ)]
+  have hY_le : ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖ ≤
+               40002 * (qn * s * ‖τ‖) := by
+    nlinarith [hY_bound, hηq_le]
+  have hsum_le : ‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+                 ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖ ≤
+                 40002 * (4 * pn + qn) * s * ‖τ‖ := by
+    have : 4 * (40002 * (pn * s * ‖τ‖)) + 40002 * (qn * s * ‖τ‖) =
+           40002 * (4 * pn + qn) * s * ‖τ‖ := by ring
+    linarith
+  -- 40002·(4·pn+qn) ≤ 200010·pn·qn (since pn, qn ≥ 1).
+  have h_4pq_le : 40002 * (4 * pn + qn) ≤ 200010 * pn * qn := by
+    have h1 : 4 * pn ≤ 4 * pn * qn := by nlinarith [hqn_ge, hpn_pos]
+    have h2 : qn ≤ pn * qn := by nlinarith [hpn_ge, hqn_pos]
+    nlinarith
+  have h_sumle2 : ‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+                 ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖ ≤
+                 200010 * pn * qn * s * ‖τ‖ := by
+    have hs_τ_nn : 0 ≤ s * ‖τ‖ := by positivity
+    have h_lin : 40002 * (4 * pn + qn) * (s * ‖τ‖) ≤
+                 200010 * pn * qn * (s * ‖τ‖) :=
+      mul_le_mul_of_nonneg_right h_4pq_le hs_τ_nn
+    have h_eq1 : 40002 * (4 * pn + qn) * s * ‖τ‖ = 40002 * (4 * pn + qn) * (s * ‖τ‖) := by ring
+    have h_eq2 : 200010 * pn * qn * s * ‖τ‖ = 200010 * pn * qn * (s * ‖τ‖) := by ring
+    linarith
+  -- Raise to 9th power.
+  have h_sum_nn : 0 ≤ ‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+                       ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖ := by positivity
+  have h_target_nn : 0 ≤ 200010 * pn * qn * s * ‖τ‖ := by positivity
+  calc (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+        ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 9
+      ≤ (200010 * pn * qn * s * ‖τ‖) ^ 9 :=
+        pow_le_pow_left₀ h_sum_nn h_sumle2 9
+    _ = 200010 ^ 9 * pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by ring
+
+/-- **Stage 5 combined polynomial bound**: the Stage 3 σ⁹-form RHS is bounded
+by `K_total·pn⁹·qn⁹·s⁹·‖τ‖⁹` where `K_total ≤ 10⁶⁷` (loose constant covering
+`2·10¹²·200010⁹ + small`).
+
+Combines `sigma_p_pow_nine_le`, `sigma_q_pow_nine_le`, and `sigma_reg_pow_nine_le`
+via per-piece bound + final `linarith`. -/
+private lemma suzuki5_bch_sub_R5_sub_R7_septic_RHS_le_aux
+    (A B : 𝔸) (p τ : ℝ) (pn qn s : ℝ)
+    (hpn_ge : (1 : ℝ) ≤ pn) (hqn_ge : (1 : ℝ) ≤ qn) (hs_ge : (1 : ℝ) ≤ s)
+    (hp_le : ‖p‖ ≤ pn) (hq_le : ‖((1 : ℝ) - 4 * p)‖ ≤ qn)
+    (hAB_le : ‖A‖ + ‖B‖ ≤ s)
+    (hp_reg : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (hq_reg : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4) :
+    2 * (4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+         1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 +
+         1000000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+                          ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 9) ≤
+      (10 : ℝ) ^ 67 * pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by
+  have hp9 := sigma_p_pow_nine_le A B p τ pn s hpn_ge hs_ge hp_le hAB_le
+  have hq9 := sigma_q_pow_nine_le A B p τ qn s hqn_ge hs_ge hq_le hAB_le
+  have hreg9 := sigma_reg_pow_nine_le A B p τ pn qn s
+                  hpn_ge hqn_ge hs_ge hp_le hq_le hAB_le hp_reg hq_reg
+  have hpn_pos : (0 : ℝ) < pn := by linarith
+  have hqn_pos : (0 : ℝ) < qn := by linarith
+  have hs_pos : (0 : ℝ) < s := by linarith
+  have hτ_nn : 0 ≤ ‖τ‖ := norm_nonneg _
+  have hqn9_ge_one : (1 : ℝ) ≤ qn ^ 9 := one_le_pow₀ hqn_ge
+  have hpn9_ge_one : (1 : ℝ) ≤ pn ^ 9 := one_le_pow₀ hpn_ge
+  have hpn9_nn : 0 ≤ pn ^ 9 := by positivity
+  have hqn9_nn : 0 ≤ qn ^ 9 := by positivity
+  have hs9_nn : 0 ≤ s ^ 9 := by positivity
+  have hτ9_nn : 0 ≤ ‖τ‖ ^ 9 := by positivity
+  have hpoly_nn : 0 ≤ pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by positivity
+  -- Bound 200010⁹ ≤ 10⁵⁴ (since 200010 < 10⁶).
+  have h_200010_pow_le_54 : (200010 : ℝ) ^ 9 ≤ (10 : ℝ) ^ 54 := by
+    have h_bound : (200010 : ℝ) ≤ 10 ^ 6 := by norm_num
+    have h200010_nn : (0 : ℝ) ≤ 200010 := by norm_num
+    calc (200010 : ℝ) ^ 9 ≤ ((10 : ℝ) ^ 6) ^ 9 :=
+          pow_le_pow_left₀ h200010_nn h_bound 9
+      _ = (10 : ℝ) ^ 54 := by norm_num
+  -- σ_p⁹ piece: 8·10¹² · σ_p⁹ ≤ 8·10¹² · pn⁹·s⁹·‖τ‖⁹ ≤ 8·10¹² · pn⁹·qn⁹·s⁹·‖τ‖⁹.
+  have hp9_bound : 8 * 1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9 ≤
+                   8 * 1000000000000 * (pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) := by
+    have h_step1 : 8 * 1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9 ≤
+                   8 * 1000000000000 * (pn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) := by
+      have h_8e12_nn : (0 : ℝ) ≤ 8 * 1000000000000 := by norm_num
+      exact mul_le_mul_of_nonneg_left hp9 h_8e12_nn
+    have h_step2 : pn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 ≤ pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by
+      have hpn9_s9_τ9_nn : 0 ≤ pn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by positivity
+      have : pn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 * 1 ≤ pn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 * qn ^ 9 := by
+        exact mul_le_mul_of_nonneg_left hqn9_ge_one hpn9_s9_τ9_nn
+      nlinarith [this]
+    linarith [h_step1, h_step2,
+              mul_le_mul_of_nonneg_left h_step2 (by norm_num : (0:ℝ) ≤ 8 * 1000000000000)]
+  -- σ_q⁹ piece: 2·10¹² · σ_q⁹ ≤ 2·10¹² · qn⁹·s⁹·‖τ‖⁹ ≤ 2·10¹² · pn⁹·qn⁹·s⁹·‖τ‖⁹.
+  have hq9_bound : 2 * 1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 ≤
+                   2 * 1000000000000 * (pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) := by
+    have h_step1 : 2 * 1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 ≤
+                   2 * 1000000000000 * (qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) := by
+      have h_2e12_nn : (0 : ℝ) ≤ 2 * 1000000000000 := by norm_num
+      exact mul_le_mul_of_nonneg_left hq9 h_2e12_nn
+    have h_step2 : qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 ≤ pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by
+      have hqn9_s9_τ9_nn : 0 ≤ qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 := by positivity
+      nlinarith [mul_le_mul_of_nonneg_left hpn9_ge_one hqn9_s9_τ9_nn]
+    linarith [h_step1, h_step2,
+              mul_le_mul_of_nonneg_left h_step2 (by norm_num : (0:ℝ) ≤ 2 * 1000000000000)]
+  -- σ_reg⁹ piece: 2·10¹² · σ_reg⁹ ≤ 2·10¹²·200010⁹ · pn⁹·qn⁹·s⁹·‖τ‖⁹.
+  have hreg9_bound : 2 * 1000000000000 *
+                     (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+                      ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 9 ≤
+                     2 * 1000000000000 *
+                     (200010 ^ 9 * pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) := by
+    have h_2e12_nn : (0 : ℝ) ≤ 2 * 1000000000000 := by norm_num
+    exact mul_le_mul_of_nonneg_left hreg9 h_2e12_nn
+  -- Combine: total ≤ (8·10¹² + 2·10¹² + 2·10¹²·200010⁹) · pn⁹·qn⁹·s⁹·‖τ‖⁹.
+  -- Then bound the constant by 10⁶⁷:
+  -- 2·10¹²·200010⁹ ≤ 2·10¹²·10⁵⁴ = 2·10⁶⁶ ≤ 10⁶⁷.
+  -- Plus 8·10¹² + 2·10¹² = 10¹³ << 10⁶⁷.
+  have h_const_bound : 2 * 1000000000000 * (200010 : ℝ) ^ 9 + 10 * 1000000000000 ≤
+                       (10 : ℝ) ^ 67 := by
+    have h_step : 2 * 1000000000000 * (200010 : ℝ) ^ 9 ≤
+                  2 * 1000000000000 * (10 : ℝ) ^ 54 := by
+      have : (0 : ℝ) ≤ 2 * 1000000000000 := by norm_num
+      exact mul_le_mul_of_nonneg_left h_200010_pow_le_54 this
+    have h_2e12_54 : 2 * 1000000000000 * (10 : ℝ) ^ 54 + 10 * 1000000000000 ≤
+                     (10 : ℝ) ^ 67 := by norm_num
+    linarith
+  -- Now combine all three pieces.
+  have h_sum_le :
+      8 * 1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9 +
+        2 * 1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 +
+        2 * 1000000000000 *
+          (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+           ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 9 ≤
+      (8 * 1000000000000 + 2 * 1000000000000 +
+        2 * 1000000000000 * (200010 : ℝ) ^ 9) *
+        (pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) := by
+    have h_combine_rw :
+        (8 * 1000000000000 + 2 * 1000000000000 +
+            2 * 1000000000000 * (200010 : ℝ) ^ 9) *
+          (pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) =
+        8 * 1000000000000 * (pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) +
+        2 * 1000000000000 * (pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) +
+        2 * 1000000000000 *
+          (200010 ^ 9 * pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) := by ring
+    rw [h_combine_rw]
+    linarith [hp9_bound, hq9_bound, hreg9_bound]
+  -- Bound the constant.
+  have h_const_le_67 :
+      (8 * 1000000000000 + 2 * 1000000000000 +
+       2 * 1000000000000 * (200010 : ℝ) ^ 9) ≤ (10 : ℝ) ^ 67 := by
+    have : 8 * 1000000000000 + 2 * 1000000000000 = 10 * 1000000000000 := by norm_num
+    linarith [h_const_bound]
+  have h_final :
+      (8 * 1000000000000 + 2 * 1000000000000 +
+       2 * 1000000000000 * (200010 : ℝ) ^ 9) *
+        (pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) ≤
+      (10 : ℝ) ^ 67 * (pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) :=
+    mul_le_mul_of_nonneg_right h_const_le_67 hpoly_nn
+  -- Rewrite LHS to match the goal form.
+  have h_lhs_rw :
+      2 * (4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+           1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 +
+           1000000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+                            ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 9) =
+      8 * 1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9 +
+        2 * 1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 +
+        2 * 1000000000000 *
+          (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+           ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 9 := by ring
+  rw [h_lhs_rw]
+  have h_rhs_rw : (10 : ℝ) ^ 67 * pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9 =
+                  (10 : ℝ) ^ 67 * (pn ^ 9 * qn ^ 9 * s ^ 9 * ‖τ‖ ^ 9) := by ring
+  rw [h_rhs_rw]
+  linarith [h_sum_le, h_final]
+
 
 /-- **Septic identification axiom** (Tier-2 status, awaiting full
 discharge analogous to the P1 chain). Asserts that the τ⁷ leading
