@@ -1,11 +1,50 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 24, 2026-05-11)
+## Status (session 25, 2026-05-11)
 
-Branch: `main`. Repository is **0 sorries**, **1 scoped private axiom** —
-the only remaining axiom is `suzuki5_log_product_septic_at_suzukiP_axiom`
-(Lean-Trotter interface axiom 3). Discharge in progress; **Stages 1 and 3.0
-of the 6-stage roadmap are now complete**.
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+* `suzuki5_log_product_septic_at_suzukiP_axiom` (Lean-Trotter interface
+  axiom 3, the target of the discharge roadmap).
+* `symmetric_bch_septic_sub_poly_axiom` (NEW: stepping-stone for Stage 2;
+  introduced session 25, mirrors how `symmetric_bch_quintic_sub_poly_axiom`
+  was scaffolded before T2-F7e was discharged).
+
+Discharge in progress; **Stages 1, 2.0, 2.1 (B1.d-septic + B2.1-septic),
+and 3.0–3.3 of the 6-stage roadmap are now complete**.
+
+**Session 25 (Stage 2.1 — B1.d-septic + B2.1-septic foundation)**:
+
+- Added scoped private axiom `BCH.symmetric_bch_septic_sub_poly_axiom`
+  in `SymmetricQuintic.lean` (new `SepticTaylorBridge` section). Asserts
+  `‖sym_bch − sym_E₃ − sym_E₅ − sym_E₇‖ ≤ 10¹²·s⁹` for `s = ‖a‖+‖b‖ < 1/4`
+  — the deg-9 analog of the discharged
+  `symmetric_bch_quintic_sub_poly_axiom`. Public bridge theorem
+  `BCH.norm_symmetric_bch_septic_sub_poly_le` re-exports it.
+
+- Added `BCH.norm_strangBlock_log_sub_septic_target_le` in
+  `Palindromic.lean` (B1.d-septic): each Strang block's log differs from
+  the extended target `cτ•V + (cτ)³•E + (cτ)⁵•E₅ + (cτ)⁷·E₇` by at most
+  `10¹²·σ⁹` where `σ = ‖cτ•A‖+‖cτ•B‖`. Thin wrapper around the new
+  upstream axiom + the deg-7 homogeneity lemma `symmetric_bch_septic_poly_smul`.
+  Analog of `norm_strangBlock_log_sub_quintic_target_le` at one degree higher.
+
+- Added `BCH.norm_4X_plus_Y_sub_septic_target_le` in `Palindromic.lean`
+  (B2.1-septic): bound on `‖4•X + Y − τ•V − C₃·τ³·E − C₅·τ⁵·E₅ − C₇·τ⁷·E₇‖`
+  via per-block B1.d-septic + the algebraic identity
+  `target_septic_sum_4_form` (Stage 2.0). Analog of
+  `norm_4X_plus_Y_sub_quintic_target_le` at one degree higher.
+
+- Added the `IsSuzukiCubic` corollary
+  `BCH.norm_4X_plus_Y_sub_septic_target_of_IsSuzukiCubic_le`: under the
+  Suzuki-cubic-vanishing condition, the τ³·C₃·E term drops, leaving the
+  expected `τ•V + (τ⁵·C₅)·E₅ + (τ⁷·C₇)·E₇ + O(σ⁹)` decomposition.
+
+**Net axiom shift**: 1 → 2 scoped private axioms. The new axiom is a
+stepping stone with a clear discharge path (1-degree-higher analog of
+the T2-F7e discharge); it unblocks the rest of Stage 2 + Stages 4–6 of
+the septic-axiom roadmap without further upstream changes.
+
+**Session 24 (septic axiom discharge, Stages 1 + 3.0)**:
 
 **Session 24 (septic axiom discharge, Stages 1 + 3.0)**:
 
