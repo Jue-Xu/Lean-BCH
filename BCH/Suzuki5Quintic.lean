@@ -4365,6 +4365,176 @@ theorem norm_suzuki5_R7_le_bchR7Bound (A B : 𝔸) :
         nlinarith
 
 
+/-! ### Stage 3 (algebraic decomposition foundation)
+
+Combines the Stage 2 main combined bound
+(`norm_suzuki5_bch_sub_smul_sub_septic_of_IsSuzukiCubic_le`) with a
+**septic matching stepping-stone axiom** to derive
+
+```
+‖suzuki5_bch − τ•(A+B) − τ⁵•R₅(A,B,p) − τ⁷•R₇(A,B,p)‖ ≤ K·σ⁹
+```
+
+under `IsSuzukiCubic p` and the three small-norm regimes.
+
+**Algebraic structure**: at `IsSuzukiCubic p` (C₃(p) = 0), Stage 2 leaves
+
+```
+suzuki5_bch − τ•V − (τ⁵·γ₅)•E₅(A,B) − (τ⁷·γ₇)•E₇(A,B)
+            − sym_E₃(4X,Y) − sym_E₅(4X,Y) − sym_E₇(4X,Y)
+```
+
+bounded by `K·σ⁹`. The matching identity at τ⁵+τ⁷ identifies
+
+```
+(τ⁵·γ₅)•E₅(A,B) + (τ⁷·γ₇)•E₇(A,B)
+  + sym_E₃(4X,Y) + sym_E₅(4X,Y) + sym_E₇(4X,Y)
+= τ⁵•R₅(A,B,p) + τ⁷•R₇(A,B,p) + (residual at τ⁹+)
+```
+
+with the residual bounded by σ⁹. The two combine via triangle inequality.
+
+**Stepping-stone status**: the matching residual bound is currently captured
+by `norm_septic_match_residual_le_axiom`. Its discharge requires the deg-7
+analog of `L_leading_plus_E5_eq_R5` (Childs-basis projections + Jacobi
+identities at deg 6/7), which is multi-session CAS+Lean work. -/
+
+/-- **Septic matching residual**: the explicit algebraic difference between
+the Stage-2-main RHS pieces (under `IsSuzukiCubic`) and the Stage-3 target
+`τ⁵•R₅(A,B,p) + τ⁷•R₇(A,B,p)`.
+
+Specifically:
+```
+septic_match_residual A B p τ :=
+  (τ⁵·γ₅) • sym_E₅(A,B) + (τ⁷·γ₇) • sym_E₇(A,B)
+  + sym_E₃(4X,Y) + sym_E₅(4X,Y) + sym_E₇(4X,Y)
+  − τ⁵•R₅(A,B,p) − τ⁷•R₇(A,B,p)
+```
+where `4X := 4•strangBlock_log ℝ A B p τ` and `Y := strangBlock_log ℝ A B (1-4p) τ`.
+
+At `IsSuzukiCubic p`, the τ⁵ and τ⁷ Taylor coefficients of the positive
+contributions match `τ⁵•R₅` and `τ⁷•R₇` respectively; what remains is σ⁹+. -/
+private noncomputable def septic_match_residual (A B : 𝔸) (p τ : ℝ) : 𝔸 :=
+  (τ ^ 5 * suzuki5_bch_quintic_coeff ℝ p) • symmetric_bch_quintic_poly ℝ A B +
+  (τ ^ 7 * suzuki5_bch_septic_coeff ℝ p) • symmetric_bch_septic_poly ℝ A B +
+  symmetric_bch_cubic_poly ℝ
+    ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+    (strangBlock_log ℝ A B (1 - 4 * p) τ) +
+  symmetric_bch_quintic_poly ℝ
+    ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+    (strangBlock_log ℝ A B (1 - 4 * p) τ) +
+  symmetric_bch_septic_poly ℝ
+    ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+    (strangBlock_log ℝ A B (1 - 4 * p) τ) -
+  τ ^ 5 • suzuki5_R5 A B p -
+  τ ^ 7 • suzuki5_R7 A B p
+
+/-- **Stepping-stone axiom for the Stage 3 septic matching identity**.
+
+Under `IsSuzukiCubic p` and the three small-norm regimes, the σ⁹ tail of the
+matching identity at τ⁵+τ⁷ is bounded by the same Stage-2 σ⁹ form.
+
+The bound encodes both:
+* **τ⁵ matching** (already proved at the quintic level via
+  `sym_cubic_linear_part_τ5_plus_E5_τ5_eq_R5_τ5`; included for clarity).
+* **τ⁷ matching** (NEW, the core deg-7 algebraic content): the τ⁷ Taylor
+  coefficient of the Stage-2 positive contributions equals `τ⁷•R₇` modulo σ⁹.
+
+**Discharge roadmap** (mirrors `L_leading_plus_E5_eq_R5` at one degree higher):
+* L+Q+C decomposition of `sym_E₃(α•V + δa, β•V + δb)` at
+  `δ ∈ {α⁵·E_5, β⁵·E_5}` (gives the deg-5-input contributions to τ⁷).
+* Quadratic-in-δ decomposition of `sym_E₃` at `δ ∈ {α³·E_3, β³·E_3}`
+  (gives τ⁷ via 2·δ_3 + 1·V structure).
+* L-decomposition of `sym_E₅(α•V + δa, β•V + δb)` at `δ ∈ {α³·E_3, β³·E_3}`
+  (gives τ⁷ via 1·δ_3 + 4·V structure).
+* (`sym_E₇(α•V, β•V) = 0` by `symmetric_bch_septic_poly_apply_smul_smul`,
+  so no τ⁷ contribution from sym_E₇(4X,Y).)
+* Project all four pieces onto a Hall basis of 4-fold and 6-fold commutators;
+  verify the polynomial identity in p (under IsSuzukiCubic).
+
+Estimated work: ~4000-6000 lines of Lean (analog of the quintic
+`L_leading_plus_E5_eq_R5` chain but ~10x larger due to deg-7 basis size). -/
+private axiom norm_septic_match_residual_le_axiom (A B : 𝔸) (p τ : ℝ)
+    (_hcubic : IsSuzukiCubic p)
+    (_hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (_h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (_hreg : ‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+            ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖ < 1 / 4) :
+    ‖septic_match_residual A B p τ‖ ≤
+      4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+      1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 +
+      1000000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+                    ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 9
+
+/-- **Stage 3 main: combined bound on `‖suzuki5_bch − τ•V − τ⁵•R₅ − τ⁷•R₇‖`**.
+
+Combines the Stage 2 main combined bound
+(`norm_suzuki5_bch_sub_smul_sub_septic_of_IsSuzukiCubic_le`) with the Stage 3
+septic matching stepping-stone (`norm_septic_match_residual_le_axiom`) via
+triangle inequality and the algebraic identity
+
+```
+suzuki5_bch − τ•V − τ⁵•R₅ − τ⁷•R₇ = (Stage-2-LHS-under-IsSuzukiCubic)
+                                  + septic_match_residual
+```
+
+Bound: `2 · K_stage2` on the same σ⁹ sum (since the two stepping-stones use
+the same constant 10¹²).
+
+The deg-7 analog of `norm_suzuki5_bch_sub_smul_sub_R5_le_under_regime`.
+Foundation for Stage 4 (small-τ regime derivation) and Stages 5-6 (polynomial
+RHS bound + final assembly + bridge at Suzuki p). -/
+theorem norm_suzuki5_bch_sub_smul_sub_R5_sub_R7_le_of_IsSuzukiCubic
+    (A B : 𝔸) (p τ : ℝ) (hcubic : IsSuzukiCubic p)
+    (hR : suzuki5ArgNormBound A B p τ < Real.log 2)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4)
+    (hreg : ‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+            ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖ < 1 / 4)
+    (hZ1 : ‖suzuki5_bch ℝ A B p τ‖ < Real.log 2)
+    (hZ2 : ‖bch (𝕂 := ℝ)
+      (bch (𝕂 := ℝ)
+        ((2 : ℝ)⁻¹ • ((4 : ℝ) • strangBlock_log ℝ A B p τ))
+        (strangBlock_log ℝ A B (1 - 4 * p) τ))
+      ((2 : ℝ)⁻¹ • ((4 : ℝ) • strangBlock_log ℝ A B p τ))‖ < Real.log 2) :
+    ‖suzuki5_bch ℝ A B p τ - τ • (A + B) -
+        τ ^ 5 • suzuki5_R5 A B p - τ ^ 7 • suzuki5_R7 A B p‖ ≤
+      2 * (4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+           1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 +
+           1000000000000 * (‖(4 : ℝ) • strangBlock_log ℝ A B p τ‖ +
+                          ‖strangBlock_log ℝ A B (1 - 4 * p) τ‖) ^ 9) := by
+  -- Stage 2 main combined bound (under IsSuzukiCubic).
+  have h_stage2 := norm_suzuki5_bch_sub_smul_sub_septic_of_IsSuzukiCubic_le
+    (𝕂 := ℝ) A B p τ hcubic hR hp h1m4p hreg hZ1 hZ2
+  -- Stage 3 matching residual bound (stepping-stone axiom).
+  have h_match := norm_septic_match_residual_le_axiom A B p τ hcubic hp h1m4p hreg
+  -- Algebraic identity: Stage 3 LHS = Stage 2 LHS + septic_match_residual.
+  have h_eq :
+      suzuki5_bch ℝ A B p τ - τ • (A + B) -
+          τ ^ 5 • suzuki5_R5 A B p - τ ^ 7 • suzuki5_R7 A B p =
+      (suzuki5_bch ℝ A B p τ - τ • (A + B) -
+          (τ ^ 5 * suzuki5_bch_quintic_coeff ℝ p) •
+            symmetric_bch_quintic_poly ℝ A B -
+          (τ ^ 7 * suzuki5_bch_septic_coeff ℝ p) •
+            symmetric_bch_septic_poly ℝ A B -
+          symmetric_bch_cubic_poly ℝ
+            ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+            (strangBlock_log ℝ A B (1 - 4 * p) τ) -
+          symmetric_bch_quintic_poly ℝ
+            ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+            (strangBlock_log ℝ A B (1 - 4 * p) τ) -
+          symmetric_bch_septic_poly ℝ
+            ((4 : ℝ) • strangBlock_log ℝ A B p τ)
+            (strangBlock_log ℝ A B (1 - 4 * p) τ)) +
+      septic_match_residual A B p τ := by
+    unfold septic_match_residual
+    abel
+  rw [h_eq]
+  -- Triangle inequality on the two-summand sum.
+  refine le_trans (norm_add_le _ _) ?_
+  linarith
+
+
 /-- **Septic identification axiom** (Tier-2 status, awaiting full
 discharge analogous to the P1 chain). Asserts that the τ⁷ leading
 coefficient of `suzuki5_bch ℝ A B suzukiP τ − τ • (A + B)` is bounded

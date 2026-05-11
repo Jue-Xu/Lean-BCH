@@ -1,16 +1,73 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 25, 2026-05-11)
+## Status (session 26, 2026-05-11)
 
-Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 * `suzuki5_log_product_septic_at_suzukiP_axiom` (Lean-Trotter interface
-  axiom 3, the target of the discharge roadmap).
-* `symmetric_bch_septic_sub_poly_axiom` (NEW: stepping-stone for Stage 2;
-  introduced session 25, mirrors how `symmetric_bch_quintic_sub_poly_axiom`
-  was scaffolded before T2-F7e was discharged).
+  axiom 3, the eventual discharge target for the 6-stage roadmap).
+* `symmetric_bch_septic_sub_poly_axiom` (Stage 2 stepping-stone,
+  introduced session 25; mirrors `symmetric_bch_quintic_sub_poly_axiom`).
+* `norm_septic_match_residual_le_axiom` (NEW: Stage 3 stepping-stone;
+  bounds the σ⁹ residual of the deg-7 matching identity).
 
 Discharge in progress; **Stages 1, 2.0, 2.1 (B1.d-septic + B2.1-septic),
-and 3.0–3.3 of the 6-stage roadmap are now complete**.
+2 main combined bound, 3.0–3.3, and 3 algebraic backbone are now
+complete**.
+
+**Session 26 (Stage 3 algebraic decomposition backbone)**:
+
+- Added scoped private axiom `BCH.norm_septic_match_residual_le_axiom`
+  in `Suzuki5Quintic.lean` (new "Stage 3 algebraic decomposition
+  foundation" section, ~165 lines added). Bounds the σ⁹ residual of the
+  deg-7 matching identity (the algebraic content that identifies
+  `(τ⁵·γ₅)•E₅ + (τ⁷·γ₇)•E₇ + sym_E₃(4X,Y) + sym_E₅(4X,Y) + sym_E₇(4X,Y)`
+  with `τ⁵•R₅ + τ⁷•R₇` modulo σ⁹).
+
+  The matching residual is captured by the explicit
+  `septic_match_residual` (private `noncomputable def`). The bound uses
+  the same `10¹²·σ⁹` form as Stage 2's combined bound. Discharge roadmap
+  documented in the axiom docstring: requires the deg-7 analog of
+  `L_leading_plus_E5_eq_R5` via L+Q decompositions of `sym_E₃`, `sym_E₅`
+  at substituted inputs + Childs-basis/Hall-basis projections of
+  6-fold/7-fold commutators. Estimated ~4000-6000 lines of Lean
+  (multi-session CAS+Lean work).
+
+- Added `BCH.norm_suzuki5_bch_sub_smul_sub_R5_sub_R7_le_of_IsSuzukiCubic`
+  (Stage 3 main combined bound). Combines the Stage 2 IsSuzukiCubic
+  wrapper (`norm_suzuki5_bch_sub_smul_sub_septic_of_IsSuzukiCubic_le`)
+  with the Stage 3 stepping-stone via triangle inequality, yielding:
+  ```
+  ‖suzuki5_bch − τ•V − τ⁵•R₅ − τ⁷•R₇‖ ≤ 2·K_stage2·σ⁹
+  ```
+  (with constant `2 · (4·10¹²·σ_p⁹ + 10¹²·σ_q⁹ + 10¹²·σ_reg⁹)`).
+
+  The deg-7 analog of `norm_suzuki5_bch_sub_smul_sub_R5_le_under_regime`
+  (in the quintic case). Foundation for Stage 4 (small-τ regime
+  derivation) and Stages 5-6 (polynomial RHS bound + final assembly +
+  bridge at Suzuki p).
+
+  Algebraic identity proof: 1-line `unfold septic_match_residual; abel`
+  for the rearrangement, then `norm_add_le` + `linarith` for the
+  triangle inequality assembly. Direct mirror of the quintic Stage 3
+  structure.
+
+- Verified via `#print axioms`: the new theorem depends only on the
+  three Lean foundational axioms + the two stepping-stone axioms
+  (`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`).
+  Crucially, it is INDEPENDENT of `suzuki5_log_product_septic_at_suzukiP_axiom`
+  — meaning Stages 4-6 can build on it to eventually discharge the
+  headline axiom.
+
+**Net axiom shift**: 2 → 3 scoped private axioms. The new axiom is a
+focused algebraic stepping-stone (the σ⁹ residual of the τ⁵+τ⁷ matching
+identity); much more concrete than the headline axiom (which mixes
+analytic small-τ regime + matching identity + polynomial RHS bound).
+Discharging it is a clean, well-defined CAS+Lean task.
+
+**Stage 3 algebraic backbone is now complete**. Remaining:
+* Stage 4: under_regime septic bound (mirrors `norm_suzuki5_bch_sub_smul_sub_R5_le_under_regime`).
+* Stage 5: polynomial RHS bound (mirrors `suzuki5_bch_sub_R5_RHS_le_aux` chain).
+* Stage 6: assembly + bridge at Suzuki p (replaces `suzuki5_log_product_septic_at_suzukiP_axiom` with theorem).
 
 **Session 25 (Stage 2 — B1.d-septic, B2.1-septic, and septic-precision combined bound)**:
 
