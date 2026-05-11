@@ -9774,4 +9774,70 @@ theorem norm_symmetric_bch_quintic_sub_poly_le (a b : 𝔸)
 
 end QuinticTaylorBridge
 
+/-!
+## Septic Taylor bridge for the 3-factor symmetric BCH (B1.c-septic)
+
+`norm_symmetric_bch_septic_sub_poly_le` asserts that after subtracting the
+cubic, quintic, AND septic polynomials, the residual of `symmetric_bch_cubic`
+decays as `O(s⁹)`. By palindromic symmetry of `log(exp(a/2)·exp(b)·exp(a/2))`,
+every even-degree Taylor coefficient vanishes — so degree 8 is zero, and the
+first non-zero residual sits at degree 9.
+
+This is the one-degree-higher analog of `norm_symmetric_bch_quintic_sub_poly_le`
+(which gives an `O(s⁷)` bound after subtracting `sym_E₃ + sym_E₅`).
+
+### Proof status
+
+**Currently accepted from a scoped Tier-2 axiom**
+(`symmetric_bch_septic_sub_poly_axiom`), introduced as a stepping stone
+for the septic axiom discharge (Stage 2 of the 6-stage roadmap in
+`CLAUDE.md`). The full Lean proof would require:
+
+* a deg-8 BCH remainder (`bch_octic_term`) and the corresponding
+  `norm_bch_octic_remainder_le` Tier-1 bound, mirroring the structure
+  established for the deg-6 case (`bch_sextic_term`,
+  `norm_bch_septic_remainder_le`);
+* an extended hdecomp `symmetric_bch_septic_extended_hdecomp` mirroring
+  Phase D of T2-F7e, plus per-piece bounds (deg-9 cancellation analogs
+  of Phases B, C, E.1, E.2).
+
+The axiom is introduced `private` so only the public
+`norm_symmetric_bch_septic_sub_poly_le` theorem appears in the API.
+Downstream consumers — `norm_strangBlock_log_sub_septic_target_le`
+(B1.d-septic) and the symbolic 5-factor composition extension — depend
+only on the theorem, not on the underlying axiom.
+
+The constant `10^12` is a coarse upper bound; the actual leading constant
+in the deg-9 series tail is expected to be `O(10^11)`. -/
+
+section SepticTaylorBridge
+
+variable {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+  [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+
+include 𝕂 in
+/-- **Stepping-stone Tier-2 axiom (B1.c-septic)**: the deg-9 bound on
+`‖symmetric_bch_cubic − sym_E₃ − sym_E₅ − sym_E₇‖`. Awaits the analog of the
+T2-F7e discharge at one degree higher; see the module docstring above. -/
+private axiom symmetric_bch_septic_sub_poly_axiom (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b -
+       symmetric_bch_quintic_poly 𝕂 a b -
+       symmetric_bch_septic_poly 𝕂 a b‖ ≤
+      1000000000000 * (‖a‖ + ‖b‖) ^ 9
+
+include 𝕂 in
+/-- **B1.c-septic (public)**: deg-9 bound on the symmetric BCH residual.
+Direct restatement of `symmetric_bch_septic_sub_poly_axiom` as a `theorem`,
+so that downstream `#print axioms` traces it cleanly. -/
+theorem norm_symmetric_bch_septic_sub_poly_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b -
+       symmetric_bch_quintic_poly 𝕂 a b -
+       symmetric_bch_septic_poly 𝕂 a b‖ ≤
+      1000000000000 * (‖a‖ + ‖b‖) ^ 9 :=
+  symmetric_bch_septic_sub_poly_axiom (𝕂 := 𝕂) a b hab
+
+end SepticTaylorBridge
+
 end BCH

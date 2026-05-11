@@ -3220,6 +3220,43 @@ theorem target_septic_sum_4_form (A B : 𝔸) (p τ : 𝕂) :
   match_scalars <;> ring
 
 include 𝕂 in
+/-- **Per-block septic bound (B1.d-septic)**: each Strang block's log differs
+from the extended target `cτ•V + (cτ)³•E_sym + (cτ)⁵•E₅_sym + (cτ)⁷•E₇_sym`
+by at most `K·σ⁹` where `σ = ‖cτ•A‖+‖cτ•B‖`. Direct application of
+`norm_symmetric_bch_septic_sub_poly_le` to the Strang composition `cτ•A, cτ•B`,
+then pulling `(cτ)³`, `(cτ)⁵`, `(cτ)⁷` through via the homogeneity lemmas
+`symmetric_bch_cubic_poly_smul`, `symmetric_bch_quintic_poly_smul`,
+`symmetric_bch_septic_poly_smul`.
+
+Analog of `norm_strangBlock_log_sub_quintic_target_le` at one degree higher;
+foundation for `norm_4X_plus_Y_sub_septic_target_le` (B2.1-septic). -/
+theorem norm_strangBlock_log_sub_septic_target_le (A B : 𝔸) (c τ : 𝕂)
+    (h : ‖(c * τ) • A‖ + ‖(c * τ) • B‖ < 1 / 4) :
+    ‖strangBlock_log 𝕂 A B c τ - (c * τ) • (A + B)
+        - (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B
+        - (c * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B
+        - (c * τ) ^ 7 • symmetric_bch_septic_poly 𝕂 A B‖ ≤
+      1000000000000 * (‖(c * τ) • A‖ + ‖(c * τ) • B‖) ^ 9 := by
+  unfold strangBlock_log
+  -- Apply `norm_symmetric_bch_septic_sub_poly_le` with a = cτ•A, b = cτ•B.
+  have key := norm_symmetric_bch_septic_sub_poly_le
+    (𝕂 := 𝕂) ((c * τ) • A) ((c * τ) • B) h
+  unfold symmetric_bch_cubic at key
+  -- Regroup (cτA+cτB) as cτ•(A+B), factor (cτ)³ / (cτ)⁵ / (cτ)⁷ scalars outside.
+  have hsmul_dist : (c * τ) • A + (c * τ) • B = (c * τ) • (A + B) := by rw [smul_add]
+  have hcub_hom : symmetric_bch_cubic_poly 𝕂 ((c * τ) • A) ((c * τ) • B) =
+      (c * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B :=
+    symmetric_bch_cubic_poly_smul A B (c * τ)
+  have hquint_hom : symmetric_bch_quintic_poly 𝕂 ((c * τ) • A) ((c * τ) • B) =
+      (c * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B :=
+    symmetric_bch_quintic_poly_smul A B (c * τ)
+  have hsept_hom : symmetric_bch_septic_poly 𝕂 ((c * τ) • A) ((c * τ) • B) =
+      (c * τ) ^ 7 • symmetric_bch_septic_poly 𝕂 A B :=
+    symmetric_bch_septic_poly_smul A B (c * τ)
+  rw [hsmul_dist, hcub_hom, hquint_hom, hsept_hom] at key
+  exact key
+
+include 𝕂 in
 /-- **Per-block decomposition at quintic precision (B2.1)**: bound on
 `‖4•X + Y − τ•V − C₃·τ³•E_sym − C₅·τ⁵•E_quintic_sym‖`.
 
@@ -3346,6 +3383,145 @@ theorem norm_4X_plus_Y_sub_quintic_target_of_IsSuzukiCubic_le
       (4 : 𝕂) • strangBlock_log 𝕂 A B p τ + strangBlock_log 𝕂 A B (1 - 4 * p) τ -
         τ • (A + B) -
         (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B := by
+    rw [h_zero_term]; abel
+  rw [h_rearrange] at h_main
+  exact h_main
+
+include 𝕂 in
+/-- **Per-block decomposition at septic precision (B2.1-septic)**: bound on
+`‖4•X + Y − τ•V − C₃·τ³•E − C₅·τ⁵•E₅ − C₇·τ⁷·E₇‖`.
+
+Combines the per-block septic bound (B1.d-septic,
+`norm_strangBlock_log_sub_septic_target_le`) with the algebraic identity
+`target_septic_sum_4_form` to give the "linear+cubic+quintic+septic" precision
+approximation of the per-block sum `4X+Y` (where X, Y are the two distinct
+strangBlock_log instances).
+
+Analog of `norm_4X_plus_Y_sub_quintic_target_le` at one degree higher.
+Foundation for the τ⁸-tail bound in the Stage 2 chain (septic axiom
+discharge). -/
+theorem norm_4X_plus_Y_sub_septic_target_le (A B : 𝔸) (p τ : 𝕂)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4) :
+    ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ +
+        strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+        τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B -
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B‖ ≤
+      4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+      1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 := by
+  set X := strangBlock_log 𝕂 A B p τ with hX_def
+  set Y := strangBlock_log 𝕂 A B (1 - 4 * p) τ with hY_def
+  set T_p := strangBlock_log_target_septic 𝕂 A B p τ with hTp_def
+  set T_q := strangBlock_log_target_septic 𝕂 A B (1 - 4 * p) τ with hTq_def
+  -- B1.d-septic per-block bounds.
+  have hX_le : ‖X - T_p‖ ≤ 1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9 := by
+    have := norm_strangBlock_log_sub_septic_target_le (𝕂 := 𝕂) A B p τ hp
+    have hT_eq : T_p =
+        (p * τ) • (A + B) + (p * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B +
+        (p * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B +
+        (p * τ) ^ 7 • symmetric_bch_septic_poly 𝕂 A B := by
+      rw [hTp_def]; rfl
+    have h_sub_eq :
+        X - T_p =
+        X - (p * τ) • (A + B) - (p * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B
+          - (p * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B
+          - (p * τ) ^ 7 • symmetric_bch_septic_poly 𝕂 A B := by
+      rw [hT_eq]; abel
+    rw [h_sub_eq]; exact this
+  have hY_le : ‖Y - T_q‖ ≤
+      1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 := by
+    have := norm_strangBlock_log_sub_septic_target_le (𝕂 := 𝕂) A B (1 - 4 * p) τ h1m4p
+    have hT_eq : T_q =
+        ((1 - 4 * p) * τ) • (A + B) +
+          ((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B +
+          ((1 - 4 * p) * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B +
+          ((1 - 4 * p) * τ) ^ 7 • symmetric_bch_septic_poly 𝕂 A B := by
+      rw [hTq_def]; rfl
+    have h_sub_eq :
+        Y - T_q =
+        Y - ((1 - 4 * p) * τ) • (A + B) -
+          ((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B -
+          ((1 - 4 * p) * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B -
+          ((1 - 4 * p) * τ) ^ 7 • symmetric_bch_septic_poly 𝕂 A B := by
+      rw [hT_eq]; abel
+    rw [h_sub_eq]; exact this
+  -- Bound for 4•(X - T_p)
+  have h4_norm_eq : ‖(4 : 𝕂)‖ = 4 := by rw [RCLike.norm_ofNat]
+  have h4X_le : ‖(4 : 𝕂) • (X - T_p)‖ ≤
+      4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) := by
+    calc ‖(4 : 𝕂) • (X - T_p)‖ ≤ ‖(4 : 𝕂)‖ * ‖X - T_p‖ := norm_smul_le _ _
+      _ = 4 * ‖X - T_p‖ := by rw [h4_norm_eq]
+      _ ≤ 4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) := by gcongr
+  -- Algebraic decomposition: rewrite (4•X + Y - target) = 4•(X - T_p) + (Y - T_q).
+  have h_target_eq :
+      τ • (A + B) +
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B +
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B +
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B =
+      (4 : 𝕂) • T_p + T_q := by
+    rw [hTp_def, hTq_def]
+    exact (target_septic_sum_4_form (𝕂 := 𝕂) A B p τ).symm
+  have h_rearrange :
+      (4 : 𝕂) • X + Y - τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B -
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B =
+      (4 : 𝕂) • (X - T_p) + (Y - T_q) := by
+    have h_to_sum : (4 : 𝕂) • X + Y - τ • (A + B) -
+          (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+          (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B -
+          (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B =
+        (4 : 𝕂) • X + Y - (τ • (A + B) +
+          (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B +
+          (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B +
+          (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B) := by
+      abel
+    rw [h_to_sum, h_target_eq, smul_sub]; abel
+  rw [h_rearrange]
+  -- Triangle inequality.
+  calc ‖(4 : 𝕂) • (X - T_p) + (Y - T_q)‖
+      ≤ ‖(4 : 𝕂) • (X - T_p)‖ + ‖Y - T_q‖ := norm_add_le _ _
+    _ ≤ 4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+        1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 := by
+        linarith
+
+include 𝕂 in
+/-- **B2.1-septic under IsSuzukiCubic**: under `IsSuzukiCubic p`, the τ³ term
+in `4X + Y` vanishes, leaving τ⁵·C₅·E₅ + τ⁷·C₇·E₇ + O(σ⁹):
+
+  `‖4•X + Y - τ•V - (τ⁵·C₅)•E₅ - (τ⁷·C₇)•E₇‖ ≤ K·σ⁹`.
+
+Direct corollary of `norm_4X_plus_Y_sub_septic_target_le`; the
+`IsSuzukiCubic` hypothesis sets the τ³·C₃·E term to zero. Analog of
+`norm_4X_plus_Y_sub_quintic_target_of_IsSuzukiCubic_le` at septic precision. -/
+theorem norm_4X_plus_Y_sub_septic_target_of_IsSuzukiCubic_le
+    (A B : 𝔸) (p τ : 𝕂) (hp_suzuki : IsSuzukiCubic p)
+    (hp : ‖(p * τ) • A‖ + ‖(p * τ) • B‖ < 1 / 4)
+    (h1m4p : ‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖ < 1 / 4) :
+    ‖(4 : 𝕂) • strangBlock_log 𝕂 A B p τ +
+        strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+        τ • (A + B) -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B -
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B‖ ≤
+      4 * (1000000000000 * (‖(p * τ) • A‖ + ‖(p * τ) • B‖) ^ 9) +
+      1000000000000 * (‖((1 - 4 * p) * τ) • A‖ + ‖((1 - 4 * p) * τ) • B‖) ^ 9 := by
+  have h_main := norm_4X_plus_Y_sub_septic_target_le (𝕂 := 𝕂) A B p τ hp h1m4p
+  have h_zero_term :
+      (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B = 0 := by
+    have : suzuki5_bch_cubic_coeff 𝕂 p = 0 := hp_suzuki
+    rw [this, mul_zero, zero_smul]
+  have h_rearrange :
+      (4 : 𝕂) • strangBlock_log 𝕂 A B p τ + strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+        τ • (A + B) -
+        (τ ^ 3 * suzuki5_bch_cubic_coeff 𝕂 p) • symmetric_bch_cubic_poly 𝕂 A B -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B -
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B =
+      (4 : 𝕂) • strangBlock_log 𝕂 A B p τ + strangBlock_log 𝕂 A B (1 - 4 * p) τ -
+        τ • (A + B) -
+        (τ ^ 5 * suzuki5_bch_quintic_coeff 𝕂 p) • symmetric_bch_quintic_poly 𝕂 A B -
+        (τ ^ 7 * suzuki5_bch_septic_coeff 𝕂 p) • symmetric_bch_septic_poly 𝕂 A B := by
     rw [h_zero_term]; abel
   rw [h_rearrange] at h_main
   exact h_main
