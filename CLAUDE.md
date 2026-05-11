@@ -41,8 +41,29 @@ of the 6-stage roadmap are now complete**.
   reduce to polynomial-in-(α, β) identity, close with `ring` (4M heartbeats
   for the 126-term ring proof).
 
-  Foundation for the future `norm_symmetric_bch_septic_poly_apply_smul_add_smul_add_le`
-  (Lipschitz-style bound at deg-7) needed by Stage 2.
+- **Stage 3.2 (complete)**: `BCH.word_7_diff_le` (7-letter product Lipschitz
+  helper, deg-7 analog of `word_5_diff_le`). Telescoping identity + 7
+  per-term bounds via 6-step chained `norm_mul_le`. ~170 lines, 1.6M
+  heartbeats.
+
+- **Stage 3.3 (complete)**: `BCH.norm_symmetric_bch_septic_poly_apply_smul_add_smul_add_le`
+  — the Lipschitz bound `‖E₇(α•V + δa, β•V + δb)‖ ≤ 7·N⁶·(‖δa‖+‖δb‖)`
+  (analog of `norm_symmetric_bch_quintic_poly_apply_smul_add_smul_add_le`).
+
+  Architecture (Finset.sum-based, ~1600 lines):
+  - `deg7_smul_word_diff_le` (generic per-word helper).
+  - `septicTerm_diff_norm_le` (126-case per-i diff bound, 64M heartbeats).
+  - Final theorem via Stage 3.1's vanishing + Finset.sum_sub_distrib +
+    per-i bound + Finset.sum_const (126 · 6912/967680 · 7 · N⁶·D = 6.3·N⁶·D ≤ 7·N⁶·D).
+
+**The deg-7 infrastructure layer for Stage 2 is now complete:**
+* `symmetric_bch_septic_poly` definition, homogeneity, norm bound (Stage 3.0).
+* Vanishing on scalar·V inputs (Stage 3.1).
+* `word_7_diff_le` (Stage 3.2).
+* Lipschitz bound at perturbed scalar·V (Stage 3.3).
+
+These are direct analogs of the deg-5 infrastructure in B2.2.a-c, which
+was the workhorse for Stage 1's `norm_suzuki5_bch_sub_smul_sub_R5_le`.
 
 **CAS pipeline (new in session 24)**:
 - `scripts/gen_lean_R7_data.py` — extracts per-word post-Suzuki coefficient
