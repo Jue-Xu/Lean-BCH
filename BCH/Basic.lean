@@ -14883,6 +14883,115 @@ private theorem pieceB_octic_decomp (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
   have hOctic := octic_pure_identity 𝕂 a b
   linear_combination (norm := module) hQPI + hSPI + hSeptic + hOctic
 
+/-- Norm bound for the RHS of `I2_octic_residual_decomp_eq`.
+
+Given precomputed bounds for the 4 input pieces (with parameterized constants
+K_PmT5, K_P2', K_PzP', K_P3'), bounds the RHS by
+`(3·K_PmT5 + 2·K_P2' + K_PzP' + K_P3')·s⁸`.
+
+Per-term contributions:
+- 3 weight-1 (P-T₂-T₃-T₄-T₅) middle terms: each ≤ K_PmT5·s⁸ (using s²·K·s⁶ etc.).
+- 2 compound `z·(P²-T₂²-T₂T₃-T₃T₂-T₂T₄-T₃²-T₄T₂)`-style terms: each ≤ K_P2'·s⁸.
+- 1 sandwich `PzP-T₂zT₂-T₂zT₃-T₃zT₂-T₂zT₄-T₃zT₃-T₄zT₂` term: ≤ K_PzP'·s⁸.
+- 1 (P³-T₂³-T₂²T₃-T₂T₃T₂-T₃T₂²) term: ≤ K_P3'·s⁸.
+
+The user supplies the parameterized bounds; this wrapper combines via
+triangle inequality. Analog of `norm_I2_septic_residual_RHS_le` at one
+degree higher. -/
+private theorem norm_I2_octic_residual_RHS_le (z P T₂ T₃ T₄ T₅ : 𝔸)
+    {s K_PmT5 K_P2' K_PzP' K_P3' : ℝ} (hs_nn : 0 ≤ s)
+    (hK_PmT5_nn : 0 ≤ K_PmT5) (hK_P2'_nn : 0 ≤ K_P2')
+    (hK_PzP'_nn : 0 ≤ K_PzP') (hK_P3'_nn : 0 ≤ K_P3')
+    (hz : ‖z‖ ≤ s)
+    (hPmT5_le : ‖P - T₂ - T₃ - T₄ - T₅‖ ≤ K_PmT5 * s ^ 6)
+    (hP2'_le :
+        ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+            T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖ ≤ K_P2' * s ^ 7)
+    (hPzP'_le :
+        ‖P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+            T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂‖ ≤ K_PzP' * s ^ 8)
+    (hP3'_le :
+        ‖P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2‖ ≤
+            K_P3' * s ^ 8) :
+    ‖z ^ 2 * (P - T₂ - T₃ - T₄ - T₅) + z * (P - T₂ - T₃ - T₄ - T₅) * z +
+      (P - T₂ - T₃ - T₄ - T₅) * z ^ 2 +
+      z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+           T₂ * T₄ - T₃ * T₃ - T₄ * T₂) +
+      (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+           T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂) +
+      (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+           T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * z +
+      (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2)‖ ≤
+      (3 * K_PmT5 + 2 * K_P2' + K_PzP' + K_P3') * s ^ 8 := by
+  -- Bound each of the 7 outer terms.
+  have h1 : ‖z ^ 2 * (P - T₂ - T₃ - T₄ - T₅)‖ ≤ s ^ 2 * (K_PmT5 * s ^ 6) :=
+    calc _ ≤ ‖z ^ 2‖ * ‖P - T₂ - T₃ - T₄ - T₅‖ := norm_mul_le _ _
+      _ ≤ ‖z‖ ^ 2 * ‖P - T₂ - T₃ - T₄ - T₅‖ := by gcongr; exact norm_pow_le z 2
+      _ ≤ s ^ 2 * (K_PmT5 * s ^ 6) :=
+          mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hz 2)
+            hPmT5_le (norm_nonneg _) (by positivity)
+  have h2 : ‖z * (P - T₂ - T₃ - T₄ - T₅) * z‖ ≤ s * (K_PmT5 * s ^ 6) * s :=
+    calc _ ≤ ‖z * (P - T₂ - T₃ - T₄ - T₅)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖z‖ * ‖P - T₂ - T₃ - T₄ - T₅‖) * ‖z‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s * (K_PmT5 * s ^ 6)) * s := by
+          apply mul_le_mul _ hz (norm_nonneg _) (by positivity)
+          exact mul_le_mul hz hPmT5_le (norm_nonneg _) (by positivity)
+  have h3 : ‖(P - T₂ - T₃ - T₄ - T₅) * z ^ 2‖ ≤ (K_PmT5 * s ^ 6) * s ^ 2 :=
+    calc _ ≤ ‖P - T₂ - T₃ - T₄ - T₅‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ ‖P - T₂ - T₃ - T₄ - T₅‖ * ‖z‖ ^ 2 := by gcongr; exact norm_pow_le z 2
+      _ ≤ (K_PmT5 * s ^ 6) * s ^ 2 :=
+          mul_le_mul hPmT5_le (pow_le_pow_left₀ (norm_nonneg _) hz 2)
+            (by positivity) (by positivity)
+  have h4 : ‖z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+                  T₂ * T₄ - T₃ * T₃ - T₄ * T₂)‖ ≤ s * (K_P2' * s ^ 7) :=
+    calc _ ≤ ‖z‖ * ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+                T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖ := norm_mul_le _ _
+      _ ≤ s * (K_P2' * s ^ 7) := mul_le_mul hz hP2'_le (norm_nonneg _) (by positivity)
+  have h6 : ‖(P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+              T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * z‖ ≤ (K_P2' * s ^ 7) * s :=
+    calc _ ≤ ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+                T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (K_P2' * s ^ 7) * s := mul_le_mul hP2'_le hz (norm_nonneg _) (by positivity)
+  -- Sum 7 terms via triangle inequality (6 norm_add_le).
+  have ha1 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅) +
+    z * (P - T₂ - T₃ - T₄ - T₅) * z +
+    (P - T₂ - T₃ - T₄ - T₅) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂) +
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+         T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂) +
+    (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * z)
+    (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2)
+  have ha2 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅) +
+    z * (P - T₂ - T₃ - T₄ - T₅) * z +
+    (P - T₂ - T₃ - T₄ - T₅) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂) +
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+         T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂))
+    ((P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * z)
+  have ha3 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅) +
+    z * (P - T₂ - T₃ - T₄ - T₅) * z +
+    (P - T₂ - T₃ - T₄ - T₅) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂))
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+         T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂)
+  have ha4 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅) +
+    z * (P - T₂ - T₃ - T₄ - T₅) * z +
+    (P - T₂ - T₃ - T₄ - T₅) * z ^ 2)
+    (z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+          T₂ * T₄ - T₃ * T₃ - T₄ * T₂))
+  have ha5 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅) +
+    z * (P - T₂ - T₃ - T₄ - T₅) * z)
+    ((P - T₂ - T₃ - T₄ - T₅) * z ^ 2)
+  have ha6 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅))
+    (z * (P - T₂ - T₃ - T₄ - T₅) * z)
+  -- Sum: 3·K_PmT5 + 2·K_P2' + K_PzP' + K_P3' (in units of s⁸).
+  nlinarith [pow_nonneg hs_nn 8]
+
 /-- Norm bound `‖P - T₂ - T₃‖ ≤ 5·s⁴` where P = exp(a)*exp(b)-1-(a+b),
 T₂ = ab+½a²+½b², T₃ = ⅙a³+½a²b+½ab²+⅙b³. Algebraic identity:
 `P - T₂ - T₃ = F₁ + F₂ + a·E₂ + E₁·b + D₁·D₂` where each piece has deg-4+
