@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 28, 2026-05-12)
+## Status (session 29, 2026-05-13)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
 * `symmetric_bch_septic_sub_poly_axiom` (Stage 2 stepping-stone,
@@ -8,6 +8,49 @@ Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
 * `norm_septic_match_residual_le_axiom` (Stage 3 stepping-stone,
   introduced session 26; bounds the σ⁹ residual of the deg-7 matching
   identity).
+
+**Session 29 (2026-05-13, octic small-s infrastructure, 10 commits)**:
+
+Substantial progress on the octic small-s discharge (foundation for the
+deg-9 analog of T2-F7e, eventually replacing
+`symmetric_bch_septic_sub_poly_axiom`):
+
+1. **`pieceB_octic_decomp`** (commit `d1204b7`, the MAJOR commit): the
+   central algebraic decomposition for the small-s octic case. Combines
+   QPI + SPI + Septic + Octic pure identities via
+   `linear_combination (norm := module)` with 4 BILLION heartbeats. ~190
+   lines, 35 min build wall.
+
+2. **Full I2 octic chain** (4 commits):
+   * `I2_octic_residual_decomp_eq` (pure ring identity, `noncomm_ring`).
+   * `norm_I2_octic_residual_RHS_le` (parameterized wrapper).
+   * 4 input bounds (K_PmT5=6, K_P2'=16, K_PzP'=16, K_P3'=105) via
+     `norm_P_sub_T2_sub_T3_sub_T4_sub_T5_le`, `norm_P2_etc_octic_le`,
+     `norm_PzP_etc_octic_le`, `norm_P3_etc_octic_le`.
+   * Combined: ‖I2 octic RHS‖ ≤ (3·6 + 2·16 + 16 + 105)·s⁸ = 171·s⁸.
+
+3. **Telescoping & cancellation** (2 commits):
+   * `y6_sub_z6_sub_y6_7_decomp` + bound (≤ 87·s⁸).
+   * `pow7_sub_zpow7_telescope` + bound (session 28; ≤ 127·s⁸).
+
+4. **Deg-8 exp tail helpers** (commit `7864cdf`):
+   * `norm_exp_sub_one_sub_sub_sub_sub_sub_sub_sub_le` (noncomm deg-8 tail).
+   * `real_exp_eighth_order_le_octic` (real ≤ x⁸ bound).
+   Foundation for J_a := I_a - a⁷/5040 (next exp-tail level), needed for
+   the future I1 octic chain.
+
+**Remaining for octic small-s discharge** (pending):
+- `R_plus_T5_plus_T6_eq_neg_deg7_residual` (algebraic identity, deg-7
+  cancellation analog of `R_plus_T5_eq_neg_deg6_residual`).
+- `I1_octic_residual_decomp_eq` (pure algebraic identity, extends
+  `I1_septic_residual_decomp_eq` by subtracting `corr₁_7 = ½·W7`).
+- `norm_I1_octic_residual_RHS_le` (parameterized wrapper).
+- `norm_combined_tricky_octic_le` (combined cluster bound for the I1
+  RHS's "tricky" piece).
+- Final `norm_bch_octic_remainder_small_s_le` (the public theorem).
+
+Estimated remaining: 4-6 sessions for full octic small-s discharge, then
+2-3 more for the parent T2-F7e-octic discharge (analog of session 22).
 
 **Session 28 (2026-05-12, stepping stone 1 foundation, 4 commits)**:
 
