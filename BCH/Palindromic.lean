@@ -2528,6 +2528,170 @@ theorem sym_cubic_poly_linear_part_at_strangBlock_E3 (A B : 𝔸) (p τ : 𝕂) 
 
 include 𝕂 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Septic-matching infrastructure (E_5 input variant)**: deg-5-input analog
+of `sym_cubic_poly_linear_part_at_smul_E3`. Computes the closed form for the
+linear-in-residual part of `sym_E_3(α•V + γ·E_5, β•V + δ·E_5)`:
+
+  `sym_cubic_poly_linear_part_smul_V V α β (γ•E_5) (δ•E_5) =
+     ((24)⁻¹ * (α + 2β) * (β·γ − α·δ)) • [V, [V, E_5]]`.
+
+Used in the τ⁷ matching identity: at deg-5 strangBlock contributions
+(δa = 4(pτ)⁵·E_5, δb = ((1-4p)τ)⁵·E_5), this gives the L-piece's τ⁷
+content via `[V,[V,E_5]]`. Stepping-stone for `norm_septic_match_residual_le_axiom`
+discharge. -/
+theorem sym_cubic_poly_linear_part_at_smul_E5 (A B V : 𝔸) (α β γ δ : 𝕂) :
+    sym_cubic_poly_linear_part_smul_V V α β
+        (γ • symmetric_bch_quintic_poly 𝕂 A B)
+        (δ • symmetric_bch_quintic_poly 𝕂 A B) =
+      ((24 : 𝕂)⁻¹ * (α + 2 * β) * (β * γ - α * δ)) •
+        commBr V (commBr V (symmetric_bch_quintic_poly 𝕂 A B)) := by
+  unfold sym_cubic_poly_linear_part_smul_V
+  rw [show (β • commBr V (commBr V (γ • symmetric_bch_quintic_poly 𝕂 A B)) -
+            α • commBr V (commBr V (δ • symmetric_bch_quintic_poly 𝕂 A B))) =
+        (β * γ - α * δ) • commBr V (commBr V (symmetric_bch_quintic_poly 𝕂 A B)) from by
+    simp only [commBr_smul_right_eq (𝕂 := 𝕂), smul_smul, ← sub_smul]]
+  rw [smul_smul]
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Septic-matching scalar instantiation (E_5 input)**: substituting
+`α = 4pτ, β = (1-4p)τ, γ = 4(pτ)⁵, δ = ((1-4p)τ)⁵` (the τ⁵-leading parts
+of B1.d's per-block residuals at deg-5 contributions), the linear part
+collapses to a closed form with τ⁷ factored out:
+
+  `L = ((1/6) * p * (1-4p) * (1-2p) * (p² + (1-4p)²) * (p² − (1-4p)²) * τ⁷) •
+         [V, [V, E_5]]`.
+
+Derivation: `(α + 2β)·(β·γ − α·δ) = (2-4p)·τ · (4p(1-4p)τ⁶·(p⁴ − (1-4p)⁴))
+ = 8p(1-4p)(1-2p)·τ⁷·(p² − (1-4p)²)(p² + (1-4p)²)`,
+times `(24)⁻¹` gives `(1/3)p(1-4p)(1-2p)(p²−(1-4p)²)(p²+(1-4p)²)·τ⁷`. -/
+theorem sym_cubic_poly_linear_part_at_strangBlock_E5 (A B : 𝔸) (p τ : 𝕂) :
+    sym_cubic_poly_linear_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+        ((4 * (p * τ) ^ 5) • symmetric_bch_quintic_poly 𝕂 A B)
+        (((1 - 4 * p) * τ) ^ 5 • symmetric_bch_quintic_poly 𝕂 A B) =
+      ((1 / 3 : 𝕂) * p * (1 - 4 * p) * (1 - 2 * p) *
+        (p ^ 2 - (1 - 4 * p) ^ 2) * (p ^ 2 + (1 - 4 * p) ^ 2) * τ ^ 7) •
+        commBr (A + B) (commBr (A + B) (symmetric_bch_quintic_poly 𝕂 A B)) := by
+  rw [sym_cubic_poly_linear_part_at_smul_E5 (𝕂 := 𝕂) A B (A + B)
+        (4 * p * τ) ((1 - 4 * p) * τ) (4 * (p * τ) ^ 5) (((1 - 4 * p) * τ) ^ 5)]
+  congr 1
+  ring
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Septic-matching infrastructure (Q-piece at E_3 substitution)**: closed form
+for the quadratic-in-residual part of `sym_E_3(α•V + γ·E_3, β•V + δ·E_3)`:
+
+  `sym_cubic_poly_quadratic_part_smul_V V α β (γ•E_3) (δ•E_3) =
+     ((24)⁻¹ * (γ + 2δ) * (β·γ − α·δ)) • [E_3, [V, E_3]]`.
+
+**Derivation**: When `δa = γ•E_3` and `δb = δ•E_3`:
+* `[δa, δb] = γδ·[E_3, E_3] = 0` (since `[X,X] = 0`).
+* So the `commBr (α•V) (commBr δa δb)` and `commBr (β•V) (commBr δb δa)` terms vanish.
+* `[δa, [V, δb]] = γδ·[E_3, [V, E_3]]`.
+* `[δa, [δa, V]] = γ²·[E_3, [E_3, V]] = -γ²·[E_3, [V, E_3]]` (Jacobi antisymmetry).
+* Similar for the β-side terms.
+
+The remaining contributions collect into a single coefficient times `[E_3, [V, E_3]]`,
+which factors as `(γ + 2δ)·(β·γ − α·δ) / 24`. Stepping-stone building block for the
+τ⁷ matching identity (the 2-δ contribution to sym_E_3(4X,Y) at deg-3 inputs). -/
+theorem sym_cubic_poly_quadratic_part_at_smul_E3 (A B V : 𝔸) (α β γ δ : 𝕂) :
+    sym_cubic_poly_quadratic_part_smul_V V α β
+        (γ • symmetric_bch_cubic_poly 𝕂 A B)
+        (δ • symmetric_bch_cubic_poly 𝕂 A B) =
+      ((24 : 𝕂)⁻¹ * (γ + 2 * δ) * (β * γ - α * δ)) •
+        commBr (symmetric_bch_cubic_poly 𝕂 A B)
+          (commBr V (symmetric_bch_cubic_poly 𝕂 A B)) := by
+  unfold sym_cubic_poly_quadratic_part_smul_V
+  -- All four commutators reduce to scalar multiples of [E_3, [V, E_3]]:
+  -- * commBr (γ•E_3) (δ•E_3) = γδ•commBr E_3 E_3 = 0.
+  -- * commBr (γ•E_3) (commBr V (δ•E_3)) = γδ•commBr E_3 (commBr V E_3).
+  -- * commBr (γ•E_3) (commBr (γ•E_3) V) = γ²•commBr E_3 (commBr E_3 V)
+  --   = -γ²•commBr E_3 (commBr V E_3).
+  set E := symmetric_bch_cubic_poly 𝕂 A B with hE_def
+  -- The four "cross" commutators after δa, δb substitution.
+  have h_δaδb : commBr (γ • E) (δ • E) = (0 : 𝔸) := by
+    unfold commBr; simp [smul_smul, mul_comm]
+  have h_δbδa : commBr (δ • E) (γ • E) = (0 : 𝔸) := by
+    unfold commBr; simp [smul_smul, mul_comm]
+  have h_αV_δaδb : commBr (α • V) (commBr (γ • E) (δ • E)) = (0 : 𝔸) := by
+    rw [h_δaδb]; unfold commBr; simp
+  have h_βV_δbδa : commBr (β • V) (commBr (δ • E) (γ • E)) = (0 : 𝔸) := by
+    rw [h_δbδa]; unfold commBr; simp
+  -- Inner commutator reductions: γδ·[E, [V, E]] etc.
+  have h_VE_δb : commBr V (δ • E) = δ • commBr V E := commBr_smul_right_eq (𝕂 := 𝕂) δ V E
+  have h_VE_δa : commBr V (γ • E) = γ • commBr V E := commBr_smul_right_eq (𝕂 := 𝕂) γ V E
+  have h_δaV : commBr (γ • E) V = γ • commBr E V := commBr_smul_left_eq (𝕂 := 𝕂) γ E V
+  have h_δbV : commBr (δ • E) V = δ • commBr E V := commBr_smul_left_eq (𝕂 := 𝕂) δ E V
+  -- [E, [V, E]] = -[E, [E, V]] (antisymmetry of inner bracket).
+  have h_anti : commBr E (commBr E V) = -commBr E (commBr V E) := by
+    unfold commBr; noncomm_ring
+  -- Compute the 4 surviving commutators (after dropping the 2 zero terms).
+  have h_term1 : commBr (γ • E) (commBr V (δ • E)) =
+                 (γ * δ) • commBr E (commBr V E) := by
+    rw [h_VE_δb]
+    rw [show commBr (γ • E) (δ • commBr V E) = γ • commBr E (δ • commBr V E) from
+      commBr_smul_left_eq (𝕂 := 𝕂) γ E (δ • commBr V E)]
+    rw [show commBr E (δ • commBr V E) = δ • commBr E (commBr V E) from
+      commBr_smul_right_eq (𝕂 := 𝕂) δ E (commBr V E)]
+    rw [smul_smul]
+  have h_term2 : commBr (γ • E) (commBr (γ • E) V) =
+                 (γ * γ) • commBr E (commBr E V) := by
+    rw [h_δaV]
+    rw [show commBr (γ • E) (γ • commBr E V) = γ • commBr E (γ • commBr E V) from
+      commBr_smul_left_eq (𝕂 := 𝕂) γ E (γ • commBr E V)]
+    rw [show commBr E (γ • commBr E V) = γ • commBr E (commBr E V) from
+      commBr_smul_right_eq (𝕂 := 𝕂) γ E (commBr E V)]
+    rw [smul_smul]
+  have h_term3 : commBr (δ • E) (commBr V (γ • E)) =
+                 (δ * γ) • commBr E (commBr V E) := by
+    rw [h_VE_δa]
+    rw [show commBr (δ • E) (γ • commBr V E) = δ • commBr E (γ • commBr V E) from
+      commBr_smul_left_eq (𝕂 := 𝕂) δ E (γ • commBr V E)]
+    rw [show commBr E (γ • commBr V E) = γ • commBr E (commBr V E) from
+      commBr_smul_right_eq (𝕂 := 𝕂) γ E (commBr V E)]
+    rw [smul_smul]
+  have h_term4 : commBr (δ • E) (commBr (δ • E) V) =
+                 (δ * δ) • commBr E (commBr E V) := by
+    rw [h_δbV]
+    rw [show commBr (δ • E) (δ • commBr E V) = δ • commBr E (δ • commBr E V) from
+      commBr_smul_left_eq (𝕂 := 𝕂) δ E (δ • commBr E V)]
+    rw [show commBr E (δ • commBr E V) = δ • commBr E (commBr E V) from
+      commBr_smul_right_eq (𝕂 := 𝕂) δ E (commBr E V)]
+    rw [smul_smul]
+  -- Substitute all four cross commutator simplifications + zero terms.
+  rw [h_αV_δaδb, h_βV_δbδa, h_term1, h_term2, h_term3, h_term4, h_anti]
+  -- Now all terms are scalar multiples of commBr E (commBr V E).
+  -- The smul collects via match_scalars + ring.
+  simp only [smul_zero, zero_add, add_zero, smul_neg, neg_smul, smul_smul,
+             mul_comm γ δ]
+  match_scalars <;> ring
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Septic-matching scalar instantiation (Q-piece at E_3)**: substituting
+`α = 4pτ, β = (1-4p)τ, γ = 4(pτ)³, δ = ((1-4p)τ)³`, the Q-piece collapses to:
+
+  `Q = ((1/3) * p * (1-4p) * (2p³ + (1-4p)³) * (p² − (1-4p)²) * τ⁷) • [E_3, [V, E_3]]`.
+
+Under `IsSuzukiCubic p` (`4p³ + (1-4p)³ = 0`), `(1-4p)³ = -4p³`, so
+`2p³ + (1-4p)³ = 2p³ - 4p³ = -2p³`. The coefficient becomes
+`-(2/3) * p⁴ * (1-4p) * (p² − (1-4p)²) · τ⁷`. -/
+theorem sym_cubic_poly_quadratic_part_at_strangBlock_E3 (A B : 𝔸) (p τ : 𝕂) :
+    sym_cubic_poly_quadratic_part_smul_V (A + B) (4 * p * τ) ((1 - 4 * p) * τ)
+        ((4 * (p * τ) ^ 3) • symmetric_bch_cubic_poly 𝕂 A B)
+        (((1 - 4 * p) * τ) ^ 3 • symmetric_bch_cubic_poly 𝕂 A B) =
+      ((1 / 3 : 𝕂) * p * (1 - 4 * p) * (2 * p ^ 3 + (1 - 4 * p) ^ 3) *
+        (p ^ 2 - (1 - 4 * p) ^ 2) * τ ^ 7) •
+        commBr (symmetric_bch_cubic_poly 𝕂 A B)
+          (commBr (A + B) (symmetric_bch_cubic_poly 𝕂 A B)) := by
+  rw [sym_cubic_poly_quadratic_part_at_smul_E3 (𝕂 := 𝕂) A B (A + B)
+        (4 * p * τ) ((1 - 4 * p) * τ) (4 * (p * τ) ^ 3) (((1 - 4 * p) * τ) ^ 3)]
+  congr 1
+  ring
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **B2.2.e closed-form L_leading on Childs basis**: combines the scalar
 instantiation with the Childs-basis projection identity. The leading τ⁵
 content of the linear-in-residual part (when both `δa, δb` take their
