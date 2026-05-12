@@ -46,7 +46,7 @@ quartet now COMPLETE for both `bch_septic_term` and `bch_octic_term`**:
 * `bch_septic_term`: def + homogeneity + norm bound + vanishing + Lipschitz ✓ (s27-28).
 * `bch_octic_term`: def + homogeneity + norm bound + vanishing + Lipschitz ✓ (s28).
 
-8 code commits this session:
+9 code commits this session:
 * `bch_septic_term` Lipschitz bound (commit 14d75bc, ~1700 lines)
 * `bch_octic_term` def + homogeneity (commit 325b632, ~150 lines)
 * `bch_octic_term` norm bound ‖Z₈‖ ≤ s⁸ (commit 3c96d30, ~820 lines)
@@ -55,8 +55,9 @@ quartet now COMPLETE for both `bch_septic_term` and `bch_octic_term`**:
 * `norm_bch_octic_remainder_large_s_le` private helper (commit 6b86a3a, ~60 lines)
 * `octic_pure_identity` deg-7 cancellation identity (commit 2af11b6, ~200 lines)
 * `nonic_pure_identity` deg-8 cancellation identity (commit db47a44, ~344 lines)
+* `pow7_sub_zpow7_telescope` + `norm_pow7_sub_zpow7_le` (commit c6d129c, ~105 lines)
 
-Total session 28: ~5000 lines added, 11 commits (8 code + 4 doc), 0 axioms changed.
+Total session 28: ~5100 lines added, 12 commits (9 code + 3 doc + extras), 0 axioms changed.
 
 Remaining for stepping stone 1: small-s case of octic remainder bound
 (uses `octic_pure_identity` + `pieceB_octic_decomp` analog) → full
