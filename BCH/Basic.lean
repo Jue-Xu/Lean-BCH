@@ -15528,6 +15528,132 @@ private theorem norm_P2_etc_octic_le (P T₂ T₃ T₄ : 𝔸) {s : ℝ}
     mul_nonneg (pow_nonneg hs_nn 7) (sq_nonneg s),
     mul_nonneg (pow_nonneg hs_nn 7) (pow_nonneg hs_nn 3)]
 
+/-- Norm bound `‖PzP - T₂zT₂ - T₂zT₃ - T₃zT₂ - T₂zT₄ - T₃zT₃ - T₄zT₂‖ ≤ 16·s⁸`
+for `s ≤ 1/10`. Decomposes via `P = T₂ + T₃ + T₄ + D₅` (D₅ = P-T₂-T₃-T₄,
+‖D₅‖ ≤ 6·s⁵) into 10 deg-8+ terms.
+
+The deg-8 PzP-residual sandwich — deg-9 analog of `norm_PzP_sub_T2zT2_etc_le`
+at one degree higher. Provides the K_PzP' = 16 input bound for
+`norm_I2_octic_residual_RHS_le`. -/
+private theorem norm_PzP_etc_octic_le (z P T₂ T₃ T₄ : 𝔸) {s : ℝ}
+    (hs_nn : 0 ≤ s) (hs_small : s ≤ 1 / 10)
+    (hz : ‖z‖ ≤ s)
+    (hT₂ : ‖T₂‖ ≤ s ^ 2) (hT₃ : ‖T₃‖ ≤ s ^ 3) (hT₄ : ‖T₄‖ ≤ s ^ 4)
+    (hD5 : ‖P - T₂ - T₃ - T₄‖ ≤ 6 * s ^ 5) :
+    ‖P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+        T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂‖ ≤ 16 * s ^ 8 := by
+  have heq : P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+      T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂ =
+      T₂ * z * (P - T₂ - T₃ - T₄) + T₃ * z * T₄ +
+      T₃ * z * (P - T₂ - T₃ - T₄) + T₄ * z * T₃ + T₄ * z * T₄ +
+      T₄ * z * (P - T₂ - T₃ - T₄) +
+      (P - T₂ - T₃ - T₄) * z * T₂ + (P - T₂ - T₃ - T₄) * z * T₃ +
+      (P - T₂ - T₃ - T₄) * z * T₄ +
+      (P - T₂ - T₃ - T₄) * z * (P - T₂ - T₃ - T₄) := by
+    have hP : P = T₂ + T₃ + T₄ + (P - T₂ - T₃ - T₄) := by abel
+    rw [hP]; noncomm_ring
+  rw [heq]
+  -- 10 component bounds (each `‖X * z * Y‖ ≤ ‖X‖·‖z‖·‖Y‖`)
+  have h_T2zD5 : ‖T₂ * z * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 2 * s * (6 * s ^ 5) :=
+    calc _ ≤ ‖T₂ * z‖ * ‖P - T₂ - T₃ - T₄‖ := norm_mul_le _ _
+      _ ≤ (‖T₂‖ * ‖z‖) * ‖P - T₂ - T₃ - T₄‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 2 * s) * (6 * s ^ 5) := by
+          apply mul_le_mul _ hD5 (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₂ hz (norm_nonneg _) (by positivity)
+  have h_T3zT4 : ‖T₃ * z * T₄‖ ≤ s ^ 3 * s * s ^ 4 :=
+    calc _ ≤ ‖T₃ * z‖ * ‖T₄‖ := norm_mul_le _ _
+      _ ≤ (‖T₃‖ * ‖z‖) * ‖T₄‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 3 * s) * s ^ 4 := by
+          apply mul_le_mul _ hT₄ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₃ hz (norm_nonneg _) (by positivity)
+  have h_T3zD5 : ‖T₃ * z * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 3 * s * (6 * s ^ 5) :=
+    calc _ ≤ ‖T₃ * z‖ * ‖P - T₂ - T₃ - T₄‖ := norm_mul_le _ _
+      _ ≤ (‖T₃‖ * ‖z‖) * ‖P - T₂ - T₃ - T₄‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 3 * s) * (6 * s ^ 5) := by
+          apply mul_le_mul _ hD5 (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₃ hz (norm_nonneg _) (by positivity)
+  have h_T4zT3 : ‖T₄ * z * T₃‖ ≤ s ^ 4 * s * s ^ 3 :=
+    calc _ ≤ ‖T₄ * z‖ * ‖T₃‖ := norm_mul_le _ _
+      _ ≤ (‖T₄‖ * ‖z‖) * ‖T₃‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 4 * s) * s ^ 3 := by
+          apply mul_le_mul _ hT₃ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₄ hz (norm_nonneg _) (by positivity)
+  have h_T4zT4 : ‖T₄ * z * T₄‖ ≤ s ^ 4 * s * s ^ 4 :=
+    calc _ ≤ ‖T₄ * z‖ * ‖T₄‖ := norm_mul_le _ _
+      _ ≤ (‖T₄‖ * ‖z‖) * ‖T₄‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 4 * s) * s ^ 4 := by
+          apply mul_le_mul _ hT₄ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₄ hz (norm_nonneg _) (by positivity)
+  have h_T4zD5 : ‖T₄ * z * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 4 * s * (6 * s ^ 5) :=
+    calc _ ≤ ‖T₄ * z‖ * ‖P - T₂ - T₃ - T₄‖ := norm_mul_le _ _
+      _ ≤ (‖T₄‖ * ‖z‖) * ‖P - T₂ - T₃ - T₄‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 4 * s) * (6 * s ^ 5) := by
+          apply mul_le_mul _ hD5 (norm_nonneg _) (by positivity)
+          exact mul_le_mul hT₄ hz (norm_nonneg _) (by positivity)
+  have h_D5zT2 : ‖(P - T₂ - T₃ - T₄) * z * T₂‖ ≤ (6 * s ^ 5) * s * s ^ 2 :=
+    calc _ ≤ ‖(P - T₂ - T₃ - T₄) * z‖ * ‖T₂‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃ - T₄‖ * ‖z‖) * ‖T₂‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((6 * s ^ 5) * s) * s ^ 2 := by
+          apply mul_le_mul _ hT₂ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hD5 hz (norm_nonneg _) (by positivity)
+  have h_D5zT3 : ‖(P - T₂ - T₃ - T₄) * z * T₃‖ ≤ (6 * s ^ 5) * s * s ^ 3 :=
+    calc _ ≤ ‖(P - T₂ - T₃ - T₄) * z‖ * ‖T₃‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃ - T₄‖ * ‖z‖) * ‖T₃‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((6 * s ^ 5) * s) * s ^ 3 := by
+          apply mul_le_mul _ hT₃ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hD5 hz (norm_nonneg _) (by positivity)
+  have h_D5zT4 : ‖(P - T₂ - T₃ - T₄) * z * T₄‖ ≤ (6 * s ^ 5) * s * s ^ 4 :=
+    calc _ ≤ ‖(P - T₂ - T₃ - T₄) * z‖ * ‖T₄‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃ - T₄‖ * ‖z‖) * ‖T₄‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((6 * s ^ 5) * s) * s ^ 4 := by
+          apply mul_le_mul _ hT₄ (norm_nonneg _) (by positivity)
+          exact mul_le_mul hD5 hz (norm_nonneg _) (by positivity)
+  have h_D5zD5 : ‖(P - T₂ - T₃ - T₄) * z * (P - T₂ - T₃ - T₄)‖ ≤
+      (6 * s ^ 5) * s * (6 * s ^ 5) :=
+    calc _ ≤ ‖(P - T₂ - T₃ - T₄) * z‖ * ‖P - T₂ - T₃ - T₄‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃ - T₄‖ * ‖z‖) * ‖P - T₂ - T₃ - T₄‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((6 * s ^ 5) * s) * (6 * s ^ 5) := by
+          apply mul_le_mul _ hD5 (norm_nonneg _) (by positivity)
+          exact mul_le_mul hD5 hz (norm_nonneg _) (by positivity)
+  -- Triangle inequality on 10-term sum.
+  have ha1 := norm_add_le (T₂ * z * (P - T₂ - T₃ - T₄) + T₃ * z * T₄ +
+    T₃ * z * (P - T₂ - T₃ - T₄) + T₄ * z * T₃ + T₄ * z * T₄ +
+    T₄ * z * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * z * T₂ + (P - T₂ - T₃ - T₄) * z * T₃ +
+    (P - T₂ - T₃ - T₄) * z * T₄)
+    ((P - T₂ - T₃ - T₄) * z * (P - T₂ - T₃ - T₄))
+  have ha2 := norm_add_le (T₂ * z * (P - T₂ - T₃ - T₄) + T₃ * z * T₄ +
+    T₃ * z * (P - T₂ - T₃ - T₄) + T₄ * z * T₃ + T₄ * z * T₄ +
+    T₄ * z * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * z * T₂ + (P - T₂ - T₃ - T₄) * z * T₃)
+    ((P - T₂ - T₃ - T₄) * z * T₄)
+  have ha3 := norm_add_le (T₂ * z * (P - T₂ - T₃ - T₄) + T₃ * z * T₄ +
+    T₃ * z * (P - T₂ - T₃ - T₄) + T₄ * z * T₃ + T₄ * z * T₄ +
+    T₄ * z * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * z * T₂)
+    ((P - T₂ - T₃ - T₄) * z * T₃)
+  have ha4 := norm_add_le (T₂ * z * (P - T₂ - T₃ - T₄) + T₃ * z * T₄ +
+    T₃ * z * (P - T₂ - T₃ - T₄) + T₄ * z * T₃ + T₄ * z * T₄ +
+    T₄ * z * (P - T₂ - T₃ - T₄))
+    ((P - T₂ - T₃ - T₄) * z * T₂)
+  have ha5 := norm_add_le (T₂ * z * (P - T₂ - T₃ - T₄) + T₃ * z * T₄ +
+    T₃ * z * (P - T₂ - T₃ - T₄) + T₄ * z * T₃ + T₄ * z * T₄)
+    (T₄ * z * (P - T₂ - T₃ - T₄))
+  have ha6 := norm_add_le (T₂ * z * (P - T₂ - T₃ - T₄) + T₃ * z * T₄ +
+    T₃ * z * (P - T₂ - T₃ - T₄) + T₄ * z * T₃) (T₄ * z * T₄)
+  have ha7 := norm_add_le (T₂ * z * (P - T₂ - T₃ - T₄) + T₃ * z * T₄ +
+    T₃ * z * (P - T₂ - T₃ - T₄)) (T₄ * z * T₃)
+  have ha8 := norm_add_le (T₂ * z * (P - T₂ - T₃ - T₄) + T₃ * z * T₄)
+    (T₃ * z * (P - T₂ - T₃ - T₄))
+  have ha9 := norm_add_le (T₂ * z * (P - T₂ - T₃ - T₄)) (T₃ * z * T₄)
+  -- Sum bounds: 6s⁸ + s⁸ + 6s⁹ + s⁸ + s⁹ + 6s¹⁰ + 6s⁸ + 6s⁹ + 6s¹⁰ + 36s¹¹
+  --   = 14·s⁸ + 13·s⁹ + 12·s¹⁰ + 36·s¹¹
+  -- For s ≤ 1/10: ≤ 14 + 1.3 + 0.12 + 0.036 ≈ 15.46 ≤ 16
+  nlinarith [pow_nonneg hs_nn 8, pow_nonneg hs_nn 9, pow_nonneg hs_nn 10,
+    pow_nonneg hs_nn 11, mul_nonneg (pow_nonneg hs_nn 8) hs_nn,
+    mul_nonneg (pow_nonneg hs_nn 8) (sq_nonneg s),
+    mul_nonneg (pow_nonneg hs_nn 8) (pow_nonneg hs_nn 3)]
+
 /-- Norm bound `‖T₄‖ ≤ s⁴` where T₄ = (1/24)·a⁴ + (1/6)·a³b + (1/4)·a²b² +
 (1/6)·ab³ + (1/24)·b⁴ is the deg-4 contribution of `exp(a)·exp(b)-1`.
 Sum of |coefficients| = 16/24 = 2/3 ≤ 1, so ‖T₄‖ ≤ (2/3)·s⁴ ≤ s⁴. -/
