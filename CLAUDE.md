@@ -42,16 +42,24 @@ Net axiom count unchanged (still 2 scoped private axioms). Build time:
 heartbeats, plus 4M for the ring proof in the vanishing theorem).
 
 **Stepping stone 1 (`symmetric_bch_septic_sub_poly_axiom`) infrastructure
-status**:
-* `bch_septic_term` def + homogeneity + norm bound + vanishing ✓ (s27).
-* `bch_septic_term` Lipschitz bound ✓ (s28 commit 14d75bc).
-* `bch_octic_term` def + homogeneity ✓ (s28 commit 325b632).
-* `bch_octic_term` norm bound ‖Z₈‖ ≤ s⁸ ✓ (s28 commit 3c96d30).
-* `bch_octic_term` vanishing on (αV, βV) ✓ (s28 commit 2696fcf).
-* Remaining: `bch_octic_term` Lipschitz bound, `octic_pure_identity`
-  (deg-7 cancellation), `nonic_pure_identity` (deg-8 cancellation),
-  per-piece bounds, parent theorem. Estimated: ~3000-5000 lines,
-  multi-session.
+quartet now COMPLETE for both `bch_septic_term` and `bch_octic_term`**:
+* `bch_septic_term`: def + homogeneity + norm bound + vanishing + Lipschitz ✓ (s27-28).
+* `bch_octic_term`: def + homogeneity + norm bound + vanishing + Lipschitz ✓ (s28).
+
+5 commits this session for `bch_octic_term`:
+* def + homogeneity (commit 325b632, ~150 lines)
+* norm bound ‖Z₈‖ ≤ s⁸ (commit 3c96d30, ~820 lines)
+* vanishing on (αV, βV) (commit 2696fcf, ~50 lines)
+* Lipschitz bound (commit ad299db, ~1700 lines)
+
+Plus 1 commit for `bch_septic_term` Lipschitz (commit 14d75bc, ~1700 lines).
+
+Total session 28: ~4400 lines added, 6 commits, 0 axioms changed.
+
+Remaining for stepping stone 1: `octic_pure_identity` (deg-7 cancellation),
+`nonic_pure_identity` (deg-8 cancellation), inner/outer nonic remainder
+bounds (deg-8 analog of Phase A), per-piece bounds + extended hdecomp +
+parent theorem. Estimated: ~3000-5000 lines, multi-session.
 
 **Major session-26 milestone: `suzuki5_log_product_septic_at_suzukiP_axiom`
 (the Lean-Trotter interface axiom 3 / headline axiom) is now DISCHARGED!**
