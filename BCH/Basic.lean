@@ -3378,6 +3378,171 @@ theorem norm_bch_sextic_term_le (a b : 𝔸) :
   -- Sum of |numerators|/1440 = 164/1440 ≈ 0.1139 ≤ 1.
   linarith
 
+/-! ### `bch_septic_term` — the τ⁷ coefficient of `bch(a, b)`
+
+Explicit 126-term polynomial in {a, b}, derived via the CAS pipeline at
+`scripts/compute_bch_septic_term.py`. Common denominator 30240; integer
+numerators in {±1, ±6, ±8, ±15, ±20, ±27, ±36, ±48, ±216}.
+Sum of |numerators|/30240 = 2976/30240 = 31/315 ≈ 0.0984.
+
+This is the next term in the BCH expansion after `bch_sextic_term`:
+`bch(a, b) = a + b + ½[a,b] + Z₃ + Z₄ + Z₅ + Z₆ + Z₇ + O(·^8)`.
+
+Used in the future octic identity (stepping stone 1) for canceling deg-7
+contributions to `sym_bch_cubic - sym_E₃ - sym_E₅ - sym_E₇` (the deg-9
+analog of the discharged `symmetric_bch_quintic_sub_poly_axiom`). -/
+
+/-- **τ⁷ coefficient of `bch(a, b)`** — explicit 126-term polynomial in
+{a, b}. The 126 non-zero 7-letter words (out of 128 = 2⁷ possible) come
+from the free Lie algebra basis at degree 7. Coefficients are rational
+with LCM 30240. -/
+noncomputable def bch_septic_term (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (1 / 30240 : 𝕂) • (a * a * a * a * a * a * b)
+  + (-6 / 30240 : 𝕂) • (a * a * a * a * a * b * a)
+  + (-6 / 30240 : 𝕂) • (a * a * a * a * a * b * b)
+  + (15 / 30240 : 𝕂) • (a * a * a * a * b * a * a)
+  + (15 / 30240 : 𝕂) • (a * a * a * a * b * a * b)
+  + (15 / 30240 : 𝕂) • (a * a * a * a * b * b * a)
+  + (8 / 30240 : 𝕂) • (a * a * a * a * b * b * b)
+  + (-20 / 30240 : 𝕂) • (a * a * a * b * a * a * a)
+  + (-6 / 30240 : 𝕂) • (a * a * a * b * a * a * b)
+  + (-48 / 30240 : 𝕂) • (a * a * a * b * a * b * a)
+  + (-6 / 30240 : 𝕂) • (a * a * a * b * a * b * b)
+  + (-6 / 30240 : 𝕂) • (a * a * a * b * b * a * a)
+  + (-6 / 30240 : 𝕂) • (a * a * a * b * b * a * b)
+  + (-20 / 30240 : 𝕂) • (a * a * a * b * b * b * a)
+  + (8 / 30240 : 𝕂) • (a * a * a * b * b * b * b)
+  + (15 / 30240 : 𝕂) • (a * a * b * a * a * a * a)
+  + (-6 / 30240 : 𝕂) • (a * a * b * a * a * a * b)
+  + (36 / 30240 : 𝕂) • (a * a * b * a * a * b * a)
+  + (-27 / 30240 : 𝕂) • (a * a * b * a * a * b * b)
+  + (36 / 30240 : 𝕂) • (a * a * b * a * b * a * a)
+  + (36 / 30240 : 𝕂) • (a * a * b * a * b * a * b)
+  + (36 / 30240 : 𝕂) • (a * a * b * a * b * b * a)
+  + (-6 / 30240 : 𝕂) • (a * a * b * a * b * b * b)
+  + (-6 / 30240 : 𝕂) • (a * a * b * b * a * a * a)
+  + (-27 / 30240 : 𝕂) • (a * a * b * b * a * a * b)
+  + (36 / 30240 : 𝕂) • (a * a * b * b * a * b * a)
+  + (-27 / 30240 : 𝕂) • (a * a * b * b * a * b * b)
+  + (-6 / 30240 : 𝕂) • (a * a * b * b * b * a * a)
+  + (-6 / 30240 : 𝕂) • (a * a * b * b * b * a * b)
+  + (15 / 30240 : 𝕂) • (a * a * b * b * b * b * a)
+  + (-6 / 30240 : 𝕂) • (a * a * b * b * b * b * b)
+  + (-6 / 30240 : 𝕂) • (a * b * a * a * a * a * a)
+  + (15 / 30240 : 𝕂) • (a * b * a * a * a * a * b)
+  + (-48 / 30240 : 𝕂) • (a * b * a * a * a * b * a)
+  + (-6 / 30240 : 𝕂) • (a * b * a * a * a * b * b)
+  + (36 / 30240 : 𝕂) • (a * b * a * a * b * a * a)
+  + (36 / 30240 : 𝕂) • (a * b * a * a * b * a * b)
+  + (36 / 30240 : 𝕂) • (a * b * a * a * b * b * a)
+  + (-6 / 30240 : 𝕂) • (a * b * a * a * b * b * b)
+  + (-48 / 30240 : 𝕂) • (a * b * a * b * a * a * a)
+  + (36 / 30240 : 𝕂) • (a * b * a * b * a * a * b)
+  + (-216 / 30240 : 𝕂) • (a * b * a * b * a * b * a)
+  + (36 / 30240 : 𝕂) • (a * b * a * b * a * b * b)
+  + (36 / 30240 : 𝕂) • (a * b * a * b * b * a * a)
+  + (36 / 30240 : 𝕂) • (a * b * a * b * b * a * b)
+  + (-48 / 30240 : 𝕂) • (a * b * a * b * b * b * a)
+  + (15 / 30240 : 𝕂) • (a * b * a * b * b * b * b)
+  + (15 / 30240 : 𝕂) • (a * b * b * a * a * a * a)
+  + (-6 / 30240 : 𝕂) • (a * b * b * a * a * a * b)
+  + (36 / 30240 : 𝕂) • (a * b * b * a * a * b * a)
+  + (-27 / 30240 : 𝕂) • (a * b * b * a * a * b * b)
+  + (36 / 30240 : 𝕂) • (a * b * b * a * b * a * a)
+  + (36 / 30240 : 𝕂) • (a * b * b * a * b * a * b)
+  + (36 / 30240 : 𝕂) • (a * b * b * a * b * b * a)
+  + (-6 / 30240 : 𝕂) • (a * b * b * a * b * b * b)
+  + (-20 / 30240 : 𝕂) • (a * b * b * b * a * a * a)
+  + (-6 / 30240 : 𝕂) • (a * b * b * b * a * a * b)
+  + (-48 / 30240 : 𝕂) • (a * b * b * b * a * b * a)
+  + (-6 / 30240 : 𝕂) • (a * b * b * b * a * b * b)
+  + (15 / 30240 : 𝕂) • (a * b * b * b * b * a * a)
+  + (15 / 30240 : 𝕂) • (a * b * b * b * b * a * b)
+  + (-6 / 30240 : 𝕂) • (a * b * b * b * b * b * a)
+  + (1 / 30240 : 𝕂) • (a * b * b * b * b * b * b)
+  + (1 / 30240 : 𝕂) • (b * a * a * a * a * a * a)
+  + (-6 / 30240 : 𝕂) • (b * a * a * a * a * a * b)
+  + (15 / 30240 : 𝕂) • (b * a * a * a * a * b * a)
+  + (15 / 30240 : 𝕂) • (b * a * a * a * a * b * b)
+  + (-6 / 30240 : 𝕂) • (b * a * a * a * b * a * a)
+  + (-48 / 30240 : 𝕂) • (b * a * a * a * b * a * b)
+  + (-6 / 30240 : 𝕂) • (b * a * a * a * b * b * a)
+  + (-20 / 30240 : 𝕂) • (b * a * a * a * b * b * b)
+  + (-6 / 30240 : 𝕂) • (b * a * a * b * a * a * a)
+  + (36 / 30240 : 𝕂) • (b * a * a * b * a * a * b)
+  + (36 / 30240 : 𝕂) • (b * a * a * b * a * b * a)
+  + (36 / 30240 : 𝕂) • (b * a * a * b * a * b * b)
+  + (-27 / 30240 : 𝕂) • (b * a * a * b * b * a * a)
+  + (36 / 30240 : 𝕂) • (b * a * a * b * b * a * b)
+  + (-6 / 30240 : 𝕂) • (b * a * a * b * b * b * a)
+  + (15 / 30240 : 𝕂) • (b * a * a * b * b * b * b)
+  + (15 / 30240 : 𝕂) • (b * a * b * a * a * a * a)
+  + (-48 / 30240 : 𝕂) • (b * a * b * a * a * a * b)
+  + (36 / 30240 : 𝕂) • (b * a * b * a * a * b * a)
+  + (36 / 30240 : 𝕂) • (b * a * b * a * a * b * b)
+  + (36 / 30240 : 𝕂) • (b * a * b * a * b * a * a)
+  + (-216 / 30240 : 𝕂) • (b * a * b * a * b * a * b)
+  + (36 / 30240 : 𝕂) • (b * a * b * a * b * b * a)
+  + (-48 / 30240 : 𝕂) • (b * a * b * a * b * b * b)
+  + (-6 / 30240 : 𝕂) • (b * a * b * b * a * a * a)
+  + (36 / 30240 : 𝕂) • (b * a * b * b * a * a * b)
+  + (36 / 30240 : 𝕂) • (b * a * b * b * a * b * a)
+  + (36 / 30240 : 𝕂) • (b * a * b * b * a * b * b)
+  + (-6 / 30240 : 𝕂) • (b * a * b * b * b * a * a)
+  + (-48 / 30240 : 𝕂) • (b * a * b * b * b * a * b)
+  + (15 / 30240 : 𝕂) • (b * a * b * b * b * b * a)
+  + (-6 / 30240 : 𝕂) • (b * a * b * b * b * b * b)
+  + (-6 / 30240 : 𝕂) • (b * b * a * a * a * a * a)
+  + (15 / 30240 : 𝕂) • (b * b * a * a * a * a * b)
+  + (-6 / 30240 : 𝕂) • (b * b * a * a * a * b * a)
+  + (-6 / 30240 : 𝕂) • (b * b * a * a * a * b * b)
+  + (-27 / 30240 : 𝕂) • (b * b * a * a * b * a * a)
+  + (36 / 30240 : 𝕂) • (b * b * a * a * b * a * b)
+  + (-27 / 30240 : 𝕂) • (b * b * a * a * b * b * a)
+  + (-6 / 30240 : 𝕂) • (b * b * a * a * b * b * b)
+  + (-6 / 30240 : 𝕂) • (b * b * a * b * a * a * a)
+  + (36 / 30240 : 𝕂) • (b * b * a * b * a * a * b)
+  + (36 / 30240 : 𝕂) • (b * b * a * b * a * b * a)
+  + (36 / 30240 : 𝕂) • (b * b * a * b * a * b * b)
+  + (-27 / 30240 : 𝕂) • (b * b * a * b * b * a * a)
+  + (36 / 30240 : 𝕂) • (b * b * a * b * b * a * b)
+  + (-6 / 30240 : 𝕂) • (b * b * a * b * b * b * a)
+  + (15 / 30240 : 𝕂) • (b * b * a * b * b * b * b)
+  + (8 / 30240 : 𝕂) • (b * b * b * a * a * a * a)
+  + (-20 / 30240 : 𝕂) • (b * b * b * a * a * a * b)
+  + (-6 / 30240 : 𝕂) • (b * b * b * a * a * b * a)
+  + (-6 / 30240 : 𝕂) • (b * b * b * a * a * b * b)
+  + (-6 / 30240 : 𝕂) • (b * b * b * a * b * a * a)
+  + (-48 / 30240 : 𝕂) • (b * b * b * a * b * a * b)
+  + (-6 / 30240 : 𝕂) • (b * b * b * a * b * b * a)
+  + (-20 / 30240 : 𝕂) • (b * b * b * a * b * b * b)
+  + (8 / 30240 : 𝕂) • (b * b * b * b * a * a * a)
+  + (15 / 30240 : 𝕂) • (b * b * b * b * a * a * b)
+  + (15 / 30240 : 𝕂) • (b * b * b * b * a * b * a)
+  + (15 / 30240 : 𝕂) • (b * b * b * b * a * b * b)
+  + (-6 / 30240 : 𝕂) • (b * b * b * b * b * a * a)
+  + (-6 / 30240 : 𝕂) • (b * b * b * b * b * a * b)
+  + (1 / 30240 : 𝕂) • (b * b * b * b * b * b * a)
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **7-fold smul-product identity** (local copy for use in `bch_septic_term_smul`;
+the same lemma appears as `private` in `SymmetricQuintic.lean` for septic poly
+infrastructure, but is unavailable upstream). -/
+private lemma bch_septic_term_seven_fold_smul_mul
+    (c : 𝕂) (x₁ x₂ x₃ x₄ x₅ x₆ x₇ : 𝔸) :
+    (c • x₁) * (c • x₂) * (c • x₃) * (c • x₄) * (c • x₅) * (c • x₆) * (c • x₇) =
+      c ^ 7 • (x₁ * x₂ * x₃ * x₄ * x₅ * x₆ * x₇) := by
+  simp only [smul_mul_assoc, mul_smul_comm, smul_smul, ← mul_assoc]
+  ring_nf
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Homogeneity of `bch_septic_term`**: `Z₇(c•a, c•b) = c⁷ • Z₇(a, b)`. -/
+theorem bch_septic_term_smul (a b : 𝔸) (c : 𝕂) :
+    bch_septic_term 𝕂 (c • a) (c • b) = c ^ 7 • bch_septic_term 𝕂 a b := by
+  unfold bch_septic_term
+  simp only [bch_septic_term_seven_fold_smul_mul c, smul_comm _ (c ^ 7 : 𝕂), ← smul_add]
+
 /-! #### Lipschitz bounds for `bch_sextic_term` per-word — sample (Phase A.2 of T2-F7e)
 
 Per-word Lipschitz bounds: for each 6-letter word `w` in `bch_sextic_term`,
