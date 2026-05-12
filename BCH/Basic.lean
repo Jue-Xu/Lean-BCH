@@ -7097,6 +7097,56 @@ theorem norm_bch_octic_term_le (a b : 𝔸) :
     _ ≤ 1 * s^8 := by nlinarith [hs8_nn]
     _ = s ^ 8 := one_mul _
 
+/-! ### `bch_octic_term` vanishes on `(α•V, β•V)` inputs
+
+By the same source as `bch_septic_term_apply_smul_smul`: when both
+arguments are scalar multiples of a single element `V`, the BCH series
+`log(exp(α•V)·exp(β•V)) = (α+β)•V` (V commutes with itself), so every
+τ⁸ Taylor coefficient at pure-V inputs must vanish:
+
+  `bch_octic_term 𝕂 (α • V) (β • V) = 0`.
+
+Foundation for the future `nonic_pure_identity` (deg-8 cancellation
+algebraic identity at substituted polynomials, the deg-9 analog of
+`septic_pure_identity` from session 18 — used in the deg-9-precision
+small-s discharge mirroring stepping stone 2's `norm_bch_septic_remainder_small_s_le`). -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **8-fold smul-mul absorption (single element)**: 8 factors each of
+the form `sᵢ • V` collapse to `(s₁·…·s₈) • V⁸`. -/
+private lemma bch_octic_term_eight_fold_smul_mul_eq (V : 𝔸)
+    (s₁ s₂ s₃ s₄ s₅ s₆ s₇ s₈ : 𝕂) :
+    (s₁ • V) * (s₂ • V) * (s₃ • V) * (s₄ • V) * (s₅ • V) * (s₆ • V) * (s₇ • V) * (s₈ • V) =
+      (s₁ * s₂ * s₃ * s₄ * s₅ * s₆ * s₇ * s₈) • (V * V * V * V * V * V * V * V) := by
+  simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
+  congr 1; ring
+
+set_option maxHeartbeats 4000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Vanishing on scalar•V inputs**:
+`bch_octic_term 𝕂 (α • V) (β • V) = 0` for any `α, β : 𝕂` and `V : 𝔸`.
+
+Source: `log(exp(αV)·exp(βV)) = (α+β)V` (V commutes with itself, so all
+nested commutators vanish). Every τ⁸ Taylor coefficient at pure-V inputs
+must vanish identically as a polynomial in (α, β).
+
+Proof template mirrors `bch_septic_term_apply_smul_smul` at one degree higher:
+1. Collapse each 8-fold product `(αV)^k·(βV)^(8−k)` to `(α^k·β^(8−k)) • V⁸`.
+2. Combine the 124 word coefficients into a single polynomial in (α, β)
+   times `V⁸`.
+3. The polynomial-in-(α, β) identity (each `(k, 8−k)` partial sum is 0)
+   is closed by `ring`. -/
+theorem bch_octic_term_apply_smul_smul (V : 𝔸) (α β : 𝕂) :
+    bch_octic_term 𝕂 (α • V) (β • V) = 0 := by
+  unfold bch_octic_term
+  -- Step 1: collapse each 8-fold product to (scalar) • V⁸; combine outer scalars.
+  simp only [bch_octic_term_eight_fold_smul_mul_eq, smul_smul, ← add_smul]
+  -- Step 2: goal is now `(big_polynomial in α, β) • V⁸ = 0`.
+  conv_rhs => rw [show (0 : 𝔸) = (0 : 𝕂) • (V * V * V * V * V * V * V * V) from
+    (zero_smul _ _).symm]
+  congr 1
+  -- Polynomial-in-(α, β) identity: each (k, 8−k) coefficient group sums to 0.
+  ring
 
 /-! #### Lipschitz bounds for `bch_sextic_term` per-word — sample (Phase A.2 of T2-F7e)
 
