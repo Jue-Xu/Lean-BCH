@@ -15927,6 +15927,70 @@ private theorem norm_P3_etc_octic_le (P T₂ T₃ : 𝔸) {s : ℝ}
   nlinarith [pow_nonneg hs_nn 8, pow_nonneg hs_nn 9,
     mul_nonneg (pow_nonneg hs_nn 8) hs_nn]
 
+/-- Norm bound `‖R+T₅+T₆ residual sum‖ ≤ 7·s⁷` from precomputed component bounds.
+The 9 terms come from `R_plus_T5_plus_T6_eq_neg_deg7_residual`:
+I_a+I_b+a·H₂+H₁·b+F₁·F₂+⅙·F₁·b³+⅙·a³·F₂+½·G₁·b²+½·a²·G₂.
+
+Analog of `norm_R_plus_T5_residual_sum_le` at one degree higher.
+All inputs are deg-7+ (or deg-8+ for F₁·F₂); requires `s ≤ 1` to fold
+the s⁸ piece into s⁷. -/
+private theorem norm_R_plus_T5_plus_T6_residual_sum_le
+    (I_a I_b H₁ H₂ G₁ G₂ F₁ F₂ a b : 𝔸) {s : ℝ}
+    (hs_nn : 0 ≤ s) (hs_le_one : s ≤ 1)
+    (hI_a_le : ‖I_a‖ ≤ s ^ 7) (hI_b_le : ‖I_b‖ ≤ s ^ 7)
+    (h_aH₂_le : ‖a * H₂‖ ≤ s ^ 7) (h_H₁b_le : ‖H₁ * b‖ ≤ s ^ 7)
+    (h_F₁F₂_le : ‖F₁ * F₂‖ ≤ s ^ 8)
+    (h_F₁b3_le : ‖F₁ * b ^ 3‖ ≤ s ^ 7)
+    (h_a3F₂_le : ‖a ^ 3 * F₂‖ ≤ s ^ 7)
+    (h_G₁b2_le : ‖G₁ * b ^ 2‖ ≤ s ^ 7)
+    (h_a2G₂_le : ‖a ^ 2 * G₂‖ ≤ s ^ 7) :
+    ‖I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂ +
+      (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * F₂) +
+      (2 : 𝕂)⁻¹ • (G₁ * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * G₂)‖ ≤ 7 * s ^ 7 := by
+  have h2eq : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h6eq : ‖(6 : 𝕂)⁻¹‖ = (6 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have hs7_le_s7 : s ^ 8 ≤ s ^ 7 := by
+    have h : s ^ 8 = s ^ 7 * s := by ring
+    rw [h]
+    nlinarith [pow_nonneg hs_nn 7]
+  have h_F₁b3_smul : ‖(6 : 𝕂)⁻¹ • (F₁ * b ^ 3)‖ ≤ s ^ 7 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖F₁ * b ^ 3‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_F₁b3_le (by norm_num)
+      _ = s ^ 7 / 6 := by ring
+  have h_a3F₂_smul : ‖(6 : 𝕂)⁻¹ • (a ^ 3 * F₂)‖ ≤ s ^ 7 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖a ^ 3 * F₂‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_a3F₂_le (by norm_num)
+      _ = s ^ 7 / 6 := by ring
+  have h_G₁b2_smul : ‖(2 : 𝕂)⁻¹ • (G₁ * b ^ 2)‖ ≤ s ^ 7 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖G₁ * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_G₁b2_le (by norm_num)
+      _ = s ^ 7 / 2 := by ring
+  have h_a2G₂_smul : ‖(2 : 𝕂)⁻¹ • (a ^ 2 * G₂)‖ ≤ s ^ 7 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a ^ 2 * G₂‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_a2G₂_le (by norm_num)
+      _ = s ^ 7 / 2 := by ring
+  -- 8-term sum via triangle inequality (8 norm_add_le).
+  have ha1 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂ +
+    (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * F₂) +
+    (2 : 𝕂)⁻¹ • (G₁ * b ^ 2)) ((2 : 𝕂)⁻¹ • (a ^ 2 * G₂))
+  have ha2 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂ +
+    (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * F₂))
+    ((2 : 𝕂)⁻¹ • (G₁ * b ^ 2))
+  have ha3 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂ +
+    (6 : 𝕂)⁻¹ • (F₁ * b ^ 3)) ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂))
+  have ha4 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂)
+    ((6 : 𝕂)⁻¹ • (F₁ * b ^ 3))
+  have ha5 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b) (F₁ * F₂)
+  have ha6 := norm_add_le (I_a + I_b + a * H₂) (H₁ * b)
+  have ha7 := norm_add_le (I_a + I_b) (a * H₂)
+  have ha8 := norm_add_le I_a I_b
+  -- Sum: 4·s⁷ + s⁸ + 2·s⁷/6 + s⁷ = 4s⁷ + 1/3·s⁷ + s⁷ + ε = 16/3·s⁷ + s⁸ ≤ 7·s⁷
+  linarith [pow_nonneg hs_nn 7]
+
 /-- Norm bound `‖T₄‖ ≤ s⁴` where T₄ = (1/24)·a⁴ + (1/6)·a³b + (1/4)·a²b² +
 (1/6)·ab³ + (1/24)·b⁴ is the deg-4 contribution of `exp(a)·exp(b)-1`.
 Sum of |coefficients| = 16/24 = 2/3 ≤ 1, so ‖T₄‖ ≤ (2/3)·s⁴ ≤ s⁴. -/
