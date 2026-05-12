@@ -4423,6 +4423,1704 @@ theorem bch_septic_term_apply_smul_smul (V : 𝔸) (α β : 𝕂) :
   -- Polynomial-in-(α, β) identity: each (k, 7−k) coefficient group sums to 0.
   ring
 
+/-! ### Lipschitz bound for `bch_septic_term`
+
+Analog of `norm_bch_sextic_term_diff_le` at one degree higher; deg-7 BCH
+coefficient is Lipschitz in its first argument with prefactor `7·M⁶`.
+
+Foundation for stepping stone 1 (`symmetric_bch_septic_sub_poly_axiom`
+discharge): with `z = (a'+b) + W` and `‖W‖ = O(s²)`, gives an
+O(s⁸·‖W‖) bound on `‖Z₇(z, y) − Z₇(a'+b, y)‖`. -/
+
+set_option maxHeartbeats 1600000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **7-letter product Lipschitz** (local copy):
+`‖x₁·…·x₇ − y₁·…·y₇‖ ≤ N⁶·Σᵢ ‖xᵢ−yᵢ‖` when `‖xᵢ‖, ‖yᵢ‖ ≤ N`.
+Local copy of `SymmetricQuintic.word_7_diff_le` (unavailable upstream). -/
+private lemma word_7_diff_le_basic
+    (x₁ x₂ x₃ x₄ x₅ x₆ x₇ y₁ y₂ y₃ y₄ y₅ y₆ y₇ : 𝔸) (N : ℝ)
+    (hx₁ : ‖x₁‖ ≤ N) (hx₂ : ‖x₂‖ ≤ N) (hx₃ : ‖x₃‖ ≤ N) (hx₄ : ‖x₄‖ ≤ N)
+    (hx₅ : ‖x₅‖ ≤ N) (hx₆ : ‖x₆‖ ≤ N) (hx₇ : ‖x₇‖ ≤ N)
+    (hy₁ : ‖y₁‖ ≤ N) (hy₂ : ‖y₂‖ ≤ N) (hy₃ : ‖y₃‖ ≤ N) (hy₄ : ‖y₄‖ ≤ N)
+    (hy₅ : ‖y₅‖ ≤ N) (hy₆ : ‖y₆‖ ≤ N) (hy₇ : ‖y₇‖ ≤ N) (hN_nn : 0 ≤ N) :
+    ‖x₁ * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ - y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * y₇‖ ≤
+      N ^ 6 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖ + ‖x₆ - y₆‖ + ‖x₇ - y₇‖) := by
+  have hid : x₁ * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ - y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * y₇ =
+      (x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ +
+      y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ +
+      y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ +
+      y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇ +
+      y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇ +
+      y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇ +
+      y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇) := by noncomm_ring
+  rw [hid]
+  have hN_pow_nn : (0 : ℝ) ≤ N ^ 6 := pow_nonneg hN_nn 6
+  have ht₁ : ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇‖ ≤ N ^ 6 * ‖x₁ - y₁‖ := by
+    calc ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇‖
+        ≤ ‖x₁ - y₁‖ * ‖x₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := norm_7prod_le _ _ _ _ _ _ _
+      _ ≤ ‖x₁ - y₁‖ * N * N * N * N * N * N := by gcongr
+      _ = N ^ 6 * ‖x₁ - y₁‖ := by ring
+  have ht₂ : ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇‖ ≤ N ^ 6 * ‖x₂ - y₂‖ := by
+    calc ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇‖
+        ≤ ‖y₁‖ * ‖x₂ - y₂‖ * ‖x₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := norm_7prod_le _ _ _ _ _ _ _
+      _ ≤ N * ‖x₂ - y₂‖ * N * N * N * N * N := by gcongr
+      _ = N ^ 6 * ‖x₂ - y₂‖ := by ring
+  have ht₃ : ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇‖ ≤ N ^ 6 * ‖x₃ - y₃‖ := by
+    calc ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖x₃ - y₃‖ * ‖x₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := norm_7prod_le _ _ _ _ _ _ _
+      _ ≤ N * N * ‖x₃ - y₃‖ * N * N * N * N := by gcongr
+      _ = N ^ 6 * ‖x₃ - y₃‖ := by ring
+  have ht₄ : ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇‖ ≤ N ^ 6 * ‖x₄ - y₄‖ := by
+    calc ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖x₄ - y₄‖ * ‖x₅‖ * ‖x₆‖ * ‖x₇‖ := norm_7prod_le _ _ _ _ _ _ _
+      _ ≤ N * N * N * ‖x₄ - y₄‖ * N * N * N := by gcongr
+      _ = N ^ 6 * ‖x₄ - y₄‖ := by ring
+  have ht₅ : ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇‖ ≤ N ^ 6 * ‖x₅ - y₅‖ := by
+    calc ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖x₅ - y₅‖ * ‖x₆‖ * ‖x₇‖ := norm_7prod_le _ _ _ _ _ _ _
+      _ ≤ N * N * N * N * ‖x₅ - y₅‖ * N * N := by gcongr
+      _ = N ^ 6 * ‖x₅ - y₅‖ := by ring
+  have ht₆ : ‖y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇‖ ≤ N ^ 6 * ‖x₆ - y₆‖ := by
+    calc ‖y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖x₆ - y₆‖ * ‖x₇‖ := norm_7prod_le _ _ _ _ _ _ _
+      _ ≤ N * N * N * N * N * ‖x₆ - y₆‖ * N := by gcongr
+      _ = N ^ 6 * ‖x₆ - y₆‖ := by ring
+  have ht₇ : ‖y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇)‖ ≤ N ^ 6 * ‖x₇ - y₇‖ := by
+    calc ‖y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇)‖
+        ≤ ‖y₁‖ * ‖y₂‖ * ‖y₃‖ * ‖y₄‖ * ‖y₅‖ * ‖y₆‖ * ‖x₇ - y₇‖ := norm_7prod_le _ _ _ _ _ _ _
+      _ ≤ N * N * N * N * N * N * ‖x₇ - y₇‖ := by gcongr
+      _ = N ^ 6 * ‖x₇ - y₇‖ := by ring
+  calc ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ +
+        y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ +
+        y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ +
+        y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇ +
+        y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇ +
+        y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇ +
+        y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇)‖
+      ≤ ‖(x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇‖ +
+          ‖y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇‖ +
+          ‖y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇‖ +
+          ‖y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇‖ +
+          ‖y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇‖ +
+          ‖y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇‖ +
+          ‖y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇)‖ := by
+        have a1 := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇ + y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇)
+              (y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * (x₇ - y₇))
+        have a2 := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇)
+              (y₁ * y₂ * y₃ * y₄ * y₅ * (x₆ - y₆) * x₇)
+        have a3 := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇)
+              (y₁ * y₂ * y₃ * y₄ * (x₅ - y₅) * x₆ * x₇)
+        have a4 := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇)
+              (y₁ * y₂ * y₃ * (x₄ - y₄) * x₅ * x₆ * x₇)
+        have a5 := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ + y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇)
+              (y₁ * y₂ * (x₃ - y₃) * x₄ * x₅ * x₆ * x₇)
+        have a6 := norm_add_le
+              ((x₁ - y₁) * x₂ * x₃ * x₄ * x₅ * x₆ * x₇)
+              (y₁ * (x₂ - y₂) * x₃ * x₄ * x₅ * x₆ * x₇)
+        linarith
+    _ ≤ N ^ 6 * ‖x₁ - y₁‖ + N ^ 6 * ‖x₂ - y₂‖ + N ^ 6 * ‖x₃ - y₃‖ + N ^ 6 * ‖x₄ - y₄‖ + N ^ 6 * ‖x₅ - y₅‖ + N ^ 6 * ‖x₆ - y₆‖ + N ^ 6 * ‖x₇ - y₇‖ := by
+        linarith [ht₁, ht₂, ht₃, ht₄, ht₅, ht₆, ht₇]
+    _ = N ^ 6 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖ + ‖x₆ - y₆‖ + ‖x₇ - y₇‖) := by ring
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Scaled 7-letter Lipschitz** (local copy):
+`‖c•(x₁·…·x₇) − c•(y₁·…·y₇)‖ ≤ cb·7·N⁶·D` when `‖c‖ ≤ cb`,
+`‖xᵢ‖, ‖yᵢ‖ ≤ N`, and `‖xᵢ − yᵢ‖ ≤ D`.
+Local copy of `SymmetricQuintic.deg7_smul_word_diff_le`. -/
+private lemma deg7_smul_word_diff_le_basic
+    (c : 𝕂) (cb : ℝ) (hc : ‖c‖ ≤ cb)
+    (x₁ x₂ x₃ x₄ x₅ x₆ x₇ y₁ y₂ y₃ y₄ y₅ y₆ y₇ : 𝔸) (N D : ℝ)
+    (hx₁ : ‖x₁‖ ≤ N) (hx₂ : ‖x₂‖ ≤ N) (hx₃ : ‖x₃‖ ≤ N) (hx₄ : ‖x₄‖ ≤ N)
+    (hx₅ : ‖x₅‖ ≤ N) (hx₆ : ‖x₆‖ ≤ N) (hx₇ : ‖x₇‖ ≤ N)
+    (hy₁ : ‖y₁‖ ≤ N) (hy₂ : ‖y₂‖ ≤ N) (hy₃ : ‖y₃‖ ≤ N) (hy₄ : ‖y₄‖ ≤ N)
+    (hy₅ : ‖y₅‖ ≤ N) (hy₆ : ‖y₆‖ ≤ N) (hy₇ : ‖y₇‖ ≤ N)
+    (hd₁ : ‖x₁ - y₁‖ ≤ D) (hd₂ : ‖x₂ - y₂‖ ≤ D) (hd₃ : ‖x₃ - y₃‖ ≤ D)
+    (hd₄ : ‖x₄ - y₄‖ ≤ D) (hd₅ : ‖x₅ - y₅‖ ≤ D) (hd₆ : ‖x₆ - y₆‖ ≤ D) (hd₇ : ‖x₇ - y₇‖ ≤ D)
+    (hcb : 0 ≤ cb) (hN_nn : 0 ≤ N) (hD_nn : 0 ≤ D) :
+    ‖c • (x₁ * x₂ * x₃ * x₄ * x₅ * x₆ * x₇) - c • (y₁ * y₂ * y₃ * y₄ * y₅ * y₆ * y₇)‖ ≤
+      cb * 7 * N^6 * D := by
+  rw [← smul_sub]
+  have hwd : ‖x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇‖ ≤
+             N^6 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖ + ‖x₆ - y₆‖ + ‖x₇ - y₇‖) :=
+    word_7_diff_le_basic x₁ x₂ x₃ x₄ x₅ x₆ x₇ y₁ y₂ y₃ y₄ y₅ y₆ y₇ N hx₁ hx₂ hx₃ hx₄ hx₅ hx₆ hx₇ hy₁ hy₂ hy₃ hy₄ hy₅ hy₆ hy₇ hN_nn
+  have hwd_bound : N^6 * (‖x₁ - y₁‖ + ‖x₂ - y₂‖ + ‖x₃ - y₃‖ + ‖x₄ - y₄‖ + ‖x₅ - y₅‖ + ‖x₆ - y₆‖ + ‖x₇ - y₇‖) ≤
+             7 * N^6 * D := by
+    have hN6_nn : 0 ≤ N^6 := pow_nonneg hN_nn 6
+    nlinarith [hd₁, hd₂, hd₃, hd₄, hd₅, hd₆, hd₇, hN6_nn]
+  have hwd2 : ‖x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇‖ ≤ 7 * N^6 * D := le_trans hwd hwd_bound
+  have h_pos : 0 ≤ 7 * N^6 * D := by positivity
+  calc ‖c • (x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇)‖
+      ≤ ‖c‖ * ‖x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇‖ := norm_smul_le _ _
+    _ ≤ cb * ‖x₁*x₂*x₃*x₄*x₅*x₆*x₇ - y₁*y₂*y₃*y₄*y₅*y₆*y₇‖ := mul_le_mul_of_nonneg_right hc (norm_nonneg _)
+    _ ≤ cb * (7 * N^6 * D) := mul_le_mul_of_nonneg_left hwd2 hcb
+    _ = cb * 7 * N^6 * D := by ring
+
+-- Per-i diff bound: `‖bchSepticTerm z y i − bchSepticTerm x y i‖ ≤ (216/30240) · 7 · M⁶ · ‖z−x‖`
+-- (uniform over all 126 indices, since each word has ≤ 7 'a'-positions).
+set_option maxHeartbeats 64000000 in
+private lemma bchSepticTerm_diff_norm_le (z x y : 𝔸) (M : ℝ)
+    (hz : ‖z‖ ≤ M) (hx : ‖x‖ ≤ M) (hy : ‖y‖ ≤ M) (hM_nn : 0 ≤ M) :
+    ∀ i : Fin 126, ‖bchSepticTerm (𝕂 := 𝕂) z y i -
+                     bchSepticTerm (𝕂 := 𝕂) x y i‖ ≤
+      (216 / 30240 : ℝ) * 7 * M^6 * ‖z - x‖ := by
+  intro i
+  set D := ‖z - x‖ with hD_def
+  have hD_nn : 0 ≤ D := norm_nonneg _
+  have hzx_le_D : ‖z - x‖ ≤ D := le_refl _
+  have hyy_le_D : ‖y - y‖ ≤ D := by rw [sub_self, norm_zero]; exact hD_nn
+  match i with
+  | ⟨0, _⟩ =>
+    show ‖(1 / 30240 : 𝕂) • (z * z * z * z * z * z * y) - (1 / 30240 : 𝕂) • (x * x * x * x * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (1 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z z z z y
+        x x x x x x y
+        M D
+        hz hz hz hz hz hz hy
+        hx hx hx hx hx hx hy
+        hzx_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨1, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * z * z * z * y * z) - (-6 / 30240 : 𝕂) • (x * x * x * x * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z z z y z
+        x x x x x y x
+        M D
+        hz hz hz hz hz hy hz
+        hx hx hx hx hx hy hx
+        hzx_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨2, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * z * z * z * y * y) - (-6 / 30240 : 𝕂) • (x * x * x * x * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z z z y y
+        x x x x x y y
+        M D
+        hz hz hz hz hz hy hy
+        hx hx hx hx hx hy hy
+        hzx_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨3, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * z * z * z * y * z * z) - (15 / 30240 : 𝕂) • (x * x * x * x * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z z y z z
+        x x x x y x x
+        M D
+        hz hz hz hz hy hz hz
+        hx hx hx hx hy hx hx
+        hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨4, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * z * z * z * y * z * y) - (15 / 30240 : 𝕂) • (x * x * x * x * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z z y z y
+        x x x x y x y
+        M D
+        hz hz hz hz hy hz hy
+        hx hx hx hx hy hx hy
+        hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨5, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * z * z * z * y * y * z) - (15 / 30240 : 𝕂) • (x * x * x * x * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z z y y z
+        x x x x y y x
+        M D
+        hz hz hz hz hy hy hz
+        hx hx hx hx hy hy hx
+        hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨6, _⟩ =>
+    show ‖(8 / 30240 : 𝕂) • (z * z * z * z * y * y * y) - (8 / 30240 : 𝕂) • (x * x * x * x * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (8 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z z y y y
+        x x x x y y y
+        M D
+        hz hz hz hz hy hy hy
+        hx hx hx hx hy hy hy
+        hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨7, _⟩ =>
+    show ‖(-20 / 30240 : 𝕂) • (z * z * z * y * z * z * z) - (-20 / 30240 : 𝕂) • (x * x * x * y * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-20 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z y z z z
+        x x x y x x x
+        M D
+        hz hz hz hy hz hz hz
+        hx hx hx hy hx hx hx
+        hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨8, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * z * y * z * z * y) - (-6 / 30240 : 𝕂) • (x * x * x * y * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z y z z y
+        x x x y x x y
+        M D
+        hz hz hz hy hz hz hy
+        hx hx hx hy hx hx hy
+        hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨9, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (z * z * z * y * z * y * z) - (-48 / 30240 : 𝕂) • (x * x * x * y * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z y z y z
+        x x x y x y x
+        M D
+        hz hz hz hy hz hy hz
+        hx hx hx hy hx hy hx
+        hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨10, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * z * y * z * y * y) - (-6 / 30240 : 𝕂) • (x * x * x * y * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z y z y y
+        x x x y x y y
+        M D
+        hz hz hz hy hz hy hy
+        hx hx hx hy hx hy hy
+        hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨11, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * z * y * y * z * z) - (-6 / 30240 : 𝕂) • (x * x * x * y * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z y y z z
+        x x x y y x x
+        M D
+        hz hz hz hy hy hz hz
+        hx hx hx hy hy hx hx
+        hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨12, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * z * y * y * z * y) - (-6 / 30240 : 𝕂) • (x * x * x * y * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z y y z y
+        x x x y y x y
+        M D
+        hz hz hz hy hy hz hy
+        hx hx hx hy hy hx hy
+        hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨13, _⟩ =>
+    show ‖(-20 / 30240 : 𝕂) • (z * z * z * y * y * y * z) - (-20 / 30240 : 𝕂) • (x * x * x * y * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-20 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z y y y z
+        x x x y y y x
+        M D
+        hz hz hz hy hy hy hz
+        hx hx hx hy hy hy hx
+        hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨14, _⟩ =>
+    show ‖(8 / 30240 : 𝕂) • (z * z * z * y * y * y * y) - (8 / 30240 : 𝕂) • (x * x * x * y * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (8 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z z y y y y
+        x x x y y y y
+        M D
+        hz hz hz hy hy hy hy
+        hx hx hx hy hy hy hy
+        hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨15, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * z * y * z * z * z * z) - (15 / 30240 : 𝕂) • (x * x * y * x * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y z z z z
+        x x y x x x x
+        M D
+        hz hz hy hz hz hz hz
+        hx hx hy hx hx hx hx
+        hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨16, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * y * z * z * z * y) - (-6 / 30240 : 𝕂) • (x * x * y * x * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y z z z y
+        x x y x x x y
+        M D
+        hz hz hy hz hz hz hy
+        hx hx hy hx hx hx hy
+        hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨17, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * z * y * z * z * y * z) - (36 / 30240 : 𝕂) • (x * x * y * x * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y z z y z
+        x x y x x y x
+        M D
+        hz hz hy hz hz hy hz
+        hx hx hy hx hx hy hx
+        hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨18, _⟩ =>
+    show ‖(-27 / 30240 : 𝕂) • (z * z * y * z * z * y * y) - (-27 / 30240 : 𝕂) • (x * x * y * x * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-27 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y z z y y
+        x x y x x y y
+        M D
+        hz hz hy hz hz hy hy
+        hx hx hy hx hx hy hy
+        hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨19, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * z * y * z * y * z * z) - (36 / 30240 : 𝕂) • (x * x * y * x * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y z y z z
+        x x y x y x x
+        M D
+        hz hz hy hz hy hz hz
+        hx hx hy hx hy hx hx
+        hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨20, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * z * y * z * y * z * y) - (36 / 30240 : 𝕂) • (x * x * y * x * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y z y z y
+        x x y x y x y
+        M D
+        hz hz hy hz hy hz hy
+        hx hx hy hx hy hx hy
+        hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨21, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * z * y * z * y * y * z) - (36 / 30240 : 𝕂) • (x * x * y * x * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y z y y z
+        x x y x y y x
+        M D
+        hz hz hy hz hy hy hz
+        hx hx hy hx hy hy hx
+        hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨22, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * y * z * y * y * y) - (-6 / 30240 : 𝕂) • (x * x * y * x * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y z y y y
+        x x y x y y y
+        M D
+        hz hz hy hz hy hy hy
+        hx hx hy hx hy hy hy
+        hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨23, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * y * y * z * z * z) - (-6 / 30240 : 𝕂) • (x * x * y * y * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y y z z z
+        x x y y x x x
+        M D
+        hz hz hy hy hz hz hz
+        hx hx hy hy hx hx hx
+        hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨24, _⟩ =>
+    show ‖(-27 / 30240 : 𝕂) • (z * z * y * y * z * z * y) - (-27 / 30240 : 𝕂) • (x * x * y * y * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-27 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y y z z y
+        x x y y x x y
+        M D
+        hz hz hy hy hz hz hy
+        hx hx hy hy hx hx hy
+        hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨25, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * z * y * y * z * y * z) - (36 / 30240 : 𝕂) • (x * x * y * y * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y y z y z
+        x x y y x y x
+        M D
+        hz hz hy hy hz hy hz
+        hx hx hy hy hx hy hx
+        hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨26, _⟩ =>
+    show ‖(-27 / 30240 : 𝕂) • (z * z * y * y * z * y * y) - (-27 / 30240 : 𝕂) • (x * x * y * y * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-27 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y y z y y
+        x x y y x y y
+        M D
+        hz hz hy hy hz hy hy
+        hx hx hy hy hx hy hy
+        hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨27, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * y * y * y * z * z) - (-6 / 30240 : 𝕂) • (x * x * y * y * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y y y z z
+        x x y y y x x
+        M D
+        hz hz hy hy hy hz hz
+        hx hx hy hy hy hx hx
+        hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨28, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * y * y * y * z * y) - (-6 / 30240 : 𝕂) • (x * x * y * y * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y y y z y
+        x x y y y x y
+        M D
+        hz hz hy hy hy hz hy
+        hx hx hy hy hy hx hy
+        hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨29, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * z * y * y * y * y * z) - (15 / 30240 : 𝕂) • (x * x * y * y * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y y y y z
+        x x y y y y x
+        M D
+        hz hz hy hy hy hy hz
+        hx hx hy hy hy hy hx
+        hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨30, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * z * y * y * y * y * y) - (-6 / 30240 : 𝕂) • (x * x * y * y * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z z y y y y y
+        x x y y y y y
+        M D
+        hz hz hy hy hy hy hy
+        hx hx hy hy hy hy hy
+        hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨31, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * y * z * z * z * z * z) - (-6 / 30240 : 𝕂) • (x * y * x * x * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z z z z z
+        x y x x x x x
+        M D
+        hz hy hz hz hz hz hz
+        hx hy hx hx hx hx hx
+        hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨32, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * y * z * z * z * z * y) - (15 / 30240 : 𝕂) • (x * y * x * x * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z z z z y
+        x y x x x x y
+        M D
+        hz hy hz hz hz hz hy
+        hx hy hx hx hx hx hy
+        hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨33, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (z * y * z * z * z * y * z) - (-48 / 30240 : 𝕂) • (x * y * x * x * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z z z y z
+        x y x x x y x
+        M D
+        hz hy hz hz hz hy hz
+        hx hy hx hx hx hy hx
+        hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨34, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * y * z * z * z * y * y) - (-6 / 30240 : 𝕂) • (x * y * x * x * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z z z y y
+        x y x x x y y
+        M D
+        hz hy hz hz hz hy hy
+        hx hy hx hx hx hy hy
+        hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨35, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * z * z * y * z * z) - (36 / 30240 : 𝕂) • (x * y * x * x * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z z y z z
+        x y x x y x x
+        M D
+        hz hy hz hz hy hz hz
+        hx hy hx hx hy hx hx
+        hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨36, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * z * z * y * z * y) - (36 / 30240 : 𝕂) • (x * y * x * x * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z z y z y
+        x y x x y x y
+        M D
+        hz hy hz hz hy hz hy
+        hx hy hx hx hy hx hy
+        hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨37, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * z * z * y * y * z) - (36 / 30240 : 𝕂) • (x * y * x * x * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z z y y z
+        x y x x y y x
+        M D
+        hz hy hz hz hy hy hz
+        hx hy hx hx hy hy hx
+        hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨38, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * y * z * z * y * y * y) - (-6 / 30240 : 𝕂) • (x * y * x * x * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z z y y y
+        x y x x y y y
+        M D
+        hz hy hz hz hy hy hy
+        hx hy hx hx hy hy hy
+        hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨39, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (z * y * z * y * z * z * z) - (-48 / 30240 : 𝕂) • (x * y * x * y * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z y z z z
+        x y x y x x x
+        M D
+        hz hy hz hy hz hz hz
+        hx hy hx hy hx hx hx
+        hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨40, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * z * y * z * z * y) - (36 / 30240 : 𝕂) • (x * y * x * y * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z y z z y
+        x y x y x x y
+        M D
+        hz hy hz hy hz hz hy
+        hx hy hx hy hx hx hy
+        hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨41, _⟩ =>
+    show ‖(-216 / 30240 : 𝕂) • (z * y * z * y * z * y * z) - (-216 / 30240 : 𝕂) • (x * y * x * y * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-216 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z y z y z
+        x y x y x y x
+        M D
+        hz hy hz hy hz hy hz
+        hx hy hx hy hx hy hx
+        hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨42, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * z * y * z * y * y) - (36 / 30240 : 𝕂) • (x * y * x * y * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z y z y y
+        x y x y x y y
+        M D
+        hz hy hz hy hz hy hy
+        hx hy hx hy hx hy hy
+        hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨43, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * z * y * y * z * z) - (36 / 30240 : 𝕂) • (x * y * x * y * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z y y z z
+        x y x y y x x
+        M D
+        hz hy hz hy hy hz hz
+        hx hy hx hy hy hx hx
+        hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨44, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * z * y * y * z * y) - (36 / 30240 : 𝕂) • (x * y * x * y * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z y y z y
+        x y x y y x y
+        M D
+        hz hy hz hy hy hz hy
+        hx hy hx hy hy hx hy
+        hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨45, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (z * y * z * y * y * y * z) - (-48 / 30240 : 𝕂) • (x * y * x * y * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z y y y z
+        x y x y y y x
+        M D
+        hz hy hz hy hy hy hz
+        hx hy hx hy hy hy hx
+        hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨46, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * y * z * y * y * y * y) - (15 / 30240 : 𝕂) • (x * y * x * y * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y z y y y y
+        x y x y y y y
+        M D
+        hz hy hz hy hy hy hy
+        hx hy hx hy hy hy hy
+        hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨47, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * y * y * z * z * z * z) - (15 / 30240 : 𝕂) • (x * y * y * x * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y z z z z
+        x y y x x x x
+        M D
+        hz hy hy hz hz hz hz
+        hx hy hy hx hx hx hx
+        hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨48, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * y * y * z * z * z * y) - (-6 / 30240 : 𝕂) • (x * y * y * x * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y z z z y
+        x y y x x x y
+        M D
+        hz hy hy hz hz hz hy
+        hx hy hy hx hx hx hy
+        hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨49, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * y * z * z * y * z) - (36 / 30240 : 𝕂) • (x * y * y * x * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y z z y z
+        x y y x x y x
+        M D
+        hz hy hy hz hz hy hz
+        hx hy hy hx hx hy hx
+        hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨50, _⟩ =>
+    show ‖(-27 / 30240 : 𝕂) • (z * y * y * z * z * y * y) - (-27 / 30240 : 𝕂) • (x * y * y * x * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-27 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y z z y y
+        x y y x x y y
+        M D
+        hz hy hy hz hz hy hy
+        hx hy hy hx hx hy hy
+        hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨51, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * y * z * y * z * z) - (36 / 30240 : 𝕂) • (x * y * y * x * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y z y z z
+        x y y x y x x
+        M D
+        hz hy hy hz hy hz hz
+        hx hy hy hx hy hx hx
+        hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨52, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * y * z * y * z * y) - (36 / 30240 : 𝕂) • (x * y * y * x * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y z y z y
+        x y y x y x y
+        M D
+        hz hy hy hz hy hz hy
+        hx hy hy hx hy hx hy
+        hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨53, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (z * y * y * z * y * y * z) - (36 / 30240 : 𝕂) • (x * y * y * x * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y z y y z
+        x y y x y y x
+        M D
+        hz hy hy hz hy hy hz
+        hx hy hy hx hy hy hx
+        hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨54, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * y * y * z * y * y * y) - (-6 / 30240 : 𝕂) • (x * y * y * x * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y z y y y
+        x y y x y y y
+        M D
+        hz hy hy hz hy hy hy
+        hx hy hy hx hy hy hy
+        hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨55, _⟩ =>
+    show ‖(-20 / 30240 : 𝕂) • (z * y * y * y * z * z * z) - (-20 / 30240 : 𝕂) • (x * y * y * y * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-20 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y y z z z
+        x y y y x x x
+        M D
+        hz hy hy hy hz hz hz
+        hx hy hy hy hx hx hx
+        hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨56, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * y * y * y * z * z * y) - (-6 / 30240 : 𝕂) • (x * y * y * y * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y y z z y
+        x y y y x x y
+        M D
+        hz hy hy hy hz hz hy
+        hx hy hy hy hx hx hy
+        hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨57, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (z * y * y * y * z * y * z) - (-48 / 30240 : 𝕂) • (x * y * y * y * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y y z y z
+        x y y y x y x
+        M D
+        hz hy hy hy hz hy hz
+        hx hy hy hy hx hy hx
+        hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨58, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * y * y * y * z * y * y) - (-6 / 30240 : 𝕂) • (x * y * y * y * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y y z y y
+        x y y y x y y
+        M D
+        hz hy hy hy hz hy hy
+        hx hy hy hy hx hy hy
+        hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨59, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * y * y * y * y * z * z) - (15 / 30240 : 𝕂) • (x * y * y * y * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y y y z z
+        x y y y y x x
+        M D
+        hz hy hy hy hy hz hz
+        hx hy hy hy hy hx hx
+        hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨60, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (z * y * y * y * y * z * y) - (15 / 30240 : 𝕂) • (x * y * y * y * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y y y z y
+        x y y y y x y
+        M D
+        hz hy hy hy hy hz hy
+        hx hy hy hy hy hx hy
+        hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨61, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (z * y * y * y * y * y * z) - (-6 / 30240 : 𝕂) • (x * y * y * y * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y y y y z
+        x y y y y y x
+        M D
+        hz hy hy hy hy hy hz
+        hx hy hy hy hy hy hx
+        hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨62, _⟩ =>
+    show ‖(1 / 30240 : 𝕂) • (z * y * y * y * y * y * y) - (1 / 30240 : 𝕂) • (x * y * y * y * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (1 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        z y y y y y y
+        x y y y y y y
+        M D
+        hz hy hy hy hy hy hy
+        hx hy hy hy hy hy hy
+        hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨63, _⟩ =>
+    show ‖(1 / 30240 : 𝕂) • (y * z * z * z * z * z * z) - (1 / 30240 : 𝕂) • (y * x * x * x * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (1 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z z z z z
+        y x x x x x x
+        M D
+        hy hz hz hz hz hz hz
+        hy hx hx hx hx hx hx
+        hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨64, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * z * z * z * z * z * y) - (-6 / 30240 : 𝕂) • (y * x * x * x * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z z z z y
+        y x x x x x y
+        M D
+        hy hz hz hz hz hz hy
+        hy hx hx hx hx hx hy
+        hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨65, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * z * z * z * z * y * z) - (15 / 30240 : 𝕂) • (y * x * x * x * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z z z y z
+        y x x x x y x
+        M D
+        hy hz hz hz hz hy hz
+        hy hx hx hx hx hy hx
+        hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨66, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * z * z * z * z * y * y) - (15 / 30240 : 𝕂) • (y * x * x * x * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z z z y y
+        y x x x x y y
+        M D
+        hy hz hz hz hz hy hy
+        hy hx hx hx hx hy hy
+        hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨67, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * z * z * z * y * z * z) - (-6 / 30240 : 𝕂) • (y * x * x * x * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z z y z z
+        y x x x y x x
+        M D
+        hy hz hz hz hy hz hz
+        hy hx hx hx hy hx hx
+        hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨68, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (y * z * z * z * y * z * y) - (-48 / 30240 : 𝕂) • (y * x * x * x * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z z y z y
+        y x x x y x y
+        M D
+        hy hz hz hz hy hz hy
+        hy hx hx hx hy hx hy
+        hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨69, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * z * z * z * y * y * z) - (-6 / 30240 : 𝕂) • (y * x * x * x * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z z y y z
+        y x x x y y x
+        M D
+        hy hz hz hz hy hy hz
+        hy hx hx hx hy hy hx
+        hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨70, _⟩ =>
+    show ‖(-20 / 30240 : 𝕂) • (y * z * z * z * y * y * y) - (-20 / 30240 : 𝕂) • (y * x * x * x * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-20 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z z y y y
+        y x x x y y y
+        M D
+        hy hz hz hz hy hy hy
+        hy hx hx hx hy hy hy
+        hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨71, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * z * z * y * z * z * z) - (-6 / 30240 : 𝕂) • (y * x * x * y * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z y z z z
+        y x x y x x x
+        M D
+        hy hz hz hy hz hz hz
+        hy hx hx hy hx hx hx
+        hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨72, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * z * y * z * z * y) - (36 / 30240 : 𝕂) • (y * x * x * y * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z y z z y
+        y x x y x x y
+        M D
+        hy hz hz hy hz hz hy
+        hy hx hx hy hx hx hy
+        hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨73, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * z * y * z * y * z) - (36 / 30240 : 𝕂) • (y * x * x * y * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z y z y z
+        y x x y x y x
+        M D
+        hy hz hz hy hz hy hz
+        hy hx hx hy hx hy hx
+        hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨74, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * z * y * z * y * y) - (36 / 30240 : 𝕂) • (y * x * x * y * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z y z y y
+        y x x y x y y
+        M D
+        hy hz hz hy hz hy hy
+        hy hx hx hy hx hy hy
+        hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨75, _⟩ =>
+    show ‖(-27 / 30240 : 𝕂) • (y * z * z * y * y * z * z) - (-27 / 30240 : 𝕂) • (y * x * x * y * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-27 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z y y z z
+        y x x y y x x
+        M D
+        hy hz hz hy hy hz hz
+        hy hx hx hy hy hx hx
+        hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨76, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * z * y * y * z * y) - (36 / 30240 : 𝕂) • (y * x * x * y * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z y y z y
+        y x x y y x y
+        M D
+        hy hz hz hy hy hz hy
+        hy hx hx hy hy hx hy
+        hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨77, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * z * z * y * y * y * z) - (-6 / 30240 : 𝕂) • (y * x * x * y * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z y y y z
+        y x x y y y x
+        M D
+        hy hz hz hy hy hy hz
+        hy hx hx hy hy hy hx
+        hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨78, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * z * z * y * y * y * y) - (15 / 30240 : 𝕂) • (y * x * x * y * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z z y y y y
+        y x x y y y y
+        M D
+        hy hz hz hy hy hy hy
+        hy hx hx hy hy hy hy
+        hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨79, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * z * y * z * z * z * z) - (15 / 30240 : 𝕂) • (y * x * y * x * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y z z z z
+        y x y x x x x
+        M D
+        hy hz hy hz hz hz hz
+        hy hx hy hx hx hx hx
+        hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨80, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (y * z * y * z * z * z * y) - (-48 / 30240 : 𝕂) • (y * x * y * x * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y z z z y
+        y x y x x x y
+        M D
+        hy hz hy hz hz hz hy
+        hy hx hy hx hx hx hy
+        hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨81, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * y * z * z * y * z) - (36 / 30240 : 𝕂) • (y * x * y * x * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y z z y z
+        y x y x x y x
+        M D
+        hy hz hy hz hz hy hz
+        hy hx hy hx hx hy hx
+        hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨82, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * y * z * z * y * y) - (36 / 30240 : 𝕂) • (y * x * y * x * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y z z y y
+        y x y x x y y
+        M D
+        hy hz hy hz hz hy hy
+        hy hx hy hx hx hy hy
+        hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨83, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * y * z * y * z * z) - (36 / 30240 : 𝕂) • (y * x * y * x * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y z y z z
+        y x y x y x x
+        M D
+        hy hz hy hz hy hz hz
+        hy hx hy hx hy hx hx
+        hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨84, _⟩ =>
+    show ‖(-216 / 30240 : 𝕂) • (y * z * y * z * y * z * y) - (-216 / 30240 : 𝕂) • (y * x * y * x * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-216 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y z y z y
+        y x y x y x y
+        M D
+        hy hz hy hz hy hz hy
+        hy hx hy hx hy hx hy
+        hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨85, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * y * z * y * y * z) - (36 / 30240 : 𝕂) • (y * x * y * x * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y z y y z
+        y x y x y y x
+        M D
+        hy hz hy hz hy hy hz
+        hy hx hy hx hy hy hx
+        hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨86, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (y * z * y * z * y * y * y) - (-48 / 30240 : 𝕂) • (y * x * y * x * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y z y y y
+        y x y x y y y
+        M D
+        hy hz hy hz hy hy hy
+        hy hx hy hx hy hy hy
+        hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨87, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * z * y * y * z * z * z) - (-6 / 30240 : 𝕂) • (y * x * y * y * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y y z z z
+        y x y y x x x
+        M D
+        hy hz hy hy hz hz hz
+        hy hx hy hy hx hx hx
+        hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨88, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * y * y * z * z * y) - (36 / 30240 : 𝕂) • (y * x * y * y * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y y z z y
+        y x y y x x y
+        M D
+        hy hz hy hy hz hz hy
+        hy hx hy hy hx hx hy
+        hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨89, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * y * y * z * y * z) - (36 / 30240 : 𝕂) • (y * x * y * y * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y y z y z
+        y x y y x y x
+        M D
+        hy hz hy hy hz hy hz
+        hy hx hy hy hx hy hx
+        hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨90, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * z * y * y * z * y * y) - (36 / 30240 : 𝕂) • (y * x * y * y * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y y z y y
+        y x y y x y y
+        M D
+        hy hz hy hy hz hy hy
+        hy hx hy hy hx hy hy
+        hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨91, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * z * y * y * y * z * z) - (-6 / 30240 : 𝕂) • (y * x * y * y * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y y y z z
+        y x y y y x x
+        M D
+        hy hz hy hy hy hz hz
+        hy hx hy hy hy hx hx
+        hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨92, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (y * z * y * y * y * z * y) - (-48 / 30240 : 𝕂) • (y * x * y * y * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y y y z y
+        y x y y y x y
+        M D
+        hy hz hy hy hy hz hy
+        hy hx hy hy hy hx hy
+        hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨93, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * z * y * y * y * y * z) - (15 / 30240 : 𝕂) • (y * x * y * y * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y y y y z
+        y x y y y y x
+        M D
+        hy hz hy hy hy hy hz
+        hy hx hy hy hy hy hx
+        hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨94, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * z * y * y * y * y * y) - (-6 / 30240 : 𝕂) • (y * x * y * y * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y z y y y y y
+        y x y y y y y
+        M D
+        hy hz hy hy hy hy hy
+        hy hx hy hy hy hy hy
+        hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨95, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * z * z * z * z * z) - (-6 / 30240 : 𝕂) • (y * y * x * x * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z z z z z
+        y y x x x x x
+        M D
+        hy hy hz hz hz hz hz
+        hy hy hx hx hx hx hx
+        hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨96, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * y * z * z * z * z * y) - (15 / 30240 : 𝕂) • (y * y * x * x * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z z z z y
+        y y x x x x y
+        M D
+        hy hy hz hz hz hz hy
+        hy hy hx hx hx hx hy
+        hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨97, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * z * z * z * y * z) - (-6 / 30240 : 𝕂) • (y * y * x * x * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z z z y z
+        y y x x x y x
+        M D
+        hy hy hz hz hz hy hz
+        hy hy hx hx hx hy hx
+        hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨98, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * z * z * z * y * y) - (-6 / 30240 : 𝕂) • (y * y * x * x * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z z z y y
+        y y x x x y y
+        M D
+        hy hy hz hz hz hy hy
+        hy hy hx hx hx hy hy
+        hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨99, _⟩ =>
+    show ‖(-27 / 30240 : 𝕂) • (y * y * z * z * y * z * z) - (-27 / 30240 : 𝕂) • (y * y * x * x * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-27 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z z y z z
+        y y x x y x x
+        M D
+        hy hy hz hz hy hz hz
+        hy hy hx hx hy hx hx
+        hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨100, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * y * z * z * y * z * y) - (36 / 30240 : 𝕂) • (y * y * x * x * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z z y z y
+        y y x x y x y
+        M D
+        hy hy hz hz hy hz hy
+        hy hy hx hx hy hx hy
+        hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨101, _⟩ =>
+    show ‖(-27 / 30240 : 𝕂) • (y * y * z * z * y * y * z) - (-27 / 30240 : 𝕂) • (y * y * x * x * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-27 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z z y y z
+        y y x x y y x
+        M D
+        hy hy hz hz hy hy hz
+        hy hy hx hx hy hy hx
+        hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨102, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * z * z * y * y * y) - (-6 / 30240 : 𝕂) • (y * y * x * x * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z z y y y
+        y y x x y y y
+        M D
+        hy hy hz hz hy hy hy
+        hy hy hx hx hy hy hy
+        hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨103, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * z * y * z * z * z) - (-6 / 30240 : 𝕂) • (y * y * x * y * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z y z z z
+        y y x y x x x
+        M D
+        hy hy hz hy hz hz hz
+        hy hy hx hy hx hx hx
+        hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨104, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * y * z * y * z * z * y) - (36 / 30240 : 𝕂) • (y * y * x * y * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z y z z y
+        y y x y x x y
+        M D
+        hy hy hz hy hz hz hy
+        hy hy hx hy hx hx hy
+        hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨105, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * y * z * y * z * y * z) - (36 / 30240 : 𝕂) • (y * y * x * y * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z y z y z
+        y y x y x y x
+        M D
+        hy hy hz hy hz hy hz
+        hy hy hx hy hx hy hx
+        hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨106, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * y * z * y * z * y * y) - (36 / 30240 : 𝕂) • (y * y * x * y * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z y z y y
+        y y x y x y y
+        M D
+        hy hy hz hy hz hy hy
+        hy hy hx hy hx hy hy
+        hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨107, _⟩ =>
+    show ‖(-27 / 30240 : 𝕂) • (y * y * z * y * y * z * z) - (-27 / 30240 : 𝕂) • (y * y * x * y * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-27 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z y y z z
+        y y x y y x x
+        M D
+        hy hy hz hy hy hz hz
+        hy hy hx hy hy hx hx
+        hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨108, _⟩ =>
+    show ‖(36 / 30240 : 𝕂) • (y * y * z * y * y * z * y) - (36 / 30240 : 𝕂) • (y * y * x * y * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (36 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z y y z y
+        y y x y y x y
+        M D
+        hy hy hz hy hy hz hy
+        hy hy hx hy hy hx hy
+        hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨109, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * z * y * y * y * z) - (-6 / 30240 : 𝕂) • (y * y * x * y * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z y y y z
+        y y x y y y x
+        M D
+        hy hy hz hy hy hy hz
+        hy hy hx hy hy hy hx
+        hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨110, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * y * z * y * y * y * y) - (15 / 30240 : 𝕂) • (y * y * x * y * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y z y y y y
+        y y x y y y y
+        M D
+        hy hy hz hy hy hy hy
+        hy hy hx hy hy hy hy
+        hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨111, _⟩ =>
+    show ‖(8 / 30240 : 𝕂) • (y * y * y * z * z * z * z) - (8 / 30240 : 𝕂) • (y * y * y * x * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (8 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y z z z z
+        y y y x x x x
+        M D
+        hy hy hy hz hz hz hz
+        hy hy hy hx hx hx hx
+        hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨112, _⟩ =>
+    show ‖(-20 / 30240 : 𝕂) • (y * y * y * z * z * z * y) - (-20 / 30240 : 𝕂) • (y * y * y * x * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-20 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y z z z y
+        y y y x x x y
+        M D
+        hy hy hy hz hz hz hy
+        hy hy hy hx hx hx hy
+        hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨113, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * y * z * z * y * z) - (-6 / 30240 : 𝕂) • (y * y * y * x * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y z z y z
+        y y y x x y x
+        M D
+        hy hy hy hz hz hy hz
+        hy hy hy hx hx hy hx
+        hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨114, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * y * z * z * y * y) - (-6 / 30240 : 𝕂) • (y * y * y * x * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y z z y y
+        y y y x x y y
+        M D
+        hy hy hy hz hz hy hy
+        hy hy hy hx hx hy hy
+        hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨115, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * y * z * y * z * z) - (-6 / 30240 : 𝕂) • (y * y * y * x * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y z y z z
+        y y y x y x x
+        M D
+        hy hy hy hz hy hz hz
+        hy hy hy hx hy hx hx
+        hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨116, _⟩ =>
+    show ‖(-48 / 30240 : 𝕂) • (y * y * y * z * y * z * y) - (-48 / 30240 : 𝕂) • (y * y * y * x * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-48 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y z y z y
+        y y y x y x y
+        M D
+        hy hy hy hz hy hz hy
+        hy hy hy hx hy hx hy
+        hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨117, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * y * z * y * y * z) - (-6 / 30240 : 𝕂) • (y * y * y * x * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y z y y z
+        y y y x y y x
+        M D
+        hy hy hy hz hy hy hz
+        hy hy hy hx hy hy hx
+        hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨118, _⟩ =>
+    show ‖(-20 / 30240 : 𝕂) • (y * y * y * z * y * y * y) - (-20 / 30240 : 𝕂) • (y * y * y * x * y * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-20 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y z y y y
+        y y y x y y y
+        M D
+        hy hy hy hz hy hy hy
+        hy hy hy hx hy hy hy
+        hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨119, _⟩ =>
+    show ‖(8 / 30240 : 𝕂) • (y * y * y * y * z * z * z) - (8 / 30240 : 𝕂) • (y * y * y * y * x * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (8 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y y z z z
+        y y y y x x x
+        M D
+        hy hy hy hy hz hz hz
+        hy hy hy hy hx hx hx
+        hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨120, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * y * y * y * z * z * y) - (15 / 30240 : 𝕂) • (y * y * y * y * x * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y y z z y
+        y y y y x x y
+        M D
+        hy hy hy hy hz hz hy
+        hy hy hy hy hx hx hy
+        hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨121, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * y * y * y * z * y * z) - (15 / 30240 : 𝕂) • (y * y * y * y * x * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y y z y z
+        y y y y x y x
+        M D
+        hy hy hy hy hz hy hz
+        hy hy hy hy hx hy hx
+        hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨122, _⟩ =>
+    show ‖(15 / 30240 : 𝕂) • (y * y * y * y * z * y * y) - (15 / 30240 : 𝕂) • (y * y * y * y * x * y * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (15 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y y z y y
+        y y y y x y y
+        M D
+        hy hy hy hy hz hy hy
+        hy hy hy hy hx hy hy
+        hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨123, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * y * y * y * z * z) - (-6 / 30240 : 𝕂) • (y * y * y * y * y * x * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y y y z z
+        y y y y y x x
+        M D
+        hy hy hy hy hy hz hz
+        hy hy hy hy hy hx hx
+        hyy_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨124, _⟩ =>
+    show ‖(-6 / 30240 : 𝕂) • (y * y * y * y * y * z * y) - (-6 / 30240 : 𝕂) • (y * y * y * y * y * x * y)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (-6 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y y y z y
+        y y y y y x y
+        M D
+        hy hy hy hy hy hz hy
+        hy hy hy hy hy hx hy
+        hyy_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D hyy_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨125, _⟩ =>
+    show ‖(1 / 30240 : 𝕂) • (y * y * y * y * y * y * z) - (1 / 30240 : 𝕂) • (y * y * y * y * y * y * x)‖ ≤
+         (216 / 30240 : ℝ) * 7 * M^6 * D
+    exact deg7_smul_word_diff_le_basic (1 / 30240 : 𝕂) (216 / 30240 : ℝ)
+        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)
+        y y y y y y z
+        y y y y y y x
+        M D
+        hy hy hy hy hy hy hz
+        hy hy hy hy hy hy hx
+        hyy_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hyy_le_D hzx_le_D
+        (by norm_num) hM_nn hD_nn
+  | ⟨_ + 126, h⟩ => exact absurd h (by omega)
+
+set_option maxHeartbeats 800000 in
+/-- **Lipschitz bound for `bch_septic_term`**: `‖Z₇(z, y) − Z₇(x, y)‖ ≤ 7·M⁶·‖z−x‖`
+where `M = ‖z‖+‖x‖+‖y‖`.
+
+Analog of `norm_bch_sextic_term_diff_le` at one degree higher; with
+`z = (a'+b) + W` and `‖W‖ = O(s²)`, gives an O(s⁸·‖W‖) bound on
+`‖C₇(z, y) − C₇(a'+b, y)‖`. Foundation for stepping stone 1
+(`symmetric_bch_septic_sub_poly_axiom` discharge).
+
+The proof uses a uniform per-i bound `(216/30240) · 7 · M⁶ · ‖z−x‖`,
+giving `Σ ≤ 126·216·7/30240 = 190512/30240 = 63/10 ≤ 7`. -/
+theorem norm_bch_septic_term_diff_le (z x y : 𝔸) :
+    ‖bch_septic_term 𝕂 z y - bch_septic_term 𝕂 x y‖ ≤
+      7 * (‖z‖ + ‖x‖ + ‖y‖) ^ 6 * ‖z - x‖ := by
+  set M := ‖z‖ + ‖x‖ + ‖y‖ with hM_def
+  have hM_nn : 0 ≤ M := by positivity
+  have hz_le : ‖z‖ ≤ M := by
+    show ‖z‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg x, norm_nonneg y]
+  have hx_le : ‖x‖ ≤ M := by
+    show ‖x‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg y]
+  have hy_le : ‖y‖ ≤ M := by
+    show ‖y‖ ≤ ‖z‖ + ‖x‖ + ‖y‖; linarith [norm_nonneg z, norm_nonneg x]
+  have hM6_nn : 0 ≤ M^6 := pow_nonneg hM_nn 6
+  have hzx_nn : 0 ≤ ‖z - x‖ := norm_nonneg _
+  rw [bch_septic_term_eq_sum, bch_septic_term_eq_sum, ← Finset.sum_sub_distrib]
+  calc ‖∑ i : Fin 126, (bchSepticTerm (𝕂 := 𝕂) z y i - bchSepticTerm (𝕂 := 𝕂) x y i)‖
+      ≤ ∑ i : Fin 126, ‖bchSepticTerm (𝕂 := 𝕂) z y i - bchSepticTerm (𝕂 := 𝕂) x y i‖ := norm_sum_le _ _
+    _ ≤ ∑ _i : Fin 126, (216 / 30240 : ℝ) * 7 * M^6 * ‖z - x‖ :=
+        Finset.sum_le_sum (fun i _ => bchSepticTerm_diff_norm_le (𝕂 := 𝕂) z x y M hz_le hx_le hy_le hM_nn i)
+    _ = 126 * ((216 / 30240 : ℝ) * 7 * M^6 * ‖z - x‖) := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring
+    _ ≤ 7 * M^6 * ‖z - x‖ := by nlinarith [hM6_nn, hzx_nn]
+
 /-! #### Lipschitz bounds for `bch_sextic_term` per-word — sample (Phase A.2 of T2-F7e)
 
 Per-word Lipschitz bounds: for each 6-letter word `w` in `bch_sextic_term`,
