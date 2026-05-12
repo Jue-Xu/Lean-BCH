@@ -12623,6 +12623,15 @@ private theorem pow6_sub_zpow6_telescope (y P : 𝔸) :
         y ^ 2 * P * (y - P) ^ 3 + y * P * (y - P) ^ 4 + P * (y - P) ^ 5 := by
   noncomm_ring
 
+/-- 7-fold non-commutative telescoping: `y⁷ - (y - P)⁷` expands as a sum of
+seven 7-letter words, each with one `P` factor and six `y`/`(y-P)` factors. -/
+private theorem pow7_sub_zpow7_telescope (y P : 𝔸) :
+    y ^ 7 - (y - P) ^ 7 =
+      y ^ 6 * P + y ^ 5 * P * (y - P) + y ^ 4 * P * (y - P) ^ 2 +
+        y ^ 3 * P * (y - P) ^ 3 + y ^ 2 * P * (y - P) ^ 4 +
+        y * P * (y - P) ^ 5 + P * (y - P) ^ 6 := by
+  noncomm_ring
+
 /-- 4-fold non-commutative telescoping: `y⁴ - (y - P)⁴` expands as a sum of
 four 4-letter words, each with one `P` factor and three `y`/`(y-P)` factors. -/
 private theorem pow4_sub_zpow4_telescope (y P : 𝔸) :
@@ -12791,6 +12800,102 @@ private theorem norm_pow6_sub_zpow6_le (y P : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
   have ht4 := norm_add_le (y ^ 5 * P + y ^ 4 * P * z) (y ^ 3 * P * z ^ 2)
   have ht5 := norm_add_le (y ^ 5 * P) (y ^ 4 * P * z)
   nlinarith [pow_nonneg hs_nn 7]
+
+/-- Norm bound for the 7-fold telescoping: given `‖y‖ ≤ 2s`, `‖z‖ ≤ s`,
+`‖P‖ ≤ s²`, `‖y⁷ - z⁷‖ ≤ 127·s⁸`. Used in the small-s case of the octic
+remainder bound (analog of `norm_pow6_sub_zpow6_le` at one degree higher).
+
+Per-term bounds: `(2s)⁶·s² + (2s)⁵·s²·s + (2s)⁴·s²·s² + (2s)³·s²·s³ +
+                 (2s)²·s²·s⁴ + (2s)·s²·s⁵ + s²·s⁶
+                = 64s⁸ + 32s⁸ + 16s⁸ + 8s⁸ + 4s⁸ + 2s⁸ + s⁸ = 127s⁸`. -/
+private theorem norm_pow7_sub_zpow7_le (y P : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hy : ‖y‖ ≤ 2 * s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2) :
+    ‖y ^ 7 - (y - P) ^ 7‖ ≤ 127 * s ^ 8 := by
+  rw [pow7_sub_zpow7_telescope]
+  set z : 𝔸 := y - P with hz_def
+  have hzn : ‖z‖ ≤ s := hz
+  -- Seven terms, bounded individually.
+  have h_y6P : ‖y ^ 6 * P‖ ≤ (2 * s) ^ 6 * s ^ 2 :=
+    calc ‖y ^ 6 * P‖ ≤ ‖y ^ 6‖ * ‖P‖ := norm_mul_le _ _
+      _ ≤ ‖y‖ ^ 6 * ‖P‖ := by gcongr; exact norm_pow_le y 6
+      _ ≤ (2 * s) ^ 6 * s ^ 2 :=
+          mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hy 6) hP (by positivity) (by positivity)
+  have h_y5Pz : ‖y ^ 5 * P * z‖ ≤ (2 * s) ^ 5 * s ^ 2 * s :=
+    calc ‖y ^ 5 * P * z‖ ≤ ‖y ^ 5 * P‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖y‖ ^ 5 * ‖P‖) * ‖z‖ := by
+          gcongr
+          calc _ ≤ ‖y ^ 5‖ * ‖P‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le y 5
+      _ ≤ ((2 * s) ^ 5 * s ^ 2) * s := by
+          apply mul_le_mul _ hzn (norm_nonneg _) (by positivity)
+          exact mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hy 5) hP
+            (norm_nonneg _) (by positivity)
+  have h_y4Pz2 : ‖y ^ 4 * P * z ^ 2‖ ≤ (2 * s) ^ 4 * s ^ 2 * s ^ 2 :=
+    calc ‖y ^ 4 * P * z ^ 2‖ ≤ ‖y ^ 4 * P‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ (‖y‖ ^ 4 * ‖P‖) * ‖z‖ ^ 2 := by
+          gcongr
+          · calc _ ≤ ‖y ^ 4‖ * ‖P‖ := norm_mul_le _ _
+              _ ≤ _ := by gcongr; exact norm_pow_le y 4
+          · exact norm_pow_le z 2
+      _ ≤ ((2 * s) ^ 4 * s ^ 2) * s ^ 2 := by
+          apply mul_le_mul _ (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+            (by positivity) (by positivity)
+          exact mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hy 4) hP
+            (norm_nonneg _) (by positivity)
+  have h_y3Pz3 : ‖y ^ 3 * P * z ^ 3‖ ≤ (2 * s) ^ 3 * s ^ 2 * s ^ 3 :=
+    calc ‖y ^ 3 * P * z ^ 3‖ ≤ ‖y ^ 3 * P‖ * ‖z ^ 3‖ := norm_mul_le _ _
+      _ ≤ (‖y‖ ^ 3 * ‖P‖) * ‖z‖ ^ 3 := by
+          gcongr
+          · calc _ ≤ ‖y ^ 3‖ * ‖P‖ := norm_mul_le _ _
+              _ ≤ _ := by gcongr; exact norm_pow_le y 3
+          · exact norm_pow_le z 3
+      _ ≤ ((2 * s) ^ 3 * s ^ 2) * s ^ 3 := by
+          apply mul_le_mul _ (pow_le_pow_left₀ (norm_nonneg _) hzn 3)
+            (by positivity) (by positivity)
+          exact mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hy 3) hP
+            (norm_nonneg _) (by positivity)
+  have h_y2Pz4 : ‖y ^ 2 * P * z ^ 4‖ ≤ (2 * s) ^ 2 * s ^ 2 * s ^ 4 :=
+    calc ‖y ^ 2 * P * z ^ 4‖ ≤ ‖y ^ 2 * P‖ * ‖z ^ 4‖ := norm_mul_le _ _
+      _ ≤ (‖y‖ ^ 2 * ‖P‖) * ‖z‖ ^ 4 := by
+          gcongr
+          · calc _ ≤ ‖y ^ 2‖ * ‖P‖ := norm_mul_le _ _
+              _ ≤ _ := by gcongr; exact norm_pow_le y 2
+          · exact norm_pow_le z 4
+      _ ≤ ((2 * s) ^ 2 * s ^ 2) * s ^ 4 := by
+          apply mul_le_mul _ (pow_le_pow_left₀ (norm_nonneg _) hzn 4)
+            (by positivity) (by positivity)
+          exact mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hy 2) hP
+            (norm_nonneg _) (by positivity)
+  have h_yPz5 : ‖y * P * z ^ 5‖ ≤ 2 * s * s ^ 2 * s ^ 5 :=
+    calc ‖y * P * z ^ 5‖ ≤ ‖y * P‖ * ‖z ^ 5‖ := norm_mul_le _ _
+      _ ≤ (‖y‖ * ‖P‖) * ‖z‖ ^ 5 := by
+          gcongr
+          · exact norm_mul_le _ _
+          · exact norm_pow_le z 5
+      _ ≤ (2 * s * s ^ 2) * s ^ 5 := by
+          apply mul_le_mul _ (pow_le_pow_left₀ (norm_nonneg _) hzn 5)
+            (by positivity) (by positivity)
+          exact mul_le_mul hy hP (norm_nonneg _) (by positivity)
+  have h_Pz6 : ‖P * z ^ 6‖ ≤ s ^ 2 * s ^ 6 :=
+    calc ‖P * z ^ 6‖ ≤ ‖P‖ * ‖z ^ 6‖ := norm_mul_le _ _
+      _ ≤ ‖P‖ * ‖z‖ ^ 6 := by gcongr; exact norm_pow_le z 6
+      _ ≤ s ^ 2 * s ^ 6 := mul_le_mul hP (pow_le_pow_left₀ (norm_nonneg _) hzn 6)
+          (by positivity) (by positivity)
+  -- Sum via triangle inequality (6 norm_add_le applications)
+  have ht1 := norm_add_le
+    (y ^ 6 * P + y ^ 5 * P * z + y ^ 4 * P * z ^ 2 + y ^ 3 * P * z ^ 3 +
+      y ^ 2 * P * z ^ 4 + y * P * z ^ 5) (P * z ^ 6)
+  have ht2 := norm_add_le
+    (y ^ 6 * P + y ^ 5 * P * z + y ^ 4 * P * z ^ 2 + y ^ 3 * P * z ^ 3 +
+      y ^ 2 * P * z ^ 4) (y * P * z ^ 5)
+  have ht3 := norm_add_le
+    (y ^ 6 * P + y ^ 5 * P * z + y ^ 4 * P * z ^ 2 + y ^ 3 * P * z ^ 3)
+    (y ^ 2 * P * z ^ 4)
+  have ht4 := norm_add_le
+    (y ^ 6 * P + y ^ 5 * P * z + y ^ 4 * P * z ^ 2) (y ^ 3 * P * z ^ 3)
+  have ht5 := norm_add_le (y ^ 6 * P + y ^ 5 * P * z) (y ^ 4 * P * z ^ 2)
+  have ht6 := norm_add_le (y ^ 6 * P) (y ^ 5 * P * z)
+  nlinarith [pow_nonneg hs_nn 8]
 
 /-- Norm bound for `y² - z²` (2-fold telescoping) where `z = y - P`,
 given `‖y‖ ≤ 2s`, `‖P‖ ≤ s²`, `‖z‖ ≤ s`. -/
