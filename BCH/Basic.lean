@@ -10527,6 +10527,132 @@ private lemma real_exp_sub_one_pow7_le_small {s : ℝ} (hs_nn : 0 ≤ s)
         linarith
     _ = 2 * s ^ 7 := by ring
 
+/-- **Eighth-order noncommutative exp tail bound**: norm of the deg-8+ tail
+of `exp(x) = ∑ xⁿ/n!` is bounded by the corresponding real tail.
+
+Adds one more level to `norm_exp_sub_one_sub_sub_sub_sub_sub_sub_le`. -/
+private theorem norm_exp_sub_one_sub_sub_sub_sub_sub_sub_sub_le (x : 𝔸) :
+    ‖exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3 - (24 : 𝕂)⁻¹ • x ^ 4 -
+        (120 : 𝕂)⁻¹ • x ^ 5 - (720 : 𝕂)⁻¹ • x ^ 6 - (5040 : 𝕂)⁻¹ • x ^ 7‖ ≤
+      Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6 - ‖x‖ ^ 4 / 24 -
+        ‖x‖ ^ 5 / 120 - ‖x‖ ^ 6 / 720 - ‖x‖ ^ 7 / 5040 := by
+  set f : ℕ → 𝔸 := fun n => (n !⁻¹ : 𝕂) • x ^ n
+  have hf_summ : Summable f := NormedSpace.expSeries_summable' (𝕂 := 𝕂) x
+  have hf0 : f 0 = 1 := by simp [f]
+  have hf1 : f 1 = x := by simp [f]
+  have hf2 : f 2 = (2 : 𝕂)⁻¹ • x ^ 2 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    ring
+  have hf3 : f 3 = (6 : 𝕂)⁻¹ • x ^ 3 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf4 : f 4 = (24 : 𝕂)⁻¹ • x ^ 4 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf5 : f 5 = (120 : 𝕂)⁻¹ • x ^ 5 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf6 : f 6 = (720 : 𝕂)⁻¹ • x ^ 6 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf7 : f 7 = (5040 : 𝕂)⁻¹ • x ^ 7 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have h_sub : exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3 -
+      (24 : 𝕂)⁻¹ • x ^ 4 - (120 : 𝕂)⁻¹ • x ^ 5 - (720 : 𝕂)⁻¹ • x ^ 6 -
+      (5040 : 𝕂)⁻¹ • x ^ 7 = ∑' n, f (n + 8) := by
+    rw [congr_fun (exp_eq_tsum 𝕂 (𝔸 := 𝔸)) x]
+    have h1 := hf_summ.tsum_eq_zero_add; rw [hf0] at h1
+    have h2 := ((summable_nat_add_iff 1).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf1] at h2
+    have h3 := ((summable_nat_add_iff 2).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf2] at h3
+    have h4 := ((summable_nat_add_iff 3).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf3] at h4
+    have h5 := ((summable_nat_add_iff 4).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf4] at h5
+    have h6 := ((summable_nat_add_iff 5).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf5] at h6
+    have h7 := ((summable_nat_add_iff 6).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf6] at h7
+    have h8 := ((summable_nat_add_iff 7).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf7] at h8
+    rw [h1, add_sub_cancel_left, h2, add_sub_cancel_left, h3, add_sub_cancel_left,
+        h4, add_sub_cancel_left, h5, add_sub_cancel_left, h6, add_sub_cancel_left,
+        h7, add_sub_cancel_left, h8, add_sub_cancel_left]
+  rw [h_sub]
+  have h_rexp := hasSum_real_exp ‖x‖
+  have h_summ8 : Summable (fun n => ((n + 8) !⁻¹ : ℝ) * ‖x‖ ^ (n + 8)) :=
+    (summable_nat_add_iff 8).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 8) !⁻¹ : ℝ) * ‖x‖ ^ (n + 8))
+      (Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6 - ‖x‖ ^ 4 / 24 -
+        ‖x‖ ^ 5 / 120 - ‖x‖ ^ 6 / 720 - ‖x‖ ^ 7 / 5040) := by
+    rw [h_summ8.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split5 := ((summable_nat_add_iff 4).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split6 := ((summable_nat_add_iff 5).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split7 := ((summable_nat_add_iff 6).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split8 := ((summable_nat_add_iff 7).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4 h_split5 h_split6 h_split7 h_split8
+    linarith
+  exact tsum_of_norm_bounded h_val (fun n => norm_expSeries_term_le' (𝕂 := 𝕂) x (n + 8))
+
+-- For 0 ≤ s with s < 3/4, the eighth-order Taylor remainder satisfies
+-- exp(s) - 1 - s - ... - s⁷/5040 ≤ s⁸.
+private lemma real_exp_eighth_order_le_octic {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 3 / 4) :
+    Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 - s ^ 5 / 120 -
+        s ^ 6 / 720 - s ^ 7 / 5040 ≤ s ^ 8 := by
+  have hs_lt1 : s < 1 := by linarith
+  have h_rexp := hasSum_real_exp s
+  have h_summ8 : Summable (fun n => ((n + 8) !⁻¹ : ℝ) * s ^ (n + 8)) :=
+    (summable_nat_add_iff 8).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 8) !⁻¹ : ℝ) * s ^ (n + 8))
+      (Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 - s ^ 5 / 120 -
+        s ^ 6 / 720 - s ^ 7 / 5040) := by
+    rw [h_summ8.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split5 := ((summable_nat_add_iff 4).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split6 := ((summable_nat_add_iff 5).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split7 := ((summable_nat_add_iff 6).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split8 := ((summable_nat_add_iff 7).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4 h_split5 h_split6 h_split7 h_split8
+    linarith
+  -- Comparison: (n+8)!⁻¹ * s^(n+8) ≤ (40320)⁻¹ * s^(n+8) since (n+8)! ≥ 8! = 40320
+  have h_geom_summ : Summable (fun n => s ^ (n + 8) / 40320) := by
+    apply Summable.div_const
+    exact (summable_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 8) |>.congr fun n => by ring
+  have hterm : ∀ n, ((n + 8) !⁻¹ : ℝ) * s ^ (n + 8) ≤ s ^ (n + 8) * (40320 : ℝ)⁻¹ := by
+    intro n
+    rw [mul_comm]
+    apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs _)
+    rw [inv_le_inv₀ (by positivity : (0 : ℝ) < (n + 8)!) (by positivity : (0 : ℝ) < 40320)]
+    have : (8 : ℕ)! ≤ (n + 8)! := Nat.factorial_le (by omega)
+    exact_mod_cast this
+  have h_geom : HasSum (fun n => s ^ (n + 8) * (40320 : ℝ)⁻¹)
+      (s ^ 8 * (1 - s)⁻¹ * (40320 : ℝ)⁻¹) := by
+    have hg := (hasSum_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 8)
+    have h_eq : (fun n => s ^ 8 * s ^ n) = (fun n => s ^ (n + 8)) := by ext n; ring
+    rw [h_eq] at hg
+    exact hg.mul_right (40320 : ℝ)⁻¹
+  calc Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 - s ^ 5 / 120 -
+        s ^ 6 / 720 - s ^ 7 / 5040
+      = ∑' n, ((n + 8) !⁻¹ : ℝ) * s ^ (n + 8) := h_val.tsum_eq.symm
+    _ ≤ ∑' n, (s ^ (n + 8) * (40320 : ℝ)⁻¹) :=
+        h_summ8.tsum_le_tsum hterm h_geom.summable
+    _ = s ^ 8 * (1 - s)⁻¹ * (40320 : ℝ)⁻¹ := h_geom.tsum_eq
+    _ = s ^ 8 / (40320 * (1 - s)) := by rw [div_eq_mul_inv, mul_inv_rev]; ring
+    _ ≤ s ^ 8 := by
+        rw [div_le_iff₀ (by nlinarith : (0 : ℝ) < 40320 * (1 - s))]
+        nlinarith [sq_nonneg s, pow_nonneg hs 8]
+
 set_option maxHeartbeats 32000000 in
 include 𝕂 in
 /-- **Fourth-order BCH**: `bch(a,b) = (a+b) + ½[a,b] + bch_cubic_term(a,b) + O(s⁴)`.
