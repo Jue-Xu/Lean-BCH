@@ -1,6 +1,6 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 26, 2026-05-12)
+## Status (session 28, 2026-05-12)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
 * `symmetric_bch_septic_sub_poly_axiom` (Stage 2 stepping-stone,
@@ -8,6 +8,17 @@ Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
 * `norm_septic_match_residual_le_axiom` (Stage 3 stepping-stone,
   introduced session 26; bounds the σ⁹ residual of the deg-7 matching
   identity).
+
+**Session 28 (2026-05-12, stepping stone 1 foundation)**: Added
+`BCH.norm_bch_septic_term_diff_le` (~1700 lines via Finset.sum approach,
+CAS-generated). The deg-9 analog of `norm_bch_sextic_term_diff_le`:
+`‖Z₇(z, y) − Z₇(x, y)‖ ≤ 7·M⁶·‖z − x‖` for `M = ‖z‖+‖x‖+‖y‖`.
+Foundation for stepping stone 1 (`symmetric_bch_septic_sub_poly_axiom`):
+the deg-7 BCH coefficient is Lipschitz in its first arg, enabling
+O(s⁸·‖W‖) bounds for `‖C₇(z, y) − C₇(a'+b, y)‖` when z = (a'+b)+W.
+
+Net axiom count unchanged (still 2 scoped private axioms). Build time:
+~11 min wall for Basic.lean (64M heartbeats for the 126-case match).
 
 **Major session-26 milestone: `suzuki5_log_product_septic_at_suzukiP_axiom`
 (the Lean-Trotter interface axiom 3 / headline axiom) is now DISCHARGED!**
