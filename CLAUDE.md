@@ -141,6 +141,45 @@ roadmaps in their docstrings (Stage 2: T2-F7e-style discharge; Stage 3:
 deg-7 analog of `L_leading_plus_E5_eq_R5` via L+Q decompositions + Hall
 basis projections).
 
+### Commit 4: Matching identity infrastructure (E_5 + Q-piece substitution lemmas, this session)
+
+Adds four new building blocks toward `norm_septic_match_residual_le_axiom`
+discharge — the deg-7-input analogs of the existing deg-5 substitution
+infrastructure:
+
+- **`sym_cubic_poly_linear_part_at_smul_E5`** (Palindromic.lean): closed form
+  for the linear-in-δ part of `sym_E_3(α•V + γ·E_5, β•V + δ·E_5)`:
+  `((24)⁻¹·(α+2β)·(β·γ−α·δ)) • [V, [V, E_5]]`. Trivial extension of
+  `sym_cubic_poly_linear_part_at_smul_E3`.
+
+- **`sym_cubic_poly_linear_part_at_strangBlock_E5`**: substitution at deg-5
+  strangBlock contributions (`γ = 4(pτ)⁵, δ = ((1-4p)τ)⁵`). Closed form
+  factors as
+  `(1/3)·p(1-4p)(1-2p)(p²−(1-4p)²)(p²+(1-4p)²)·τ⁷ • [V, [V, E_5]]`.
+  Contributes to the τ⁷ matching identity.
+
+- **`sym_cubic_poly_quadratic_part_at_smul_E3`**: closed form for the
+  quadratic-in-δ part of `sym_E_3(α•V + γ·E_3, β•V + δ·E_3)`. Beautiful
+  cancellation pattern: `[E_3, E_3] = 0` kills 2 of 6 sub-terms; Jacobi
+  antisymmetry `[E_3, [E_3, V]] = -[E_3, [V, E_3]]` collects the remaining
+  4 sub-terms into a single coefficient × `[E_3, [V, E_3]]`. Result:
+  `((24)⁻¹·(γ+2δ)·(β·γ−α·δ)) • [E_3, [V, E_3]]`.
+
+- **`sym_cubic_poly_quadratic_part_at_strangBlock_E3`**: substitution at
+  deg-3 strangBlock contributions. Coefficient:
+  `(1/3)·p(1-4p)·(2p³+(1-4p)³)·(p²-(1-4p)²)·τ⁷`. Under IsSuzukiCubic
+  (`4p³+(1-4p)³=0`), `(1-4p)³ = -4p³`, so `2p³+(1-4p)³ = -2p³`.
+
+**Coverage**: These cover 2 of 3 τ⁷-contributing pieces of `sym_E_3(4X, Y)`:
+* L-piece at deg-5 inputs (gives `[V,[V,E_5]]` contribution).
+* Q-piece at deg-3 inputs (gives `[E_3,[V,E_3]]` contribution).
+
+**Remaining for full matching identity**: the L-piece of `sym_E_5` at deg-3
+strangBlock inputs (needs new `sym_quintic_poly_linear_part_smul_V` def +
+closed form via CAS). Plus the Childs/Hall basis projections of
+`[V,[V,E_5]]` and `[E_3,[V,E_3]]` (6-fold and 5-fold commutators
+respectively, both deg-7 in A, B).
+
 **Session 25 (Stage 2 — B1.d-septic, B2.1-septic, and septic-precision combined bound)**:
 
 - Added scoped private axiom `BCH.symmetric_bch_septic_sub_poly_axiom`
