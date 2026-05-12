@@ -4372,6 +4372,56 @@ theorem norm_bch_septic_term_le (a b : 𝔸) :
     _ ≤ 1 * s^7 := by nlinarith [hs7_nn]
     _ = s ^ 7 := one_mul _
 
+/-! ## Vanishing of `bch_septic_term` on `(α•V, β•V)`
+
+Since `bch(α•V, β•V) = log(exp(α•V)·exp(β•V)) = (α+β)•V` for any
+`α, β : 𝕂` (all commutators `[V, V]` vanish), every τ⁷ Taylor
+coefficient of bch at pure-V inputs must vanish:
+
+  `bch_septic_term 𝕂 (α • V) (β • V) = 0`.
+
+Analog of `SymmetricQuintic.symmetric_bch_septic_poly_apply_smul_smul`
+for the (non-palindromic) bch deg-7 coefficient. Foundation for the
+future `octic_pure_identity` (deg-7 cancellation algebraic identity at
+substituted polynomials, the deg-9 analog of `septic_pure_identity`). -/
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **7-fold smul-mul absorption (single element)** (local copy):
+7 factors each of the form `sᵢ • V` collapse to `(s₁·…·s₇) • V⁷`.
+The same lemma exists as `private` in `SymmetricQuintic.lean`; this
+copy is needed for use in `bch_septic_term_apply_smul_smul`. -/
+private lemma bch_septic_term_seven_fold_smul_mul_eq (V : 𝔸)
+    (s₁ s₂ s₃ s₄ s₅ s₆ s₇ : 𝕂) :
+    (s₁ • V) * (s₂ • V) * (s₃ • V) * (s₄ • V) * (s₅ • V) * (s₆ • V) * (s₇ • V) =
+      (s₁ * s₂ * s₃ * s₄ * s₅ * s₆ * s₇) • (V * V * V * V * V * V * V) := by
+  simp only [smul_mul_assoc, mul_smul_comm, smul_smul]
+  congr 1; ring
+
+set_option maxHeartbeats 4000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Vanishing on scalar•V inputs**:
+`bch_septic_term 𝕂 (α • V) (β • V) = 0` for any `α, β : 𝕂` and `V : 𝔸`.
+
+Source: `log(exp(αV)·exp(βV)) = (α+β)V` (V commutes with itself), so all
+deg-7 Taylor content must vanish identically as a polynomial in (α, β).
+
+Proof template mirrors `symmetric_bch_septic_poly_apply_smul_smul`:
+1. Collapse each 7-fold product `(αV)^k·(βV)^(7−k)` to `(α^k·β^(7−k)) • V⁷`.
+2. Combine the 126 word coefficients into a single polynomial in (α, β)
+   times `V⁷`.
+3. The polynomial-in-(α, β) identity (each `(k, 7−k)` partial sum is 0)
+   is closed by `ring`. -/
+theorem bch_septic_term_apply_smul_smul (V : 𝔸) (α β : 𝕂) :
+    bch_septic_term 𝕂 (α • V) (β • V) = 0 := by
+  unfold bch_septic_term
+  -- Step 1: collapse each 7-fold product to (scalar) • V⁷; combine outer scalars.
+  simp only [bch_septic_term_seven_fold_smul_mul_eq, smul_smul, ← add_smul]
+  -- Step 2: goal is now `(big_polynomial in α, β) • V⁷ = 0`.
+  conv_rhs => rw [show (0 : 𝔸) = (0 : 𝕂) • (V * V * V * V * V * V * V) from
+    (zero_smul _ _).symm]
+  congr 1
+  -- Polynomial-in-(α, β) identity: each (k, 7−k) coefficient group sums to 0.
+  ring
 
 /-! #### Lipschitz bounds for `bch_sextic_term` per-word — sample (Phase A.2 of T2-F7e)
 
