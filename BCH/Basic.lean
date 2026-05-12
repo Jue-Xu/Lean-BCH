@@ -15452,6 +15452,82 @@ private theorem norm_P_sub_T2_sub_T3_sub_T4_sub_T5_le (a b : 𝔸) {s : ℝ} (hs
   have ha6 := norm_add_le H₁ H₂
   linarith [pow_nonneg hs_nn 6]
 
+/-- Norm bound `‖P² - T₂² - T₂T₃ - T₃T₂ - T₂T₄ - T₃² - T₄T₂‖ ≤ 16·s⁷`
+for `s ≤ 1/10`. Decomposes via `P = T₂ + T₃ + T₄ + D₅` (D₅ = P-T₂-T₃-T₄,
+‖D₅‖ ≤ 6·s⁵) into 10 deg-7+ terms.
+
+The deg-7 P²-residual cluster — deg-9 analog of `norm_T22_sub_P2_etc_le`
+at one degree higher. Provides the K_P2' = 16 input bound for
+`norm_I2_octic_residual_RHS_le`. -/
+private theorem norm_P2_etc_octic_le (P T₂ T₃ T₄ : 𝔸) {s : ℝ}
+    (hs_nn : 0 ≤ s) (hs_small : s ≤ 1 / 10)
+    (hT₂ : ‖T₂‖ ≤ s ^ 2) (hT₃ : ‖T₃‖ ≤ s ^ 3) (hT₄ : ‖T₄‖ ≤ s ^ 4)
+    (hD5 : ‖P - T₂ - T₃ - T₄‖ ≤ 6 * s ^ 5) :
+    ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+        T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖ ≤ 16 * s ^ 7 := by
+  have heq : P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ - T₂ * T₄ - T₃ * T₃ - T₄ * T₂ =
+      T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) + (P - T₂ - T₃ - T₄) * T₂ +
+      T₄ ^ 2 + T₃ * (P - T₂ - T₃ - T₄) + (P - T₂ - T₃ - T₄) * T₃ +
+      T₄ * (P - T₂ - T₃ - T₄) + (P - T₂ - T₃ - T₄) * T₄ +
+      (P - T₂ - T₃ - T₄) ^ 2 := by
+    have hP : P = T₂ + T₃ + T₄ + (P - T₂ - T₃ - T₄) := by abel
+    rw [hP]; noncomm_ring
+  rw [heq]
+  -- 10 component bounds
+  have h_T3T4 : ‖T₃ * T₄‖ ≤ s ^ 3 * s ^ 4 :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₃ hT₄ (norm_nonneg _) (by positivity))
+  have h_T4T3 : ‖T₄ * T₃‖ ≤ s ^ 4 * s ^ 3 :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₄ hT₃ (norm_nonneg _) (by positivity))
+  have h_T2D5 : ‖T₂ * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 2 * (6 * s ^ 5) :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₂ hD5 (norm_nonneg _) (by positivity))
+  have h_D5T2 : ‖(P - T₂ - T₃ - T₄) * T₂‖ ≤ (6 * s ^ 5) * s ^ 2 :=
+    (norm_mul_le _ _).trans (mul_le_mul hD5 hT₂ (norm_nonneg _) (by positivity))
+  have h_T4_2 : ‖T₄ ^ 2‖ ≤ s ^ 4 * s ^ 4 :=
+    calc _ ≤ ‖T₄‖ ^ 2 := norm_pow_le _ _
+      _ ≤ (s ^ 4) ^ 2 := pow_le_pow_left₀ (norm_nonneg _) hT₄ 2
+      _ = s ^ 4 * s ^ 4 := by ring
+  have h_T3D5 : ‖T₃ * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 3 * (6 * s ^ 5) :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₃ hD5 (norm_nonneg _) (by positivity))
+  have h_D5T3 : ‖(P - T₂ - T₃ - T₄) * T₃‖ ≤ (6 * s ^ 5) * s ^ 3 :=
+    (norm_mul_le _ _).trans (mul_le_mul hD5 hT₃ (norm_nonneg _) (by positivity))
+  have h_T4D5 : ‖T₄ * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 4 * (6 * s ^ 5) :=
+    (norm_mul_le _ _).trans (mul_le_mul hT₄ hD5 (norm_nonneg _) (by positivity))
+  have h_D5T4 : ‖(P - T₂ - T₃ - T₄) * T₄‖ ≤ (6 * s ^ 5) * s ^ 4 :=
+    (norm_mul_le _ _).trans (mul_le_mul hD5 hT₄ (norm_nonneg _) (by positivity))
+  have h_D5_2 : ‖(P - T₂ - T₃ - T₄) ^ 2‖ ≤ (6 * s ^ 5) ^ 2 :=
+    calc _ ≤ ‖P - T₂ - T₃ - T₄‖ ^ 2 := norm_pow_le _ _
+      _ ≤ (6 * s ^ 5) ^ 2 := pow_le_pow_left₀ (norm_nonneg _) hD5 2
+  -- Triangle inequality on 10-term sum.
+  have ha1 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 + T₃ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₃ + T₄ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₄) ((P - T₂ - T₃ - T₄) ^ 2)
+  have ha2 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 + T₃ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₃ + T₄ * (P - T₂ - T₃ - T₄))
+    ((P - T₂ - T₃ - T₄) * T₄)
+  have ha3 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 + T₃ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₃) (T₄ * (P - T₂ - T₃ - T₄))
+  have ha4 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2 + T₃ * (P - T₂ - T₃ - T₄))
+    ((P - T₂ - T₃ - T₄) * T₃)
+  have ha5 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂ + T₄ ^ 2) (T₃ * (P - T₂ - T₃ - T₄))
+  have ha6 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄) +
+    (P - T₂ - T₃ - T₄) * T₂) (T₄ ^ 2)
+  have ha7 := norm_add_le (T₃ * T₄ + T₄ * T₃ + T₂ * (P - T₂ - T₃ - T₄))
+    ((P - T₂ - T₃ - T₄) * T₂)
+  have ha8 := norm_add_le (T₃ * T₄ + T₄ * T₃) (T₂ * (P - T₂ - T₃ - T₄))
+  have ha9 := norm_add_le (T₃ * T₄) (T₄ * T₃)
+  -- Sum: 2·s⁷ + 12·s⁷ + s⁸ + 12·s⁸ + 12·s⁹ + 36·s¹⁰
+  --   = 14·s⁷ + 13·s⁸ + 12·s⁹ + 36·s¹⁰
+  -- For s ≤ 1/10: ≤ 14 + 1.3 + 0.12 + 0.0036 ≈ 15.4 ≤ 16
+  nlinarith [pow_nonneg hs_nn 7, pow_nonneg hs_nn 8, pow_nonneg hs_nn 9,
+    pow_nonneg hs_nn 10, mul_nonneg (pow_nonneg hs_nn 7) hs_nn,
+    mul_nonneg (pow_nonneg hs_nn 7) (sq_nonneg s),
+    mul_nonneg (pow_nonneg hs_nn 7) (pow_nonneg hs_nn 3)]
+
 /-- Norm bound `‖T₄‖ ≤ s⁴` where T₄ = (1/24)·a⁴ + (1/6)·a³b + (1/4)·a²b² +
 (1/6)·ab³ + (1/24)·b⁴ is the deg-4 contribution of `exp(a)·exp(b)-1`.
 Sum of |coefficients| = 16/24 = 2/3 ≤ 1, so ‖T₄‖ ≤ (2/3)·s⁴ ≤ s⁴. -/
