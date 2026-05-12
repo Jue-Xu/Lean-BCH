@@ -6121,6 +6121,167 @@ theorem norm_bch_septic_term_diff_le (z x y : 𝔸) :
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring
     _ ≤ 7 * M^6 * ‖z - x‖ := by nlinarith [hM6_nn, hzx_nn]
 
+/-! ### `bch_octic_term` — the τ⁸ coefficient of `bch(a, b)`
+
+Explicit 124-term polynomial in {a, b}, derived via the CAS pipeline at
+`scripts/compute_bch_octic_term.py`. Common denominator 120960; integer
+numerators in {±2, ±12, ±23, ±30, ±40, ±54, ±72, ±96, ±432}.
+Sum of |numerators|/120960 = 5970/120960 = 199/4032 ≈ 0.0494.
+
+This is the next term in the BCH expansion after `bch_septic_term`:
+`bch(a, b) = a + b + ½[a,b] + Z₃ + Z₄ + Z₅ + Z₆ + Z₇ + Z₈ + O(·^9)`.
+
+Used in the future nonic identity (stepping stone 1) for canceling deg-8
+contributions to `sym_bch_cubic - sym_E₃ - sym_E₅ - sym_E₇` (the deg-9
+analog of the discharged `symmetric_bch_quintic_sub_poly_axiom`). -/
+
+/-- **τ⁸ coefficient of `bch(a, b)`** — explicit 124-term polynomial in
+{a, b}. The 124 non-zero 8-letter words (out of 256 = 2⁸ possible) come
+from the free Lie algebra basis at degree 8. Coefficients are rational
+with LCM 120960. -/
+noncomputable def bch_octic_term (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (2 / 120960 : 𝕂) • (a * a * a * a * a * a * b * b)
+  + (-12 / 120960 : 𝕂) • (a * a * a * a * a * b * a * b)
+  + (-12 / 120960 : 𝕂) • (a * a * a * a * a * b * b * b)
+  + (30 / 120960 : 𝕂) • (a * a * a * a * b * a * a * b)
+  + (30 / 120960 : 𝕂) • (a * a * a * a * b * a * b * b)
+  + (30 / 120960 : 𝕂) • (a * a * a * a * b * b * a * b)
+  + (23 / 120960 : 𝕂) • (a * a * a * a * b * b * b * b)
+  + (-40 / 120960 : 𝕂) • (a * a * a * b * a * a * a * b)
+  + (-12 / 120960 : 𝕂) • (a * a * a * b * a * a * b * b)
+  + (-96 / 120960 : 𝕂) • (a * a * a * b * a * b * a * b)
+  + (-40 / 120960 : 𝕂) • (a * a * a * b * a * b * b * b)
+  + (-12 / 120960 : 𝕂) • (a * a * a * b * b * a * a * b)
+  + (-12 / 120960 : 𝕂) • (a * a * a * b * b * a * b * b)
+  + (-40 / 120960 : 𝕂) • (a * a * a * b * b * b * a * b)
+  + (-12 / 120960 : 𝕂) • (a * a * a * b * b * b * b * b)
+  + (30 / 120960 : 𝕂) • (a * a * b * a * a * a * a * b)
+  + (-12 / 120960 : 𝕂) • (a * a * b * a * a * a * b * b)
+  + (72 / 120960 : 𝕂) • (a * a * b * a * a * b * a * b)
+  + (-12 / 120960 : 𝕂) • (a * a * b * a * a * b * b * b)
+  + (72 / 120960 : 𝕂) • (a * a * b * a * b * a * a * b)
+  + (72 / 120960 : 𝕂) • (a * a * b * a * b * a * b * b)
+  + (72 / 120960 : 𝕂) • (a * a * b * a * b * b * a * b)
+  + (30 / 120960 : 𝕂) • (a * a * b * a * b * b * b * b)
+  + (-12 / 120960 : 𝕂) • (a * a * b * b * a * a * a * b)
+  + (-54 / 120960 : 𝕂) • (a * a * b * b * a * a * b * b)
+  + (72 / 120960 : 𝕂) • (a * a * b * b * a * b * a * b)
+  + (-12 / 120960 : 𝕂) • (a * a * b * b * a * b * b * b)
+  + (-12 / 120960 : 𝕂) • (a * a * b * b * b * a * a * b)
+  + (-12 / 120960 : 𝕂) • (a * a * b * b * b * a * b * b)
+  + (30 / 120960 : 𝕂) • (a * a * b * b * b * b * a * b)
+  + (2 / 120960 : 𝕂) • (a * a * b * b * b * b * b * b)
+  + (-12 / 120960 : 𝕂) • (a * b * a * a * a * a * a * b)
+  + (30 / 120960 : 𝕂) • (a * b * a * a * a * a * b * b)
+  + (-96 / 120960 : 𝕂) • (a * b * a * a * a * b * a * b)
+  + (-40 / 120960 : 𝕂) • (a * b * a * a * a * b * b * b)
+  + (72 / 120960 : 𝕂) • (a * b * a * a * b * a * a * b)
+  + (72 / 120960 : 𝕂) • (a * b * a * a * b * a * b * b)
+  + (72 / 120960 : 𝕂) • (a * b * a * a * b * b * a * b)
+  + (30 / 120960 : 𝕂) • (a * b * a * a * b * b * b * b)
+  + (-96 / 120960 : 𝕂) • (a * b * a * b * a * a * a * b)
+  + (72 / 120960 : 𝕂) • (a * b * a * b * a * a * b * b)
+  + (-432 / 120960 : 𝕂) • (a * b * a * b * a * b * a * b)
+  + (-96 / 120960 : 𝕂) • (a * b * a * b * a * b * b * b)
+  + (72 / 120960 : 𝕂) • (a * b * a * b * b * a * a * b)
+  + (72 / 120960 : 𝕂) • (a * b * a * b * b * a * b * b)
+  + (-96 / 120960 : 𝕂) • (a * b * a * b * b * b * a * b)
+  + (-12 / 120960 : 𝕂) • (a * b * a * b * b * b * b * b)
+  + (30 / 120960 : 𝕂) • (a * b * b * a * a * a * a * b)
+  + (-12 / 120960 : 𝕂) • (a * b * b * a * a * a * b * b)
+  + (72 / 120960 : 𝕂) • (a * b * b * a * a * b * a * b)
+  + (-12 / 120960 : 𝕂) • (a * b * b * a * a * b * b * b)
+  + (72 / 120960 : 𝕂) • (a * b * b * a * b * a * a * b)
+  + (72 / 120960 : 𝕂) • (a * b * b * a * b * a * b * b)
+  + (72 / 120960 : 𝕂) • (a * b * b * a * b * b * a * b)
+  + (30 / 120960 : 𝕂) • (a * b * b * a * b * b * b * b)
+  + (-40 / 120960 : 𝕂) • (a * b * b * b * a * a * a * b)
+  + (-12 / 120960 : 𝕂) • (a * b * b * b * a * a * b * b)
+  + (-96 / 120960 : 𝕂) • (a * b * b * b * a * b * a * b)
+  + (-40 / 120960 : 𝕂) • (a * b * b * b * a * b * b * b)
+  + (30 / 120960 : 𝕂) • (a * b * b * b * b * a * a * b)
+  + (30 / 120960 : 𝕂) • (a * b * b * b * b * a * b * b)
+  + (-12 / 120960 : 𝕂) • (a * b * b * b * b * b * a * b)
+  + (12 / 120960 : 𝕂) • (b * a * a * a * a * a * b * a)
+  + (-30 / 120960 : 𝕂) • (b * a * a * a * a * b * a * a)
+  + (-30 / 120960 : 𝕂) • (b * a * a * a * a * b * b * a)
+  + (40 / 120960 : 𝕂) • (b * a * a * a * b * a * a * a)
+  + (96 / 120960 : 𝕂) • (b * a * a * a * b * a * b * a)
+  + (12 / 120960 : 𝕂) • (b * a * a * a * b * b * a * a)
+  + (40 / 120960 : 𝕂) • (b * a * a * a * b * b * b * a)
+  + (-30 / 120960 : 𝕂) • (b * a * a * b * a * a * a * a)
+  + (-72 / 120960 : 𝕂) • (b * a * a * b * a * a * b * a)
+  + (-72 / 120960 : 𝕂) • (b * a * a * b * a * b * a * a)
+  + (-72 / 120960 : 𝕂) • (b * a * a * b * a * b * b * a)
+  + (12 / 120960 : 𝕂) • (b * a * a * b * b * a * a * a)
+  + (-72 / 120960 : 𝕂) • (b * a * a * b * b * a * b * a)
+  + (12 / 120960 : 𝕂) • (b * a * a * b * b * b * a * a)
+  + (-30 / 120960 : 𝕂) • (b * a * a * b * b * b * b * a)
+  + (12 / 120960 : 𝕂) • (b * a * b * a * a * a * a * a)
+  + (96 / 120960 : 𝕂) • (b * a * b * a * a * a * b * a)
+  + (-72 / 120960 : 𝕂) • (b * a * b * a * a * b * a * a)
+  + (-72 / 120960 : 𝕂) • (b * a * b * a * a * b * b * a)
+  + (96 / 120960 : 𝕂) • (b * a * b * a * b * a * a * a)
+  + (432 / 120960 : 𝕂) • (b * a * b * a * b * a * b * a)
+  + (-72 / 120960 : 𝕂) • (b * a * b * a * b * b * a * a)
+  + (96 / 120960 : 𝕂) • (b * a * b * a * b * b * b * a)
+  + (-30 / 120960 : 𝕂) • (b * a * b * b * a * a * a * a)
+  + (-72 / 120960 : 𝕂) • (b * a * b * b * a * a * b * a)
+  + (-72 / 120960 : 𝕂) • (b * a * b * b * a * b * a * a)
+  + (-72 / 120960 : 𝕂) • (b * a * b * b * a * b * b * a)
+  + (40 / 120960 : 𝕂) • (b * a * b * b * b * a * a * a)
+  + (96 / 120960 : 𝕂) • (b * a * b * b * b * a * b * a)
+  + (-30 / 120960 : 𝕂) • (b * a * b * b * b * b * a * a)
+  + (12 / 120960 : 𝕂) • (b * a * b * b * b * b * b * a)
+  + (-2 / 120960 : 𝕂) • (b * b * a * a * a * a * a * a)
+  + (-30 / 120960 : 𝕂) • (b * b * a * a * a * a * b * a)
+  + (12 / 120960 : 𝕂) • (b * b * a * a * a * b * a * a)
+  + (12 / 120960 : 𝕂) • (b * b * a * a * a * b * b * a)
+  + (12 / 120960 : 𝕂) • (b * b * a * a * b * a * a * a)
+  + (-72 / 120960 : 𝕂) • (b * b * a * a * b * a * b * a)
+  + (54 / 120960 : 𝕂) • (b * b * a * a * b * b * a * a)
+  + (12 / 120960 : 𝕂) • (b * b * a * a * b * b * b * a)
+  + (-30 / 120960 : 𝕂) • (b * b * a * b * a * a * a * a)
+  + (-72 / 120960 : 𝕂) • (b * b * a * b * a * a * b * a)
+  + (-72 / 120960 : 𝕂) • (b * b * a * b * a * b * a * a)
+  + (-72 / 120960 : 𝕂) • (b * b * a * b * a * b * b * a)
+  + (12 / 120960 : 𝕂) • (b * b * a * b * b * a * a * a)
+  + (-72 / 120960 : 𝕂) • (b * b * a * b * b * a * b * a)
+  + (12 / 120960 : 𝕂) • (b * b * a * b * b * b * a * a)
+  + (-30 / 120960 : 𝕂) • (b * b * a * b * b * b * b * a)
+  + (12 / 120960 : 𝕂) • (b * b * b * a * a * a * a * a)
+  + (40 / 120960 : 𝕂) • (b * b * b * a * a * a * b * a)
+  + (12 / 120960 : 𝕂) • (b * b * b * a * a * b * a * a)
+  + (12 / 120960 : 𝕂) • (b * b * b * a * a * b * b * a)
+  + (40 / 120960 : 𝕂) • (b * b * b * a * b * a * a * a)
+  + (96 / 120960 : 𝕂) • (b * b * b * a * b * a * b * a)
+  + (12 / 120960 : 𝕂) • (b * b * b * a * b * b * a * a)
+  + (40 / 120960 : 𝕂) • (b * b * b * a * b * b * b * a)
+  + (-23 / 120960 : 𝕂) • (b * b * b * b * a * a * a * a)
+  + (-30 / 120960 : 𝕂) • (b * b * b * b * a * a * b * a)
+  + (-30 / 120960 : 𝕂) • (b * b * b * b * a * b * a * a)
+  + (-30 / 120960 : 𝕂) • (b * b * b * b * a * b * b * a)
+  + (12 / 120960 : 𝕂) • (b * b * b * b * b * a * a * a)
+  + (12 / 120960 : 𝕂) • (b * b * b * b * b * a * b * a)
+  + (-2 / 120960 : 𝕂) • (b * b * b * b * b * b * a * a)
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **8-fold smul-product identity** (local copy for use in `bch_octic_term_smul`). -/
+private lemma bch_octic_term_eight_fold_smul_mul
+    (c : 𝕂) (x₁ x₂ x₃ x₄ x₅ x₆ x₇ x₈ : 𝔸) :
+    (c • x₁) * (c • x₂) * (c • x₃) * (c • x₄) * (c • x₅) * (c • x₆) * (c • x₇) * (c • x₈) =
+      c ^ 8 • (x₁ * x₂ * x₃ * x₄ * x₅ * x₆ * x₇ * x₈) := by
+  simp only [smul_mul_assoc, mul_smul_comm, smul_smul, ← mul_assoc]
+  ring_nf
+
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Homogeneity of `bch_octic_term`**: `Z₈(c•a, c•b) = c⁸ • Z₈(a, b)`. -/
+theorem bch_octic_term_smul (a b : 𝔸) (c : 𝕂) :
+    bch_octic_term 𝕂 (c • a) (c • b) = c ^ 8 • bch_octic_term 𝕂 a b := by
+  unfold bch_octic_term
+  simp only [bch_octic_term_eight_fold_smul_mul c, smul_comm _ (c ^ 8 : 𝕂), ← smul_add]
+
 /-! #### Lipschitz bounds for `bch_sextic_term` per-word — sample (Phase A.2 of T2-F7e)
 
 Per-word Lipschitz bounds: for each 6-letter word `w` in `bch_sextic_term`,
