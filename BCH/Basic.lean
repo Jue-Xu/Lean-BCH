@@ -13452,6 +13452,47 @@ private theorem I2_septic_residual_decomp_eq (z P T₂ T₃ T₄ : 𝔸) :
     (P ^ 3 - T₂ ^ 3) := by
   noncomm_ring
 
+/-- **I₂ octic residual decomposition**: extends `I2_septic_residual_decomp_eq`
+by subtracting the deg-7 leading part `y3_7` (15 terms: 3 with T₅, 6 with
+T₂·T₄ + T₄·T₂ perms, 3 with T₃² perms, 3 with T₂²·T₃ perms) to give a pure
+ring identity in `(z, P, T₂, T₃, T₄, T₅)` where each RHS term is deg-8+.
+
+Pairings (additions on top of septic):
+- 3 weight-1 terms `z^i·(P-T₂-T₃-T₄)·z^j` extend to `z^i·(P-T₂-T₃-T₄-T₅)·z^j`.
+- `z·T₂·T₄` and `z·T₄·T₂` + `z·T₃²` get absorbed into
+  `z·(P² - T₂² - T₂T₃ - T₃T₂)` → `z·(P² - T₂² - T₂T₃ - T₃T₂ - T₂T₄ - T₃² - T₄T₂)`.
+- Conjugates `(...)·z` and `T_aux·z·T_aux` get the analogous extensions.
+- `T₂²·T₃`, `T₂·T₃·T₂`, `T₃·T₂²` get absorbed into `P³`:
+  `(P³ - T₂³)` → `(P³ - T₂³ - T₂²·T₃ - T₂·T₃·T₂ - T₃·T₂²)`.
+
+Each RHS summand is deg-8+ in the BCH context.
+Proof: `noncomm_ring` (pure ring identity, no scalar coefficients). -/
+private theorem I2_octic_residual_decomp_eq (z P T₂ T₃ T₄ T₅ : 𝔸) :
+    (z + P) ^ 3 - z ^ 3 -
+      (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2) -
+      (z ^ 2 * T₃ + z * T₃ * z + T₃ * z ^ 2 +
+        z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z) -
+      (z ^ 2 * T₄ + z * T₄ * z + T₄ * z ^ 2 +
+        z * T₂ * T₃ + z * T₃ * T₂ +
+        T₂ * z * T₃ + T₃ * z * T₂ +
+        T₂ * T₃ * z + T₃ * T₂ * z +
+        T₂ ^ 3) -
+      (z ^ 2 * T₅ + z * T₅ * z + T₅ * z ^ 2 +
+        z * T₂ * T₄ + z * T₃ * T₃ + z * T₄ * T₂ +
+        T₂ * z * T₄ + T₃ * z * T₃ + T₄ * z * T₂ +
+        T₂ * T₄ * z + T₃ * T₃ * z + T₄ * T₂ * z +
+        T₂ * T₂ * T₃ + T₂ * T₃ * T₂ + T₃ * T₂ * T₂) =
+    z ^ 2 * (P - T₂ - T₃ - T₄ - T₅) + z * (P - T₂ - T₃ - T₄ - T₅) * z +
+      (P - T₂ - T₃ - T₄ - T₅) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂) +
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+         T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂) +
+    (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * z +
+    (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2) := by
+  noncomm_ring
+
 set_option maxHeartbeats 4000000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **I₁ residual decomposition** (pure algebraic identity in (ea, eb, a, b)):
