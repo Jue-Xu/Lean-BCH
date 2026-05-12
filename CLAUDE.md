@@ -46,21 +46,23 @@ quartet now COMPLETE for both `bch_septic_term` and `bch_octic_term`**:
 * `bch_septic_term`: def + homogeneity + norm bound + vanishing + Lipschitz ✓ (s27-28).
 * `bch_octic_term`: def + homogeneity + norm bound + vanishing + Lipschitz ✓ (s28).
 
-6 code commits this session:
+7 code commits this session:
 * `bch_septic_term` Lipschitz bound (commit 14d75bc, ~1700 lines)
 * `bch_octic_term` def + homogeneity (commit 325b632, ~150 lines)
 * `bch_octic_term` norm bound ‖Z₈‖ ≤ s⁸ (commit 3c96d30, ~820 lines)
 * `bch_octic_term` vanishing on (αV, βV) (commit 2696fcf, ~50 lines)
 * `bch_octic_term` Lipschitz bound (commit ad299db, ~1700 lines)
 * `norm_bch_octic_remainder_large_s_le` private helper (commit 6b86a3a, ~60 lines)
+* `octic_pure_identity` deg-7 cancellation identity (commit 2af11b6, ~200 lines)
 
-Total session 28: ~4500 lines added, 9 commits (6 code + 3 doc), 0 axioms changed.
+Total session 28: ~4700 lines added, 10 commits (7 code + 3 doc), 0 axioms changed.
 
-Remaining for stepping stone 1: `octic_pure_identity` (deg-7 cancellation),
-small-s case of octic remainder bound + full `norm_bch_octic_remainder_le`,
-`nonic_pure_identity` (deg-8 cancellation), inner/outer nonic remainder
-bounds (deg-8 analog of Phase A), per-piece bounds + extended hdecomp +
-parent theorem. Estimated: ~3000-5000 lines, multi-session.
+Remaining for stepping stone 1: small-s case of octic remainder bound
+(uses `octic_pure_identity` + `pieceB_octic_decomp` analog) → full
+`norm_bch_octic_remainder_le`, `nonic_pure_identity` (deg-8 cancellation),
+inner/outer nonic remainder bounds (deg-8 analog of Phase A), per-piece
+bounds + extended hdecomp + parent theorem. Estimated: ~2500-4000 lines,
+multi-session.
 
 **Major session-26 milestone: `suzuki5_log_product_septic_at_suzukiP_axiom`
 (the Lean-Trotter interface axiom 3 / headline axiom) is now DISCHARGED!**
