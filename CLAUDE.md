@@ -9,16 +9,49 @@ Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
   introduced session 26; bounds the σ⁹ residual of the deg-7 matching
   identity).
 
-**Session 28 (2026-05-12, stepping stone 1 foundation)**: Added
-`BCH.norm_bch_septic_term_diff_le` (~1700 lines via Finset.sum approach,
-CAS-generated). The deg-9 analog of `norm_bch_sextic_term_diff_le`:
-`‖Z₇(z, y) − Z₇(x, y)‖ ≤ 7·M⁶·‖z − x‖` for `M = ‖z‖+‖x‖+‖y‖`.
-Foundation for stepping stone 1 (`symmetric_bch_septic_sub_poly_axiom`):
-the deg-7 BCH coefficient is Lipschitz in its first arg, enabling
-O(s⁸·‖W‖) bounds for `‖C₇(z, y) − C₇(a'+b, y)‖` when z = (a'+b)+W.
+**Session 28 (2026-05-12, stepping stone 1 foundation, 4 commits)**:
+
+Substantial progress on the `bch_octic_term` infrastructure for stepping
+stone 1 discharge:
+
+1. `BCH.norm_bch_septic_term_diff_le` (~1700 lines via Finset.sum approach,
+   CAS-generated). The deg-9 analog of `norm_bch_sextic_term_diff_le`:
+   `‖Z₇(z, y) − Z₇(x, y)‖ ≤ 7·M⁶·‖z − x‖` for `M = ‖z‖+‖x‖+‖y‖`.
+   Foundation for stepping stone 1 (`symmetric_bch_septic_sub_poly_axiom`):
+   the deg-7 BCH coefficient is Lipschitz in its first arg, enabling
+   O(s⁸·‖W‖) bounds for `‖C₇(z, y) − C₇(a'+b, y)‖` when z = (a'+b)+W.
+
+2. `BCH.bch_octic_term`: deg-8 BCH coefficient as an explicit 124-term
+   polynomial (out of 256 = 2⁸ possible 8-letter words). LCM 120960,
+   max |coef| = 432, Σ|coef|/LCM = 199/4032 ≈ 0.0494. CAS-derived in
+   `scripts/compute_bch_octic_term.py`. Plus homogeneity theorem
+   `bch_octic_term_smul`: `Z₈(c•a, c•b) = c⁸ • Z₈(a, b)`.
+
+3. `BCH.norm_bch_octic_term_le`: `‖Z₈(a, b)‖ ≤ (‖a‖+‖b‖)⁸`. ~820 lines
+   via Finset.sum approach mirroring `norm_bch_septic_term_le` (session 27).
+   Uniform per-i bound `432/120960`; sum `124·432/120960 = 31/70 ≤ 1`.
+   CAS-generated in `scripts/gen_bch_octic_norm_bound.py`.
+
+4. `BCH.bch_octic_term_apply_smul_smul`: vanishing on (αV, βV) inputs.
+   ~50 lines, mirrors `bch_septic_term_apply_smul_smul`. Foundation for
+   the future `nonic_pure_identity` (deg-8 cancellation in deg-9-precision
+   small-s discharge).
 
 Net axiom count unchanged (still 2 scoped private axioms). Build time:
-~11 min wall for Basic.lean (64M heartbeats for the 126-case match).
+~11 min wall for Basic.lean per major commit (124-case matches at 32M+
+heartbeats, plus 4M for the ring proof in the vanishing theorem).
+
+**Stepping stone 1 (`symmetric_bch_septic_sub_poly_axiom`) infrastructure
+status**:
+* `bch_septic_term` def + homogeneity + norm bound + vanishing ✓ (s27).
+* `bch_septic_term` Lipschitz bound ✓ (s28 commit 14d75bc).
+* `bch_octic_term` def + homogeneity ✓ (s28 commit 325b632).
+* `bch_octic_term` norm bound ‖Z₈‖ ≤ s⁸ ✓ (s28 commit 3c96d30).
+* `bch_octic_term` vanishing on (αV, βV) ✓ (s28 commit 2696fcf).
+* Remaining: `bch_octic_term` Lipschitz bound, `octic_pure_identity`
+  (deg-7 cancellation), `nonic_pure_identity` (deg-8 cancellation),
+  per-piece bounds, parent theorem. Estimated: ~3000-5000 lines,
+  multi-session.
 
 **Major session-26 milestone: `suzuki5_log_product_septic_at_suzukiP_axiom`
 (the Lean-Trotter interface axiom 3 / headline axiom) is now DISCHARGED!**
