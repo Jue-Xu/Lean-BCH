@@ -9,7 +9,7 @@ Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
   introduced session 26; bounds the σ⁹ residual of the deg-7 matching
   identity).
 
-**Session 29 (2026-05-13, octic small-s infrastructure, 10 commits)**:
+**Session 29 (2026-05-13, octic small-s infrastructure, 13 commits)**:
 
 Substantial progress on the octic small-s discharge (foundation for the
 deg-9 analog of T2-F7e, eventually replacing
@@ -39,9 +39,17 @@ deg-9 analog of T2-F7e, eventually replacing
    Foundation for J_a := I_a - a⁷/5040 (next exp-tail level), needed for
    the future I1 octic chain.
 
+5. **R+T₅+T₆ deg-7 cancellation infrastructure** (2 commits):
+   * `R_plus_T5_plus_T6_eq_neg_deg7_residual` (commit `da82482`): the deg-7
+     cancellation algebraic identity extending `R_plus_T5_eq_neg_deg6_residual`.
+     RHS = -(I_a + I_b + a·H₂ + H₁·b + F₁·F₂ + ⅙·F₁·b³ + ⅙·a³·F₂ +
+     ½·G₁·b² + ½·a²·G₂), 9 deg-7+ terms. Proof: 1-line `linear_combination`
+     from septic version + simp + `match_scalars <;> ring`. ~75 lines.
+   * `norm_R_plus_T5_plus_T6_residual_sum_le` (commit `0f968b8`): the norm
+     bound `≤ 7·s⁷` on the 9-term residual sum, given precomputed
+     component bounds. ~65 lines.
+
 **Remaining for octic small-s discharge** (pending):
-- `R_plus_T5_plus_T6_eq_neg_deg7_residual` (algebraic identity, deg-7
-  cancellation analog of `R_plus_T5_eq_neg_deg6_residual`).
 - `I1_octic_residual_decomp_eq` (pure algebraic identity, extends
   `I1_septic_residual_decomp_eq` by subtracting `corr₁_7 = ½·W7`).
 - `norm_I1_octic_residual_RHS_le` (parameterized wrapper).
