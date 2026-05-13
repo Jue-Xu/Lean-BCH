@@ -1,5 +1,35 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 33, 2026-05-13)
+
+Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
+`norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
+
+**Session 33 (2026-05-13, octic pieceA bound, 1 commit)**:
+
+First ingredient for the eventual small-s octic discharge:
+
+- `BCH.norm_bch_octic_pieceA_le` (commit `63a82dc`): the deg-8 log-tail
+  bound `‖logOnePlus y − y + y²/2 − … − y⁷/7‖ ≤ 3·s⁸/(2 − exp s)` for
+  `y := exp(a)·exp(b) − 1`, `s := ‖a‖+‖b‖`, `s < 1/10`. Combines
+  `norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le` (LogSeries.lean, deg-7
+  truncation tail) with `real_exp_sub_one_pow8_le_small` (`(exp s − 1)⁸ ≤
+  3·s⁸`). Structure mirrors the septic pieceA inline computation in
+  `norm_bch_septic_remainder_small_s_le` at one degree higher. The
+  constant 3 (not 2 as for septic) reflects `(1+1/10)⁸ ≈ 2.14 > 2`.
+
+Per the discharge arithmetic in the axiom's docstring: pieceA contributes
+3·s⁸/(2−exp s); pieceB''' will contribute 217·s⁸ from the 6 sub-pieces
+(S₁' ≤ 25·s⁸ + S₂' ≤ 57·s⁸ + S₃' ≤ 72·s⁸ + S₄' ≤ 29·s⁸ + S₅' ≤ 15·s⁸ +
+S₆ ≤ 19·s⁸). Total ≤ 220·s⁸/(2−exp s), comfortably within the axiom's
+1000·s⁸/(2−exp s) headroom.
+
+**Remaining for the small-s discharge**: the pieceB''' assembly (~700
+lines) using `pieceB_octic_decomp` + the 6 sub-piece bounds already in
+place from sessions 28–31. Estimated 2–3 sessions for the final assembly,
+then 2–3 more for the parent T2-F7e-octic discharge.
+
 ## Status (session 32, 2026-05-13)
 
 Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
