@@ -19134,6 +19134,80 @@ theorem norm_bch_septic_remainder_le (a b : 𝔸)
             nlinarith [pow_nonneg hs_nn 7]
           linarith
 
+include 𝕂 in
+/-- **Stepping-stone axiom: eighth-order BCH remainder, small-s case.**
+
+Bound on the deg-8+ BCH remainder after subtracting the explicit through-deg-7
+expansion (C₃ through `bch_septic_term`), for `‖a‖+‖b‖ < 1/10`:
+
+  `‖LHS_octic‖ ≤ 1000·s⁸/(2-exp(s))`
+
+This is the deg-8 analog of `norm_bch_septic_remainder_small_s_le` (which was
+itself a stepping-stone axiom in session 18, discharged in session 19). All
+the per-piece inner bounds are already in place (sessions 28-31):
+* `pieceB_octic_decomp` (central algebraic decomposition into 6 pieces).
+* `norm_I1_octic_residual_RHS_le` + `norm_combined_tricky_octic_le` (S₁').
+* `norm_I2_octic_residual_RHS_le` + 4 parametric inputs (S₂').
+* `norm_y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_le` (S₃' inner ≤ 285·s⁸).
+* `norm_y5_sub_z5_sub_y5_6_sub_y5_7_le` (S₄' inner ≤ 141·s⁸).
+* `norm_y6_sub_z6_sub_y6_7_le` (S₅' inner ≤ 87·s⁸).
+* `norm_pow7_sub_zpow7_le` (S₆ inner ≤ 127·s⁸).
+* `norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le` + `real_exp_sub_one_pow8_le_small`
+  (pieceA bound).
+
+What remains is the orchestrating assembly proof (~800 lines mirroring the
+session-19 septic discharge at `norm_bch_septic_remainder_small_s_le`,
+adapting each piece to one degree higher). Estimated 2-3 sessions per
+CLAUDE.md session-31 status. -/
+private axiom norm_bch_octic_remainder_small_s_axiom (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) (hs_small : ‖a‖ + ‖b‖ < 1 / 10) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+      bch_septic_term 𝕂 a b‖ ≤
+      1000 * (‖a‖ + ‖b‖) ^ 8 / (2 - Real.exp (‖a‖ + ‖b‖))
+
+include 𝕂 in
+/-- **Order-8 BCH remainder bound** (public theorem):
+
+  `‖bch(a, b) - (a+b) - ½[a,b] - C₃ - C₄ - bqt - bch_sextic_term - bch_septic_term‖ ≤
+   10000110 · s⁸ / (2 - exp(s))`  for `s < log 2`.
+
+This is the deg-8+ remainder of the BCH series after subtracting the
+through-deg-7 expansion. It's the order-8 analog of `norm_bch_septic_remainder_le`
+and the foundation for extending the cubic template to discharge the parent
+deg-9 stepping-stone `symmetric_bch_septic_sub_poly_axiom` (the deg-9 analog
+of T2-F7e).
+
+Proof: case split on `s ≥ 1/10` (uses `norm_bch_octic_remainder_large_s_le`,
+fully proved) vs. `s < 1/10` (uses `norm_bch_octic_remainder_small_s_axiom`,
+stepping-stone awaiting discharge; analog of session-18 septic
+small-s axiom → session-19 discharge). -/
+theorem norm_bch_octic_remainder_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+      bch_septic_term 𝕂 a b‖ ≤
+      10000110 * (‖a‖ + ‖b‖) ^ 8 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  by_cases hs : 1 / 10 ≤ ‖a‖ + ‖b‖
+  · -- Large-s: ‖LHS‖ ≤ 10000110·s⁸/(2-exp(s)) directly.
+    exact norm_bch_octic_remainder_large_s_le (𝕂 := 𝕂) a b hab hs
+  · -- Small-s: ‖LHS‖ ≤ 1000·s⁸/(2-exp(s)) ≤ 10000110·s⁸/(2-exp(s)).
+    push_neg at hs
+    have h_small := norm_bch_octic_remainder_small_s_axiom (𝕂 := 𝕂) a b hab hs
+    have hexp_lt : Real.exp (‖a‖ + ‖b‖) < 2 := by
+      calc Real.exp (‖a‖ + ‖b‖) < Real.exp (Real.log 2) := Real.exp_strictMono hab
+        _ = 2 := Real.exp_log (by norm_num)
+    have hdenom : 0 < 2 - Real.exp (‖a‖ + ‖b‖) := by linarith
+    have hs_nn : 0 ≤ ‖a‖ + ‖b‖ := by positivity
+    calc _ ≤ 1000 * (‖a‖ + ‖b‖) ^ 8 / (2 - Real.exp (‖a‖ + ‖b‖)) := h_small
+      _ ≤ 10000110 * (‖a‖ + ‖b‖) ^ 8 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+          apply div_le_div_of_nonneg_right _ hdenom.le
+          have : 1000 * (‖a‖ + ‖b‖) ^ 8 ≤ 10000110 * (‖a‖ + ‖b‖) ^ 8 := by
+            nlinarith [pow_nonneg hs_nn 8]
+          linarith
+
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
 For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:
