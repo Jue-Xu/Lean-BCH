@@ -39,6 +39,17 @@ extension, y5 octic via CAS or analogy — is COMPLETE for both:
      compound + 4 perms) + 34·s⁸ (Group C) + 21·s⁸ (Group D) + 10·s⁸
      (Group E = `(P²-T₂²)·z³`).
 
+**pieceA infrastructure complete (this session, 2 commits)**:
+- `BCH.norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le` (LogSeries.lean,
+  commit `f4ec6ed`): the deg-8 log tail bound
+  `‖log(1+x) - x + x²/2 - ... - x⁷/7‖ ≤ ‖x‖⁸/(1-‖x‖)` for `‖x‖ < 1`.
+  Analog of the deg-7 tail used by the septic pieceA, at one degree
+  higher. Plus 3 helpers (`summable_logSeriesTerm_shift7`,
+  `logSeriesTerm_six`, `logOnePlus_sub_sub_sub_sub_sub_sub_sub_eq_tsum`).
+- `BCH.real_exp_sub_one_pow8_le_small` (Basic.lean, commit `ff04696`):
+  `(Real.exp s - 1)⁸ ≤ 3·s⁸` for `s ≤ 1/10`. Constant is 3 (not 2)
+  because `(1+1/10)⁸ ≈ 2.14 > 2`.
+
 **Remaining for octic small-s discharge** (pending):
 - Final `norm_bch_octic_remainder_small_s_le` (analog of session-19
   step 22 septic discharge / `norm_bch_septic_remainder_small_s_le` at
@@ -48,8 +59,7 @@ extension, y5 octic via CAS or analogy — is COMPLETE for both:
   `norm_I2_octic_residual_RHS_le` + 4 parametric inputs), S₃' (y4 octic
   ≤ 285·s⁸, this session), S₄' (y5 octic ≤ 141·s⁸, this session),
   S₅ (`norm_y6_sub_z6_sub_y6_7_le` ≤ 87·s⁸), S₆ (`norm_pow7_sub_zpow7_le`
-  ≤ 127·s⁸). Plus pieceA bound via the deg-8 log tail
-  (`norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le`).
+  ≤ 127·s⁸). Plus pieceA bound via the deg-8 log tail (just added).
 
 Estimated: 2-3 sessions for the final small-s assembly, then 2-3 more
 for the parent T2-F7e-octic discharge.
