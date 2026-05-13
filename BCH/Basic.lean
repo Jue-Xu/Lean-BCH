@@ -19135,6 +19135,73 @@ theorem norm_bch_septic_remainder_le (a b : 𝔸)
           linarith
 
 include 𝕂 in
+/-- **PieceA bound for the octic small-s discharge.**
+
+The deg-8 log-series tail bound applied to `y := exp(a)·exp(b) - 1`, expressed
+in terms of `s := ‖a‖+‖b‖` rather than `‖y‖`. For `s < 1/10` (with `s < log 2`),
+
+  `‖logOnePlus y - y + y²/2 - y³/3 + y⁴/4 - y⁵/5 + y⁶/6 - y⁷/7‖
+   ≤ 3 · s⁸ / (2 - exp(s))`.
+
+Combines `norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le` (LogSeries.lean,
+deg-7 log truncation tail `≤ ‖y‖⁸/(1-‖y‖)`) with `real_exp_sub_one_pow8_le_small`
+(`(exp s - 1)⁸ ≤ 3·s⁸` for `s ≤ 1/10`). The denominator conversion uses
+`‖y‖ ≤ exp s - 1`, so `1 - ‖y‖ ≥ 2 - exp s`. Constant is 3 (not 2 as for the
+septic pieceA) because `(1 + 1/10)⁸ ≈ 2.144 > 2`.
+
+Foundation for the eventual `norm_bch_octic_remainder_small_s_le` discharge
+of `norm_bch_octic_remainder_small_s_axiom` (analog of the septic discharge
+in session 19; the deg-8+ analog of the septic pieceA bound used inline in
+`norm_bch_septic_remainder_small_s_le`). -/
+private theorem norm_bch_octic_pieceA_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) (hs_small : ‖a‖ + ‖b‖ < 1 / 10) :
+    ‖logOnePlus (𝕂 := 𝕂) (exp a * exp b - 1) - (exp a * exp b - 1) +
+      (2 : 𝕂)⁻¹ • (exp a * exp b - 1) ^ 2 -
+      (3 : 𝕂)⁻¹ • (exp a * exp b - 1) ^ 3 +
+      (4 : 𝕂)⁻¹ • (exp a * exp b - 1) ^ 4 -
+      (5 : 𝕂)⁻¹ • (exp a * exp b - 1) ^ 5 +
+      (6 : 𝕂)⁻¹ • (exp a * exp b - 1) ^ 6 -
+      (7 : 𝕂)⁻¹ • (exp a * exp b - 1) ^ 7‖ ≤
+      3 * (‖a‖ + ‖b‖) ^ 8 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set y := exp a * exp b - 1 with hy_def
+  set α := ‖a‖
+  set β := ‖b‖
+  have hs_nn : 0 ≤ s := by positivity
+  have hα_nn : (0 : ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0 : ℝ) ≤ β := norm_nonneg b
+  have hs_small_le : s ≤ 1 / 10 := hs_small.le
+  have hexp_lt : Real.exp s < 2 := by
+    calc Real.exp s < Real.exp (Real.log 2) := Real.exp_strictMono hab
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom : 0 < 2 - Real.exp s := by linarith
+  have hy_lt : ‖y‖ < 1 := norm_exp_mul_exp_sub_one_lt_one (𝕂 := 𝕂) a b hab
+  have hy_le : ‖y‖ ≤ Real.exp s - 1 := by
+    have hy_eq : y = (exp a - 1) * exp b + (exp b - 1) := by
+      rw [hy_def, sub_mul, one_mul]; abel
+    calc ‖y‖ = ‖(exp a - 1) * exp b + (exp b - 1)‖ := by rw [hy_eq]
+      _ ≤ ‖exp a - 1‖ * ‖exp b‖ + ‖exp b - 1‖ := by
+          calc _ ≤ ‖(exp a - 1) * exp b‖ + _ := norm_add_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (Real.exp α - 1) * Real.exp β + (Real.exp β - 1) := by
+          apply add_le_add
+          · exact mul_le_mul (norm_exp_sub_one_le (𝕂 := 𝕂) a) (norm_exp_le (𝕂 := 𝕂) b)
+              (norm_nonneg _) (by linarith [Real.add_one_le_exp α])
+          · exact norm_exp_sub_one_le (𝕂 := 𝕂) b
+      _ = Real.exp s - 1 := by rw [hs_def, Real.exp_add]; ring
+  have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
+  have hexp8_le : (Real.exp s - 1) ^ 8 ≤ 3 * s ^ 8 :=
+    real_exp_sub_one_pow8_le_small hs_nn hs_small_le
+  calc _ ≤ ‖y‖ ^ 8 / (1 - ‖y‖) :=
+          norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le (𝕂 := 𝕂) y hy_lt
+    _ ≤ (Real.exp s - 1) ^ 8 / (2 - Real.exp s) :=
+        div_le_div₀ (pow_nonneg hE1_nn 8)
+          (pow_le_pow_left₀ (norm_nonneg _) hy_le 8) hdenom (by linarith)
+    _ ≤ 3 * s ^ 8 / (2 - Real.exp s) := by
+        apply div_le_div_of_nonneg_right _ hdenom.le
+        linarith
+
+include 𝕂 in
 /-- **Stepping-stone axiom: eighth-order BCH remainder, small-s case.**
 
 Bound on the deg-8+ BCH remainder after subtracting the explicit through-deg-7
