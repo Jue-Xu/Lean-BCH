@@ -1,10 +1,26 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 33, 2026-05-13)
+## Status (session 34, 2026-05-13)
 
 Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
 `norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
+
+**Session 34 (2026-05-13, deg-7 P-tail bound, 1 commit)**:
+
+Infrastructure for the future deg-9 parent (T2-F7e-octic) discharge:
+
+- `BCH.P_sub_T2_sub_T3_sub_T4_sub_T5_sub_T6_decomp_eq` + `BCH.norm_P_sub_T2_sub_T3_sub_T4_sub_T5_sub_T6_le`:
+  the deg-7 P-tail bound `‖P − T₂ − T₃ − T₄ − T₅ − T₆‖ ≤ 7·s⁷` for
+  `P = exp(a)·exp(b) − 1 − (a+b)`, `s < 3/4`, `s ≤ 1`. Algebraic identity:
+  `P − T₂ − ... − T₆ = I_a + I_b + a·H₂ + H₁·b + F₁·F₂ + ⅙·F₁·b³ +
+   ⅙·a³·F₂ + ½·G₁·b² + ½·a²·G₂` (9 deg-7+ terms). Decomp proof: 4-line
+  `linear_combination ... -hR` from `R_plus_T5_plus_T6_eq_neg_deg7_residual`
+  + the auxiliary fact `P − T₂ = E₁ + E₂ + Q`. Norm bound: per-term
+  bounds (each ≤ s⁷, F₁·F₂ ≤ s⁸ folded via `s ≤ 1`) summed via 8-step
+  triangle inequality; total ≤ (4 + 1 + 4/3)·s⁷ ≈ 6.34·s⁷ ≤ 7·s⁷.
+  Deg-10 analog of the existing `norm_P_sub_T2_sub_T3_sub_T4_sub_T5_le`
+  (≤ 6·s⁶) at one degree higher.
 
 **Session 33 (2026-05-13, octic pieceA bound, 1 commit)**:
 
