@@ -10527,6 +10527,32 @@ private lemma real_exp_sub_one_pow7_le_small {s : ℝ} (hs_nn : 0 ≤ s)
         linarith
     _ = 2 * s ^ 7 := by ring
 
+/-- For `0 ≤ s ≤ 1/10`, `(Real.exp s - 1)^8 ≤ 3 · s^8`. Used in the small-s
+octic remainder assembly. Analog of `real_exp_sub_one_pow7_le_small` at one
+degree higher; constant is 3 (not 2) because `(1+1/10)^8 ≈ 2.14`. -/
+private lemma real_exp_sub_one_pow8_le_small {s : ℝ} (hs_nn : 0 ≤ s)
+    (hs_small : s ≤ 1 / 10) :
+    (Real.exp s - 1) ^ 8 ≤ 3 * s ^ 8 := by
+  have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
+  have hs_lt1 : s < 1 := by linarith
+  have hEs2 : Real.exp s - 1 - s ≤ s ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖s‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hs_nn]; linarith)
+    have hEs_nn : 0 ≤ Real.exp s - 1 - s := by
+      linarith [Real.quadratic_le_exp_of_nonneg hs_nn, sq_nonneg s]
+    rwa [Real.norm_eq_abs, abs_of_nonneg hEs_nn,
+         Real.norm_eq_abs, abs_of_nonneg hs_nn] at h
+  calc (Real.exp s - 1) ^ 8 ≤ (s + s ^ 2) ^ 8 :=
+        pow_le_pow_left₀ hE1_nn (by linarith) 8
+    _ = s ^ 8 * (1 + s) ^ 8 := by ring
+    _ ≤ s ^ 8 * 3 := by
+        apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs_nn 8)
+        have h1 : (1 + s) ^ 8 ≤ (1 + 1/10) ^ 8 :=
+          pow_le_pow_left₀ (by linarith) (by linarith) 8
+        have h2 : (1 + 1/10 : ℝ) ^ 8 ≤ 3 := by norm_num
+        linarith
+    _ = 3 * s ^ 8 := by ring
+
 /-- **Eighth-order noncommutative exp tail bound**: norm of the deg-8+ tail
 of `exp(x) = ∑ xⁿ/n!` is bounded by the corresponding real tail.
 
