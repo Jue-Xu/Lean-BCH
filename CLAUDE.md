@@ -50,11 +50,15 @@ deg-9 analog of T2-F7e, eventually replacing
      component bounds. ~65 lines.
 
 **Remaining for octic small-s discharge** (pending):
+- `norm_y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_le` (S₃' inner bound,
+  deg-8 analog of `norm_y4_sub_z4_sub_y4_5_sub_y4_6_le`, ~400 lines).
+- `norm_y5_sub_z5_sub_y5_6_sub_y5_7_le` (S₄' inner bound,
+  deg-8 analog of `norm_y5_sub_z5_sub_y5_6_le`, ~250 lines).
 - Final `norm_bch_octic_remainder_small_s_le` (the public theorem,
-  analog of session-19 step 22 sextic/septic discharge at ~700 lines).
+  analog of session-19 step 22 septic discharge at ~770 lines).
 
-**Session 30 (in progress, octic I1 infrastructure)** added 3 lemmas
-(all proved, ~390 lines total added):
+**Session 30 (in progress, octic I1 infrastructure + T₆ helper)** added
+4 lemmas (all proved, ~500 lines total added):
 - `I1_octic_residual_decomp_eq`: extends `I1_septic_residual_decomp_eq` by
   subtracting `corr₁_7 = ½·W7`, expressing
   `(I₁ in quartic_id form) - corr₁ - corr₁_5 - corr₁_6 - corr₁_7` as
@@ -68,8 +72,9 @@ deg-9 analog of T2-F7e, eventually replacing
   for `(z·R+R·z) + T22 + T_extra + T_extra2` via the R+T₅+T₆ identity
   (`R_plus_T5_plus_T6_eq_neg_deg7_residual`) + 15-term P²_deg≥8
   decomposition (with D₆ := P-T₂-T₃-T₄-T₅).
+- `norm_T6_le`: `‖T₆‖ ≤ s⁶` standalone helper (sum of |coef| = 64/720 = 4/45).
 
-Estimated remaining: 2-3 sessions for the final small-s assembly
+Estimated remaining: 3-4 sessions for the final small-s assembly
 (`norm_bch_octic_remainder_small_s_le`), then 2-3 more for the parent
 T2-F7e-octic discharge (analog of session 22).
 
