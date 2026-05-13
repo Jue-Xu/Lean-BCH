@@ -379,6 +379,56 @@ theorem norm_logOnePlus_sub_sub_sub_sub_sub_sub_le (x : 𝔸) (hx : ‖x‖ < 1)
       ≤ ‖x‖ ^ (n + 6 + 1) := norm_logSeriesTerm_le (𝕂 := 𝕂) x (n + 6)
     _ = ‖x‖ ^ (n + 7) := by ring_nf
 
+/-! ### Remainder bound (log minus terms through degree 7) — degree-8 tail -/
+
+include 𝕂 in
+/-- The 7-shifted series `∑'_{n≥7} logSeriesTerm x n` is summable when `‖x‖ < 1`. -/
+lemma summable_logSeriesTerm_shift7 (x : 𝔸) (hx : ‖x‖ < 1) :
+    Summable (fun n => logSeriesTerm (𝕂 := 𝕂) x (n + 7)) :=
+  (summable_nat_add_iff (f := logSeriesTerm (𝕂 := 𝕂) x) 7).mpr
+    (summable_logSeriesTerm (𝕂 := 𝕂) x hx)
+
+include 𝕂 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+@[simp]
+lemma logSeriesTerm_six (x : 𝔸) :
+    logSeriesTerm (𝕂 := 𝕂) x 6 = (7 : 𝕂)⁻¹ • x ^ 7 := by
+  simp [logSeriesTerm, pow_succ]
+  ring
+
+include 𝕂 in
+/-- `log(1+x) - x + x²/2 - x³/3 + x⁴/4 - x⁵/5 + x⁶/6 - x⁷/7 =
+    ∑' n, logSeriesTerm x (n+7)`. -/
+lemma logOnePlus_sub_sub_sub_sub_sub_sub_sub_eq_tsum (x : 𝔸) (hx : ‖x‖ < 1) :
+    logOnePlus (𝕂 := 𝕂) x - x + (2 : 𝕂)⁻¹ • x ^ 2 - (3 : 𝕂)⁻¹ • x ^ 3 +
+      (4 : 𝕂)⁻¹ • x ^ 4 - (5 : 𝕂)⁻¹ • x ^ 5 + (6 : 𝕂)⁻¹ • x ^ 6 -
+      (7 : 𝕂)⁻¹ • x ^ 7 =
+      ∑' n, logSeriesTerm (𝕂 := 𝕂) x (n + 7) := by
+  have hsumm := summable_logSeriesTerm_shift6 (𝕂 := 𝕂) x hx
+  rw [logOnePlus_sub_sub_sub_sub_sub_sub_eq_tsum (𝕂 := 𝕂) x hx, hsumm.tsum_eq_zero_add,
+      logSeriesTerm_six (𝕂 := 𝕂)]
+  abel
+
+include 𝕂 in
+/-- `‖log(1+x) - x + x²/2 - x³/3 + x⁴/4 - x⁵/5 + x⁶/6 - x⁷/7‖ ≤
+    ‖x‖⁸/(1-‖x‖)` when `‖x‖ < 1`. Foundation for the octic small-s
+discharge's pieceA bound. -/
+theorem norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le (x : 𝔸) (hx : ‖x‖ < 1) :
+    ‖logOnePlus (𝕂 := 𝕂) x - x + (2 : 𝕂)⁻¹ • x ^ 2 - (3 : 𝕂)⁻¹ • x ^ 3 +
+      (4 : 𝕂)⁻¹ • x ^ 4 - (5 : 𝕂)⁻¹ • x ^ 5 + (6 : 𝕂)⁻¹ • x ^ 6 -
+      (7 : 𝕂)⁻¹ • x ^ 7‖ ≤
+      ‖x‖ ^ 8 / (1 - ‖x‖) := by
+  rw [logOnePlus_sub_sub_sub_sub_sub_sub_sub_eq_tsum (𝕂 := 𝕂) x hx, div_eq_mul_inv]
+  have h_geom := (hasSum_geometric_of_lt_one (norm_nonneg x) hx).mul_left (‖x‖ ^ 8)
+  have h_eq : (fun i => ‖x‖ ^ 8 * ‖x‖ ^ i) = (fun i => ‖x‖ ^ (i + 8)) := by
+    ext n; ring
+  rw [h_eq] at h_geom
+  apply tsum_of_norm_bounded h_geom
+  intro n
+  calc ‖logSeriesTerm (𝕂 := 𝕂) x (n + 7)‖
+      ≤ ‖x‖ ^ (n + 7 + 1) := norm_logSeriesTerm_le (𝕂 := 𝕂) x (n + 7)
+    _ = ‖x‖ ^ (n + 8) := by ring_nf
+
 /-! ### The exp ∘ log identity -/
 
 /-! #### Step 1: Real scalar case via `Real.hasSum_pow_div_log_of_abs_lt_one` -/
