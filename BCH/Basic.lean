@@ -16918,6 +16918,260 @@ private theorem norm_P_sub_T2_sub_T3_sub_T4_sub_T5_le (a b : 𝔸) {s : ℝ} (hs
   have ha6 := norm_add_le H₁ H₂
   linarith [pow_nonneg hs_nn 6]
 
+set_option maxHeartbeats 1600000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Algebraic decomposition for `P - T₂ - T₃ - T₄ - T₅ - T₆`**: pure ring identity
+in `(ea, eb, a, b)` expressing `P - T₂ - T₃ - T₄ - T₅ - T₆` as a sum of 9 deg-7+
+terms. Used in `norm_P_sub_T2_sub_T3_sub_T4_sub_T5_sub_T6_le`. Deg-10 analog of
+`P_sub_T2_sub_T3_sub_T4_sub_T5_decomp_eq` at one degree higher.
+
+Derived from `R_plus_T5_plus_T6_eq_neg_deg7_residual` via the auxiliary fact
+`P - T₂ = E₁ + E₂ + Q` (which expands `P - T₂` as the deg-3+ part). -/
+private theorem P_sub_T2_sub_T3_sub_T4_sub_T5_sub_T6_decomp_eq (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (ea eb a b : 𝔸) :
+    let D₁ : 𝔸 := ea - 1 - a
+    let D₂ : 𝔸 := eb - 1 - b
+    let E₁ : 𝔸 := D₁ - (2 : 𝕂)⁻¹ • a ^ 2
+    let E₂ : 𝔸 := D₂ - (2 : 𝕂)⁻¹ • b ^ 2
+    let F₁ : 𝔸 := E₁ - (6 : 𝕂)⁻¹ • a ^ 3
+    let F₂ : 𝔸 := E₂ - (6 : 𝕂)⁻¹ • b ^ 3
+    let G₁ : 𝔸 := F₁ - (24 : 𝕂)⁻¹ • a ^ 4
+    let G₂ : 𝔸 := F₂ - (24 : 𝕂)⁻¹ • b ^ 4
+    let H₁ : 𝔸 := G₁ - (120 : 𝕂)⁻¹ • a ^ 5
+    let H₂ : 𝔸 := G₂ - (120 : 𝕂)⁻¹ • b ^ 5
+    let I_a : 𝔸 := H₁ - (720 : 𝕂)⁻¹ • a ^ 6
+    let I_b : 𝔸 := H₂ - (720 : 𝕂)⁻¹ • b ^ 6
+    ea * eb - 1 - (a + b) -
+      (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) -
+      ((6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3) -
+      ((24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4) -
+      ((120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5) -
+      ((720 : 𝕂)⁻¹ • a ^ 6 + (120 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (48 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (36 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (48 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (120 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (720 : 𝕂)⁻¹ • b ^ 6) =
+    I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂ +
+      (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * F₂) +
+      (2 : 𝕂)⁻¹ • (G₁ * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * G₂) := by
+  have hR := R_plus_T5_plus_T6_eq_neg_deg7_residual 𝕂 ea eb a b
+  dsimp only at hR ⊢
+  linear_combination (norm := (simp only [smul_sub, smul_add, smul_neg, smul_smul,
+    mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul]; noncomm_ring))
+    -hR
+
+set_option maxHeartbeats 1600000 in
+/-- Norm bound `‖P - T₂ - T₃ - T₄ - T₅ - T₆‖ ≤ 7·s⁷` where P = exp(a)·exp(b)-1-(a+b)
+and T₂..T₆ are the deg-2..6 contributions to P. Algebraic identity:
+`P - T₂ - T₃ - T₄ - T₅ - T₆ = I_a + I_b + a·H₂ + H₁·b + F₁·F₂ +
+  ⅙·F₁·b³ + ⅙·a³·F₂ + ½·G₁·b² + ½·a²·G₂` where each piece has deg-7+ structure.
+
+Foundation for the future deg-9 parent T2-F7e-octic discharge (analog at one
+degree higher than `norm_P_sub_T2_sub_T3_sub_T4_sub_T5_le`). -/
+private theorem norm_P_sub_T2_sub_T3_sub_T4_sub_T5_sub_T6_le (a b : 𝔸) {s : ℝ}
+    (hs_nn : 0 ≤ s) (hs34 : s < 3 / 4) (hs1 : s ≤ 1)
+    (hα_le : ‖a‖ ≤ s) (hβ_le : ‖b‖ ≤ s) :
+    ‖exp a * exp b - 1 - (a + b) -
+      (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) -
+      ((6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3) -
+      ((24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4) -
+      ((120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5) -
+      ((720 : 𝕂)⁻¹ • a ^ 6 + (120 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (48 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (36 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (48 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (120 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (720 : 𝕂)⁻¹ • b ^ 6)‖ ≤ 7 * s ^ 7 := by
+  set α := ‖a‖
+  set β := ‖b‖
+  have hα_nn : (0 : ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0 : ℝ) ≤ β := norm_nonneg b
+  have h2eq : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h6eq : ‖(6 : 𝕂)⁻¹‖ = (6 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  -- Set up D, E, F, G, H, I variables
+  set D₁ := exp a - 1 - a with hD₁_def
+  set D₂ := exp b - 1 - b with hD₂_def
+  set E₁ := D₁ - (2 : 𝕂)⁻¹ • a ^ 2 with hE₁_def
+  set E₂ := D₂ - (2 : 𝕂)⁻¹ • b ^ 2 with hE₂_def
+  set F₁ := E₁ - (6 : 𝕂)⁻¹ • a ^ 3 with hF₁_def
+  set F₂ := E₂ - (6 : 𝕂)⁻¹ • b ^ 3 with hF₂_def
+  set G₁ := F₁ - (24 : 𝕂)⁻¹ • a ^ 4 with hG₁_def
+  set G₂ := F₂ - (24 : 𝕂)⁻¹ • b ^ 4 with hG₂_def
+  set H₁ := G₁ - (120 : 𝕂)⁻¹ • a ^ 5 with hH₁_def
+  set H₂ := G₂ - (120 : 𝕂)⁻¹ • b ^ 5 with hH₂_def
+  set I_a := H₁ - (720 : 𝕂)⁻¹ • a ^ 6 with hI_a_def
+  set I_b := H₂ - (720 : 𝕂)⁻¹ • b ^ 6 with hI_b_def
+  -- Algebraic identity (9 deg-7+ terms)
+  have h_alg : exp a * exp b - 1 - (a + b) -
+      (a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2) -
+      ((6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3) -
+      ((24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4) -
+      ((120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5) -
+      ((720 : 𝕂)⁻¹ • a ^ 6 + (120 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (48 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (36 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (48 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (120 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (720 : 𝕂)⁻¹ • b ^ 6) =
+      I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂ +
+        (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * F₂) +
+        (2 : 𝕂)⁻¹ • (G₁ * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * G₂) := by
+    have h := P_sub_T2_sub_T3_sub_T4_sub_T5_sub_T6_decomp_eq 𝕂 (exp a) (exp b) a b
+    simp only [hI_a_def, hI_b_def, hH₁_def, hH₂_def, hG₁_def, hG₂_def,
+      hF₁_def, hF₂_def, hE₁_def, hE₂_def, hD₁_def, hD₂_def] at h
+    convert h using 1
+  rw [h_alg]
+  -- Real tail bounds for F, G, H, I_a, I_b
+  have hF₁_le : ‖F₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 :=
+    norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) a
+  have hF₂_le : ‖F₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 :=
+    norm_exp_sub_one_sub_sub_sub_le (𝕂 := 𝕂) b
+  have hG₁_le : ‖G₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 :=
+    norm_exp_sub_one_sub_sub_sub_sub_le (𝕂 := 𝕂) a
+  have hG₂_le : ‖G₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 :=
+    norm_exp_sub_one_sub_sub_sub_sub_le (𝕂 := 𝕂) b
+  have hH₁_le : ‖H₁‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 -
+      α ^ 5 / 120 :=
+    norm_exp_sub_one_sub_sub_sub_sub_sub_le (𝕂 := 𝕂) a
+  have hH₂_le : ‖H₂‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 -
+      β ^ 5 / 120 :=
+    norm_exp_sub_one_sub_sub_sub_sub_sub_le (𝕂 := 𝕂) b
+  have hI_a_le : ‖I_a‖ ≤ Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 -
+      α ^ 5 / 120 - α ^ 6 / 720 :=
+    norm_exp_sub_one_sub_sub_sub_sub_sub_sub_le (𝕂 := 𝕂) a
+  have hI_b_le : ‖I_b‖ ≤ Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 -
+      β ^ 5 / 120 - β ^ 6 / 720 :=
+    norm_exp_sub_one_sub_sub_sub_sub_sub_sub_le (𝕂 := 𝕂) b
+  -- Real bound transitions
+  have hFa4 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 ≤ α ^ 4 :=
+    real_exp_fourth_order_le_quartic hα_nn (lt_of_le_of_lt hα_le hs34)
+  have hFb4 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 ≤ β ^ 4 :=
+    real_exp_fourth_order_le_quartic hβ_nn (lt_of_le_of_lt hβ_le hs34)
+  have hGa5 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 ≤ α ^ 5 :=
+    real_exp_fifth_order_le_quintic hα_nn (lt_of_le_of_lt hα_le hs34)
+  have hGb5 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 ≤ β ^ 5 :=
+    real_exp_fifth_order_le_quintic hβ_nn (lt_of_le_of_lt hβ_le hs34)
+  have hHa6 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 -
+      α ^ 5 / 120 ≤ α ^ 6 :=
+    real_exp_sixth_order_le_sextic hα_nn (lt_of_le_of_lt hα_le hs34)
+  have hHb6 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 -
+      β ^ 5 / 120 ≤ β ^ 6 :=
+    real_exp_sixth_order_le_sextic hβ_nn (lt_of_le_of_lt hβ_le hs34)
+  have hIa7 : Real.exp α - 1 - α - α ^ 2 / 2 - α ^ 3 / 6 - α ^ 4 / 24 -
+      α ^ 5 / 120 - α ^ 6 / 720 ≤ α ^ 7 :=
+    real_exp_seventh_order_le_septic hα_nn (lt_of_le_of_lt hα_le hs34)
+  have hIb7 : Real.exp β - 1 - β - β ^ 2 / 2 - β ^ 3 / 6 - β ^ 4 / 24 -
+      β ^ 5 / 120 - β ^ 6 / 720 ≤ β ^ 7 :=
+    real_exp_seventh_order_le_septic hβ_nn (lt_of_le_of_lt hβ_le hs34)
+  -- Component bounds (each of the 9 RHS pieces ≤ s⁷ or ≤ ½·s⁷ or ≤ ⅙·s⁷; F₁·F₂ ≤ s⁸ ≤ s⁷)
+  have hI_a_s7 : ‖I_a‖ ≤ s ^ 7 := le_trans (le_trans hI_a_le hIa7)
+    (pow_le_pow_left₀ hα_nn hα_le 7)
+  have hI_b_s7 : ‖I_b‖ ≤ s ^ 7 := le_trans (le_trans hI_b_le hIb7)
+    (pow_le_pow_left₀ hβ_nn hβ_le 7)
+  have h_aH₂ : ‖a * H₂‖ ≤ s ^ 7 :=
+    calc _ ≤ ‖a‖ * ‖H₂‖ := norm_mul_le _ _
+      _ ≤ α * β ^ 6 := mul_le_mul_of_nonneg_left
+          (le_trans hH₂_le hHb6) hα_nn
+      _ ≤ s * s ^ 6 := mul_le_mul hα_le (pow_le_pow_left₀ hβ_nn hβ_le 6)
+          (by positivity) hs_nn
+      _ = s ^ 7 := by ring
+  have h_H₁b : ‖H₁ * b‖ ≤ s ^ 7 :=
+    calc _ ≤ ‖H₁‖ * ‖b‖ := norm_mul_le _ _
+      _ ≤ α ^ 6 * β := mul_le_mul (le_trans hH₁_le hHa6) le_rfl
+          hβ_nn (by positivity)
+      _ ≤ s ^ 6 * s := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 6)
+          hβ_le (by positivity) (by positivity)
+      _ = s ^ 7 := by ring
+  have h_F₁F₂ : ‖F₁ * F₂‖ ≤ s ^ 8 :=
+    calc _ ≤ ‖F₁‖ * ‖F₂‖ := norm_mul_le _ _
+      _ ≤ α ^ 4 * β ^ 4 := mul_le_mul (le_trans hF₁_le hFa4)
+          (le_trans hF₂_le hFb4) (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 4 * s ^ 4 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 4)
+          (pow_le_pow_left₀ hβ_nn hβ_le 4) (by positivity) (by positivity)
+      _ = s ^ 8 := by ring
+  have h_F₁b3_norm : ‖F₁ * b ^ 3‖ ≤ s ^ 7 :=
+    calc _ ≤ ‖F₁‖ * ‖b ^ 3‖ := norm_mul_le _ _
+      _ ≤ α ^ 4 * β ^ 3 := mul_le_mul (le_trans hF₁_le hFa4) (norm_pow_le _ _)
+          (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 4 * s ^ 3 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 4)
+          (pow_le_pow_left₀ hβ_nn hβ_le 3) (by positivity) (by positivity)
+      _ = s ^ 7 := by ring
+  have h_F₁b3_smul : ‖(6 : 𝕂)⁻¹ • (F₁ * b ^ 3)‖ ≤ s ^ 7 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖F₁ * b ^ 3‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_F₁b3_norm (by norm_num)
+      _ = s ^ 7 / 6 := by ring
+  have h_a3F₂_norm : ‖a ^ 3 * F₂‖ ≤ s ^ 7 :=
+    calc _ ≤ ‖a ^ 3‖ * ‖F₂‖ := norm_mul_le _ _
+      _ ≤ α ^ 3 * β ^ 4 := mul_le_mul (norm_pow_le _ _) (le_trans hF₂_le hFb4)
+          (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 3 * s ^ 4 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3)
+          (pow_le_pow_left₀ hβ_nn hβ_le 4) (by positivity) (by positivity)
+      _ = s ^ 7 := by ring
+  have h_a3F₂_smul : ‖(6 : 𝕂)⁻¹ • (a ^ 3 * F₂)‖ ≤ s ^ 7 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖a ^ 3 * F₂‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_a3F₂_norm (by norm_num)
+      _ = s ^ 7 / 6 := by ring
+  have h_G₁b2_norm : ‖G₁ * b ^ 2‖ ≤ s ^ 7 :=
+    calc _ ≤ ‖G₁‖ * ‖b ^ 2‖ := norm_mul_le _ _
+      _ ≤ α ^ 5 * β ^ 2 := mul_le_mul (le_trans hG₁_le hGa5) (norm_pow_le _ _)
+          (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 5 * s ^ 2 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 5)
+          (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
+      _ = s ^ 7 := by ring
+  have h_G₁b2_smul : ‖(2 : 𝕂)⁻¹ • (G₁ * b ^ 2)‖ ≤ s ^ 7 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖G₁ * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_G₁b2_norm (by norm_num)
+      _ = s ^ 7 / 2 := by ring
+  have h_a2G₂_norm : ‖a ^ 2 * G₂‖ ≤ s ^ 7 :=
+    calc _ ≤ ‖a ^ 2‖ * ‖G₂‖ := norm_mul_le _ _
+      _ ≤ α ^ 2 * β ^ 5 := mul_le_mul (norm_pow_le _ _) (le_trans hG₂_le hGb5)
+          (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 2 * s ^ 5 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+          (pow_le_pow_left₀ hβ_nn hβ_le 5) (by positivity) (by positivity)
+      _ = s ^ 7 := by ring
+  have h_a2G₂_smul : ‖(2 : 𝕂)⁻¹ • (a ^ 2 * G₂)‖ ≤ s ^ 7 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a ^ 2 * G₂‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 7 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_a2G₂_norm (by norm_num)
+      _ = s ^ 7 / 2 := by ring
+  -- s⁸ ≤ s⁷ folding (uses hs1 : s ≤ 1)
+  have hs8_le_s7 : s ^ 8 ≤ s ^ 7 := by
+    have h : s ^ 8 = s ^ 7 * s := by ring
+    rw [h]
+    calc s ^ 7 * s ≤ s ^ 7 * 1 :=
+          mul_le_mul_of_nonneg_left hs1 (pow_nonneg hs_nn 7)
+      _ = s ^ 7 := by ring
+  -- Triangle inequality. Sum: 4·s⁷ + s⁸ + 2·(s⁷/6) + 2·(s⁷/2) = 4·s⁷ + s⁸ + 4·s⁷/3
+  -- ≤ 4·s⁷ + s⁷ + 1.34·s⁷ = 6.34·s⁷ ≤ 7·s⁷.
+  have ha1 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂ +
+    (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * F₂) +
+    (2 : 𝕂)⁻¹ • (G₁ * b ^ 2)) ((2 : 𝕂)⁻¹ • (a ^ 2 * G₂))
+  have ha2 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂ +
+    (6 : 𝕂)⁻¹ • (F₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * F₂))
+    ((2 : 𝕂)⁻¹ • (G₁ * b ^ 2))
+  have ha3 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂ +
+    (6 : 𝕂)⁻¹ • (F₁ * b ^ 3)) ((6 : 𝕂)⁻¹ • (a ^ 3 * F₂))
+  have ha4 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b + F₁ * F₂)
+    ((6 : 𝕂)⁻¹ • (F₁ * b ^ 3))
+  have ha5 := norm_add_le (I_a + I_b + a * H₂ + H₁ * b) (F₁ * F₂)
+  have ha6 := norm_add_le (I_a + I_b + a * H₂) (H₁ * b)
+  have ha7 := norm_add_le (I_a + I_b) (a * H₂)
+  have ha8 := norm_add_le I_a I_b
+  linarith [pow_nonneg hs_nn 7]
+
 /-- Norm bound `‖P² - T₂² - T₂T₃ - T₃T₂ - T₂T₄ - T₃² - T₄T₂‖ ≤ 16·s⁷`
 for `s ≤ 1/10`. Decomposes via `P = T₂ + T₃ + T₄ + D₅` (D₅ = P-T₂-T₃-T₄,
 ‖D₅‖ ≤ 6·s⁵) into 10 deg-7+ terms.
