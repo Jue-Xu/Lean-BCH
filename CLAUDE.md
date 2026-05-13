@@ -1,9 +1,37 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 32, 2026-05-13)
+
+Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
+and the newly-added stepping stone `norm_bch_octic_remainder_small_s_axiom`.
+
+**Session 32 (2026-05-13, octic remainder public theorem via stepping stone, 1 commit)**:
+
+With all per-piece octic infrastructure in place from sessions 28-31, the
+public `norm_bch_octic_remainder_le` theorem is now in place, gated on a
+stepping-stone axiom for the small-s case (analog of session 18's pattern
+for the septic where the small-s axiom was introduced then discharged
+session 19).
+
+- `norm_bch_octic_remainder_small_s_axiom`: stepping-stone bounding
+  `‖LHS_octic‖ ≤ 1000·s⁸/(2-exp(s))` for s < 1/10. To be discharged
+  following the session-19 template (~770 lines): pieceA (deg-8 log tail)
+  + pieceB'''' (via `pieceB_octic_decomp` + 6 sub-piece bounds).
+- `BCH.norm_bch_octic_remainder_le`: PUBLIC theorem
+  `‖bch - ... - bch_septic_term‖ ≤ 10000110·s⁸/(2-exp(s))` for s < log 2.
+  Case split: large-s (proved via `norm_bch_octic_remainder_large_s_le`)
+  vs. small-s (uses the new stepping-stone axiom). Deg-8 analog of
+  `norm_bch_septic_remainder_le`.
+
+Axiom count: 2 → 3. Will return to 2 once the small-s axiom is discharged
+over the next 2-3 sessions, and to the original 2 once the deg-9-parent
+T2-F7e-octic discharge eliminates `symmetric_bch_septic_sub_poly_axiom`.
+
 ## Status (session 31, 2026-05-13)
 
-Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**
-(unchanged): `symmetric_bch_septic_sub_poly_axiom`,
+Branch: `main`. Repository was **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`,
 `norm_septic_match_residual_le_axiom`.
 
 **Session 31 (2026-05-13, octic small-s S₃' + S₄' inner bounds, 3 commits)**:
