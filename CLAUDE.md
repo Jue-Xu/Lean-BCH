@@ -1,5 +1,59 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 31, 2026-05-13)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**
+(unchanged): `symmetric_bch_septic_sub_poly_axiom`,
+`norm_septic_match_residual_le_axiom`.
+
+**Session 31 (2026-05-13, octic small-s S₃' + S₄' inner bounds, 3 commits)**:
+
+Both remaining "inner piece" bounds for the octic small-s discharge are
+now in place. The roadmap noted in session 30 — y4 octic via structural
+extension, y5 octic via CAS or analogy — is COMPLETE for both:
+
+1. **y4 octic** (commit `ab38b23`, 407 lines):
+   * `y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_decomp`: 24-term deg-8+
+     decomposition. Each of the 20 `y4_7` items is exactly the deg-7
+     leading of one of the 16 terms in the existing septic decomposition.
+     Absorption pattern verified by hand (no CAS needed).
+   * `norm_y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_le`: bound `≤ 285·s⁸`
+     for `s ≤ 1`. Uses `nlinarith` with `s ≤ 1` to coalesce a single
+     `s⁹` term (B7-3 = `(P²-T₂²)·z·(P-T₂)`).
+
+2. **y5 octic decomp** (commit `d4089c0`, 65 lines):
+   * `y5_sub_z5_sub_y5_6_sub_y5_7_decomp`: 18-term decomposition. Each of
+     the 15 `y5_7` items is the deg-7 leading of one of the 9 terms in
+     the y5 septic decomposition. The "(y^k-z^k)·...·P·..." terms split
+     into `(y^k-z^k-yk_l)·...·P·...` (deg-8+ compound) + perms of
+     `y(k-1)_l·(P-T₂)·...`. Identity proved by `noncomm_ring`.
+
+3. **y5 octic norm bound + 2 helpers** (commit `7a18dde`, 385 lines):
+   * `norm_y2_sub_z2_sub_y2_3_le`: `≤ 11·s⁴` via identity
+     `y² - z² - y2_3 = z(P-T₂) + (P-T₂)z + P²`.
+   * `norm_y3_sub_z3_sub_y3_4_le`: `≤ 19·s⁵` (for `s ≤ 1`) via
+     `y³ - z³ - y3_4 = (P-T₂)·z² + z²·(P-T₂) + z·(P-T₂)·z + P·z·P +
+      P²·z + P³ + z·P²`.
+   * `norm_y5_sub_z5_sub_y5_6_sub_y5_7_le`: bound `≤ 141·s⁸` for `s ≤ 1`.
+     The 18 terms split as: 25·s⁸ (5 P-T₂-T₃ middle) + 51·s⁸ (Group B:
+     compound + 4 perms) + 34·s⁸ (Group C) + 21·s⁸ (Group D) + 10·s⁸
+     (Group E = `(P²-T₂²)·z³`).
+
+**Remaining for octic small-s discharge** (pending):
+- Final `norm_bch_octic_remainder_small_s_le` (analog of session-19
+  step 22 septic discharge / `norm_bch_septic_remainder_small_s_le` at
+  ~770 lines). The 6 RHS pieces of `pieceB_octic_decomp` now have all
+  their inner bounds available: I₁ octic (via `norm_I1_octic_residual_RHS_le`
+  + `norm_combined_tricky_octic_le`), I₂ octic (via
+  `norm_I2_octic_residual_RHS_le` + 4 parametric inputs), S₃' (y4 octic
+  ≤ 285·s⁸, this session), S₄' (y5 octic ≤ 141·s⁸, this session),
+  S₅ (`norm_y6_sub_z6_sub_y6_7_le` ≤ 87·s⁸), S₆ (`norm_pow7_sub_zpow7_le`
+  ≤ 127·s⁸). Plus pieceA bound via the deg-8 log tail
+  (`norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le`).
+
+Estimated: 2-3 sessions for the final small-s assembly, then 2-3 more
+for the parent T2-F7e-octic discharge.
+
 ## Status (session 29, 2026-05-13)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
