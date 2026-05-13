@@ -19155,6 +19155,21 @@ the per-piece inner bounds are already in place (sessions 28-31):
 * `norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le` + `real_exp_sub_one_pow8_le_small`
   (pieceA bound).
 
+**Discharge arithmetic (precise target for the assembly proof):**
+* pieceA = ‖logOnePlus y - y + y²/2 - ... - y⁷/7‖ ≤ ‖y‖⁸/(1-‖y‖) ≤
+  `(exp s - 1)⁸/(2-exp s) ≤ 3·s⁸/(2-exp s)` for s ≤ 1/10 via
+  `real_exp_sub_one_pow8_le_small` (constant 3, not 2 — `(1+1/10)⁸ ≈ 2.14`).
+* pieceB sub-piece bounds (after scalar smul):
+  - S₁' ≤ (7 + C/2)·s⁸ with C ≤ 35 ⇒ ≤ 25·s⁸ (round 24.5).
+  - S₂' = ⅓·(3·6 + 2·16 + 16 + 105)·s⁸ = ⅓·171·s⁸ = 57·s⁸ (exact).
+  - S₃' = ¼·285·s⁸ = 71.25·s⁸ ⇒ ≤ 72·s⁸.
+  - S₄' = ⅕·141·s⁸ = 28.2·s⁸ ⇒ ≤ 29·s⁸.
+  - S₅' = ⅙·87·s⁸ = 14.5·s⁸ ⇒ ≤ 15·s⁸.
+  - S₆ = ⅐·127·s⁸ ≈ 18.14·s⁸ ⇒ ≤ 19·s⁸.
+* Total pieceB ≤ 25 + 57 + 72 + 29 + 15 + 19 = **217·s⁸**.
+* Total: ≤ (3 + 217)·s⁸/(2-exp s) = 220·s⁸/(2-exp s); rounded to 1000·s⁸/(2-exp s)
+  for headroom (matches the septic bound's `1000·s⁷/(2-exp s)` style).
+
 What remains is the orchestrating assembly proof (~800 lines mirroring the
 session-19 septic discharge at `norm_bch_septic_remainder_small_s_le`,
 adapting each piece to one degree higher). Estimated 2-3 sessions per
