@@ -39,7 +39,7 @@ extension, y5 octic via CAS or analogy — is COMPLETE for both:
      compound + 4 perms) + 34·s⁸ (Group C) + 21·s⁸ (Group D) + 10·s⁸
      (Group E = `(P²-T₂²)·z³`).
 
-**pieceA infrastructure complete (this session, 2 commits)**:
+**pieceA infrastructure (this session, 3 commits)**:
 - `BCH.norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_le` (LogSeries.lean,
   commit `f4ec6ed`): the deg-8 log tail bound
   `‖log(1+x) - x + x²/2 - ... - x⁷/7‖ ≤ ‖x‖⁸/(1-‖x‖)` for `‖x‖ < 1`.
@@ -49,6 +49,9 @@ extension, y5 octic via CAS or analogy — is COMPLETE for both:
 - `BCH.real_exp_sub_one_pow8_le_small` (Basic.lean, commit `ff04696`):
   `(Real.exp s - 1)⁸ ≤ 3·s⁸` for `s ≤ 1/10`. Constant is 3 (not 2)
   because `(1+1/10)⁸ ≈ 2.14 > 2`.
+- `BCH.norm_T7_le` (commit `f895af1`): `‖T₇‖ ≤ s⁷` standalone helper
+  (T₇ = deg-7 contribution of `exp(a)·exp(b)-1`, 8 monomial terms,
+  sum of |coefs|/5040 = 128/5040 ≈ 0.0254). Mirrors `norm_T6_le`.
 
 **Remaining for octic small-s discharge** (pending):
 - Final `norm_bch_octic_remainder_small_s_le` (analog of session-19
