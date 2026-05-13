@@ -57,6 +57,17 @@ deg-9 analog of T2-F7e, eventually replacing
 - Final `norm_bch_octic_remainder_small_s_le` (the public theorem,
   analog of session-19 step 22 septic discharge at ~770 lines).
 
+**Note (session 30 attempted):** sympy expansion of
+`y^5 - z^5 - y5_6 - y5_7` after `z=y-P` yields ~370 distinct
+non-commutative monomials. The y4 octic decomp (16 terms) was derived
+via careful structural analysis — for y5 the structural pattern is
+non-trivial. Next session should either:
+(a) write a CAS pipeline (similar to existing `scripts/gen_*.py`) that
+    factors the expansion into compact building blocks
+    `(P-T₂-T₃), (P²-T₂²), (y^k-z^k), z^a·X·z^b`, OR
+(b) extend the y4 octic structure by analogy and iterate via
+    `noncomm_ring` verification.
+
 **Session 30 (in progress, octic I1 infrastructure + T₆ helper)** added
 4 lemmas (all proved, ~500 lines total added):
 - `I1_octic_residual_decomp_eq`: extends `I1_septic_residual_decomp_eq` by
