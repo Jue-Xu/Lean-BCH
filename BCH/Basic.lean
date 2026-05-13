@@ -13339,6 +13339,71 @@ private theorem y5_sub_z5_sub_y5_6_decomp (y P T₂ : 𝔸) :
       (P - T₂) * (y - P) ^ 4 := by
   noncomm_ring
 
+/-- Algebraic decomposition of `y⁵ - z⁵ - y5_6 - y5_7` where `z = y - P`.
+
+Extends `y5_sub_z5_sub_y5_6_decomp` by subtracting the deg-7 contribution
+`y5_7` (15 terms from compositions `(k₁,..,k₅) ⊢ 7, kᵢ ≥ 1`):
+- 5 with T₃ at one position (`(1,1,1,1,3)` perms)
+- 10 with T₂ at two positions (`(1,1,1,2,2)` perms)
+
+Each `y5_7` item is the deg-7 leading of one of the 9 terms in the septic
+decomposition. Absorbing yields 18 deg-8+ terms:
+- 5 weight-1 (P-T₂-T₃) middle terms (absorb 5 T₃-perms).
+- (y⁴-z⁴-y4_5)·P + 4 perms of y4_5·(P-T₂) (absorb 4 (T₂ at positions p,5) items).
+- (y³-z³-y3_4)·P·z + 3 perms of y3_4·(P-T₂)·z (absorb 3 (T₂ at positions p,4) items).
+- (y²-z²-y2_3)·P·z² + 2 perms of y2_3·(P-T₂)·z² (absorb 2 (T₂ at positions p,3) items).
+- (P²-T₂²)·z³ (absorbs T₂²·z³). -/
+private theorem y5_sub_z5_sub_y5_6_sub_y5_7_decomp (y P T₂ T₃ : 𝔸) :
+    y ^ 5 - (y - P) ^ 5 -
+      ((y - P) ^ 4 * T₂ + (y - P) ^ 3 * T₂ * (y - P) +
+        (y - P) ^ 2 * T₂ * (y - P) ^ 2 + (y - P) * T₂ * (y - P) ^ 3 +
+        T₂ * (y - P) ^ 4) -
+      ((y - P) * (y - P) * (y - P) * (y - P) * T₃ +
+        (y - P) * (y - P) * (y - P) * T₃ * (y - P) +
+        (y - P) * (y - P) * T₃ * (y - P) * (y - P) +
+        (y - P) * T₃ * (y - P) * (y - P) * (y - P) +
+        T₃ * (y - P) * (y - P) * (y - P) * (y - P) +
+        (y - P) * (y - P) * (y - P) * T₂ * T₂ +
+        (y - P) * (y - P) * T₂ * (y - P) * T₂ +
+        (y - P) * (y - P) * T₂ * T₂ * (y - P) +
+        (y - P) * T₂ * (y - P) * (y - P) * T₂ +
+        (y - P) * T₂ * (y - P) * T₂ * (y - P) +
+        (y - P) * T₂ * T₂ * (y - P) * (y - P) +
+        T₂ * (y - P) * (y - P) * (y - P) * T₂ +
+        T₂ * (y - P) * (y - P) * T₂ * (y - P) +
+        T₂ * (y - P) * T₂ * (y - P) * (y - P) +
+        T₂ * T₂ * (y - P) * (y - P) * (y - P)) =
+    -- 5 (P-T₂-T₃) middle terms (absorbs 5 T₃-perms).
+    (y - P) ^ 4 * (P - T₂ - T₃) +
+    (y - P) ^ 3 * (P - T₂ - T₃) * (y - P) +
+    (y - P) ^ 2 * (P - T₂ - T₃) * (y - P) ^ 2 +
+    (y - P) * (P - T₂ - T₃) * (y - P) ^ 3 +
+    (P - T₂ - T₃) * (y - P) ^ 4 +
+    -- (y⁴-z⁴-y4_5)·P (1 compound term)
+    (y ^ 4 - (y - P) ^ 4 -
+      ((y - P) ^ 3 * T₂ + (y - P) ^ 2 * T₂ * (y - P) +
+        (y - P) * T₂ * (y - P) ^ 2 + T₂ * (y - P) ^ 3)) * P +
+    -- 4 perms of y4_5·(P-T₂)
+    (y - P) ^ 3 * T₂ * (P - T₂) +
+    (y - P) ^ 2 * T₂ * (y - P) * (P - T₂) +
+    (y - P) * T₂ * (y - P) ^ 2 * (P - T₂) +
+    T₂ * (y - P) ^ 3 * (P - T₂) +
+    -- (y³-z³-y3_4)·P·z (1 compound term)
+    (y ^ 3 - (y - P) ^ 3 -
+      ((y - P) ^ 2 * T₂ + (y - P) * T₂ * (y - P) + T₂ * (y - P) ^ 2)) * P * (y - P) +
+    -- 3 perms of y3_4·(P-T₂)·z
+    (y - P) ^ 2 * T₂ * (P - T₂) * (y - P) +
+    (y - P) * T₂ * (y - P) * (P - T₂) * (y - P) +
+    T₂ * (y - P) ^ 2 * (P - T₂) * (y - P) +
+    -- (y²-z²-y2_3)·P·z² (1 compound term)
+    (y ^ 2 - (y - P) ^ 2 - ((y - P) * T₂ + T₂ * (y - P))) * P * (y - P) ^ 2 +
+    -- 2 perms of y2_3·(P-T₂)·z²
+    (y - P) * T₂ * (P - T₂) * (y - P) ^ 2 +
+    T₂ * (y - P) * (P - T₂) * (y - P) ^ 2 +
+    -- (P²-T₂²)·z³ (absorbs T₂²·z³)
+    (P ^ 2 - T₂ ^ 2) * (y - P) ^ 3 := by
+  noncomm_ring
+
 /-- Norm bound for `y⁵ - z⁵ - y5_6`: each of the 9 terms is deg-7+;
 total bound `≤ 51·s⁷`. Used in the small-s case of the septic remainder
 (analog of `norm_y4_sub_z4_sub_y4_5_le` at one degree higher). -/
