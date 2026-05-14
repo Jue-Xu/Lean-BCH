@@ -6,6 +6,21 @@ Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
 `norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
 
+**Session 35 part 4 (2026-05-14, ‖T₈‖ ≤ s⁸ helper, 1 commit)**:
+
+Commit `b86f4c1` (+155 lines): `BCH.norm_T8_le` — standalone helper bounding
+the deg-8 contribution of `exp(a)·exp(b)-1`:
+
+  T₈ = (1/40320)·a⁸ + (1/5040)·a⁷b + (1/1440)·a⁶b² + (1/720)·a⁵b³ +
+       (1/576)·a⁴b⁴ + (1/720)·a³b⁵ + (1/1440)·a²b⁶ + (1/5040)·ab⁷ +
+       (1/40320)·b⁸.
+
+Sum of |coefficients|·LCM = 256/40320 = 2/315 ≈ 0.00635, so `‖T₈‖ ≤ s⁸`.
+Mirrors `norm_T7_le` (session 31) at one degree higher with 9 instead of 8
+monomials. Forward-looking infrastructure for the deg-9-parent T2-F7e-octic
+discharge, where ‖T₈‖ ≤ s⁸ is needed alongside the ‖T_k‖ ≤ s^k chain
+(k=2..7) already in place.
+
 **Session 35 part 3 (2026-05-14, deg-8 R+T5+T6+T7 norm sum bound, 1 commit)**:
 
 Commit `34873dc` (+61 lines): `BCH.norm_R_plus_T5_plus_T6_plus_T7_residual_sum_le`
