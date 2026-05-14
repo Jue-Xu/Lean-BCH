@@ -6,7 +6,29 @@ Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
 `norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
 
-**Session 35 (2026-05-14, deg-8 P-tail chain, 1 commit)**:
+**Session 35 part 2 (2026-05-14, nonic combined tricky bound, 1 commit)**:
+
+Commit `b3bdb2b` (+266 lines): `BCH.norm_combined_tricky_nonic_le` — deg-9
+analog of `norm_combined_tricky_octic_le` (session 31) at one degree higher.
+Uses session 35's new deg-8 cancellation identity bound and session 34's
+deg-7 P-tail bound as inputs.
+
+Bounds the combined cluster
+`z·R + R·z + (T₂²-P²+T₂T₃+T₃T₂) + (z·T₅+T₂T₄+T₃²+T₄T₂+T₅z) +
+ (z·T₆+T₂T₅+T₃T₄+T₄T₃+T₅T₂+T₆z) + (z·T₇+T₂T₆+T₃T₅+T₄²+T₅T₃+T₆T₂+T₇z)`
+by `35·s⁹` for `s ≤ 1/10`.
+
+Algebraic identity (`noncomm_ring`): combined = `z·(R+T₅+T₆+T₇) +
+(R+T₅+T₆+T₇)·z − P²_deg≥9` where `P²_deg≥9` unfolds via
+`D₇ := P-T₂-T₃-T₄-T₅-T₆` into 21 deg-9+ terms (10 T·T products with
+i+j ≥ 9, 10 T·D₇ products, D₇²). Proof: 20-step norm_add_le telescoping +
+`nlinarith` with `maxHeartbeats 16000000` (4M times out due to large
+context: 21 cluster bounds + 20 norm_add_le + 5 s^k folding facts).
+
+Per-degree contributions: deg 9 (18·s⁹) + dominated higher degrees
+(≤ 1.88·s⁹) + z·R cluster (14·s⁹) ≈ 33.88·s⁹ ≤ 35·s⁹.
+
+**Session 35 part 1 (2026-05-14, deg-8 P-tail chain, 1 commit)**:
 
 Forward-looking infrastructure for the eventual deg-9-parent T2-F7e-octic
 discharge (which will eliminate `symmetric_bch_septic_sub_poly_axiom`).
