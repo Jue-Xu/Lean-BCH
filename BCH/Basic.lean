@@ -18607,6 +18607,161 @@ private theorem norm_T7_le (a b : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
   --   ≤ s⁷·(1+7+21+35+35+21+7+1)/5040 = 128/5040·s⁷ = (8/315)·s⁷ ≤ s⁷.
   nlinarith [pow_nonneg hs_nn 7]
 
+/-- Norm bound `‖T₈‖ ≤ s⁸` where
+`T₈ = (1/40320)·a⁸ + (1/5040)·a⁷b + (1/1440)·a⁶b² + (1/720)·a⁵b³ +
+      (1/576)·a⁴b⁴ + (1/720)·a³b⁵ + (1/1440)·a²b⁶ + (1/5040)·ab⁷ +
+      (1/40320)·b⁸`
+is the deg-8 contribution of `exp(a)·exp(b)-1`. Sum of |coefficients|·LCM =
+(1+8+28+56+70+56+28+8+1)/40320 = 256/40320 = 2/315 ≈ 0.00635, so `‖T₈‖ ≤ s⁸`.
+
+Deg-8 analog of `norm_T7_le` (session 31). Standalone helper for the
+forward-looking deg-9-parent T2-F7e-octic discharge infrastructure. -/
+private theorem norm_T8_le (a b : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+    (hα_le : ‖a‖ ≤ s) (hβ_le : ‖b‖ ≤ s) :
+    ‖(40320 : 𝕂)⁻¹ • a ^ 8 + (5040 : 𝕂)⁻¹ • (a ^ 7 * b) +
+      (1440 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2) + (720 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3) +
+      (576 : 𝕂)⁻¹ • (a ^ 4 * b ^ 4) + (720 : 𝕂)⁻¹ • (a ^ 3 * b ^ 5) +
+      (1440 : 𝕂)⁻¹ • (a ^ 2 * b ^ 6) + (5040 : 𝕂)⁻¹ • (a * b ^ 7) +
+      (40320 : 𝕂)⁻¹ • b ^ 8‖ ≤ s ^ 8 := by
+  set α := ‖a‖
+  set β := ‖b‖
+  have hα_nn : (0 : ℝ) ≤ α := norm_nonneg a
+  have hβ_nn : (0 : ℝ) ≤ β := norm_nonneg b
+  have h576eq : ‖(576 : 𝕂)⁻¹‖ = (576 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h720eq : ‖(720 : 𝕂)⁻¹‖ = (720 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h1440eq : ‖(1440 : 𝕂)⁻¹‖ = (1440 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h5040eq : ‖(5040 : 𝕂)⁻¹‖ = (5040 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h40320eq : ‖(40320 : 𝕂)⁻¹‖ = (40320 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  -- Per-coefficient bounds.
+  have hT1 : ‖(40320 : 𝕂)⁻¹ • a ^ 8‖ ≤ α ^ 8 / 40320 :=
+    calc _ ≤ ‖(40320 : 𝕂)⁻¹‖ * ‖a ^ 8‖ := norm_smul_le _ _
+      _ ≤ (40320 : ℝ)⁻¹ * α ^ 8 := by
+          rw [h40320eq]; exact mul_le_mul_of_nonneg_left (norm_pow_le _ _) (by norm_num)
+      _ = α ^ 8 / 40320 := by ring
+  have hT2 : ‖(5040 : 𝕂)⁻¹ • (a ^ 7 * b)‖ ≤ α ^ 7 * β / 5040 :=
+    calc _ ≤ ‖(5040 : 𝕂)⁻¹‖ * ‖a ^ 7 * b‖ := norm_smul_le _ _
+      _ ≤ (5040 : ℝ)⁻¹ * (α ^ 7 * β) := by
+          rw [h5040eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) le_rfl hβ_nn
+              (by positivity))) (by norm_num)
+      _ = α ^ 7 * β / 5040 := by ring
+  have hT3 : ‖(1440 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2)‖ ≤ α ^ 6 * β ^ 2 / 1440 :=
+    calc _ ≤ ‖(1440 : 𝕂)⁻¹‖ * ‖a ^ 6 * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (1440 : ℝ)⁻¹ * (α ^ 6 * β ^ 2) := by
+          rw [h1440eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) (norm_pow_le _ _)
+              (norm_nonneg _) (by positivity))) (by norm_num)
+      _ = α ^ 6 * β ^ 2 / 1440 := by ring
+  have hT4 : ‖(720 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3)‖ ≤ α ^ 5 * β ^ 3 / 720 :=
+    calc _ ≤ ‖(720 : 𝕂)⁻¹‖ * ‖a ^ 5 * b ^ 3‖ := norm_smul_le _ _
+      _ ≤ (720 : ℝ)⁻¹ * (α ^ 5 * β ^ 3) := by
+          rw [h720eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) (norm_pow_le _ _)
+              (norm_nonneg _) (by positivity))) (by norm_num)
+      _ = α ^ 5 * β ^ 3 / 720 := by ring
+  have hT5 : ‖(576 : 𝕂)⁻¹ • (a ^ 4 * b ^ 4)‖ ≤ α ^ 4 * β ^ 4 / 576 :=
+    calc _ ≤ ‖(576 : 𝕂)⁻¹‖ * ‖a ^ 4 * b ^ 4‖ := norm_smul_le _ _
+      _ ≤ (576 : ℝ)⁻¹ * (α ^ 4 * β ^ 4) := by
+          rw [h576eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) (norm_pow_le _ _)
+              (norm_nonneg _) (by positivity))) (by norm_num)
+      _ = α ^ 4 * β ^ 4 / 576 := by ring
+  have hT6 : ‖(720 : 𝕂)⁻¹ • (a ^ 3 * b ^ 5)‖ ≤ α ^ 3 * β ^ 5 / 720 :=
+    calc _ ≤ ‖(720 : 𝕂)⁻¹‖ * ‖a ^ 3 * b ^ 5‖ := norm_smul_le _ _
+      _ ≤ (720 : ℝ)⁻¹ * (α ^ 3 * β ^ 5) := by
+          rw [h720eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) (norm_pow_le _ _)
+              (norm_nonneg _) (by positivity))) (by norm_num)
+      _ = α ^ 3 * β ^ 5 / 720 := by ring
+  have hT7 : ‖(1440 : 𝕂)⁻¹ • (a ^ 2 * b ^ 6)‖ ≤ α ^ 2 * β ^ 6 / 1440 :=
+    calc _ ≤ ‖(1440 : 𝕂)⁻¹‖ * ‖a ^ 2 * b ^ 6‖ := norm_smul_le _ _
+      _ ≤ (1440 : ℝ)⁻¹ * (α ^ 2 * β ^ 6) := by
+          rw [h1440eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul (norm_pow_le _ _) (norm_pow_le _ _)
+              (norm_nonneg _) (by positivity))) (by norm_num)
+      _ = α ^ 2 * β ^ 6 / 1440 := by ring
+  have hT8 : ‖(5040 : 𝕂)⁻¹ • (a * b ^ 7)‖ ≤ α * β ^ 7 / 5040 :=
+    calc _ ≤ ‖(5040 : 𝕂)⁻¹‖ * ‖a * b ^ 7‖ := norm_smul_le _ _
+      _ ≤ (5040 : ℝ)⁻¹ * (α * β ^ 7) := by
+          rw [h5040eq]
+          exact mul_le_mul_of_nonneg_left
+            ((norm_mul_le _ _).trans (mul_le_mul le_rfl (norm_pow_le _ _)
+              (by positivity) hα_nn)) (by norm_num)
+      _ = α * β ^ 7 / 5040 := by ring
+  have hT9 : ‖(40320 : 𝕂)⁻¹ • b ^ 8‖ ≤ β ^ 8 / 40320 :=
+    calc _ ≤ ‖(40320 : 𝕂)⁻¹‖ * ‖b ^ 8‖ := norm_smul_le _ _
+      _ ≤ (40320 : ℝ)⁻¹ * β ^ 8 := by
+          rw [h40320eq]; exact mul_le_mul_of_nonneg_left (norm_pow_le _ _) (by norm_num)
+      _ = β ^ 8 / 40320 := by ring
+  -- Triangle inequality (8 norm_add_le applications).
+  have ha1 := norm_add_le ((40320 : 𝕂)⁻¹ • a ^ 8 + (5040 : 𝕂)⁻¹ • (a ^ 7 * b) +
+    (1440 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2) + (720 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3) +
+    (576 : 𝕂)⁻¹ • (a ^ 4 * b ^ 4) + (720 : 𝕂)⁻¹ • (a ^ 3 * b ^ 5) +
+    (1440 : 𝕂)⁻¹ • (a ^ 2 * b ^ 6) + (5040 : 𝕂)⁻¹ • (a * b ^ 7))
+    ((40320 : 𝕂)⁻¹ • b ^ 8)
+  have ha2 := norm_add_le ((40320 : 𝕂)⁻¹ • a ^ 8 + (5040 : 𝕂)⁻¹ • (a ^ 7 * b) +
+    (1440 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2) + (720 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3) +
+    (576 : 𝕂)⁻¹ • (a ^ 4 * b ^ 4) + (720 : 𝕂)⁻¹ • (a ^ 3 * b ^ 5) +
+    (1440 : 𝕂)⁻¹ • (a ^ 2 * b ^ 6))
+    ((5040 : 𝕂)⁻¹ • (a * b ^ 7))
+  have ha3 := norm_add_le ((40320 : 𝕂)⁻¹ • a ^ 8 + (5040 : 𝕂)⁻¹ • (a ^ 7 * b) +
+    (1440 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2) + (720 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3) +
+    (576 : 𝕂)⁻¹ • (a ^ 4 * b ^ 4) + (720 : 𝕂)⁻¹ • (a ^ 3 * b ^ 5))
+    ((1440 : 𝕂)⁻¹ • (a ^ 2 * b ^ 6))
+  have ha4 := norm_add_le ((40320 : 𝕂)⁻¹ • a ^ 8 + (5040 : 𝕂)⁻¹ • (a ^ 7 * b) +
+    (1440 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2) + (720 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3) +
+    (576 : 𝕂)⁻¹ • (a ^ 4 * b ^ 4))
+    ((720 : 𝕂)⁻¹ • (a ^ 3 * b ^ 5))
+  have ha5 := norm_add_le ((40320 : 𝕂)⁻¹ • a ^ 8 + (5040 : 𝕂)⁻¹ • (a ^ 7 * b) +
+    (1440 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2) + (720 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3))
+    ((576 : 𝕂)⁻¹ • (a ^ 4 * b ^ 4))
+  have ha6 := norm_add_le ((40320 : 𝕂)⁻¹ • a ^ 8 + (5040 : 𝕂)⁻¹ • (a ^ 7 * b) +
+    (1440 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2)) ((720 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3))
+  have ha7 := norm_add_le ((40320 : 𝕂)⁻¹ • a ^ 8 + (5040 : 𝕂)⁻¹ • (a ^ 7 * b))
+    ((1440 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2))
+  have ha8 := norm_add_le ((40320 : 𝕂)⁻¹ • a ^ 8) ((5040 : 𝕂)⁻¹ • (a ^ 7 * b))
+  -- α^k·β^(8-k) ≤ s^8 for each k = 0, 1, ..., 8.
+  have ha8s : α ^ 8 ≤ s ^ 8 := pow_le_pow_left₀ hα_nn hα_le 8
+  have hb8s : β ^ 8 ≤ s ^ 8 := pow_le_pow_left₀ hβ_nn hβ_le 8
+  have ha7bs : α ^ 7 * β ≤ s ^ 8 := by
+    calc α ^ 7 * β ≤ s ^ 7 * s := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 7) hβ_le
+          hβ_nn (by positivity)
+      _ = s ^ 8 := by ring
+  have ha6b2s : α ^ 6 * β ^ 2 ≤ s ^ 8 := by
+    calc α ^ 6 * β ^ 2 ≤ s ^ 6 * s ^ 2 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 6)
+          (pow_le_pow_left₀ hβ_nn hβ_le 2) (by positivity) (by positivity)
+      _ = s ^ 8 := by ring
+  have ha5b3s : α ^ 5 * β ^ 3 ≤ s ^ 8 := by
+    calc α ^ 5 * β ^ 3 ≤ s ^ 5 * s ^ 3 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 5)
+          (pow_le_pow_left₀ hβ_nn hβ_le 3) (by positivity) (by positivity)
+      _ = s ^ 8 := by ring
+  have ha4b4s : α ^ 4 * β ^ 4 ≤ s ^ 8 := by
+    calc α ^ 4 * β ^ 4 ≤ s ^ 4 * s ^ 4 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 4)
+          (pow_le_pow_left₀ hβ_nn hβ_le 4) (by positivity) (by positivity)
+      _ = s ^ 8 := by ring
+  have ha3b5s : α ^ 3 * β ^ 5 ≤ s ^ 8 := by
+    calc α ^ 3 * β ^ 5 ≤ s ^ 3 * s ^ 5 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 3)
+          (pow_le_pow_left₀ hβ_nn hβ_le 5) (by positivity) (by positivity)
+      _ = s ^ 8 := by ring
+  have ha2b6s : α ^ 2 * β ^ 6 ≤ s ^ 8 := by
+    calc α ^ 2 * β ^ 6 ≤ s ^ 2 * s ^ 6 := mul_le_mul (pow_le_pow_left₀ hα_nn hα_le 2)
+          (pow_le_pow_left₀ hβ_nn hβ_le 6) (by positivity) (by positivity)
+      _ = s ^ 8 := by ring
+  have hab7s : α * β ^ 7 ≤ s ^ 8 := by
+    calc α * β ^ 7 ≤ s * s ^ 7 := mul_le_mul hα_le (pow_le_pow_left₀ hβ_nn hβ_le 7)
+          (by positivity) hs_nn
+      _ = s ^ 8 := by ring
+  -- Sum: α⁸/40320 + α⁷β/5040 + α⁶β²/1440 + α⁵β³/720 + α⁴β⁴/576 + α³β⁵/720 +
+  --      α²β⁶/1440 + αβ⁷/5040 + β⁸/40320
+  --   ≤ s⁸·(1+8+28+56+70+56+28+8+1)/40320 = 256/40320·s⁸ = (2/315)·s⁸ ≤ s⁸.
+  nlinarith [pow_nonneg hs_nn 8]
+
 /-! ### Sixth-order BCH remainder bound
 
 The public theorem `norm_bch_sextic_remainder_le` extends
