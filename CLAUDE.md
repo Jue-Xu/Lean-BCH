@@ -6,6 +6,24 @@ Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
 `norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
 
+**Session 35 part 3 (2026-05-14, deg-8 R+T5+T6+T7 norm sum bound, 1 commit)**:
+
+Commit `34873dc` (+61 lines): `BCH.norm_R_plus_T5_plus_T6_plus_T7_residual_sum_le`
+— deg-8 analog of `norm_R_plus_T5_plus_T6_residual_sum_le` (session 29) at one
+degree higher. Bounds the 9-term residual sum from session 35 part 1's
+`R_plus_T5_plus_T6_plus_T7_eq_neg_deg8_residual` identity by `7·s⁸` given
+precomputed per-term bounds (each ≤ s⁸):
+
+  J_a + J_b + a·I_b + I_a·b + F₁·F₂ + ⅙·G₁·b³ + ⅙·a³·G₂ + ½·H₁·b² + ½·a²·H₂.
+
+Per-term: 4·s⁸ (outer) + s⁸ (F₁·F₂, deg-8 leading inherently — no `s ≤ 1`
+folding needed) + 2·(s⁸/6) (smul'd by 1/6) + 2·(s⁸/2) (smul'd by 1/2) =
+19/3·s⁸ ≈ 6.34·s⁸ ≤ 7·s⁸. Proof: 9-step triangle inequality + linarith.
+
+Forward-looking infrastructure for the future I1-nonic chain (deg-9-parent
+T2-F7e-octic discharge), alongside session 35 part 2's
+`norm_combined_tricky_nonic_le`.
+
 **Session 35 part 2 (2026-05-14, nonic combined tricky bound, 1 commit)**:
 
 Commit `b3bdb2b` (+266 lines): `BCH.norm_combined_tricky_nonic_le` — deg-9
