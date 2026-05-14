@@ -1,10 +1,36 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 34, 2026-05-13)
+## Status (session 35, 2026-05-14)
 
 Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
 `norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
+
+**Session 35 (2026-05-14, deg-8 P-tail chain, 1 commit)**:
+
+Forward-looking infrastructure for the eventual deg-9-parent T2-F7e-octic
+discharge (which will eliminate `symmetric_bch_septic_sub_poly_axiom`).
+Commit `1d5056e` added 3 lemmas extending the session-34 chain one degree
+higher:
+
+- `BCH.R_plus_T5_plus_T6_plus_T7_eq_neg_deg8_residual`: deg-8 cancellation
+  identity. Promotes each term in the deg-7 residual by one tail level
+  (F→G, G→H, H→I, I→J); subtracted monomials sum to exactly T₇. RHS =
+  `−(J_a + J_b + a·I_b + I_a·b + F₁·F₂ + ⅙·G₁·b³ + ⅙·a³·G₂ + ½·H₁·b² +
+  ½·a²·H₂)`. Proof: 1-line `linear_combination` from session-29 deg-7
+  identity + match_scalars/ring normalization.
+- `BCH.P_sub_T2_sub_T3_sub_T4_sub_T5_sub_T6_sub_T7_decomp_eq`: deg-8 P-tail
+  decomp (`P − T₂ − ... − T₇ = 9 deg-8+ terms`). Proof:
+  `linear_combination -hR` + noncomm_ring normalization.
+- `BCH.norm_P_sub_T2_sub_T3_sub_T4_sub_T5_sub_T6_sub_T7_le`: norm bound
+  `≤ 7·s⁸` for `s < 3/4`. Per-term: 5·s⁸ (J_a+J_b+a·I_b+I_a·b+F₁·F₂) +
+  2·(s⁸/6) (⅙·G₁·b³+⅙·a³·G₂) + 2·(s⁸/2) (½·H₁·b²+½·a²·H₂) = 19/3·s⁸ ≈
+  6.34·s⁸ ≤ 7·s⁸. Uses session-29 deg-8 noncomm exp tail +
+  `real_exp_eighth_order_le_octic`. No `s ≤ 1` folding needed (all
+  terms inherently deg-8+).
+
+Deg-8 analog of session 34's deg-7 P-tail bound. Same per-term arithmetic
+at one degree higher; same outer triangle inequality + linarith pattern.
 
 **Session 34 (2026-05-13, deg-7 P-tail bound, 1 commit)**:
 
