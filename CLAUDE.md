@@ -6,6 +6,24 @@ Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
 `norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
 
+**Session 35 part 6 (2026-05-15, y7 nonic decomp + norm bound, 1 commit)**:
+
+Commit `fbec7a0` (+216 lines): `BCH.y7_sub_z7_sub_y7_8_decomp` (13-term
+algebraic identity) + `BCH.norm_y7_sub_z7_sub_y7_8_le` (`‖y⁷ - z⁷ - y7_8‖
+≤ 155·s⁹`). Deg-9 analog of `y6_sub_z6_sub_y6_7_decomp` /
+`norm_y6_sub_z6_sub_y6_7_le` (session 28) at one degree higher.
+
+`y7_8 = z⁶T₂ + z⁵T₂z + z⁴T₂z² + z³T₂z³ + z²T₂z⁴ + zT₂z⁵ + T₂z⁶` (7 perms
+of (1,1,1,1,1,1,2) — single T₂ in 7 positions among 6 z's). The 13 RHS
+terms split as 5 (yⁿ-zⁿ)·P·zᵏ telescoping pieces (n=2..6) + 7 zⁿ·(P-T₂)·zᵏ
+absorption pieces (n=0..6) + P·P·z⁵ (level-1 telescoping). Per-term:
+63+5+31+5+15+5+7+5+3+5+1+5+5 = 155 (units of s⁹).
+
+Both lemmas need `set_option maxHeartbeats 4000000` (default 200K times out
+on the 13-term `noncomm_ring` and on `whnf` of the giant statement).
+Forward-looking infrastructure for the future S₆-nonic piece in the
+deg-9-parent T2-F7e-octic discharge.
+
 **Session 35 part 5 (2026-05-14, deg-9 pow8 telescoping bound, 1 commit)**:
 
 Commit `eeb72c8` (+121 lines): `BCH.pow8_sub_zpow8_telescope` (8-fold
