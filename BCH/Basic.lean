@@ -18140,6 +18140,67 @@ private theorem norm_R_plus_T5_plus_T6_residual_sum_le
   -- Sum: 4·s⁷ + s⁸ + 2·s⁷/6 + s⁷ = 4s⁷ + 1/3·s⁷ + s⁷ + ε = 16/3·s⁷ + s⁸ ≤ 7·s⁷
   linarith [pow_nonneg hs_nn 7]
 
+/-- Norm bound `‖R+T₅+T₆+T₇ residual sum‖ ≤ 7·s⁸` from precomputed component bounds.
+The 9 terms come from `R_plus_T5_plus_T6_plus_T7_eq_neg_deg8_residual`:
+J_a+J_b+a·I_b+I_a·b+F₁·F₂+⅙·G₁·b³+⅙·a³·G₂+½·H₁·b²+½·a²·H₂.
+
+Analog of `norm_R_plus_T5_plus_T6_residual_sum_le` at one degree higher. All
+inputs are deg-8+ inherently (the F₁·F₂ term has deg-4+4 = 8 leading, so no
+`s ≤ 1` folding is needed at this level). Forward-looking infrastructure for
+the eventual deg-9-parent T2-F7e-octic discharge. -/
+private theorem norm_R_plus_T5_plus_T6_plus_T7_residual_sum_le
+    (J_a J_b I_a I_b H₁ H₂ G₁ G₂ F₁ F₂ a b : 𝔸) {s : ℝ}
+    (hs_nn : 0 ≤ s)
+    (hJ_a_le : ‖J_a‖ ≤ s ^ 8) (hJ_b_le : ‖J_b‖ ≤ s ^ 8)
+    (h_aI_b_le : ‖a * I_b‖ ≤ s ^ 8) (h_I_ab_le : ‖I_a * b‖ ≤ s ^ 8)
+    (h_F₁F₂_le : ‖F₁ * F₂‖ ≤ s ^ 8)
+    (h_G₁b3_le : ‖G₁ * b ^ 3‖ ≤ s ^ 8)
+    (h_a3G₂_le : ‖a ^ 3 * G₂‖ ≤ s ^ 8)
+    (h_H₁b2_le : ‖H₁ * b ^ 2‖ ≤ s ^ 8)
+    (h_a2H₂_le : ‖a ^ 2 * H₂‖ ≤ s ^ 8) :
+    ‖J_a + J_b + a * I_b + I_a * b + F₁ * F₂ +
+      (6 : 𝕂)⁻¹ • (G₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * G₂) +
+      (2 : 𝕂)⁻¹ • (H₁ * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * H₂)‖ ≤ 7 * s ^ 8 := by
+  have h2eq : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h6eq : ‖(6 : 𝕂)⁻¹‖ = (6 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h_G₁b3_smul : ‖(6 : 𝕂)⁻¹ • (G₁ * b ^ 3)‖ ≤ s ^ 8 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖G₁ * b ^ 3‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 8 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_G₁b3_le (by norm_num)
+      _ = s ^ 8 / 6 := by ring
+  have h_a3G₂_smul : ‖(6 : 𝕂)⁻¹ • (a ^ 3 * G₂)‖ ≤ s ^ 8 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖a ^ 3 * G₂‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 8 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_a3G₂_le (by norm_num)
+      _ = s ^ 8 / 6 := by ring
+  have h_H₁b2_smul : ‖(2 : 𝕂)⁻¹ • (H₁ * b ^ 2)‖ ≤ s ^ 8 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖H₁ * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 8 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_H₁b2_le (by norm_num)
+      _ = s ^ 8 / 2 := by ring
+  have h_a2H₂_smul : ‖(2 : 𝕂)⁻¹ • (a ^ 2 * H₂)‖ ≤ s ^ 8 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a ^ 2 * H₂‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 8 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_a2H₂_le (by norm_num)
+      _ = s ^ 8 / 2 := by ring
+  -- 8-term sum via triangle inequality (8 norm_add_le).
+  have ha1 := norm_add_le (J_a + J_b + a * I_b + I_a * b + F₁ * F₂ +
+    (6 : 𝕂)⁻¹ • (G₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * G₂) +
+    (2 : 𝕂)⁻¹ • (H₁ * b ^ 2)) ((2 : 𝕂)⁻¹ • (a ^ 2 * H₂))
+  have ha2 := norm_add_le (J_a + J_b + a * I_b + I_a * b + F₁ * F₂ +
+    (6 : 𝕂)⁻¹ • (G₁ * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * G₂))
+    ((2 : 𝕂)⁻¹ • (H₁ * b ^ 2))
+  have ha3 := norm_add_le (J_a + J_b + a * I_b + I_a * b + F₁ * F₂ +
+    (6 : 𝕂)⁻¹ • (G₁ * b ^ 3)) ((6 : 𝕂)⁻¹ • (a ^ 3 * G₂))
+  have ha4 := norm_add_le (J_a + J_b + a * I_b + I_a * b + F₁ * F₂)
+    ((6 : 𝕂)⁻¹ • (G₁ * b ^ 3))
+  have ha5 := norm_add_le (J_a + J_b + a * I_b + I_a * b) (F₁ * F₂)
+  have ha6 := norm_add_le (J_a + J_b + a * I_b) (I_a * b)
+  have ha7 := norm_add_le (J_a + J_b) (a * I_b)
+  have ha8 := norm_add_le J_a J_b
+  -- Sum: 4·s⁸ + s⁸ + 2·s⁸/6 + 2·s⁸/2 = 4 + 1 + 1/3 + 1 = 19/3·s⁸ ≈ 6.34·s⁸ ≤ 7·s⁸.
+  linarith [pow_nonneg hs_nn 8]
+
 /-- Norm bound `‖T₄‖ ≤ s⁴` where T₄ = (1/24)·a⁴ + (1/6)·a³b + (1/4)·a²b² +
 (1/6)·ab³ + (1/24)·b⁴ is the deg-4 contribution of `exp(a)·exp(b)-1`.
 Sum of |coefficients| = 16/24 = 2/3 ≤ 1, so ‖T₄‖ ≤ (2/3)·s⁴ ≤ s⁴. -/
