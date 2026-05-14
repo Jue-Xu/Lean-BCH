@@ -6,6 +6,19 @@ Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
 `norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
 
+**Session 35 part 5 (2026-05-14, deg-9 pow8 telescoping bound, 1 commit)**:
+
+Commit `eeb72c8` (+121 lines): `BCH.pow8_sub_zpow8_telescope` (8-fold
+non-commutative ring identity) + `BCH.norm_pow8_sub_zpow8_le`
+(`‖y⁸ - z⁸‖ ≤ 255·s⁹` for `‖y‖ ≤ 2s, ‖z‖ ≤ s, ‖P‖ ≤ s²`). Per-term bounds:
+`(2s)^(7-k)·s²·s^k` for k=0..7 sums to 128+64+32+16+8+4+2+1 = 255 (units
+of s⁹).
+
+Deg-9 analog of `pow7_sub_zpow7_telescope` + `norm_pow7_sub_zpow7_le`
+(session 28) at one degree higher. Forward-looking infrastructure for the
+deg-9-parent T2-F7e-octic discharge — will feed the future S₆-nonic piece
+(analog of the octic S₆ using `norm_pow7_sub_zpow7_le` ≤ 127·s⁸).
+
 **Session 35 part 4 (2026-05-14, ‖T₈‖ ≤ s⁸ helper, 1 commit)**:
 
 Commit `b86f4c1` (+155 lines): `BCH.norm_T8_le` — standalone helper bounding
