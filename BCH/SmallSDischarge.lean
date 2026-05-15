@@ -3857,6 +3857,265 @@ theorem norm_I1_octic_residual_RHS_le (a b z J_a J_b I_a I_b H₁ H₂ G₁ G₂
   -- Sum: 4·s⁸ + 4/3·s⁸ + 1·s⁸ + C/2·s⁸ = 19/3·s⁸ + C/2·s⁸ ≤ 7·s⁸ + C/2·s⁸.
   nlinarith [pow_nonneg hs_nn 8]
 
+set_option maxHeartbeats 32000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **I₁ nonic residual decomposition** (pure algebraic identity in (ea, eb, a, b)):
+extends `I1_octic_residual_decomp_eq` by additionally subtracting
+`corr₁_8 = ½·W8`, expressing
+`(I₁ in quartic_id form) − corr₁ − corr₁_5 − corr₁_6 − corr₁_7 − corr₁_8`
+as 13 deg-9+ "outer + inner-cluster" terms plus a 5th "tricky" cluster
+(one-degree-higher promotion of the octic RHS).
+
+Promotions on the RHS (each ½·W8 absorption promotes one term by one
+exp-tail level):
+- `J_a → K_a` (where `K_a = J_a - (40320:𝕂)⁻¹·a⁸`), `J_b → K_b`.
+- `a·I_b → a·J_b`, `I_a·b → J_a·b`.
+- `(1/2)·a²·H₂ → (1/2)·a²·I_b`, `(1/2)·H₁·b² → (1/2)·I_a·b²`.
+- `(1/6)·a³·G₂ → (1/6)·a³·H₂`, `(1/6)·G₁·b³ → (1/6)·H₁·b³`.
+- `F₁·F₂` refines to `G₁·G₂ + (1/24)·a⁴·G₂ + (1/24)·G₁·b⁴` (5-item inner
+  cluster instead of octic's 3-item).
+
+Plus a NEW deg-8 cluster `½·(z·T₇ + T₂·T₆ + T₃·T₅ + T₄² + T₅·T₃ + T₆·T₂ +
+T₇·z)` is added (from W₈'s non-monomial part), alongside the four octic
+tricky clusters.
+
+The five "tricky" clusters `½·(z·R+R·z) + ½·(T₂²−P²+T₂T₃+T₃T₂) +
+½·(z·T₅+T₂T₄+T₃²+T₄T₂+T₅z) + ½·(z·T₆+T₂T₅+T₃T₄+T₄T₃+T₅T₂+T₆z) +
+½·(z·T₇+T₂T₆+T₃T₅+T₄²+T₅T₃+T₆T₂+T₇z)` have individual deg-6, 7, or 8
+leading parts, but combine to deg-9+ via the R+T₅+T₆+T₇ identity
+(`R_plus_T5_plus_T6_plus_T7_eq_neg_deg8_residual`), to be exploited in
+`norm_combined_tricky_nonic_le` (already in place, session 35 part 2).
+
+Proof: `match_scalars <;> ring` (mirrors I1_octic_residual_decomp_eq). -/
+theorem I1_nonic_residual_decomp_eq (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (ea eb a b : 𝔸) :
+    let D₁ : 𝔸 := ea - 1 - a
+    let D₂ : 𝔸 := eb - 1 - b
+    let E₁ : 𝔸 := D₁ - (2 : 𝕂)⁻¹ • a ^ 2
+    let E₂ : 𝔸 := D₂ - (2 : 𝕂)⁻¹ • b ^ 2
+    let F₁ : 𝔸 := E₁ - (6 : 𝕂)⁻¹ • a ^ 3
+    let F₂ : 𝔸 := E₂ - (6 : 𝕂)⁻¹ • b ^ 3
+    let G₁ : 𝔸 := F₁ - (24 : 𝕂)⁻¹ • a ^ 4
+    let G₂ : 𝔸 := F₂ - (24 : 𝕂)⁻¹ • b ^ 4
+    let H₁ : 𝔸 := G₁ - (120 : 𝕂)⁻¹ • a ^ 5
+    let H₂ : 𝔸 := G₂ - (120 : 𝕂)⁻¹ • b ^ 5
+    let I_a : 𝔸 := H₁ - (720 : 𝕂)⁻¹ • a ^ 6
+    let I_b : 𝔸 := H₂ - (720 : 𝕂)⁻¹ • b ^ 6
+    let J_a : 𝔸 := I_a - (5040 : 𝕂)⁻¹ • a ^ 7
+    let J_b : 𝔸 := I_b - (5040 : 𝕂)⁻¹ • b ^ 7
+    let K_a : 𝔸 := J_a - (40320 : 𝕂)⁻¹ • a ^ 8
+    let K_b : 𝔸 := J_b - (40320 : 𝕂)⁻¹ • b ^ 8
+    let P : 𝔸 := ea * eb - 1 - (a + b)
+    let z : 𝔸 := a + b
+    let Q : 𝔸 := a * D₂ + D₁ * b + D₁ * D₂
+    let T₂ : 𝔸 := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+    let T₃ : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    let T₅ : 𝔸 := (120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5
+    let T₆ : 𝔸 := (720 : 𝕂)⁻¹ • a ^ 6 + (120 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (48 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (36 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (48 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (120 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (720 : 𝕂)⁻¹ • b ^ 6
+    let T₇ : 𝔸 := (5040 : 𝕂)⁻¹ • a ^ 7 + (720 : 𝕂)⁻¹ • (a ^ 6 * b) +
+        (240 : 𝕂)⁻¹ • (a ^ 5 * b ^ 2) + (144 : 𝕂)⁻¹ • (a ^ 4 * b ^ 3) +
+        (144 : 𝕂)⁻¹ • (a ^ 3 * b ^ 4) + (240 : 𝕂)⁻¹ • (a ^ 2 * b ^ 5) +
+        (720 : 𝕂)⁻¹ • (a * b ^ 6) + (5040 : 𝕂)⁻¹ • b ^ 7
+    let W5 : 𝔸 := (60 : 𝕂)⁻¹ • a ^ 5 + (60 : 𝕂)⁻¹ • b ^ 5 +
+        (12 : 𝕂)⁻¹ • (a * b ^ 4) + (12 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (6 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) -
+        (z * T₄ + T₄ * z) - (T₂ * T₃ + T₃ * T₂)
+    let W6 : 𝔸 := (360 : 𝕂)⁻¹ • a ^ 6 + (60 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (24 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (18 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (60 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (360 : 𝕂)⁻¹ • b ^ 6 -
+        (z * T₅ + T₂ * T₄ + T₃ * T₃ + T₄ * T₂ + T₅ * z)
+    let W7 : 𝔸 := (2520 : 𝕂)⁻¹ • a ^ 7 + (360 : 𝕂)⁻¹ • (a ^ 6 * b) +
+        (120 : 𝕂)⁻¹ • (a ^ 5 * b ^ 2) + (72 : 𝕂)⁻¹ • (a ^ 4 * b ^ 3) +
+        (72 : 𝕂)⁻¹ • (a ^ 3 * b ^ 4) + (120 : 𝕂)⁻¹ • (a ^ 2 * b ^ 5) +
+        (360 : 𝕂)⁻¹ • (a * b ^ 6) + (2520 : 𝕂)⁻¹ • b ^ 7 -
+        (z * T₆ + T₂ * T₅ + T₃ * T₄ + T₄ * T₃ + T₅ * T₂ + T₆ * z)
+    let W8 : 𝔸 := (20160 : 𝕂)⁻¹ • a ^ 8 + (2520 : 𝕂)⁻¹ • (a ^ 7 * b) +
+        (720 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2) + (360 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3) +
+        (288 : 𝕂)⁻¹ • (a ^ 4 * b ^ 4) + (360 : 𝕂)⁻¹ • (a ^ 3 * b ^ 5) +
+        (720 : 𝕂)⁻¹ • (a ^ 2 * b ^ 6) + (2520 : 𝕂)⁻¹ • (a * b ^ 7) +
+        (20160 : 𝕂)⁻¹ • b ^ 8 -
+        (z * T₇ + T₂ * T₆ + T₃ * T₅ + T₄ * T₄ + T₅ * T₃ + T₆ * T₂ + T₇ * z)
+    let R : 𝔸 := T₃ - E₁ - E₂ - Q + T₄
+    -- LHS: I₁ (quartic_identity form) − corr₁ − corr₁_5 − corr₁_6 − corr₁_7 − corr₁_8
+    (F₁ + F₂ + a * E₂ + E₁ * b + D₁ * D₂ -
+        (2 : 𝕂)⁻¹ • (z * (E₁ + E₂ + Q) + (E₁ + E₂ + Q) * z) -
+        (2 : 𝕂)⁻¹ • P ^ 2) -
+      ((24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+        (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+        (2 : 𝕂)⁻¹ • (z * T₃ + T₃ * z) - (2 : 𝕂)⁻¹ • T₂ ^ 2) -
+      (2 : 𝕂)⁻¹ • W5 -
+      (2 : 𝕂)⁻¹ • W6 -
+      (2 : 𝕂)⁻¹ • W7 -
+      (2 : 𝕂)⁻¹ • W8 =
+    -- RHS: 13 deg-9+ "outer+inner" + 5 tricky clusters.
+    K_a + K_b + a * J_b + J_a * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) + G₁ * G₂ +
+      (24 : 𝕂)⁻¹ • (a ^ 4 * G₂) + (24 : 𝕂)⁻¹ • (G₁ * b ^ 4)) +
+    (2 : 𝕂)⁻¹ • (a ^ 2 * I_b) + (2 : 𝕂)⁻¹ • (I_a * b ^ 2) +
+    (2 : 𝕂)⁻¹ • (z * R + R * z) +
+    (2 : 𝕂)⁻¹ • (T₂ ^ 2 - P ^ 2 + T₂ * T₃ + T₃ * T₂) +
+    (2 : 𝕂)⁻¹ • (z * T₅ + T₂ * T₄ + T₃ * T₃ + T₄ * T₂ + T₅ * z) +
+    (2 : 𝕂)⁻¹ • (z * T₆ + T₂ * T₅ + T₃ * T₄ + T₄ * T₃ + T₅ * T₂ + T₆ * z) +
+    (2 : 𝕂)⁻¹ • (z * T₇ + T₂ * T₆ + T₃ * T₅ + T₄ ^ 2 + T₅ * T₃ + T₆ * T₂ + T₇ * z) := by
+  dsimp only
+  simp only [pow_succ, pow_zero, one_mul, smul_sub, smul_add, smul_neg, smul_smul,
+    mul_smul_comm, smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
+
+set_option maxHeartbeats 4000000 in
+/-- Norm bound for the RHS of `I1_nonic_residual_decomp_eq`.
+
+Given precomputed bounds for the 11 "easy" pieces (each ≤ s⁹ with smul
+scaling) and one COMBINED bound for the five "tricky" pieces
+(`‖z·R+R·z + T22 + T_extra + T_extra2 + T_extra3‖ ≤ C·s⁹`), bounds the
+RHS by `(7 + C/2)·s⁹`.
+
+Per-term contributions (in units of s⁹):
+- 4 outer terms (K_a + K_b + a·J_b + J_a·b): 4·s⁹.
+- Inner 5-cluster: ⅙·a³·H₂ + ⅙·H₁·b³ + G₁·G₂ + 1/24·a⁴·G₂ + 1/24·G₁·b⁴
+  → (1/6 + 1/6 + 1 + 1/24 + 1/24) = 17/12·s⁹.
+- Two ½·smul'd (a²·I_b, I_a·b²) → 1·s⁹.
+- Combined ½·smul'd tricky → C/2·s⁹.
+- Total: 4 + 17/12 + 1 + C/2 = 77/12 + C/2 ≤ 7 + C/2.
+
+Direct analog of `norm_I1_octic_residual_RHS_le` at one degree higher.
+With C = 35 (from `norm_combined_tricky_nonic_le`), gives ≤ 24.5·s⁹. -/
+theorem norm_I1_nonic_residual_RHS_le (a b z K_a K_b J_a J_b I_a I_b H₁ H₂ G₁ G₂
+    R T22 T_extra T_extra2 T_extra3 : 𝔸)
+    {s C : ℝ} (hs_nn : 0 ≤ s) (hC_nn : 0 ≤ C)
+    (hK_a_le : ‖K_a‖ ≤ s ^ 9) (hK_b_le : ‖K_b‖ ≤ s ^ 9)
+    (h_aJ_b_le : ‖a * J_b‖ ≤ s ^ 9) (h_J_ab_le : ‖J_a * b‖ ≤ s ^ 9)
+    (h_a3H₂_le : ‖a ^ 3 * H₂‖ ≤ s ^ 9)
+    (h_H₁b3_le : ‖H₁ * b ^ 3‖ ≤ s ^ 9)
+    (h_G₁G₂_le : ‖G₁ * G₂‖ ≤ s ^ 9)
+    (h_a4G₂_le : ‖a ^ 4 * G₂‖ ≤ s ^ 9)
+    (h_G₁b4_le : ‖G₁ * b ^ 4‖ ≤ s ^ 9)
+    (h_a2I_b_le : ‖a ^ 2 * I_b‖ ≤ s ^ 9)
+    (h_I_ab2_le : ‖I_a * b ^ 2‖ ≤ s ^ 9)
+    (h_combined_le :
+        ‖z * R + R * z + T22 + T_extra + T_extra2 + T_extra3‖ ≤ C * s ^ 9) :
+    ‖K_a + K_b + a * J_b + J_a * b +
+      ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) + G₁ * G₂ +
+        (24 : 𝕂)⁻¹ • (a ^ 4 * G₂) + (24 : 𝕂)⁻¹ • (G₁ * b ^ 4)) +
+      (2 : 𝕂)⁻¹ • (a ^ 2 * I_b) + (2 : 𝕂)⁻¹ • (I_a * b ^ 2) +
+      (2 : 𝕂)⁻¹ • (z * R + R * z) +
+      (2 : 𝕂)⁻¹ • T22 +
+      (2 : 𝕂)⁻¹ • T_extra +
+      (2 : 𝕂)⁻¹ • T_extra2 +
+      (2 : 𝕂)⁻¹ • T_extra3‖ ≤ (7 + C / 2) * s ^ 9 := by
+  have h2eq : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h6eq : ‖(6 : 𝕂)⁻¹‖ = (6 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have h24eq : ‖(24 : 𝕂)⁻¹‖ = (24 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  -- Re-associate to group the 5 smul'd tricky terms together.
+  have h_assoc :
+      K_a + K_b + a * J_b + J_a * b +
+        ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) + G₁ * G₂ +
+          (24 : 𝕂)⁻¹ • (a ^ 4 * G₂) + (24 : 𝕂)⁻¹ • (G₁ * b ^ 4)) +
+        (2 : 𝕂)⁻¹ • (a ^ 2 * I_b) + (2 : 𝕂)⁻¹ • (I_a * b ^ 2) +
+        (2 : 𝕂)⁻¹ • (z * R + R * z) + (2 : 𝕂)⁻¹ • T22 +
+        (2 : 𝕂)⁻¹ • T_extra + (2 : 𝕂)⁻¹ • T_extra2 +
+        (2 : 𝕂)⁻¹ • T_extra3 =
+      (K_a + K_b + a * J_b + J_a * b +
+        ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) + G₁ * G₂ +
+          (24 : 𝕂)⁻¹ • (a ^ 4 * G₂) + (24 : 𝕂)⁻¹ • (G₁ * b ^ 4)) +
+        (2 : 𝕂)⁻¹ • (a ^ 2 * I_b) + (2 : 𝕂)⁻¹ • (I_a * b ^ 2)) +
+      ((2 : 𝕂)⁻¹ • (z * R + R * z) + (2 : 𝕂)⁻¹ • T22 +
+        (2 : 𝕂)⁻¹ • T_extra + (2 : 𝕂)⁻¹ • T_extra2 +
+        (2 : 𝕂)⁻¹ • T_extra3) := by abel
+  -- Combine the 5 smul terms into one.
+  have h_smul_combine : (2 : 𝕂)⁻¹ • (z * R + R * z) + (2 : 𝕂)⁻¹ • T22 +
+      (2 : 𝕂)⁻¹ • T_extra + (2 : 𝕂)⁻¹ • T_extra2 + (2 : 𝕂)⁻¹ • T_extra3 =
+      (2 : 𝕂)⁻¹ • (z * R + R * z + T22 + T_extra + T_extra2 + T_extra3) := by
+    rw [← smul_add, ← smul_add, ← smul_add, ← smul_add]
+  rw [h_assoc, h_smul_combine]
+  -- Smul-prefixed bounds.
+  have h_a3H2_smul : ‖(6 : 𝕂)⁻¹ • (a ^ 3 * H₂)‖ ≤ s ^ 9 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖a ^ 3 * H₂‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 9 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_a3H₂_le (by norm_num)
+      _ = s ^ 9 / 6 := by ring
+  have h_H1b3_smul : ‖(6 : 𝕂)⁻¹ • (H₁ * b ^ 3)‖ ≤ s ^ 9 / 6 := by
+    calc _ ≤ ‖(6 : 𝕂)⁻¹‖ * ‖H₁ * b ^ 3‖ := norm_smul_le _ _
+      _ ≤ (6 : ℝ)⁻¹ * s ^ 9 := by
+          rw [h6eq]; exact mul_le_mul_of_nonneg_left h_H₁b3_le (by norm_num)
+      _ = s ^ 9 / 6 := by ring
+  have h_a4G2_smul : ‖(24 : 𝕂)⁻¹ • (a ^ 4 * G₂)‖ ≤ s ^ 9 / 24 := by
+    calc _ ≤ ‖(24 : 𝕂)⁻¹‖ * ‖a ^ 4 * G₂‖ := norm_smul_le _ _
+      _ ≤ (24 : ℝ)⁻¹ * s ^ 9 := by
+          rw [h24eq]; exact mul_le_mul_of_nonneg_left h_a4G₂_le (by norm_num)
+      _ = s ^ 9 / 24 := by ring
+  have h_G1b4_smul : ‖(24 : 𝕂)⁻¹ • (G₁ * b ^ 4)‖ ≤ s ^ 9 / 24 := by
+    calc _ ≤ ‖(24 : 𝕂)⁻¹‖ * ‖G₁ * b ^ 4‖ := norm_smul_le _ _
+      _ ≤ (24 : ℝ)⁻¹ * s ^ 9 := by
+          rw [h24eq]; exact mul_le_mul_of_nonneg_left h_G₁b4_le (by norm_num)
+      _ = s ^ 9 / 24 := by ring
+  have h_a2I_b_smul : ‖(2 : 𝕂)⁻¹ • (a ^ 2 * I_b)‖ ≤ s ^ 9 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a ^ 2 * I_b‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 9 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_a2I_b_le (by norm_num)
+      _ = s ^ 9 / 2 := by ring
+  have h_I_ab2_smul : ‖(2 : 𝕂)⁻¹ • (I_a * b ^ 2)‖ ≤ s ^ 9 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖I_a * b ^ 2‖ := norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * s ^ 9 := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_I_ab2_le (by norm_num)
+      _ = s ^ 9 / 2 := by ring
+  have h_combined_smul :
+      ‖(2 : 𝕂)⁻¹ • (z * R + R * z + T22 + T_extra + T_extra2 + T_extra3)‖ ≤
+      C * s ^ 9 / 2 := by
+    calc _ ≤ ‖(2 : 𝕂)⁻¹‖ *
+              ‖z * R + R * z + T22 + T_extra + T_extra2 + T_extra3‖ :=
+            norm_smul_le _ _
+      _ ≤ (2 : ℝ)⁻¹ * (C * s ^ 9) := by
+          rw [h2eq]; exact mul_le_mul_of_nonneg_left h_combined_le (by norm_num)
+      _ = C * s ^ 9 / 2 := by ring
+  -- Inner 5-cluster: (1/6)·a³H₂ + (1/6)·H₁b³ + G₁G₂ + (1/24)·a⁴G₂ + (1/24)·G₁b⁴
+  --   ≤ s⁹/6 + s⁹/6 + s⁹ + s⁹/24 + s⁹/24 = (17/12)·s⁹.
+  have h_inner :
+      ‖(6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) + G₁ * G₂ +
+        (24 : 𝕂)⁻¹ • (a ^ 4 * G₂) + (24 : 𝕂)⁻¹ • (G₁ * b ^ 4)‖ ≤
+      s ^ 9 / 6 + s ^ 9 / 6 + s ^ 9 + s ^ 9 / 24 + s ^ 9 / 24 := by
+    have hi1 := norm_add_le ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) +
+      G₁ * G₂ + (24 : 𝕂)⁻¹ • (a ^ 4 * G₂)) ((24 : 𝕂)⁻¹ • (G₁ * b ^ 4))
+    have hi2 := norm_add_le ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) +
+      G₁ * G₂) ((24 : 𝕂)⁻¹ • (a ^ 4 * G₂))
+    have hi3 := norm_add_le ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3))
+      (G₁ * G₂)
+    have hi4 := norm_add_le ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂)) ((6 : 𝕂)⁻¹ • (H₁ * b ^ 3))
+    linarith
+  -- Triangle inequality on the (outer 7) + (combined smul'd) split.
+  have ha_main := norm_add_le (K_a + K_b + a * J_b + J_a * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) + G₁ * G₂ +
+      (24 : 𝕂)⁻¹ • (a ^ 4 * G₂) + (24 : 𝕂)⁻¹ • (G₁ * b ^ 4)) +
+    (2 : 𝕂)⁻¹ • (a ^ 2 * I_b) + (2 : 𝕂)⁻¹ • (I_a * b ^ 2))
+    ((2 : 𝕂)⁻¹ • (z * R + R * z + T22 + T_extra + T_extra2 + T_extra3))
+  have ha1 := norm_add_le (K_a + K_b + a * J_b + J_a * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) + G₁ * G₂ +
+      (24 : 𝕂)⁻¹ • (a ^ 4 * G₂) + (24 : 𝕂)⁻¹ • (G₁ * b ^ 4)) +
+    (2 : 𝕂)⁻¹ • (a ^ 2 * I_b)) ((2 : 𝕂)⁻¹ • (I_a * b ^ 2))
+  have ha2 := norm_add_le (K_a + K_b + a * J_b + J_a * b +
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) + G₁ * G₂ +
+      (24 : 𝕂)⁻¹ • (a ^ 4 * G₂) + (24 : 𝕂)⁻¹ • (G₁ * b ^ 4)))
+    ((2 : 𝕂)⁻¹ • (a ^ 2 * I_b))
+  have ha3 := norm_add_le (K_a + K_b + a * J_b + J_a * b)
+    ((6 : 𝕂)⁻¹ • (a ^ 3 * H₂) + (6 : 𝕂)⁻¹ • (H₁ * b ^ 3) + G₁ * G₂ +
+      (24 : 𝕂)⁻¹ • (a ^ 4 * G₂) + (24 : 𝕂)⁻¹ • (G₁ * b ^ 4))
+  have ha4 := norm_add_le (K_a + K_b + a * J_b) (J_a * b)
+  have ha5 := norm_add_le (K_a + K_b) (a * J_b)
+  have ha6 := norm_add_le K_a K_b
+  -- Sum: 4·s⁹ + 17/12·s⁹ + 1·s⁹ + C/2·s⁹ = 77/12·s⁹ + C/2·s⁹ ≤ 7·s⁹ + C/2·s⁹.
+  nlinarith [pow_nonneg hs_nn 9]
+
 /-- Norm bound for the RHS of `I2_septic_residual_decomp_eq`.
 
 Given precomputed bounds for the 4 input pieces (with parameterized constants
