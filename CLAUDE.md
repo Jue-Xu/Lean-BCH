@@ -6,6 +6,22 @@ Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
 `norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
 
+**Session 35 part 8 (2026-05-15, deg-9 PzP-residual sandwich bound, 1 commit)**:
+
+Commit `984eeb3` (+187 lines): `BCH.norm_PzP_etc_nonic_le` — deg-9 analog of
+`norm_PzP_etc_octic_le` (session 29) at one degree higher.
+
+Bounds the deg-9 residual of P·z·P after subtracting all deg-5..8 contributions:
+`‖P·z·P − T₂zT₂ − T₂zT₃ − T₃zT₂ − T₂zT₄ − T₃zT₃ − T₄zT₂ − T₂zT₅ − T₃zT₄ −
+T₄zT₃ − T₅zT₂‖ ≤ 19·s⁹` for `s ≤ 1/10`. Decomposes via
+`P = T₂ + T₃ + T₄ + T₅ + D₆` into 15 deg-9+ terms (6 T·z·T + 8 T·z·D₆ cross +
+D₆·z·D₆). Per-degree sums: 17 + 1.6 + 0.15 + 0.014 + ε ≈ 18.76·s⁹ ≤ 19·s⁹.
+
+Together with session 35 part 7's `norm_P2_etc_nonic_le ≤ 19·s⁸`, the
+P²-residual + PzP-residual deg-9 cluster bounds are now in place. The
+remaining I2-nonic input is `norm_P3_etc_nonic_le`. Forward-looking
+infrastructure for the deg-9-parent T2-F7e-octic discharge.
+
 **Session 35 part 7 (2026-05-15, deg-8 P²-residual cluster bound, 1 commit)**:
 
 Commit `c5537bd` (+114 lines): `BCH.norm_P2_etc_nonic_le` — deg-9 analog of
