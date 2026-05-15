@@ -139,6 +139,140 @@ private theorem norm_I2_octic_residual_RHS_le (z P T₂ T₃ T₄ T₅ : 𝔸)
   -- Sum: 3·K_PmT5 + 2·K_P2' + K_PzP' + K_P3' (in units of s⁸).
   nlinarith [pow_nonneg hs_nn 8]
 
+/-- Norm bound for the RHS of `I2_nonic_residual_decomp_eq`.
+
+The RHS has 7 outer terms (each deg-9+ in the BCH context):
+- 3 weight-1 (P-T₂-T₃-T₄-T₅-T₆) middle terms: each ≤ K_PmT6·s⁹ (s²·K·s⁷ etc.).
+- 2 compound `z·(P² - T₂² - T₂T₃ - T₃T₂ - T₂T₄ - T₃² - T₄T₂ - T₂T₅
+    - T₃T₄ - T₄T₃ - T₅T₂)`-style terms: each ≤ K_P2''·s⁹.
+- 1 sandwich `PzP - T₂zT₂ - T₂zT₃ - T₃zT₂ - T₂zT₄ - T₃zT₃ - T₄zT₂
+    - T₂zT₅ - T₃zT₄ - T₄zT₃ - T₅zT₂` term: ≤ K_PzP''·s⁹.
+- 1 `P³` residual term (10 cancellations: deg-7 + deg-8): ≤ K_P3''·s⁹.
+
+The user supplies the parameterized bounds; this wrapper combines via
+triangle inequality. Analog of `norm_I2_octic_residual_RHS_le` at one
+degree higher. -/
+private theorem norm_I2_nonic_residual_RHS_le (z P T₂ T₃ T₄ T₅ T₆ : 𝔸)
+    {s K_PmT6 K_P2'' K_PzP'' K_P3'' : ℝ} (hs_nn : 0 ≤ s)
+    (hK_PmT6_nn : 0 ≤ K_PmT6) (hK_P2''_nn : 0 ≤ K_P2'')
+    (hK_PzP''_nn : 0 ≤ K_PzP'') (hK_P3''_nn : 0 ≤ K_P3'')
+    (hz : ‖z‖ ≤ s)
+    (hPmT6_le : ‖P - T₂ - T₃ - T₄ - T₅ - T₆‖ ≤ K_PmT6 * s ^ 7)
+    (hP2''_le :
+        ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+            T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+            T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂‖ ≤ K_P2'' * s ^ 8)
+    (hPzP''_le :
+        ‖P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+            T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂ -
+            T₂ * z * T₅ - T₃ * z * T₄ - T₄ * z * T₃ - T₅ * z * T₂‖ ≤
+            K_PzP'' * s ^ 9)
+    (hP3''_le :
+        ‖P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2 -
+            T₂ ^ 2 * T₄ - T₂ * T₄ * T₂ - T₄ * T₂ ^ 2 -
+            T₂ * T₃ ^ 2 - T₃ * T₂ * T₃ - T₃ ^ 2 * T₂‖ ≤ K_P3'' * s ^ 9) :
+    ‖z ^ 2 * (P - T₂ - T₃ - T₄ - T₅ - T₆) +
+      z * (P - T₂ - T₃ - T₄ - T₅ - T₆) * z +
+      (P - T₂ - T₃ - T₄ - T₅ - T₆) * z ^ 2 +
+      z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+           T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+           T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂) +
+      (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+           T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂ -
+           T₂ * z * T₅ - T₃ * z * T₄ - T₄ * z * T₃ - T₅ * z * T₂) +
+      (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+           T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+           T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂) * z +
+      (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2 -
+           T₂ ^ 2 * T₄ - T₂ * T₄ * T₂ - T₄ * T₂ ^ 2 -
+           T₂ * T₃ ^ 2 - T₃ * T₂ * T₃ - T₃ ^ 2 * T₂)‖ ≤
+      (3 * K_PmT6 + 2 * K_P2'' + K_PzP'' + K_P3'') * s ^ 9 := by
+  -- Bound each of the 7 outer terms.
+  have h1 : ‖z ^ 2 * (P - T₂ - T₃ - T₄ - T₅ - T₆)‖ ≤ s ^ 2 * (K_PmT6 * s ^ 7) :=
+    calc _ ≤ ‖z ^ 2‖ * ‖P - T₂ - T₃ - T₄ - T₅ - T₆‖ := norm_mul_le _ _
+      _ ≤ ‖z‖ ^ 2 * ‖P - T₂ - T₃ - T₄ - T₅ - T₆‖ := by gcongr; exact norm_pow_le z 2
+      _ ≤ s ^ 2 * (K_PmT6 * s ^ 7) :=
+          mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hz 2)
+            hPmT6_le (norm_nonneg _) (by positivity)
+  have h2 : ‖z * (P - T₂ - T₃ - T₄ - T₅ - T₆) * z‖ ≤ s * (K_PmT6 * s ^ 7) * s :=
+    calc _ ≤ ‖z * (P - T₂ - T₃ - T₄ - T₅ - T₆)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖z‖ * ‖P - T₂ - T₃ - T₄ - T₅ - T₆‖) * ‖z‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s * (K_PmT6 * s ^ 7)) * s := by
+          apply mul_le_mul _ hz (norm_nonneg _) (by positivity)
+          exact mul_le_mul hz hPmT6_le (norm_nonneg _) (by positivity)
+  have h3 : ‖(P - T₂ - T₃ - T₄ - T₅ - T₆) * z ^ 2‖ ≤ (K_PmT6 * s ^ 7) * s ^ 2 :=
+    calc _ ≤ ‖P - T₂ - T₃ - T₄ - T₅ - T₆‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ ‖P - T₂ - T₃ - T₄ - T₅ - T₆‖ * ‖z‖ ^ 2 := by gcongr; exact norm_pow_le z 2
+      _ ≤ (K_PmT6 * s ^ 7) * s ^ 2 :=
+          mul_le_mul hPmT6_le (pow_le_pow_left₀ (norm_nonneg _) hz 2)
+            (by positivity) (by positivity)
+  have h4 : ‖z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+                  T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+                  T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂)‖ ≤
+                s * (K_P2'' * s ^ 8) :=
+    calc _ ≤ ‖z‖ * ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+                T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+                T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂‖ := norm_mul_le _ _
+      _ ≤ s * (K_P2'' * s ^ 8) := mul_le_mul hz hP2''_le (norm_nonneg _) (by positivity)
+  have h6 : ‖(P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+              T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+              T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂) * z‖ ≤
+              (K_P2'' * s ^ 8) * s :=
+    calc _ ≤ ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+                T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+                T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (K_P2'' * s ^ 8) * s := mul_le_mul hP2''_le hz (norm_nonneg _) (by positivity)
+  -- Sum 7 terms via triangle inequality (6 norm_add_le).
+  have ha1 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅ - T₆) +
+    z * (P - T₂ - T₃ - T₄ - T₅ - T₆) * z +
+    (P - T₂ - T₃ - T₄ - T₅ - T₆) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+         T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂) +
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+         T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂ -
+         T₂ * z * T₅ - T₃ * z * T₄ - T₄ * z * T₃ - T₅ * z * T₂) +
+    (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+         T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂) * z)
+    (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2 -
+         T₂ ^ 2 * T₄ - T₂ * T₄ * T₂ - T₄ * T₂ ^ 2 -
+         T₂ * T₃ ^ 2 - T₃ * T₂ * T₃ - T₃ ^ 2 * T₂)
+  have ha2 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅ - T₆) +
+    z * (P - T₂ - T₃ - T₄ - T₅ - T₆) * z +
+    (P - T₂ - T₃ - T₄ - T₅ - T₆) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+         T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂) +
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+         T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂ -
+         T₂ * z * T₅ - T₃ * z * T₄ - T₄ * z * T₃ - T₅ * z * T₂))
+    ((P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+         T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂) * z)
+  have ha3 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅ - T₆) +
+    z * (P - T₂ - T₃ - T₄ - T₅ - T₆) * z +
+    (P - T₂ - T₃ - T₄ - T₅ - T₆) * z ^ 2 +
+    z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+         T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+         T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂))
+    (P * z * P - T₂ * z * T₂ - T₂ * z * T₃ - T₃ * z * T₂ -
+         T₂ * z * T₄ - T₃ * z * T₃ - T₄ * z * T₂ -
+         T₂ * z * T₅ - T₃ * z * T₄ - T₄ * z * T₃ - T₅ * z * T₂)
+  have ha4 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅ - T₆) +
+    z * (P - T₂ - T₃ - T₄ - T₅ - T₆) * z +
+    (P - T₂ - T₃ - T₄ - T₅ - T₆) * z ^ 2)
+    (z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+          T₂ * T₄ - T₃ * T₃ - T₄ * T₂ -
+          T₂ * T₅ - T₃ * T₄ - T₄ * T₃ - T₅ * T₂))
+  have ha5 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅ - T₆) +
+    z * (P - T₂ - T₃ - T₄ - T₅ - T₆) * z)
+    ((P - T₂ - T₃ - T₄ - T₅ - T₆) * z ^ 2)
+  have ha6 := norm_add_le (z ^ 2 * (P - T₂ - T₃ - T₄ - T₅ - T₆))
+    (z * (P - T₂ - T₃ - T₄ - T₅ - T₆) * z)
+  -- Sum: 3·K_PmT6 + 2·K_P2'' + K_PzP'' + K_P3'' (in units of s⁹).
+  nlinarith [pow_nonneg hs_nn 9]
+
 /-- Norm bound `‖P - T₂ - T₃‖ ≤ 5·s⁴` where P = exp(a)*exp(b)-1-(a+b),
 T₂ = ab+½a²+½b², T₃ = ⅙a³+½a²b+½ab²+⅙b³. Algebraic identity:
 `P - T₂ - T₃ = F₁ + F₂ + a·E₂ + E₁·b + D₁·D₂` where each piece has deg-4+
