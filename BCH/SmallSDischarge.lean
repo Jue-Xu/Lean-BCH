@@ -5823,6 +5823,155 @@ private theorem norm_y6_sub_z6_sub_y6_7_sub_y6_8_le (y P T₂ T₃ : 𝔸)
   -- Sum: 51+25+5+31+20+5+19+15+5+11+10+5+5+5+5+5 = 222·s⁹ ≤ 230·s⁹.
   nlinarith [pow_nonneg hs_nn 9, hs_le_one]
 
+/-- Norm bound `‖y² - z² - y2_3 - y2_4‖ ≤ 20·s⁵` where `z = y - P`,
+`y2_3 = z·T₂ + T₂·z`, `y2_4 = z·T₃ + T₃·z + T₂²`.
+
+Algebraic identity: `y² - z² - y2_3 - y2_4 = z·(P-T₂-T₃) + (P-T₂-T₃)·z + (P²-T₂²)`.
+
+Forward-looking helper for the y5 nonic norm bound's `[F]` piece in the
+deg-9-parent T2-F7e-octic discharge. Deg-5+ residual of `y²`. -/
+private theorem norm_y2_sub_z2_sub_y2_3_sub_y2_4_le (y P T₂ T₃ : 𝔸) {s : ℝ}
+    (hs_nn : 0 ≤ s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2)
+    (hT₂ : ‖T₂‖ ≤ s ^ 2)
+    (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3)
+    (hPmT₂mT₃ : ‖P - T₂ - T₃‖ ≤ 5 * s ^ 4) :
+    ‖y ^ 2 - (y - P) ^ 2 - ((y - P) * T₂ + T₂ * (y - P)) -
+      ((y - P) * T₃ + T₃ * (y - P) + T₂ ^ 2)‖ ≤ 20 * s ^ 5 := by
+  have heq : y ^ 2 - (y - P) ^ 2 - ((y - P) * T₂ + T₂ * (y - P)) -
+      ((y - P) * T₃ + T₃ * (y - P) + T₂ ^ 2) =
+      (y - P) * (P - T₂ - T₃) + (P - T₂ - T₃) * (y - P) + (P ^ 2 - T₂ ^ 2) := by
+    noncomm_ring
+  rw [heq]
+  set z : 𝔸 := y - P with hz_def
+  have hzn : ‖z‖ ≤ s := hz
+  have hP2T22 := norm_P2_sub_T22_le P T₂ hs_nn hP hT₂ hPmT₂
+  have h1 : ‖z * (P - T₂ - T₃)‖ ≤ s * (5 * s ^ 4) :=
+    (norm_mul_le _ _).trans (mul_le_mul hzn hPmT₂mT₃ (norm_nonneg _) (by positivity))
+  have h2 : ‖(P - T₂ - T₃) * z‖ ≤ (5 * s ^ 4) * s :=
+    (norm_mul_le _ _).trans (mul_le_mul hPmT₂mT₃ hzn (norm_nonneg _) (by positivity))
+  have ht1 := norm_add_le (z * (P - T₂ - T₃) + (P - T₂ - T₃) * z) (P ^ 2 - T₂ ^ 2)
+  have ht2 := norm_add_le (z * (P - T₂ - T₃)) ((P - T₂ - T₃) * z)
+  -- Sum: 5·s⁵ + 5·s⁵ + 10·s⁵ = 20·s⁵.
+  nlinarith [pow_nonneg hs_nn 5]
+
+/-- Algebraic decomposition of `y³ - z³ - y3_4 - y3_5` where `z = y - P`.
+
+`y3_4 = z²·T₂ + z·T₂·z + T₂·z²` (3 terms, deg-4 leading of y³).
+`y3_5 = z²·T₃ + z·T₃·z + T₃·z² + z·T₂² + T₂·z·T₂ + T₂²·z` (6 terms, deg-5 leading).
+
+Decomposes into 9 deg-6+ pieces:
+* 3 weight-1 (P-T₂-T₃) middle terms.
+* 3 from `P·z·P − T₂·z·T₂` refinement (each deg-6+).
+* 2 `(P²-T₂²)·z` and `z·(P²-T₂²)` (deg-6+).
+* 1 `P³` (deg-6 exactly). -/
+private theorem y3_sub_z3_sub_y3_4_sub_y3_5_decomp (y P T₂ T₃ : 𝔸) :
+    y ^ 3 - (y - P) ^ 3 -
+      ((y - P) ^ 2 * T₂ + (y - P) * T₂ * (y - P) + T₂ * (y - P) ^ 2) -
+      ((y - P) ^ 2 * T₃ + (y - P) * T₃ * (y - P) + T₃ * (y - P) ^ 2 +
+        (y - P) * T₂ ^ 2 + T₂ * (y - P) * T₂ + T₂ ^ 2 * (y - P)) =
+      (y - P) ^ 2 * (P - T₂ - T₃) + (y - P) * (P - T₂ - T₃) * (y - P) +
+        (P - T₂ - T₃) * (y - P) ^ 2 +
+      T₂ * (y - P) * (P - T₂) + (P - T₂) * (y - P) * T₂ +
+        (P - T₂) * (y - P) * (P - T₂) +
+      (P ^ 2 - T₂ ^ 2) * (y - P) + (y - P) * (P ^ 2 - T₂ ^ 2) +
+      P ^ 3 := by
+  noncomm_ring
+
+/-- Norm bound `‖y³ - z³ - y3_4 - y3_5‖ ≤ 71·s⁶` for `s ≤ 1`. Forward-looking
+helper for the y5 nonic norm bound's `[D]` piece.
+
+Per-term breakdown (units of s⁶):
+* 3 weight-1 (P-T₂-T₃) middle: 15·s⁶
+* T₂·z·(P-T₂) + (P-T₂)·z·T₂ + (P-T₂)·z·(P-T₂): 5+5+25·s⁷ folded → 35·s⁶
+* (P²-T₂²)·z + z·(P²-T₂²): 20·s⁶
+* P³: 1·s⁶
+Total: 71·s⁶. -/
+private theorem norm_y3_sub_z3_sub_y3_4_sub_y3_5_le (y P T₂ T₃ : 𝔸) {s : ℝ}
+    (hs_nn : 0 ≤ s) (hs_le_one : s ≤ 1)
+    (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2)
+    (hT₂ : ‖T₂‖ ≤ s ^ 2)
+    (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3)
+    (hPmT₂mT₃ : ‖P - T₂ - T₃‖ ≤ 5 * s ^ 4) :
+    ‖y ^ 3 - (y - P) ^ 3 -
+      ((y - P) ^ 2 * T₂ + (y - P) * T₂ * (y - P) + T₂ * (y - P) ^ 2) -
+      ((y - P) ^ 2 * T₃ + (y - P) * T₃ * (y - P) + T₃ * (y - P) ^ 2 +
+        (y - P) * T₂ ^ 2 + T₂ * (y - P) * T₂ + T₂ ^ 2 * (y - P))‖ ≤ 71 * s ^ 6 := by
+  rw [y3_sub_z3_sub_y3_4_sub_y3_5_decomp]
+  set z : 𝔸 := y - P with hz_def
+  have hzn : ‖z‖ ≤ s := hz
+  have hP2T22 := norm_P2_sub_T22_le P T₂ hs_nn hP hT₂ hPmT₂
+  -- 3 weight-1 (P-T₂-T₃) middle terms, each ≤ 5·s⁶.
+  have hA1 : ‖z ^ 2 * (P - T₂ - T₃)‖ ≤ s ^ 2 * (5 * s ^ 4) :=
+    calc _ ≤ ‖z ^ 2‖ * ‖P - T₂ - T₃‖ := norm_mul_le _ _
+      _ ≤ ‖z‖ ^ 2 * ‖P - T₂ - T₃‖ := by gcongr; exact norm_pow_le z 2
+      _ ≤ s ^ 2 * (5 * s ^ 4) :=
+          mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hzn 2) hPmT₂mT₃
+            (norm_nonneg _) (by positivity)
+  have hA2 : ‖z * (P - T₂ - T₃) * z‖ ≤ s * (5 * s ^ 4) * s :=
+    calc _ ≤ ‖z * (P - T₂ - T₃)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖z‖ * ‖P - T₂ - T₃‖) * ‖z‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s * (5 * s ^ 4)) * s :=
+          mul_le_mul (mul_le_mul hzn hPmT₂mT₃ (norm_nonneg _) (by positivity))
+            hzn (norm_nonneg _) (by positivity)
+  have hA3 : ‖(P - T₂ - T₃) * z ^ 2‖ ≤ (5 * s ^ 4) * s ^ 2 :=
+    calc _ ≤ ‖P - T₂ - T₃‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ ‖P - T₂ - T₃‖ * ‖z‖ ^ 2 := by gcongr; exact norm_pow_le z 2
+      _ ≤ (5 * s ^ 4) * s ^ 2 :=
+          mul_le_mul hPmT₂mT₃ (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+            (by positivity) (by positivity)
+  -- 3 P·z·P − T₂·z·T₂ refinement terms.
+  have hB1 : ‖T₂ * z * (P - T₂)‖ ≤ s ^ 2 * s * (5 * s ^ 3) :=
+    calc _ ≤ ‖T₂ * z‖ * ‖P - T₂‖ := norm_mul_le _ _
+      _ ≤ (‖T₂‖ * ‖z‖) * ‖P - T₂‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ (s ^ 2 * s) * (5 * s ^ 3) :=
+          mul_le_mul (mul_le_mul hT₂ hzn (norm_nonneg _) (by positivity))
+            hPmT₂ (norm_nonneg _) (by positivity)
+  have hB2 : ‖(P - T₂) * z * T₂‖ ≤ (5 * s ^ 3) * s * s ^ 2 :=
+    calc _ ≤ ‖(P - T₂) * z‖ * ‖T₂‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂‖ * ‖z‖) * ‖T₂‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((5 * s ^ 3) * s) * s ^ 2 :=
+          mul_le_mul (mul_le_mul hPmT₂ hzn (norm_nonneg _) (by positivity))
+            hT₂ (norm_nonneg _) (by positivity)
+  have hB3 : ‖(P - T₂) * z * (P - T₂)‖ ≤ (5 * s ^ 3) * s * (5 * s ^ 3) :=
+    calc _ ≤ ‖(P - T₂) * z‖ * ‖P - T₂‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂‖ * ‖z‖) * ‖P - T₂‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ ((5 * s ^ 3) * s) * (5 * s ^ 3) :=
+          mul_le_mul (mul_le_mul hPmT₂ hzn (norm_nonneg _) (by positivity))
+            hPmT₂ (norm_nonneg _) (by positivity)
+  -- 2 (P²-T₂²) terms.
+  have hC1 : ‖(P ^ 2 - T₂ ^ 2) * z‖ ≤ (10 * s ^ 5) * s :=
+    calc _ ≤ ‖P ^ 2 - T₂ ^ 2‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (10 * s ^ 5) * s := mul_le_mul hP2T22 hzn (norm_nonneg _) (by positivity)
+  have hC2 : ‖z * (P ^ 2 - T₂ ^ 2)‖ ≤ s * (10 * s ^ 5) :=
+    calc _ ≤ ‖z‖ * ‖P ^ 2 - T₂ ^ 2‖ := norm_mul_le _ _
+      _ ≤ s * (10 * s ^ 5) := mul_le_mul hzn hP2T22 (norm_nonneg _) (by positivity)
+  -- 1 P³ term.
+  have hD1 : ‖P ^ 3‖ ≤ (s ^ 2) ^ 3 :=
+    calc _ ≤ ‖P‖ ^ 3 := norm_pow_le P 3
+      _ ≤ (s ^ 2) ^ 3 := pow_le_pow_left₀ (norm_nonneg _) hP 3
+  -- 8 triangle inequalities for the 9-term sum.
+  have ha1 := norm_add_le (z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z +
+    (P - T₂ - T₃) * z ^ 2 + T₂ * z * (P - T₂) + (P - T₂) * z * T₂ +
+    (P - T₂) * z * (P - T₂) + (P ^ 2 - T₂ ^ 2) * z + z * (P ^ 2 - T₂ ^ 2)) (P ^ 3)
+  have ha2 := norm_add_le (z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z +
+    (P - T₂ - T₃) * z ^ 2 + T₂ * z * (P - T₂) + (P - T₂) * z * T₂ +
+    (P - T₂) * z * (P - T₂) + (P ^ 2 - T₂ ^ 2) * z) (z * (P ^ 2 - T₂ ^ 2))
+  have ha3 := norm_add_le (z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z +
+    (P - T₂ - T₃) * z ^ 2 + T₂ * z * (P - T₂) + (P - T₂) * z * T₂ +
+    (P - T₂) * z * (P - T₂)) ((P ^ 2 - T₂ ^ 2) * z)
+  have ha4 := norm_add_le (z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z +
+    (P - T₂ - T₃) * z ^ 2 + T₂ * z * (P - T₂) + (P - T₂) * z * T₂)
+    ((P - T₂) * z * (P - T₂))
+  have ha5 := norm_add_le (z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z +
+    (P - T₂ - T₃) * z ^ 2 + T₂ * z * (P - T₂)) ((P - T₂) * z * T₂)
+  have ha6 := norm_add_le (z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z +
+    (P - T₂ - T₃) * z ^ 2) (T₂ * z * (P - T₂))
+  have ha7 := norm_add_le (z ^ 2 * (P - T₂ - T₃) + z * (P - T₂ - T₃) * z)
+    ((P - T₂ - T₃) * z ^ 2)
+  have ha8 := norm_add_le (z ^ 2 * (P - T₂ - T₃)) (z * (P - T₂ - T₃) * z)
+  -- Sum (s⁶ units): 15 + 5 + 5 + 25·s⁷→25·s⁶ + 20 + 1 = 71·s⁶.
+  nlinarith [pow_nonneg hs_nn 6, pow_nonneg hs_nn 7, hs_le_one]
+
 set_option maxHeartbeats 4000000 in
 /-- Norm bound for `y⁵ - z⁵ - y5_6 - y5_7`: 18 deg-8+ terms; total bound
 `≤ 141·s⁸` (for `s ≤ 1`). Used as the `S₄'` inner piece bound in the
