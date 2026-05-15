@@ -41,7 +41,7 @@ discharging Lean-BCH's `suzuki5_R5_identification_axiom`.
   roadmap for discharging `suzuki5_R5_identification_axiom`.
 -/
 
-import BCH.Basic
+import BCH.SmallSDischarge
 
 namespace BCH
 
