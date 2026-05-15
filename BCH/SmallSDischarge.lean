@@ -7577,6 +7577,204 @@ theorem pieceB_octic_decomp (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
   have hOctic := octic_pure_identity 𝕂 a b
   linear_combination (norm := module) hQPI + hSPI + hSeptic + hOctic
 
+set_option maxHeartbeats 8192000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Algebraic decomposition of `pieceB'''''` for the nonic remainder small-s case.**
+
+Extends `pieceB_octic_decomp` to one degree higher. States that pieceB'''''
+(= pieceB'''' − ⅛·y⁸ − C₈) decomposes as:
+
+```
+pieceB''''' = (I₁ − corr₁ − corr₁_5 − corr₁_6 − corr₁_7 − corr₁_8) +
+              (I₂ − corr₂ − corr₂_5 − corr₂_6 − corr₂_7 − corr₂_8) −
+              ¼(y⁴ − z⁴ − y4_5 − y4_6 − y4_7 − y4_8) +
+              ⅕(y⁵ − z⁵ − y5_6 − y5_7 − y5_8) −
+              ⅙(y⁶ − z⁶ − y6_7 − y6_8) +
+              ⅐(y⁷ − z⁷ − y7_8) −
+              ⅛(y⁸ − z⁸)
+```
+
+where (in addition to the octic case):
+- `corr₁_8 = ½·W8` (the deg-8 contribution to I₁ from nonic_pure_identity)
+- `corr₂_8 = ⅓·y3_8` (the deg-8 contribution to ⅓(y³−z³))
+- `y4_8`, `y5_8`, `y6_8`, `y7_8` are the deg-8 contributions to y⁴..y⁷
+- `W8 = 2·y_d8 − (y²)_d8` per nonic_pure_identity definition
+
+Each piece on the RHS is deg-9+. Proof:
+`pieceB''''' − RHS = (LHS_QPI) + (LHS_SPI) + (LHS_Septic) + (LHS_Octic) +
+(LHS_Nonic) = 0+0+0+0+0 = 0` via the 5 pure identities. Central algebraic
+backbone for the deg-9-parent T2-F7e-octic discharge — the deg-9 analog
+of `pieceB_octic_decomp`. -/
+theorem pieceB_nonic_decomp (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) :
+    let z : 𝔸 := a + b
+    let T₂ : 𝔸 := a * b + (2 : 𝕂)⁻¹ • a ^ 2 + (2 : 𝕂)⁻¹ • b ^ 2
+    let T₃_QPI : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (6 : 𝕂)⁻¹ • b ^ 3 +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (2 : 𝕂)⁻¹ • (a ^ 2 * b)
+    let T₃_SPI : 𝔸 := (6 : 𝕂)⁻¹ • a ^ 3 + (2 : 𝕂)⁻¹ • (a ^ 2 * b) +
+        (2 : 𝕂)⁻¹ • (a * b ^ 2) + (6 : 𝕂)⁻¹ • b ^ 3
+    let T₄ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) + (6 : 𝕂)⁻¹ • (a * b ^ 3) +
+        (24 : 𝕂)⁻¹ • b ^ 4
+    let T₅ : 𝔸 := (120 : 𝕂)⁻¹ • a ^ 5 + (24 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (12 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) + (12 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a * b ^ 4) + (120 : 𝕂)⁻¹ • b ^ 5
+    let T₆ : 𝔸 := (720 : 𝕂)⁻¹ • a ^ 6 + (120 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (48 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (36 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (48 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (120 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (720 : 𝕂)⁻¹ • b ^ 6
+    let T₇ : 𝔸 := (5040 : 𝕂)⁻¹ • a ^ 7 + (720 : 𝕂)⁻¹ • (a ^ 6 * b) +
+        (240 : 𝕂)⁻¹ • (a ^ 5 * b ^ 2) + (144 : 𝕂)⁻¹ • (a ^ 4 * b ^ 3) +
+        (144 : 𝕂)⁻¹ • (a ^ 3 * b ^ 4) + (240 : 𝕂)⁻¹ • (a ^ 2 * b ^ 5) +
+        (720 : 𝕂)⁻¹ • (a * b ^ 6) + (5040 : 𝕂)⁻¹ • b ^ 7
+    let W5 : 𝔸 := (60 : 𝕂)⁻¹ • a ^ 5 + (60 : 𝕂)⁻¹ • b ^ 5 +
+        (12 : 𝕂)⁻¹ • (a * b ^ 4) + (12 : 𝕂)⁻¹ • (a ^ 4 * b) +
+        (6 : 𝕂)⁻¹ • (a ^ 2 * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b ^ 2) -
+        (z * T₄ + T₄ * z) - (T₂ * T₃_SPI + T₃_SPI * T₂)
+    let W6 : 𝔸 := (360 : 𝕂)⁻¹ • a ^ 6 + (60 : 𝕂)⁻¹ • (a ^ 5 * b) +
+        (24 : 𝕂)⁻¹ • (a ^ 4 * b ^ 2) + (18 : 𝕂)⁻¹ • (a ^ 3 * b ^ 3) +
+        (24 : 𝕂)⁻¹ • (a ^ 2 * b ^ 4) + (60 : 𝕂)⁻¹ • (a * b ^ 5) +
+        (360 : 𝕂)⁻¹ • b ^ 6 -
+        (z * T₅ + T₂ * T₄ + T₃_SPI * T₃_SPI + T₄ * T₂ + T₅ * z)
+    let W7 : 𝔸 := (2520 : 𝕂)⁻¹ • a ^ 7 + (360 : 𝕂)⁻¹ • (a ^ 6 * b) +
+        (120 : 𝕂)⁻¹ • (a ^ 5 * b ^ 2) + (72 : 𝕂)⁻¹ • (a ^ 4 * b ^ 3) +
+        (72 : 𝕂)⁻¹ • (a ^ 3 * b ^ 4) + (120 : 𝕂)⁻¹ • (a ^ 2 * b ^ 5) +
+        (360 : 𝕂)⁻¹ • (a * b ^ 6) + (2520 : 𝕂)⁻¹ • b ^ 7 -
+        (z * T₆ + T₂ * T₅ + T₃_SPI * T₄ + T₄ * T₃_SPI + T₅ * T₂ + T₆ * z)
+    let W8 : 𝔸 := (20160 : 𝕂)⁻¹ • a ^ 8 + (2520 : 𝕂)⁻¹ • (a ^ 7 * b) +
+        (720 : 𝕂)⁻¹ • (a ^ 6 * b ^ 2) + (360 : 𝕂)⁻¹ • (a ^ 5 * b ^ 3) +
+        (288 : 𝕂)⁻¹ • (a ^ 4 * b ^ 4) + (360 : 𝕂)⁻¹ • (a ^ 3 * b ^ 5) +
+        (720 : 𝕂)⁻¹ • (a ^ 2 * b ^ 6) + (2520 : 𝕂)⁻¹ • (a * b ^ 7) +
+        (20160 : 𝕂)⁻¹ • b ^ 8 -
+        (z * T₇ + T₂ * T₆ + T₃_SPI * T₅ + T₄ * T₄ + T₅ * T₃_SPI + T₆ * T₂ + T₇ * z)
+    let y3_5 : 𝔸 := z ^ 2 * T₃_SPI + z * T₃_SPI * z + T₃_SPI * z ^ 2 +
+        z * T₂ ^ 2 + T₂ * z * T₂ + T₂ ^ 2 * z
+    let y3_6 : 𝔸 := z ^ 2 * T₄ + z * T₄ * z + T₄ * z ^ 2 +
+        z * T₂ * T₃_SPI + z * T₃_SPI * T₂ + T₂ * z * T₃_SPI +
+        T₂ * T₃_SPI * z + T₃_SPI * z * T₂ + T₃_SPI * T₂ * z + T₂ ^ 3
+    let y3_7 : 𝔸 :=
+        z * z * T₅ + z * T₂ * T₄ + z * T₃_SPI * T₃_SPI + z * T₄ * T₂ +
+        z * T₅ * z + T₂ * z * T₄ + T₂ * T₂ * T₃_SPI + T₂ * T₃_SPI * T₂ +
+        T₂ * T₄ * z + T₃_SPI * z * T₃_SPI + T₃_SPI * T₂ * T₂ +
+        T₃_SPI * T₃_SPI * z + T₄ * z * T₂ + T₄ * T₂ * z + T₅ * z * z
+    let y3_8 : 𝔸 :=
+        z * z * T₆ + z * T₂ * T₅ + z * T₃_SPI * T₄ + z * T₄ * T₃_SPI +
+        z * T₅ * T₂ + z * T₆ * z + T₂ * z * T₅ + T₂ * T₂ * T₄ +
+        T₂ * T₃_SPI * T₃_SPI + T₂ * T₄ * T₂ + T₂ * T₅ * z +
+        T₃_SPI * z * T₄ + T₃_SPI * T₂ * T₃_SPI + T₃_SPI * T₃_SPI * T₂ +
+        T₃_SPI * T₄ * z + T₄ * z * T₃_SPI + T₄ * T₂ * T₂ + T₄ * T₃_SPI * z +
+        T₅ * z * T₂ + T₅ * T₂ * z + T₆ * z * z
+    let y4_5 : 𝔸 := z ^ 3 * T₂ + z ^ 2 * T₂ * z + z * T₂ * z ^ 2 + T₂ * z ^ 3
+    let y4_6 : 𝔸 := z ^ 3 * T₃_SPI + z ^ 2 * T₃_SPI * z + z * T₃_SPI * z ^ 2 +
+        T₃_SPI * z ^ 3 + z ^ 2 * T₂ ^ 2 + z * T₂ * z * T₂ + z * T₂ ^ 2 * z +
+        T₂ * z ^ 2 * T₂ + T₂ * z * T₂ * z + T₂ ^ 2 * z ^ 2
+    let y4_7 : 𝔸 :=
+        z * z * z * T₄ + z * z * T₂ * T₃_SPI + z * z * T₃_SPI * T₂ +
+        z * z * T₄ * z + z * T₂ * z * T₃_SPI + z * T₂ * T₂ * T₂ +
+        z * T₂ * T₃_SPI * z + z * T₃_SPI * z * T₂ + z * T₃_SPI * T₂ * z +
+        z * T₄ * z * z + T₂ * z * z * T₃_SPI + T₂ * z * T₂ * T₂ +
+        T₂ * z * T₃_SPI * z + T₂ * T₂ * z * T₂ + T₂ * T₂ * T₂ * z +
+        T₂ * T₃_SPI * z * z + T₃_SPI * z * z * T₂ + T₃_SPI * z * T₂ * z +
+        T₃_SPI * T₂ * z * z + T₄ * z * z * z
+    let y4_8 : 𝔸 :=
+        z * z * z * T₅ + z * z * T₂ * T₄ + z * z * T₃_SPI * T₃_SPI +
+        z * z * T₄ * T₂ + z * z * T₅ * z + z * T₂ * z * T₄ +
+        z * T₂ * T₂ * T₃_SPI + z * T₂ * T₃_SPI * T₂ + z * T₂ * T₄ * z +
+        z * T₃_SPI * z * T₃_SPI + z * T₃_SPI * T₂ * T₂ +
+        z * T₃_SPI * T₃_SPI * z + z * T₄ * z * T₂ + z * T₄ * T₂ * z +
+        z * T₅ * z * z + T₂ * z * z * T₄ + T₂ * z * T₂ * T₃_SPI +
+        T₂ * z * T₃_SPI * T₂ + T₂ * z * T₄ * z + T₂ * T₂ * z * T₃_SPI +
+        T₂ * T₂ * T₂ * T₂ + T₂ * T₂ * T₃_SPI * z + T₂ * T₃_SPI * z * T₂ +
+        T₂ * T₃_SPI * T₂ * z + T₂ * T₄ * z * z + T₃_SPI * z * z * T₃_SPI +
+        T₃_SPI * z * T₂ * T₂ + T₃_SPI * z * T₃_SPI * z +
+        T₃_SPI * T₂ * z * T₂ + T₃_SPI * T₂ * T₂ * z +
+        T₃_SPI * T₃_SPI * z * z + T₄ * z * z * T₂ + T₄ * z * T₂ * z +
+        T₄ * T₂ * z * z + T₅ * z * z * z
+    let y5_6 : 𝔸 := z ^ 4 * T₂ + z ^ 3 * T₂ * z + z ^ 2 * T₂ * z ^ 2 +
+        z * T₂ * z ^ 3 + T₂ * z ^ 4
+    let y5_7 : 𝔸 :=
+        z * z * z * z * T₃_SPI + z * z * z * T₂ * T₂ + z * z * z * T₃_SPI * z +
+        z * z * T₂ * z * T₂ + z * z * T₂ * T₂ * z + z * z * T₃_SPI * z * z +
+        z * T₂ * z * z * T₂ + z * T₂ * z * T₂ * z + z * T₂ * T₂ * z * z +
+        z * T₃_SPI * z * z * z + T₂ * z * z * z * T₂ + T₂ * z * z * T₂ * z +
+        T₂ * z * T₂ * z * z + T₂ * T₂ * z * z * z + T₃_SPI * z * z * z * z
+    let y5_8 : 𝔸 :=
+        z * z * z * z * T₄ + z * z * z * T₂ * T₃_SPI + z * z * z * T₃_SPI * T₂ +
+        z * z * z * T₄ * z + z * z * T₂ * z * T₃_SPI + z * z * T₂ * T₂ * T₂ +
+        z * z * T₂ * T₃_SPI * z + z * z * T₃_SPI * z * T₂ +
+        z * z * T₃_SPI * T₂ * z + z * z * T₄ * z * z + z * T₂ * z * z * T₃_SPI +
+        z * T₂ * z * T₂ * T₂ + z * T₂ * z * T₃_SPI * z + z * T₂ * T₂ * z * T₂ +
+        z * T₂ * T₂ * T₂ * z + z * T₂ * T₃_SPI * z * z + z * T₃_SPI * z * z * T₂ +
+        z * T₃_SPI * z * T₂ * z + z * T₃_SPI * T₂ * z * z +
+        z * T₄ * z * z * z + T₂ * z * z * z * T₃_SPI + T₂ * z * z * T₂ * T₂ +
+        T₂ * z * z * T₃_SPI * z + T₂ * z * T₂ * z * T₂ + T₂ * z * T₂ * T₂ * z +
+        T₂ * z * T₃_SPI * z * z + T₂ * T₂ * z * z * T₂ + T₂ * T₂ * z * T₂ * z +
+        T₂ * T₂ * T₂ * z * z + T₂ * T₃_SPI * z * z * z +
+        T₃_SPI * z * z * z * T₂ + T₃_SPI * z * z * T₂ * z +
+        T₃_SPI * z * T₂ * z * z + T₃_SPI * T₂ * z * z * z + T₄ * z * z * z * z
+    let y6_7 : 𝔸 :=
+        z * z * z * z * z * T₂ + z * z * z * z * T₂ * z +
+        z * z * z * T₂ * z * z + z * z * T₂ * z * z * z +
+        z * T₂ * z * z * z * z + T₂ * z * z * z * z * z
+    let y6_8 : 𝔸 :=
+        z * z * z * z * z * T₃_SPI + z * z * z * z * T₂ * T₂ +
+        z * z * z * z * T₃_SPI * z + z * z * z * T₂ * z * T₂ +
+        z * z * z * T₂ * T₂ * z + z * z * z * T₃_SPI * z * z +
+        z * z * T₂ * z * z * T₂ + z * z * T₂ * z * T₂ * z +
+        z * z * T₂ * T₂ * z * z + z * z * T₃_SPI * z * z * z +
+        z * T₂ * z * z * z * T₂ + z * T₂ * z * z * T₂ * z +
+        z * T₂ * z * T₂ * z * z + z * T₂ * T₂ * z * z * z +
+        z * T₃_SPI * z * z * z * z + T₂ * z * z * z * z * T₂ +
+        T₂ * z * z * z * T₂ * z + T₂ * z * z * T₂ * z * z +
+        T₂ * z * T₂ * z * z * z + T₂ * T₂ * z * z * z * z +
+        T₃_SPI * z * z * z * z * z
+    let y7_8 : 𝔸 :=
+        z * z * z * z * z * z * T₂ + z * z * z * z * z * T₂ * z +
+        z * z * z * z * T₂ * z * z + z * z * z * T₂ * z * z * z +
+        z * z * T₂ * z * z * z * z + z * T₂ * z * z * z * z * z +
+        T₂ * z * z * z * z * z * z
+    let y : 𝔸 := exp a * exp b - 1
+    let corr₁ : 𝔸 := (24 : 𝕂)⁻¹ • a ^ 4 + (24 : 𝕂)⁻¹ • b ^ 4 +
+        (6 : 𝕂)⁻¹ • (a * b ^ 3) + (6 : 𝕂)⁻¹ • (a ^ 3 * b) +
+        (4 : 𝕂)⁻¹ • (a ^ 2 * b ^ 2) -
+        (2 : 𝕂)⁻¹ • (z * T₃_QPI + T₃_QPI * z) - (2 : 𝕂)⁻¹ • T₂ ^ 2
+    let corr₂ : 𝔸 := (3 : 𝕂)⁻¹ • (z ^ 2 * T₂ + z * T₂ * z + T₂ * z ^ 2)
+    let corr₁_5 : 𝔸 := (2 : 𝕂)⁻¹ • W5
+    let corr₂_5 : 𝔸 := (3 : 𝕂)⁻¹ • y3_5
+    let corr₁_6 : 𝔸 := (2 : 𝕂)⁻¹ • W6
+    let corr₂_6 : 𝔸 := (3 : 𝕂)⁻¹ • y3_6
+    let corr₁_7 : 𝔸 := (2 : 𝕂)⁻¹ • W7
+    let corr₂_7 : 𝔸 := (3 : 𝕂)⁻¹ • y3_7
+    let corr₁_8 : 𝔸 := (2 : 𝕂)⁻¹ • W8
+    let corr₂_8 : 𝔸 := (3 : 𝕂)⁻¹ • y3_8
+    -- pieceB''''' (extends pieceB'''' by -⅛y⁸ - C₈)
+    y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+      (3 : 𝕂)⁻¹ • y ^ 3 - (4 : 𝕂)⁻¹ • y ^ 4 + (5 : 𝕂)⁻¹ • y ^ 5 -
+      (6 : 𝕂)⁻¹ • y ^ 6 + (7 : 𝕂)⁻¹ • y ^ 7 - (8 : 𝕂)⁻¹ • y ^ 8 -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+      bch_septic_term 𝕂 a b - bch_octic_term 𝕂 a b =
+    -- RHS: 7 pieces
+    ((y - z - (2 : 𝕂)⁻¹ • (a * b - b * a) - (2 : 𝕂)⁻¹ • y ^ 2 +
+        (3 : 𝕂)⁻¹ • z ^ 3 - bch_cubic_term 𝕂 a b) -
+        corr₁ - corr₁_5 - corr₁_6 - corr₁_7 - corr₁_8) +
+    ((3 : 𝕂)⁻¹ • (y ^ 3 - z ^ 3) - corr₂ - corr₂_5 - corr₂_6 - corr₂_7 - corr₂_8) -
+    (4 : 𝕂)⁻¹ • (y ^ 4 - z ^ 4 - y4_5 - y4_6 - y4_7 - y4_8) +
+    (5 : 𝕂)⁻¹ • (y ^ 5 - z ^ 5 - y5_6 - y5_7 - y5_8) -
+    (6 : 𝕂)⁻¹ • (y ^ 6 - z ^ 6 - y6_7 - y6_8) +
+    (7 : 𝕂)⁻¹ • (y ^ 7 - z ^ 7 - y7_8) -
+    (8 : 𝕂)⁻¹ • (y ^ 8 - z ^ 8) := by
+  intro z T₂ T₃_QPI T₃_SPI T₄ T₅ T₆ T₇ W5 W6 W7 W8 y3_5 y3_6 y3_7 y3_8
+    y4_5 y4_6 y4_7 y4_8 y5_6 y5_7 y5_8 y6_7 y6_8 y7_8 y
+    corr₁ corr₂ corr₁_5 corr₂_5 corr₁_6 corr₂_6 corr₁_7 corr₂_7 corr₁_8 corr₂_8
+  -- Use QPI + SPI + Septic + Octic + Nonic
+  have hQPI := quintic_pure_identity 𝕂 a b
+  have hSPI := sextic_pure_identity 𝕂 a b
+  have hSeptic := septic_pure_identity 𝕂 a b
+  have hOctic := octic_pure_identity 𝕂 a b
+  have hNonic := nonic_pure_identity 𝕂 a b
+  linear_combination (norm := module) hQPI + hSPI + hSeptic + hOctic + hNonic
+
 end
 
 end BCH
