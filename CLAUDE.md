@@ -6,6 +6,22 @@ Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`,
 `norm_bch_octic_remainder_small_s_axiom` (octic stepping stone, awaiting discharge).
 
+**Session 35 part 7 (2026-05-15, deg-8 P²-residual cluster bound, 1 commit)**:
+
+Commit `c5537bd` (+114 lines): `BCH.norm_P2_etc_nonic_le` — deg-9 analog of
+`norm_P2_etc_octic_le` (session 29) at one degree higher.
+
+Bounds the deg-8 residual of P² after subtracting all deg-4..7 contributions:
+`‖P² − T₂² − T₂T₃ − T₃T₂ − T₂T₄ − T₃² − T₄T₂ − T₂T₅ − T₃T₄ − T₄T₃ − T₅T₂‖
+≤ 19·s⁸` for `s ≤ 1/10`. Decomposes via `P = T₂ + T₃ + T₄ + T₅ + D₆` into
+15 deg-8+ terms (6 T·T deg-8+ + 8 T·D₆ cross + D₆²). Per-degree sums:
+17 + 1.6 + 0.15 + 0.014 + ε ≈ 18.76·s⁸ ≤ 19·s⁸.
+
+Needed `maxHeartbeats 4000000` for whnf on the 11-term LHS. Forward-looking
+infrastructure for the future I2-nonic chain in the deg-9-parent T2-F7e-octic
+discharge (analog of how the octic version provided the K_P2' = 16 input
+for `norm_I2_octic_residual_RHS_le`).
+
 **Session 35 part 6 (2026-05-15, y7 nonic decomp + norm bound, 1 commit)**:
 
 Commit `fbec7a0` (+216 lines): `BCH.y7_sub_z7_sub_y7_8_decomp` (13-term
