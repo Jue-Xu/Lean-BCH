@@ -470,8 +470,14 @@ applications to product formula error analysis (Trotter, Strang, Suzuki).
 ```
 BCH/
 ├── LogSeries.lean         ← log(1+x) series, summability, exp∘log = id
-├── Basic.lean             ← exp/log bounds, BCH def, H1/H2, quintic+sextic remainder,
-│                            Tier-1 of B1.c (norm_bch_sextic_remainder_le)
+├── Basic.lean             ← (11 074 lines) exp/log bounds, BCH def, H1/H2,
+│                            quintic+sextic remainder + bch_*_term defs/Lipschitz
+├── SmallSDischarge.lean   ← (5 987 lines) pure ring identities, pow_k/y_k decomps,
+│                            I₁/I₂ residual decomps, R+T₅ chain, pieceB_*_decomp
+│                            (incl. 4-billion-heartbeat pieceB_octic_decomp)
+├── RemainderBounds.lean   ← (5 671 lines) T_k norm bounds, P²/PzP/P³-residual
+│                            cluster bounds, public norm_bch_sextic/septic/octic_
+│                            remainder_le, symmetric BCH cubic/quintic/septic poly
 ├── SymmetricQuintic.lean  ← τ⁵ coefficient: 30-term polynomial, c⁵ homogeneity,
 │                            B1.c quintic Taylor bridge (Tier-2 axiom)
 ├── Palindromic.lean       ← Suzuki-5 palindromic product, M1–M4b, M6 Trotter h4,
@@ -482,7 +488,21 @@ BCH/
                              tight bridge at Suzuki p, septic axiom 3
 ```
 
-Import chain: `Basic → SymmetricQuintic → Palindromic → ChildsBasis → Suzuki5Quintic`.
+Import chain: `LogSeries → Basic → SmallSDischarge → RemainderBounds →
+SymmetricQuintic → Palindromic → ChildsBasis → Suzuki5Quintic`.
+
+**Build-time note (post split, 2026-05-15):** `BCH/Basic.lean` was split twice
+to enable parallel compilation and per-file incremental rebuilds. Touched-rebuild
+times (M1, 11 cores):
+* `BCH.Basic` — 509 s (8.5 min); was 1 234 s (20.5 min) for the monolith.
+* `BCH.SmallSDischarge` — 690 s (11.5 min); contains the 1+2+4-B-heartbeat
+  `pieceB_*_decomp` cluster.
+* `BCH.RemainderBounds` — 421 s (7.0 min); the recent edit hot-zone
+  (T_k/P²/PzP nonic bounds land here).
+
+The split required dropping `private` from 40 internal helpers (kept in `BCH.`
+namespace, no public API impact). Cold rebuild from scratch: 1 114 s (18.5 min),
+slightly faster than the monolith due to better elaboration locality.
 
 ## Key Techniques
 
