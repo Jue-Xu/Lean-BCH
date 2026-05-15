@@ -3443,7 +3443,7 @@ R+T₅+T₆ identity (`R_plus_T5_plus_T6_eq_neg_deg7_residual`), to be
 exploited in the future `norm_combined_tricky_octic_le`.
 
 Proof: `match_scalars <;> ring` (mirrors I1_septic_residual_decomp_eq's pattern). -/
-private theorem I1_octic_residual_decomp_eq (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
+theorem I1_octic_residual_decomp_eq (𝕂 : Type*) [RCLike 𝕂] {𝔸 : Type*}
     [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (ea eb a b : 𝔸) :
     let D₁ : 𝔸 := ea - 1 - a
     let D₂ : 𝔸 := eb - 1 - b
@@ -4640,7 +4640,7 @@ private theorem norm_combined_tricky_nonic_le (z P R T₂ T₃ T₄ T₅ T₆ T�
   nlinarith [pow_nonneg hs_nn 9]
 
 /-- Norm bound for `‖P² - T₂²‖ ≤ 10·s⁵` via `P² - T₂² = (P-T₂)P + T₂(P-T₂)`. -/
-private theorem norm_P2_sub_T22_le (P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+theorem norm_P2_sub_T22_le (P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
     (hP : ‖P‖ ≤ s ^ 2) (hT₂ : ‖T₂‖ ≤ s ^ 2) (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3) :
     ‖P ^ 2 - T₂ ^ 2‖ ≤ 10 * s ^ 5 := by
   have heq : P ^ 2 - T₂ ^ 2 = (P - T₂) * P + T₂ * (P - T₂) := by noncomm_ring
