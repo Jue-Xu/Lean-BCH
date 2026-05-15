@@ -1,5 +1,40 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 36, 2026-05-15)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 36 (2026-05-15, octic small-s axiom DISCHARGED, 1 commit)**:
+
+Commit `6b5396d` (+919 net lines): `norm_bch_octic_remainder_small_s_axiom`
+(introduced session 32) is now a fully proved theorem
+`norm_bch_octic_remainder_small_s_le` (~700 lines, mirrors session-19
+`norm_bch_septic_remainder_small_s_le` at one degree higher).
+
+Discharge structure:
+* pieceA bound (≤ 3·s⁸/(2-exp s)) via `norm_bch_octic_pieceA_le`.
+* pieceB'''' bound (≤ 217·s⁸) via `pieceB_octic_decomp` + 6 sub-pieces:
+  - S₁' ≤ 25·s⁸ (I₁ chain: `I1_octic_residual_decomp_eq` +
+    `norm_I1_octic_residual_RHS_le` + `norm_combined_tricky_octic_le ≤ 35·s⁸`).
+  - S₂' = 57·s⁸ (I₂ chain: `norm_I2_octic_residual_RHS_le` with K_PmT5=6,
+    K_P2'=16, K_PzP'=16, K_P3'=105 → ⅓·171·s⁸).
+  - S₃' ≤ 72·s⁸ (¼·`norm_y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_le ≤ 285·s⁸`).
+  - S₄' ≤ 29·s⁸ (⅕·`norm_y5_sub_z5_sub_y5_6_sub_y5_7_le ≤ 141·s⁸`).
+  - S₅' ≤ 15·s⁸ (⅙·`norm_y6_sub_z6_sub_y6_7_le ≤ 87·s⁸`).
+  - S₆ ≤ 19·s⁸ (⅐·`norm_pow7_sub_zpow7_le ≤ 127·s⁸`).
+* Total: ≤ 220·s⁸/(2-exp s) ≤ 1000·s⁸/(2-exp s).
+
+Public theorem `norm_bch_octic_remainder_le` no longer axiom-gated.
+
+Notes:
+* `set_option maxHeartbeats 64000000` needed for whnf elaboration of the
+  ~770-line statement.
+* S₄' bridge: lemma's y5_7 ordering differs from pieceB's — `convert + abel`.
+* S₅' bridge: lemma uses `z^k`, pieceB uses `z*z*…*z` — `convert + noncomm_ring`.
+
+Axiom count: **3 → 2** ✓.
+
 ## Status (session 35, 2026-05-14)
 
 Branch: `main`. Repository is **0 sorries**, **3 scoped private axioms**:
