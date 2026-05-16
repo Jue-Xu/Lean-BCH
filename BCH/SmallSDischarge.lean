@@ -1716,71 +1716,6 @@ theorem norm_bch_octic_remainder_large_s_le (a b : 𝔸)
     _ ≤ 10000110 * s ^ 8 / (2 - Real.exp s) :=
         div_le_div_of_nonneg_right h_le hdenom.le
 
-include 𝕂 in
-/-- **Ninth-order BCH remainder, large-s case** (private helper for the
-`norm_bch_nonic_remainder_le` public theorem).
-
-Crude bound for `‖a‖+‖b‖ ≥ 1/10`: combines `norm_bch_octic_remainder_le`
-with `‖bch_octic_term‖ ≤ s⁸` to give
-
-  `‖LHS_nonic‖ ≤ 10000111·s⁸/(2-exp(s)) ≤ 100001110·s⁹/(2-exp(s))`
-
-(since `10000111 ≤ 100001110·s` when `s ≥ 1/10`).
-
-Deg-9 analog of `norm_bch_octic_remainder_large_s_le` at one degree
-higher. The full nonic theorem also needs the small-s case (`s < 1/10`),
-which uses the eventual `norm_bch_nonic_remainder_small_s_le` discharge. -/
-theorem norm_bch_nonic_remainder_large_s_le (a b : 𝔸)
-    (hab : ‖a‖ + ‖b‖ < Real.log 2) (hs_large : 1 / 10 ≤ ‖a‖ + ‖b‖) :
-    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
-      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
-      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
-      bch_septic_term 𝕂 a b - bch_octic_term 𝕂 a b‖ ≤
-      100001110 * (‖a‖ + ‖b‖) ^ 9 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
-  set s := ‖a‖ + ‖b‖ with hs_def
-  have hs_nn : 0 ≤ s := by positivity
-  have hexp_lt : Real.exp s < 2 := by
-    calc Real.exp s < Real.exp (Real.log 2) := Real.exp_strictMono hab
-      _ = 2 := Real.exp_log (by norm_num)
-  have hdenom : 0 < 2 - Real.exp s := by linarith
-  have hdenom_le1 : 2 - Real.exp s ≤ 1 := by linarith [Real.add_one_le_exp s]
-  have hR₇ := norm_bch_octic_remainder_le (𝕂 := 𝕂) a b hab
-  have hZ₈ : ‖bch_octic_term 𝕂 a b‖ ≤ s ^ 8 := norm_bch_octic_term_le a b
-  -- Algebraic split: LHS_nonic = LHS_octic - bch_octic_term
-  have hLHS_eq : bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
-      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
-      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
-      bch_septic_term 𝕂 a b - bch_octic_term 𝕂 a b =
-      (bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
-       bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
-       bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
-       bch_septic_term 𝕂 a b) -
-      bch_octic_term 𝕂 a b := by abel
-  -- ‖LHS_nonic‖ ≤ 10000110·s⁸/(2-exp(s)) + s⁸ ≤ 10000111·s⁸/(2-exp(s))
-  have hLHS_10000111 : ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
-      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
-      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
-      bch_septic_term 𝕂 a b - bch_octic_term 𝕂 a b‖ ≤
-      10000111 * s ^ 8 / (2 - Real.exp s) := by
-    rw [hLHS_eq]
-    calc _ ≤ ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
-          bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
-          bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
-          bch_septic_term 𝕂 a b‖ +
-          ‖bch_octic_term 𝕂 a b‖ := norm_sub_le _ _
-      _ ≤ 10000110 * s ^ 8 / (2 - Real.exp s) + s ^ 8 := by linarith
-      _ ≤ 10000110 * s ^ 8 / (2 - Real.exp s) + s ^ 8 / (2 - Real.exp s) := by
-          gcongr; rw [le_div_iff₀ hdenom]
-          nlinarith [pow_nonneg hs_nn 8]
-      _ = 10000111 * s ^ 8 / (2 - Real.exp s) := by ring
-  -- Bound 10000111·s⁸ ≤ 100001110·s⁹ via 10000111 ≤ 100001110·s (s ≥ 1/10)
-  have h_le : 10000111 * s ^ 8 ≤ 100001110 * s ^ 9 := by
-    have h10000111 : (10000111 : ℝ) ≤ 100001110 * s := by linarith
-    nlinarith [pow_nonneg hs_nn 8]
-  calc _ ≤ 10000111 * s ^ 8 / (2 - Real.exp s) := hLHS_10000111
-    _ ≤ 100001110 * s ^ 9 / (2 - Real.exp s) :=
-        div_le_div_of_nonneg_right h_le hdenom.le
-
 /-! ### Sextic remainder small-s case helpers
 
 These are building blocks for the (future) `norm_bch_sextic_remainder_small_s_le`
@@ -2097,7 +2032,7 @@ one degree higher).
 Per-term bounds: `(2s)⁷·s² + (2s)⁶·s²·s + (2s)⁵·s²·s² + (2s)⁴·s²·s³ +
                  (2s)³·s²·s⁴ + (2s)²·s²·s⁵ + (2s)·s²·s⁶ + s²·s⁷
                 = 128s⁹ + 64s⁹ + 32s⁹ + 16s⁹ + 8s⁹ + 4s⁹ + 2s⁹ + s⁹ = 255s⁹`. -/
-private theorem norm_pow8_sub_zpow8_le (y P : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+theorem norm_pow8_sub_zpow8_le (y P : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
     (hy : ‖y‖ ≤ 2 * s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2) :
     ‖y ^ 8 - (y - P) ^ 8‖ ≤ 255 * s ^ 9 := by
   rw [pow8_sub_zpow8_telescope]
@@ -2889,7 +2824,7 @@ at one degree higher).
 
 Per-term bounds: 63·s⁹ + 5·s⁹ + 31·s⁹ + 5·s⁹ + 15·s⁹ + 5·s⁹ + 7·s⁹ + 5·s⁹ +
                  3·s⁹ + 5·s⁹ + 1·s⁹ + 5·s⁹ + 5·s⁹ = 155·s⁹. -/
-private theorem norm_y7_sub_z7_sub_y7_8_le (y P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
+theorem norm_y7_sub_z7_sub_y7_8_le (y P T₂ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s)
     (hy : ‖y‖ ≤ 2 * s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2)
     (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3) :
     ‖y ^ 7 - (y - P) ^ 7 -
@@ -4779,7 +4714,7 @@ Plus z·(R+T₅+T₆+T₇) + (R+T₅+T₆+T₇)·z ≤ 14·s⁹. Grand total ≈
 
 Forward-looking infrastructure for the eventual deg-9-parent T2-F7e-octic
 discharge (analog of the session-31 octic version at one degree higher). -/
-private theorem norm_combined_tricky_nonic_le (z P R T₂ T₃ T₄ T₅ T₆ T₇ : 𝔸) {s : ℝ}
+theorem norm_combined_tricky_nonic_le (z P R T₂ T₃ T₄ T₅ T₆ T₇ : 𝔸) {s : ℝ}
     (hs_nn : 0 ≤ s) (hs_small : s ≤ 1 / 10)
     (hz : ‖z‖ ≤ s) (hT₂ : ‖T₂‖ ≤ s ^ 2) (hT₃ : ‖T₃‖ ≤ s ^ 3)
     (hT₄ : ‖T₄‖ ≤ s ^ 4) (hT₅ : ‖T₅‖ ≤ s ^ 5) (hT₆ : ‖T₆‖ ≤ s ^ 6)
@@ -5774,7 +5709,7 @@ Per-term breakdown (units of s⁹):
 * [B15] 6
 * [B16] 16
 Total ≈ 532·s⁹ ≤ 600·s⁹. -/
-private theorem norm_y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_sub_y4_8_le
+theorem norm_y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_sub_y4_8_le
     (y P T₂ T₃ T₄ T₅ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s) (hs_le_one : s ≤ 1)
     (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2)
     (hT₂ : ‖T₂‖ ≤ s ^ 2) (hT₃ : ‖T₃‖ ≤ s ^ 3)
@@ -6378,7 +6313,7 @@ Per-term bounds (units of s⁹):
 * k=1 split: 5 + 5 = 10
 * 6 single-T₃ refined `z^j·(P-T₂-T₃)·z^(5-j)`: 6·5 = 30
 Total ≈ 222·s⁹ ≤ 230·s⁹. -/
-private theorem norm_y6_sub_z6_sub_y6_7_sub_y6_8_le (y P T₂ T₃ : 𝔸)
+theorem norm_y6_sub_z6_sub_y6_7_sub_y6_8_le (y P T₂ T₃ : 𝔸)
     {s : ℝ} (hs_nn : 0 ≤ s) (hs_le_one : s ≤ 1)
     (hy : ‖y‖ ≤ 2 * s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2)
     (hT₂ : ‖T₂‖ ≤ s ^ 2)
@@ -7042,7 +6977,7 @@ Per-term breakdown (units of s⁹):
 * [G] 2 y2_3·(P-T₂-T₃)·z²: 2·5 = 10
 * [H] 3 (P-T₂-T₃)·T₂·z³ + (P-T₂)²·z³ refined: 5+5+25 = 35
 Total: 30+135+20+101+15+35+10+35 = 381·s⁹ ≤ 400·s⁹. -/
-private theorem norm_y5_sub_z5_sub_y5_6_sub_y5_7_sub_y5_8_le
+theorem norm_y5_sub_z5_sub_y5_6_sub_y5_7_sub_y5_8_le
     (y P T₂ T₃ T₄ : 𝔸) {s : ℝ}
     (hs_nn : 0 ≤ s) (hs_le_one : s ≤ 1)
     (hy : ‖y‖ ≤ 2 * s) (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2)

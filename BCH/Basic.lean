@@ -10527,6 +10527,32 @@ lemma real_exp_sub_one_pow7_le_small {s : ℝ} (hs_nn : 0 ≤ s)
         linarith
     _ = 2 * s ^ 7 := by ring
 
+/-- For `0 ≤ s ≤ 1/10`, `(Real.exp s - 1)^9 ≤ 3 · s^9`. Used in the small-s
+nonic remainder assembly. Analog of `real_exp_sub_one_pow8_le_small` at one
+degree higher; constant is 3 because `(1+1/10)^9 ≈ 2.36 < 3`. -/
+lemma real_exp_sub_one_pow9_le_small {s : ℝ} (hs_nn : 0 ≤ s)
+    (hs_small : s ≤ 1 / 10) :
+    (Real.exp s - 1) ^ 9 ≤ 3 * s ^ 9 := by
+  have hE1_nn : 0 ≤ Real.exp s - 1 := by linarith [Real.add_one_le_exp s]
+  have hs_lt1 : s < 1 := by linarith
+  have hEs2 : Real.exp s - 1 - s ≤ s ^ 2 := by
+    have h := Real.norm_exp_sub_one_sub_id_le
+      (show ‖s‖ ≤ 1 by rw [Real.norm_eq_abs, abs_of_nonneg hs_nn]; linarith)
+    have hEs_nn : 0 ≤ Real.exp s - 1 - s := by
+      linarith [Real.quadratic_le_exp_of_nonneg hs_nn, sq_nonneg s]
+    rwa [Real.norm_eq_abs, abs_of_nonneg hEs_nn,
+         Real.norm_eq_abs, abs_of_nonneg hs_nn] at h
+  calc (Real.exp s - 1) ^ 9 ≤ (s + s ^ 2) ^ 9 :=
+        pow_le_pow_left₀ hE1_nn (by linarith) 9
+    _ = s ^ 9 * (1 + s) ^ 9 := by ring
+    _ ≤ s ^ 9 * 3 := by
+        apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs_nn 9)
+        have h1 : (1 + s) ^ 9 ≤ (1 + 1/10) ^ 9 :=
+          pow_le_pow_left₀ (by linarith) (by linarith) 9
+        have h2 : (1 + 1/10 : ℝ) ^ 9 ≤ 3 := by norm_num
+        linarith
+    _ = 3 * s ^ 9 := by ring
+
 /-- For `0 ≤ s ≤ 1/10`, `(Real.exp s - 1)^8 ≤ 3 · s^8`. Used in the small-s
 octic remainder assembly. Analog of `real_exp_sub_one_pow7_le_small` at one
 degree higher; constant is 3 (not 2) because `(1+1/10)^8 ≈ 2.14`. -/
@@ -10678,6 +10704,141 @@ lemma real_exp_eighth_order_le_octic {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 3 / 4) 
     _ ≤ s ^ 8 := by
         rw [div_le_iff₀ (by nlinarith : (0 : ℝ) < 40320 * (1 - s))]
         nlinarith [sq_nonneg s, pow_nonneg hs 8]
+
+/-- **Ninth-order noncommutative exp tail bound**: norm of the deg-9+ tail
+of `exp(x) = ∑ xⁿ/n!` is bounded by the corresponding real tail.
+
+Adds one more level to `norm_exp_sub_one_sub_sub_sub_sub_sub_sub_sub_le`.
+Foundation for the K_a/K_b bounds in the nonic small-s discharge. -/
+theorem norm_exp_sub_one_sub_sub_sub_sub_sub_sub_sub_sub_le (x : 𝔸) :
+    ‖exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3 - (24 : 𝕂)⁻¹ • x ^ 4 -
+        (120 : 𝕂)⁻¹ • x ^ 5 - (720 : 𝕂)⁻¹ • x ^ 6 - (5040 : 𝕂)⁻¹ • x ^ 7 -
+        (40320 : 𝕂)⁻¹ • x ^ 8‖ ≤
+      Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6 - ‖x‖ ^ 4 / 24 -
+        ‖x‖ ^ 5 / 120 - ‖x‖ ^ 6 / 720 - ‖x‖ ^ 7 / 5040 - ‖x‖ ^ 8 / 40320 := by
+  set f : ℕ → 𝔸 := fun n => (n !⁻¹ : 𝕂) • x ^ n
+  have hf_summ : Summable f := NormedSpace.expSeries_summable' (𝕂 := 𝕂) x
+  have hf0 : f 0 = 1 := by simp [f]
+  have hf1 : f 1 = x := by simp [f]
+  have hf2 : f 2 = (2 : 𝕂)⁻¹ • x ^ 2 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    ring
+  have hf3 : f 3 = (6 : 𝕂)⁻¹ • x ^ 3 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf4 : f 4 = (24 : 𝕂)⁻¹ • x ^ 4 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf5 : f 5 = (120 : 𝕂)⁻¹ • x ^ 5 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf6 : f 6 = (720 : 𝕂)⁻¹ • x ^ 6 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf7 : f 7 = (5040 : 𝕂)⁻¹ • x ^ 7 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have hf8 : f 8 = (40320 : 𝕂)⁻¹ • x ^ 8 := by
+    simp only [f, Nat.factorial, Nat.mul_one, pow_succ, pow_zero, one_mul]
+    norm_num
+  have h_sub : exp x - 1 - x - (2 : 𝕂)⁻¹ • x ^ 2 - (6 : 𝕂)⁻¹ • x ^ 3 -
+      (24 : 𝕂)⁻¹ • x ^ 4 - (120 : 𝕂)⁻¹ • x ^ 5 - (720 : 𝕂)⁻¹ • x ^ 6 -
+      (5040 : 𝕂)⁻¹ • x ^ 7 - (40320 : 𝕂)⁻¹ • x ^ 8 = ∑' n, f (n + 9) := by
+    rw [congr_fun (exp_eq_tsum 𝕂 (𝔸 := 𝔸)) x]
+    have h1 := hf_summ.tsum_eq_zero_add; rw [hf0] at h1
+    have h2 := ((summable_nat_add_iff 1).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf1] at h2
+    have h3 := ((summable_nat_add_iff 2).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf2] at h3
+    have h4 := ((summable_nat_add_iff 3).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf3] at h4
+    have h5 := ((summable_nat_add_iff 4).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf4] at h5
+    have h6 := ((summable_nat_add_iff 5).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf5] at h6
+    have h7 := ((summable_nat_add_iff 6).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf6] at h7
+    have h8 := ((summable_nat_add_iff 7).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf7] at h8
+    have h9 := ((summable_nat_add_iff 8).mpr hf_summ).tsum_eq_zero_add
+    simp only [hf8] at h9
+    rw [h1, add_sub_cancel_left, h2, add_sub_cancel_left, h3, add_sub_cancel_left,
+        h4, add_sub_cancel_left, h5, add_sub_cancel_left, h6, add_sub_cancel_left,
+        h7, add_sub_cancel_left, h8, add_sub_cancel_left, h9, add_sub_cancel_left]
+  rw [h_sub]
+  have h_rexp := hasSum_real_exp ‖x‖
+  have h_summ9 : Summable (fun n => ((n + 9) !⁻¹ : ℝ) * ‖x‖ ^ (n + 9)) :=
+    (summable_nat_add_iff 9).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 9) !⁻¹ : ℝ) * ‖x‖ ^ (n + 9))
+      (Real.exp ‖x‖ - 1 - ‖x‖ - ‖x‖ ^ 2 / 2 - ‖x‖ ^ 3 / 6 - ‖x‖ ^ 4 / 24 -
+        ‖x‖ ^ 5 / 120 - ‖x‖ ^ 6 / 720 - ‖x‖ ^ 7 / 5040 - ‖x‖ ^ 8 / 40320) := by
+    rw [h_summ9.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split5 := ((summable_nat_add_iff 4).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split6 := ((summable_nat_add_iff 5).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split7 := ((summable_nat_add_iff 6).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split8 := ((summable_nat_add_iff 7).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split9 := ((summable_nat_add_iff 8).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4 h_split5 h_split6 h_split7 h_split8 h_split9
+    linarith
+  exact tsum_of_norm_bounded h_val (fun n => norm_expSeries_term_le' (𝕂 := 𝕂) x (n + 9))
+
+-- For 0 ≤ s with s < 3/4, the ninth-order Taylor remainder satisfies
+-- exp(s) - 1 - s - ... - s⁸/40320 ≤ s⁹.
+lemma real_exp_ninth_order_le_nonic {s : ℝ} (hs : 0 ≤ s) (hs1 : s < 3 / 4) :
+    Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 - s ^ 5 / 120 -
+        s ^ 6 / 720 - s ^ 7 / 5040 - s ^ 8 / 40320 ≤ s ^ 9 := by
+  have hs_lt1 : s < 1 := by linarith
+  have h_rexp := hasSum_real_exp s
+  have h_summ9 : Summable (fun n => ((n + 9) !⁻¹ : ℝ) * s ^ (n + 9)) :=
+    (summable_nat_add_iff 9).mpr h_rexp.summable
+  have h_val : HasSum (fun n => ((n + 9) !⁻¹ : ℝ) * s ^ (n + 9))
+      (Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 - s ^ 5 / 120 -
+        s ^ 6 / 720 - s ^ 7 / 5040 - s ^ 8 / 40320) := by
+    rw [h_summ9.hasSum_iff]
+    have h_split := h_rexp.summable.tsum_eq_zero_add; rw [h_rexp.tsum_eq] at h_split
+    have h_split2 := ((summable_nat_add_iff 1).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split3 := ((summable_nat_add_iff 2).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split4 := ((summable_nat_add_iff 3).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split5 := ((summable_nat_add_iff 4).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split6 := ((summable_nat_add_iff 5).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split7 := ((summable_nat_add_iff 6).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split8 := ((summable_nat_add_iff 7).mpr h_rexp.summable).tsum_eq_zero_add
+    have h_split9 := ((summable_nat_add_iff 8).mpr h_rexp.summable).tsum_eq_zero_add
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, pow_zero,
+      Nat.factorial_one, pow_one, zero_add] at h_split h_split2 h_split3 h_split4 h_split5 h_split6 h_split7 h_split8 h_split9
+    linarith
+  -- Comparison: (n+9)!⁻¹ * s^(n+9) ≤ (362880)⁻¹ * s^(n+9) since (n+9)! ≥ 9! = 362880
+  have h_geom_summ : Summable (fun n => s ^ (n + 9) / 362880) := by
+    apply Summable.div_const
+    exact (summable_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 9) |>.congr fun n => by ring
+  have hterm : ∀ n, ((n + 9) !⁻¹ : ℝ) * s ^ (n + 9) ≤ s ^ (n + 9) * (362880 : ℝ)⁻¹ := by
+    intro n
+    rw [mul_comm]
+    apply mul_le_mul_of_nonneg_left _ (pow_nonneg hs _)
+    rw [inv_le_inv₀ (by positivity : (0 : ℝ) < (n + 9)!) (by positivity : (0 : ℝ) < 362880)]
+    have : (9 : ℕ)! ≤ (n + 9)! := Nat.factorial_le (by omega)
+    exact_mod_cast this
+  have h_geom : HasSum (fun n => s ^ (n + 9) * (362880 : ℝ)⁻¹)
+      (s ^ 9 * (1 - s)⁻¹ * (362880 : ℝ)⁻¹) := by
+    have hg := (hasSum_geometric_of_lt_one hs hs_lt1).mul_left (s ^ 9)
+    have h_eq : (fun n => s ^ 9 * s ^ n) = (fun n => s ^ (n + 9)) := by ext n; ring
+    rw [h_eq] at hg
+    exact hg.mul_right (362880 : ℝ)⁻¹
+  calc Real.exp s - 1 - s - s ^ 2 / 2 - s ^ 3 / 6 - s ^ 4 / 24 - s ^ 5 / 120 -
+        s ^ 6 / 720 - s ^ 7 / 5040 - s ^ 8 / 40320
+      = ∑' n, ((n + 9) !⁻¹ : ℝ) * s ^ (n + 9) := h_val.tsum_eq.symm
+    _ ≤ ∑' n, (s ^ (n + 9) * (362880 : ℝ)⁻¹) :=
+        h_summ9.tsum_le_tsum hterm h_geom.summable
+    _ = s ^ 9 * (1 - s)⁻¹ * (362880 : ℝ)⁻¹ := h_geom.tsum_eq
+    _ = s ^ 9 / (362880 * (1 - s)) := by rw [div_eq_mul_inv, mul_inv_rev]; ring
+    _ ≤ s ^ 9 := by
+        rw [div_le_iff₀ (by nlinarith : (0 : ℝ) < 362880 * (1 - s))]
+        nlinarith [sq_nonneg s, pow_nonneg hs 9]
 
 set_option maxHeartbeats 32000000 in
 include 𝕂 in
