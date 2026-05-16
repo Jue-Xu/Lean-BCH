@@ -1,14 +1,27 @@
 #!/usr/bin/env python3
 """
 Generate the Lean code for `norm_septic_d8_perturbation_poly_le` using the
-Finset.sum approach with uniform per-index bound.
+SPLIT-HALF Finset.sum approach.
 
-Mirrors `gen_septic_d7_perturbation_norm_bound.py` at one degree higher.
+The d8 perturbation poly has 182 terms. A monolithic Finset.sum_range_succ
+unfold of 182 cases hits Lean's simp recursion limit (works at ≤124 terms,
+fails at 182). Splitting into two 91-term halves avoids this — each half's
+proof stays well within the working range.
 
-The d8 perturbation poly is defined as the negative of
-`bch_octic_term(½a, b) + ½·[bch_septic_term(½a, b), ½a]
- + bch_octic_term(½a+b, ½a)`. Compute it directly so the script is
-self-contained.
+Structure:
+1. `septicD8FirstTermN` / `septicD8SecondTermN` (Nat → 𝔸): 91 cases each.
+2. `septicD8FirstTerm` / `septicD8SecondTerm` (Fin 91 → 𝔸) wrappers.
+3. `septic_d8_first_eq_sum` / `septic_d8_second_eq_sum`: rewrite lemmas
+   (each 91 cases → Finset.sum_range_succ × 91).
+4. `septic_d8_perturbation_poly_split`: the original 182-term def equals
+   the sum of the two halves' explicit forms (via `abel` on a 182-term
+   reassociation).
+5. `septicD8FirstTerm_norm_le` / `septicD8SecondTerm_norm_le`: per-i
+   uniform bound `≤ MAX/LCM · s^8`.
+6. `norm_septicD8FirstSum_le` / `norm_septicD8SecondSum_le`: ‖half‖ ≤
+   91·(MAX/LCM)·s^8 = (91·MAX/LCM)·s^8.
+7. `norm_septic_d8_perturbation_poly_le`: ‖d8_perturbation‖ ≤
+   ‖first‖ + ‖second‖ ≤ 2·91·MAX/LCM·s^8 = 182·MAX/LCM·s^8 ≤ 1·s^8.
 
 Usage:  python3 gen_septic_d8_perturbation_norm_bound.py > d8_norm.lean
 """
@@ -73,22 +86,17 @@ def bch_series(x, y, mx):
 
 
 def compute_terms():
-    """septic_d8_perturbation = − [bch_octic(½a,b) + ½·[C₇(½a,b), ½a]
-                                   + bch_octic(½a+b, ½a)]."""
+    """septic_d8_perturbation = − [bch_octic(½a,b) + ½·[C₇(½a,b), ½a] + bch_octic(½a+b, ½a)]."""
     MAX = 8
     a = ncpoly_a(); b = ncpoly_b()
     half = sp.Rational(1, 2)
     half_a = ncpoly_scale(a, half)
     half_a_plus_b = ncpoly_add(half_a, b)
-    # bch_octic(½a, b) = deg-8 of bch(½a, b).
     bch_inner = extract_degree(bch_series(half_a, b, MAX), 8)
-    # bch_septic(½a, b) = deg-7 of bch(½a, b).
     C7_inner = extract_degree(bch_series(half_a, b, MAX), 7)
     bracket = ncpoly_sub(ncpoly_mul(C7_inner, half_a), ncpoly_mul(half_a, C7_inner))
     half_C7_bracket = ncpoly_scale(bracket, half)
-    # bch_octic(½a+b, ½a) = deg-8 of bch(½a+b, ½a).
     bch_outer = extract_degree(bch_series(half_a_plus_b, half_a, MAX), 8)
-
     pert = ncpoly_scale(
         ncpoly_add(ncpoly_add(bch_inner, half_C7_bracket), bch_outer), -1)
     items = sorted([(w, c) for w, c in pert.items() if c != 0], key=lambda x: x[0])
@@ -103,65 +111,58 @@ def word_hyps(w):
     return ' '.join('ha' if x == 0 else 'hb' for x in w)
 
 
-def main():
-    items = compute_terms()
-    N = len(items)
-    LCM = 1
-    for _, c in items:
-        if c != 0: LCM = sp.lcm(LCM, sp.denom(sp.nsimplify(c)))
-    LCM = int(LCM)
-    MAX_ABS_NUM = max(abs(int(sp.nsimplify(c * LCM))) for _, c in items)
-    sum_abs = sum(abs(int(sp.nsimplify(c * LCM))) for _, c in items)
-    sys.stderr.write(f"# {N} terms, LCM {LCM}, max|num| = {MAX_ABS_NUM}, Σ|num| = {sum_abs}\n")
-    sys.stderr.write(f"# Σ|num|/LCM = {sum_abs}/{LCM} ≈ {sum_abs/LCM:.4f}\n")
-    sys.stderr.write(f"# Uniform bound: N · max/LCM = {N}·{MAX_ABS_NUM}/{LCM} = {N*MAX_ABS_NUM}/{LCM} ≈ {N*MAX_ABS_NUM/LCM:.4f}\n")
-    if N * MAX_ABS_NUM > LCM:
-        sys.stderr.write(f"# WARNING: uniform bound exceeds 1; will need per-term bookkeeping\n")
-        sys.exit(1)
-
-    print("/-! ## Norm bound: `‖septic_d8_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁸`")
-    print()
-    print(f"{N} explicit deg-8 terms, max |numerator| = {MAX_ABS_NUM}, LCM = {LCM}.")
-    print(f"Uniform per-term bound: {MAX_ABS_NUM}/{LCM}·s⁸. Σ ≤ {N}·{MAX_ABS_NUM}/{LCM} =")
-    print(f"{N*MAX_ABS_NUM}/{LCM} ≈ {N*MAX_ABS_NUM/LCM:.4f} ≤ 1, so `‖d8_perturbation‖ ≤ s⁸`.")
-    print(f"(Actual Σ|num|/{LCM} ≈ {sum_abs/LCM:.4f}.)")
-    print()
-    print("Uses the `Finset.sum` approach mirroring `norm_septic_d7_perturbation_poly_le`")
-    print("at one degree higher.")
-    print("-/")
-    print()
-    print(f"-- Per-Nat-index family of terms in `septic_d8_perturbation_poly a b`.")
+def emit_half_block(half_name, items_half, LCM, MAX_ABS_NUM, prefix):
+    """Emit the Lean code for one half (def, eq_sum, per-i bound, sum bound)."""
+    N = len(items_half)
+    print(f"-- Per-Nat-index family for the {half_name} half of `septic_d8_perturbation_poly`.")
     print("set_option maxHeartbeats 1600000 in")
-    print("private noncomputable def septicD8PerturbationTermN (a b : 𝔸) : Nat → 𝔸")
-    for idx, (w, c) in enumerate(items):
+    print(f"private noncomputable def septicD8{prefix}TermN (a b : 𝔸) : Nat → 𝔸")
+    for idx, (w, c) in enumerate(items_half):
         n = int(sp.nsimplify(c * LCM))
         print(f"  | {idx} => ({n} / {LCM} : 𝕂) • ({word_lean(w)})")
     print("  | _ => 0")
     print()
-    print(f"/-- `Fin {N}`-indexed wrapper around `septicD8PerturbationTermN`. -/")
-    print(f"private noncomputable def septicD8PerturbationTerm (a b : 𝔸) "
-          f"(i : Fin {N}) : 𝔸 :=")
-    print("  septicD8PerturbationTermN (𝕂 := 𝕂) a b i.val")
+    print(f"/-- `Fin {N}`-indexed wrapper. -/")
+    print(f"private noncomputable def septicD8{prefix}Term (a b : 𝔸) (i : Fin {N}) : 𝔸 :=")
+    print(f"  septicD8{prefix}TermN (𝕂 := 𝕂) a b i.val")
     print()
-    print(f"-- The {N}-term sum equals `septic_d8_perturbation_poly`.")
-    print("set_option maxHeartbeats 32000000 in")
-    print("set_option maxRecDepth 4000 in")
-    print(f"private theorem septic_d8_perturbation_poly_eq_sum (a b : 𝔸) :")
-    print(f"    septic_d8_perturbation_poly 𝕂 a b =")
-    print(f"      ∑ i : Fin {N}, septicD8PerturbationTerm (𝕂 := 𝕂) a b i := by")
-    print("  unfold septic_d8_perturbation_poly septicD8PerturbationTerm")
-    print(f"  rw [Fin.sum_univ_eq_sum_range (fun k => septicD8PerturbationTermN (𝕂 := 𝕂) a b k)]")
+
+
+def emit_eq_sum(half_name, items_half, prefix):
+    """Emit the eq_sum lemma: explicit sum = Finset.sum."""
+    N = len(items_half)
+    print(f"-- The explicit {half_name}-half sum equals the Finset.sum form.")
+    print("set_option maxHeartbeats 16000000 in")
+    print("set_option maxRecDepth 2000 in")
+    print(f"private theorem septicD8{prefix}_explicit_eq_sum (a b : 𝔸) :")
+    # Explicit form on LHS.
+    print("    ", end="")
+    first = True
+    for idx, (w, c) in enumerate(items_half):
+        n = int(sp.nsimplify(c * LCM))
+        prefix_sign = "" if first else " +\n      "
+        first = False
+        print(f"{prefix_sign}({n} / {LCM} : 𝕂) • ({word_lean(w)})", end="")
+    print(f" =")
+    print(f"      ∑ i : Fin {N}, septicD8{prefix}Term (𝕂 := 𝕂) a b i := by")
+    print(f"  unfold septicD8{prefix}Term")
+    print(f"  rw [Fin.sum_univ_eq_sum_range (fun k => septicD8{prefix}TermN (𝕂 := 𝕂) a b k)]")
     print("  simp only [Finset.sum_range_succ, Finset.sum_range_zero,")
-    print("    septicD8PerturbationTermN, zero_add]")
+    print(f"    septicD8{prefix}TermN, zero_add]")
     print()
-    print(f"-- Per-index uniform bound: `‖septicD8PerturbationTerm a b i‖ ≤ ({MAX_ABS_NUM}/{LCM}) · s^8`")
+
+
+def emit_per_i_bound(half_name, items_half, LCM, MAX_ABS_NUM, prefix):
+    """Emit the per-i uniform bound: ‖term‖ ≤ MAX/LCM · s^8."""
+    N = len(items_half)
+    print(f"-- Per-index uniform bound: `‖septicD8{prefix}Term a b i‖ ≤ ({MAX_ABS_NUM}/{LCM}) · s^8`")
     print("set_option maxHeartbeats 8000000 in")
-    print(f"private lemma septicD8PerturbationTerm_norm_le (a b : 𝔸) (s : ℝ)")
+    print(f"private lemma septicD8{prefix}Term_norm_le (a b : 𝔸) (s : ℝ)")
     print("    (ha : ‖a‖ ≤ s) (hb : ‖b‖ ≤ s) (hs : 0 ≤ s) :")
-    print(f"    ∀ i : Fin {N}, ‖septicD8PerturbationTerm (𝕂 := 𝕂) a b i‖ "
+    print(f"    ∀ i : Fin {N}, ‖septicD8{prefix}Term (𝕂 := 𝕂) a b i‖ "
           f"≤ ({MAX_ABS_NUM} / {LCM} : ℝ) * s^8 := fun i =>")
     print("  match i with")
-    for idx, (w, c) in enumerate(items):
+    for idx, (w, c) in enumerate(items_half):
         n = int(sp.nsimplify(c * LCM))
         wargs = word_args(w)
         whyps = word_hyps(w)
@@ -172,12 +173,114 @@ def main():
         print(f"        {wargs} s {whyps} (by norm_num) hs")
     print(f"  | ⟨_ + {N}, h⟩ => absurd h (by omega)")
     print()
+
+
+def emit_half_norm_bound(half_name, items_half, LCM, MAX_ABS_NUM, prefix):
+    """Emit ‖Σ Fin N, term‖ ≤ N · MAX/LCM · s^8 (Finset.sum approach)."""
+    N = len(items_half)
     print("set_option maxHeartbeats 1600000 in")
+    print(f"-- Norm bound on the {half_name} half (Finset.sum form).")
+    print(f"private theorem norm_septicD8{prefix}Sum_le (a b : 𝔸) :")
+    print(f"    ‖∑ i : Fin {N}, septicD8{prefix}Term (𝕂 := 𝕂) a b i‖ "
+          f"≤ ({N} * {MAX_ABS_NUM} / {LCM} : ℝ) * (‖a‖ + ‖b‖) ^ 8 := by")
+    print("  set s := ‖a‖ + ‖b‖ with hs_def")
+    print("  have hs_nn : 0 ≤ s := by positivity")
+    print("  have ha_le : ‖a‖ ≤ s := by linarith [norm_nonneg b]")
+    print("  have hb_le : ‖b‖ ≤ s := by linarith [norm_nonneg a]")
+    print(f"  calc ‖∑ i : Fin {N}, septicD8{prefix}Term (𝕂 := 𝕂) a b i‖")
+    print(f"      ≤ ∑ i : Fin {N}, ‖septicD8{prefix}Term (𝕂 := 𝕂) a b i‖ := norm_sum_le _ _")
+    print(f"    _ ≤ ∑ _i : Fin {N}, ({MAX_ABS_NUM} / {LCM} : ℝ) * s^8 :=")
+    print(f"        Finset.sum_le_sum (fun i _ => septicD8{prefix}Term_norm_le "
+          f"(𝕂 := 𝕂) a b s ha_le hb_le hs_nn i)")
+    print(f"    _ = {N} * (({MAX_ABS_NUM} / {LCM} : ℝ) * s^8) := by")
+    print("        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring")
+    print(f"    _ = ({N} * {MAX_ABS_NUM} / {LCM} : ℝ) * s^8 := by ring")
+    print()
+
+
+def main():
+    items = compute_terms()
+    N = len(items)
+    assert N == 182, f"Expected 182 terms, got {N}"
+    SPLIT = 91  # first half: 0..90, second half: 91..181
+    first_items = items[:SPLIT]
+    second_items = items[SPLIT:]
+
+    global LCM, MAX_ABS_NUM
+    LCM = 1
+    for _, c in items:
+        if c != 0: LCM = sp.lcm(LCM, sp.denom(sp.nsimplify(c)))
+    LCM = int(LCM)
+    MAX_ABS_NUM = max(abs(int(sp.nsimplify(c * LCM))) for _, c in items)
+    sum_abs = sum(abs(int(sp.nsimplify(c * LCM))) for _, c in items)
+    sys.stderr.write(f"# {N} terms (split {SPLIT}/{N-SPLIT}), LCM {LCM}, "
+                     f"max|num| = {MAX_ABS_NUM}, Σ|num| = {sum_abs}\n")
+    sys.stderr.write(f"# Σ|num|/LCM = {sum_abs}/{LCM} ≈ {sum_abs/LCM:.4f}\n")
+    sys.stderr.write(f"# Each half bound: {SPLIT}·{MAX_ABS_NUM}/{LCM} = "
+                     f"{SPLIT*MAX_ABS_NUM}/{LCM} ≈ {SPLIT*MAX_ABS_NUM/LCM:.4f}\n")
+    sys.stderr.write(f"# Combined bound: {N}·{MAX_ABS_NUM}/{LCM} = "
+                     f"{N*MAX_ABS_NUM}/{LCM} ≈ {N*MAX_ABS_NUM/LCM:.4f}\n")
+
+    print("/-! ## Norm bound: `‖septic_d8_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁸`")
+    print()
+    print(f"{N} explicit deg-8 terms, max |numerator| = {MAX_ABS_NUM}, LCM = {LCM}.")
+    print("Uses the **split-half** Finset.sum approach: the 182-term def is split")
+    print(f"into two {SPLIT}-term halves at definition time, each provable via the")
+    print("Finset.sum_range_succ pattern (which works reliably at ≤124 terms but")
+    print("hits a simp recursion limit at 182). The two halves are combined via")
+    print("`abel` and triangle inequality.")
+    print()
+    print(f"Combined bound: Σ ≤ {N}·{MAX_ABS_NUM}/{LCM} = {N*MAX_ABS_NUM}/{LCM} "
+          f"≈ {N*MAX_ABS_NUM/LCM:.4f} ≤ 1, so `‖d8_perturbation‖ ≤ s⁸`.")
+    print(f"(Actual Σ|num|/{LCM} ≈ {sum_abs/LCM:.4f}.)")
+    print("-/")
+    print()
+
+    # First half infrastructure.
+    emit_half_block("first", first_items, LCM, MAX_ABS_NUM, "First")
+    emit_eq_sum("first", first_items, "First")
+    emit_per_i_bound("first", first_items, LCM, MAX_ABS_NUM, "First")
+    emit_half_norm_bound("first", first_items, LCM, MAX_ABS_NUM, "First")
+
+    # Second half infrastructure.
+    emit_half_block("second", second_items, LCM, MAX_ABS_NUM, "Second")
+    emit_eq_sum("second", second_items, "Second")
+    emit_per_i_bound("second", second_items, LCM, MAX_ABS_NUM, "Second")
+    emit_half_norm_bound("second", second_items, LCM, MAX_ABS_NUM, "Second")
+
+    # The split theorem: poly = first_explicit + second_explicit.
+    print(f"-- The full 182-term def equals the sum of the two halves' explicit forms.")
+    print(f"-- Reassociation of a 182-term `+`-tree via `abel` (handles add_assoc/comm).")
+    print(f"set_option maxHeartbeats 64000000 in")
+    print(f"private theorem septic_d8_perturbation_poly_split (a b : 𝔸) :")
+    print(f"    septic_d8_perturbation_poly 𝕂 a b =")
+    print(f"      (", end="")
+    first = True
+    for idx, (w, c) in enumerate(first_items):
+        n = int(sp.nsimplify(c * LCM))
+        prefix_sign = "" if first else " +\n        "
+        first = False
+        print(f"{prefix_sign}({n} / {LCM} : 𝕂) • ({word_lean(w)})", end="")
+    print(f") +")
+    print(f"      (", end="")
+    first = True
+    for idx, (w, c) in enumerate(second_items):
+        n = int(sp.nsimplify(c * LCM))
+        prefix_sign = "" if first else " +\n        "
+        first = False
+        print(f"{prefix_sign}({n} / {LCM} : 𝕂) • ({word_lean(w)})", end="")
+    print(f") := by")
+    print(f"  unfold septic_d8_perturbation_poly")
+    print(f"  abel")
+    print()
+
+    # Final norm bound.
     print(f"/-- **Norm bound for `septic_d8_perturbation_poly`**:")
     print(f"`‖septic_d8_perturbation(a, b)‖ ≤ (‖a‖+‖b‖)⁸`.")
     print()
-    print(f"Uniform per-i bound `{MAX_ABS_NUM}/{LCM}` (max |scaled coef|), giving")
-    print(f"Σ ≤ {N}·{MAX_ABS_NUM}/{LCM} = {N*MAX_ABS_NUM}/{LCM} ≈ {N*MAX_ABS_NUM/LCM:.4f} ≤ 1.")
+    print(f"Uses the **split-half** approach: ‖poly‖ ≤ ‖first‖ + ‖second‖ ≤")
+    print(f"2·{SPLIT}·{MAX_ABS_NUM}/{LCM}·s⁸ = {N*MAX_ABS_NUM}/{LCM}·s⁸ ≈ "
+          f"{N*MAX_ABS_NUM/LCM:.4f}·s⁸ ≤ s⁸.")
     print(f"Actual Σ|num|/{LCM} ≈ {sum_abs/LCM:.4f}.")
     print()
     print(f"Companion to `norm_septic_d7_perturbation_poly_le` at one degree higher.")
@@ -187,17 +290,17 @@ def main():
     print(f"    ‖septic_d8_perturbation_poly 𝕂 a b‖ ≤ (‖a‖ + ‖b‖) ^ 8 := by")
     print("  set s := ‖a‖ + ‖b‖ with hs_def")
     print("  have hs_nn : 0 ≤ s := by positivity")
-    print("  have ha_le : ‖a‖ ≤ s := by linarith [norm_nonneg b]")
-    print("  have hb_le : ‖b‖ ≤ s := by linarith [norm_nonneg a]")
     print("  have hs8_nn : 0 ≤ s ^ 8 := pow_nonneg hs_nn 8")
-    print("  rw [septic_d8_perturbation_poly_eq_sum]")
-    print(f"  calc ‖∑ i : Fin {N}, septicD8PerturbationTerm (𝕂 := 𝕂) a b i‖")
-    print(f"      ≤ ∑ i : Fin {N}, ‖septicD8PerturbationTerm (𝕂 := 𝕂) a b i‖ := norm_sum_le _ _")
-    print(f"    _ ≤ ∑ _i : Fin {N}, ({MAX_ABS_NUM} / {LCM} : ℝ) * s^8 :=")
-    print(f"        Finset.sum_le_sum (fun i _ => septicD8PerturbationTerm_norm_le "
-          f"(𝕂 := 𝕂) a b s ha_le hb_le hs_nn i)")
-    print(f"    _ = {N} * (({MAX_ABS_NUM} / {LCM} : ℝ) * s^8) := by")
-    print("        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring")
+    print("  rw [septic_d8_perturbation_poly_split,")
+    print("      septicD8First_explicit_eq_sum,")
+    print("      septicD8Second_explicit_eq_sum]")
+    print(f"  calc ‖(∑ i : Fin {SPLIT}, septicD8FirstTerm (𝕂 := 𝕂) a b i) + "
+          f"(∑ i : Fin {SPLIT}, septicD8SecondTerm (𝕂 := 𝕂) a b i)‖")
+    print(f"      ≤ ‖∑ i : Fin {SPLIT}, septicD8FirstTerm (𝕂 := 𝕂) a b i‖ +")
+    print(f"          ‖∑ i : Fin {SPLIT}, septicD8SecondTerm (𝕂 := 𝕂) a b i‖ := norm_add_le _ _")
+    print(f"    _ ≤ ({SPLIT} * {MAX_ABS_NUM} / {LCM} : ℝ) * s^8 +")
+    print(f"          ({SPLIT} * {MAX_ABS_NUM} / {LCM} : ℝ) * s^8 :=")
+    print(f"        add_le_add (norm_septicD8FirstSum_le a b) (norm_septicD8SecondSum_le a b)")
     print(f"    _ ≤ 1 * s^8 := by nlinarith [hs8_nn]")
     print(f"    _ = s ^ 8 := one_mul _")
 
