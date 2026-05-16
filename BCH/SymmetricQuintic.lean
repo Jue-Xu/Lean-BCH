@@ -9773,6 +9773,189 @@ theorem norm_symmetric_bch_quintic_sub_poly_le (a b : 𝔸)
     _ ≤ 20000000000 * s ^ 7 := by nlinarith [hs7_nn]
 
 end QuinticTaylorBridge
+/-! ## Septic alt-form decomposition (deg-9 T2-F7e foundation)
+
+CAS-derived (`scripts/discover_septic_alt_form.py`):
+
+    sym_E₇(a, b) = bch_septic_term(½a, b)
+                 + bch_septic_term(½a + b, ½a)
+                 + symmetric_bch_septic_correction_poly(a, b)
+
+The correction polynomial is a 117-term degree-7 polynomial in `{a, b}` with
+common denominator `276480`. Σ|numerators|/276480 = 15688/276480 ≈ 0.0567,
+giving `‖correction‖ ≤ s⁷` with comfortable margin.
+
+This is the deg-9 analog of `symmetric_bch_quintic_poly_alt_form` (T2-B) at
+one degree higher, and is the key infrastructure for discharging the Stage-2
+septic axiom `symmetric_bch_septic_sub_poly_axiom` via the deg-9-parent
+T2-F7e-octic discharge.
+-/
+
+section SymmetricSepticAltForm
+
+set_option maxHeartbeats 64000000
+
+variable {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+
+/-- **Septic correction polynomial** — the 117-term degree-7 polynomial in
+`{a, b}` that captures `sym_E₇(a, b) − bch_septic_term(½a, b) −
+bch_septic_term(½a+b, ½a)`. CAS-derived; common denominator `276480`.
+Σ|numerators|/276480 = 15688/276480 ≈ 0.0567.
+Deg-9 analog of `symmetric_bch_quintic_correction_poly` at one degree higher. -/
+noncomputable def symmetric_bch_septic_correction_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (-9 / 276480 : 𝕂) • (a * a * a * a * a * a * b)
+  + (54 / 276480 : 𝕂) • (a * a * a * a * a * b * a)
+  + (46 / 276480 : 𝕂) • (a * a * a * a * a * b * b)
+  + (-135 / 276480 : 𝕂) • (a * a * a * a * b * a * a)
+  + (-134 / 276480 : 𝕂) • (a * a * a * a * b * a * b)
+  + (-96 / 276480 : 𝕂) • (a * a * a * a * b * b * a)
+  + (-88 / 276480 : 𝕂) • (a * a * a * a * b * b * b)
+  + (180 / 276480 : 𝕂) • (a * a * a * b * a * a * a)
+  + (138 / 276480 : 𝕂) • (a * a * a * b * a * a * b)
+  + (260 / 276480 : 𝕂) • (a * a * a * b * a * b * a)
+  + (144 / 276480 : 𝕂) • (a * a * a * b * a * b * b)
+  + (62 / 276480 : 𝕂) • (a * a * a * b * b * a * a)
+  + (180 / 276480 : 𝕂) • (a * a * a * b * b * a * b)
+  + (28 / 276480 : 𝕂) • (a * a * a * b * b * b * a)
+  + (64 / 276480 : 𝕂) • (a * a * a * b * b * b * b)
+  + (-135 / 276480 : 𝕂) • (a * a * b * a * a * a * a)
+  + (-132 / 276480 : 𝕂) • (a * a * b * a * a * a * b)
+  + (-18 / 276480 : 𝕂) • (a * a * b * a * a * b * a)
+  + (112 / 276480 : 𝕂) • (a * a * b * a * a * b * b)
+  + (-372 / 276480 : 𝕂) • (a * a * b * a * b * a * a)
+  + (-656 / 276480 : 𝕂) • (a * a * b * a * b * a * b)
+  + (-136 / 276480 : 𝕂) • (a * a * b * a * b * b * b)
+  + (62 / 276480 : 𝕂) • (a * a * b * b * a * a * a)
+  + (68 / 276480 : 𝕂) • (a * a * b * b * a * a * b)
+  + (-20 / 276480 : 𝕂) • (a * a * b * b * a * b * a)
+  + (64 / 276480 : 𝕂) • (a * a * b * b * a * b * b)
+  + (-32 / 276480 : 𝕂) • (a * a * b * b * b * a * a)
+  + (-176 / 276480 : 𝕂) • (a * a * b * b * b * a * b)
+  + (56 / 276480 : 𝕂) • (a * a * b * b * b * b * a)
+  + (-16 / 276480 : 𝕂) • (a * a * b * b * b * b * b)
+  + (54 / 276480 : 𝕂) • (a * b * a * a * a * a * a)
+  + (60 / 276480 : 𝕂) • (a * b * a * a * a * a * b)
+  + (24 / 276480 : 𝕂) • (a * b * a * a * a * b * a)
+  + (-68 / 276480 : 𝕂) • (a * b * a * a * a * b * b)
+  + (-18 / 276480 : 𝕂) • (a * b * a * a * b * a * a)
+  + (232 / 276480 : 𝕂) • (a * b * a * a * b * a * b)
+  + (-252 / 276480 : 𝕂) • (a * b * a * a * b * b * a)
+  + (-40 / 276480 : 𝕂) • (a * b * a * a * b * b * b)
+  + (260 / 276480 : 𝕂) • (a * b * a * b * a * a * a)
+  + (152 / 276480 : 𝕂) • (a * b * a * b * a * a * b)
+  + (544 / 276480 : 𝕂) • (a * b * a * b * a * b * a)
+  + (160 / 276480 : 𝕂) • (a * b * a * b * a * b * b)
+  + (-20 / 276480 : 𝕂) • (a * b * a * b * b * a * a)
+  + (160 / 276480 : 𝕂) • (a * b * a * b * b * a * b)
+  + (32 / 276480 : 𝕂) • (a * b * a * b * b * b * a)
+  + (32 / 276480 : 𝕂) • (a * b * a * b * b * b * b)
+  + (-96 / 276480 : 𝕂) • (a * b * b * a * a * a * a)
+  + (-12 / 276480 : 𝕂) • (a * b * b * a * a * a * b)
+  + (-252 / 276480 : 𝕂) • (a * b * b * a * a * b * a)
+  + (-160 / 276480 : 𝕂) • (a * b * b * a * a * b * b)
+  + (320 / 276480 : 𝕂) • (a * b * b * a * b * a * b)
+  + (-288 / 276480 : 𝕂) • (a * b * b * a * b * b * a)
+  + (16 / 276480 : 𝕂) • (a * b * b * a * b * b * b)
+  + (28 / 276480 : 𝕂) • (a * b * b * b * a * a * a)
+  + (-80 / 276480 : 𝕂) • (a * b * b * b * a * a * b)
+  + (32 / 276480 : 𝕂) • (a * b * b * b * a * b * a)
+  + (-64 / 276480 : 𝕂) • (a * b * b * b * a * b * b)
+  + (56 / 276480 : 𝕂) • (a * b * b * b * b * a * a)
+  + (80 / 276480 : 𝕂) • (a * b * b * b * b * a * b)
+  + (-32 / 276480 : 𝕂) • (a * b * b * b * b * b * a)
+  + (-9 / 276480 : 𝕂) • (b * a * a * a * a * a * a)
+  + (-24 / 276480 : 𝕂) • (b * a * a * a * a * a * b)
+  + (60 / 276480 : 𝕂) • (b * a * a * a * a * b * a)
+  + (76 / 276480 : 𝕂) • (b * a * a * a * a * b * b)
+  + (-132 / 276480 : 𝕂) • (b * a * a * a * b * a * a)
+  + (-224 / 276480 : 𝕂) • (b * a * a * a * b * a * b)
+  + (-12 / 276480 : 𝕂) • (b * a * a * a * b * b * a)
+  + (-80 / 276480 : 𝕂) • (b * a * a * a * b * b * b)
+  + (138 / 276480 : 𝕂) • (b * a * a * b * a * a * a)
+  + (144 / 276480 : 𝕂) • (b * a * a * b * a * a * b)
+  + (152 / 276480 : 𝕂) • (b * a * a * b * a * b * a)
+  + (120 / 276480 : 𝕂) • (b * a * a * b * a * b * b)
+  + (68 / 276480 : 𝕂) • (b * a * a * b * b * a * a)
+  + (240 / 276480 : 𝕂) • (b * a * a * b * b * a * b)
+  + (-80 / 276480 : 𝕂) • (b * a * a * b * b * b * a)
+  + (48 / 276480 : 𝕂) • (b * a * a * b * b * b * b)
+  + (-134 / 276480 : 𝕂) • (b * a * b * a * a * a * a)
+  + (-224 / 276480 : 𝕂) • (b * a * b * a * a * a * b)
+  + (232 / 276480 : 𝕂) • (b * a * b * a * a * b * a)
+  + (280 / 276480 : 𝕂) • (b * a * b * a * a * b * b)
+  + (-656 / 276480 : 𝕂) • (b * a * b * a * b * a * a)
+  + (-1280 / 276480 : 𝕂) • (b * a * b * a * b * a * b)
+  + (320 / 276480 : 𝕂) • (b * a * b * a * b * b * a)
+  + (-160 / 276480 : 𝕂) • (b * a * b * a * b * b * b)
+  + (180 / 276480 : 𝕂) • (b * a * b * b * a * a * a)
+  + (240 / 276480 : 𝕂) • (b * a * b * b * a * a * b)
+  + (160 / 276480 : 𝕂) • (b * a * b * b * a * b * a)
+  + (144 / 276480 : 𝕂) • (b * a * b * b * a * b * b)
+  + (-176 / 276480 : 𝕂) • (b * a * b * b * b * a * a)
+  + (-192 / 276480 : 𝕂) • (b * a * b * b * b * a * b)
+  + (80 / 276480 : 𝕂) • (b * a * b * b * b * b * a)
+  + (46 / 276480 : 𝕂) • (b * b * a * a * a * a * a)
+  + (76 / 276480 : 𝕂) • (b * b * a * a * a * a * b)
+  + (-68 / 276480 : 𝕂) • (b * b * a * a * a * b * a)
+  + (-80 / 276480 : 𝕂) • (b * b * a * a * a * b * b)
+  + (112 / 276480 : 𝕂) • (b * b * a * a * b * a * a)
+  + (280 / 276480 : 𝕂) • (b * b * a * a * b * a * b)
+  + (-160 / 276480 : 𝕂) • (b * b * a * a * b * b * a)
+  + (-16 / 276480 : 𝕂) • (b * b * a * a * b * b * b)
+  + (144 / 276480 : 𝕂) • (b * b * a * b * a * a * a)
+  + (120 / 276480 : 𝕂) • (b * b * a * b * a * a * b)
+  + (160 / 276480 : 𝕂) • (b * b * a * b * a * b * a)
+  + (96 / 276480 : 𝕂) • (b * b * a * b * a * b * b)
+  + (64 / 276480 : 𝕂) • (b * b * a * b * b * a * a)
+  + (144 / 276480 : 𝕂) • (b * b * a * b * b * a * b)
+  + (-64 / 276480 : 𝕂) • (b * b * a * b * b * b * a)
+  + (-88 / 276480 : 𝕂) • (b * b * b * a * a * a * a)
+  + (-80 / 276480 : 𝕂) • (b * b * b * a * a * a * b)
+  + (-40 / 276480 : 𝕂) • (b * b * b * a * a * b * a)
+  + (-16 / 276480 : 𝕂) • (b * b * b * a * a * b * b)
+  + (-136 / 276480 : 𝕂) • (b * b * b * a * b * a * a)
+  + (-160 / 276480 : 𝕂) • (b * b * b * a * b * a * b)
+  + (16 / 276480 : 𝕂) • (b * b * b * a * b * b * a)
+  + (64 / 276480 : 𝕂) • (b * b * b * b * a * a * a)
+  + (48 / 276480 : 𝕂) • (b * b * b * b * a * a * b)
+  + (32 / 276480 : 𝕂) • (b * b * b * b * a * b * a)
+  + (-16 / 276480 : 𝕂) • (b * b * b * b * b * a * a)
+
+/-- **Alt-form decomposition of `symmetric_bch_septic_poly`** (T2-B-septic
+analog, deg-9 foundation):
+
+    sym_E₇(a, b) = bch_septic_term(½a, b)
+                 + bch_septic_term(½a + b, ½a)
+                 + symmetric_bch_septic_correction_poly(a, b)
+
+CAS-derived and CAS-verified (`scripts/discover_septic_alt_form.py`
+confirms the decomposition is exact: residual = 0 across all 128 7-letter
+words).
+
+This is a pure polynomial identity in `{a, b}`. Proved via:
+1. `unfold` all definitions on both sides.
+2. `simp only [smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul]` to fully distribute scalars and products.
+3. `match_scalars` reduces to a sequence of scalar identities (one per
+    {a,b}-word in the basis).
+4. `ring` (commutative `𝕂`-arithmetic) closes each scalar goal.
+
+Same pattern as `symmetric_bch_quintic_poly_alt_form` at one degree higher;
+needs increased heartbeats due to ~128·128 = 16K monomial expansion. -/
+private theorem symmetric_bch_septic_poly_alt_form (a b : 𝔸) :
+    symmetric_bch_septic_poly 𝕂 a b =
+      bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+      bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) +
+      symmetric_bch_septic_correction_poly 𝕂 a b := by
+  unfold symmetric_bch_septic_poly bch_septic_term
+    symmetric_bch_septic_correction_poly
+  simp only [smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+    mul_add, add_mul]
+  match_scalars <;> ring
+
+end SymmetricSepticAltForm
+
 
 /-!
 ## Septic Taylor bridge for the 3-factor symmetric BCH (B1.c-septic)
