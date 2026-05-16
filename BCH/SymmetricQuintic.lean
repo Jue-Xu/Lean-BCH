@@ -11308,6 +11308,243 @@ private theorem half_C7_bracket_eq
   simp only [smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
              mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
   match_scalars <;> ring
+
+/-! ### Phase C-septic: combined deg-8 perturbation polynomial
+
+CAS-derived: bch(z, ½a)_d8 = 0 (palindromic vanishing), so the deg-8
+contributions cancel as a polynomial identity in {a, b}:
+
+    C_8(½a, b) + ½·[C_7(½a, b), ½a] + (deg-8 perturbation poly) + C_8(½a+b, ½a) = 0.
+
+The 'deg-8 perturbation poly' has 182 non-zero words
+(LCM 15482880, Σ|num|/LCM ≈ 0.0126). It captures the COMBINED
+perturbation of C_k(z, ½a) for k = 3..7 at deg 8 in {a, b} (linear-in-V_k for
+various k, quadratic-in-V₂, cubic-in-V₂, etc.) -/
+
+noncomputable def septic_d8_perturbation_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (-49 / 15482880 : 𝕂) • (a * a * a * a * a * a * a * b)
+  + (343 / 15482880 : 𝕂) • (a * a * a * a * a * a * b * a)
+  + (278 / 15482880 : 𝕂) • (a * a * a * a * a * a * b * b)
+  + (-1029 / 15482880 : 𝕂) • (a * a * a * a * a * b * a * a)
+  + (-1038 / 15482880 : 𝕂) • (a * a * a * a * a * b * a * b)
+  + (-630 / 15482880 : 𝕂) • (a * a * a * a * a * b * b * a)
+  + (-580 / 15482880 : 𝕂) • (a * a * a * a * a * b * b * b)
+  + (1715 / 15482880 : 𝕂) • (a * a * a * a * b * a * a * a)
+  + (1650 / 15482880 : 𝕂) • (a * a * a * a * b * a * a * b)
+  + (1890 / 15482880 : 𝕂) • (a * a * a * a * b * a * b * a)
+  + (1492 / 15482880 : 𝕂) • (a * a * a * a * b * a * b * b)
+  + (630 / 15482880 : 𝕂) • (a * a * a * a * b * b * a * a)
+  + (708 / 15482880 : 𝕂) • (a * a * a * a * b * b * a * b)
+  + (700 / 15482880 : 𝕂) • (a * a * a * a * b * b * b * a)
+  + (672 / 15482880 : 𝕂) • (a * a * a * a * b * b * b * b)
+  + (-1715 / 15482880 : 𝕂) • (a * a * a * b * a * a * a * a)
+  + (-1780 / 15482880 : 𝕂) • (a * a * a * b * a * a * a * b)
+  + (-1260 / 15482880 : 𝕂) • (a * a * a * b * a * a * b * a)
+  + (-720 / 15482880 : 𝕂) • (a * a * a * b * a * a * b * b)
+  + (-2520 / 15482880 : 𝕂) • (a * a * a * b * a * b * a * a)
+  + (-2848 / 15482880 : 𝕂) • (a * a * a * b * a * b * a * b)
+  + (-1680 / 15482880 : 𝕂) • (a * a * a * b * a * b * b * a)
+  + (-1456 / 15482880 : 𝕂) • (a * a * a * b * a * b * b * b)
+  + (-104 / 15482880 : 𝕂) • (a * a * a * b * b * a * a * b)
+  + (224 / 15482880 : 𝕂) • (a * a * a * b * b * a * b * a)
+  + (112 / 15482880 : 𝕂) • (a * a * a * b * b * a * b * b)
+  + (-672 / 15482880 : 𝕂) • (a * a * a * b * b * b * a * a)
+  + (-896 / 15482880 : 𝕂) • (a * a * a * b * b * b * a * b)
+  + (-448 / 15482880 : 𝕂) • (a * a * a * b * b * b * b * a)
+  + (-352 / 15482880 : 𝕂) • (a * a * a * b * b * b * b * b)
+  + (1029 / 15482880 : 𝕂) • (a * a * b * a * a * a * a * a)
+  + (1020 / 15482880 : 𝕂) • (a * a * b * a * a * a * a * b)
+  + (1260 / 15482880 : 𝕂) • (a * a * b * a * a * a * b * a)
+  + (232 / 15482880 : 𝕂) • (a * a * b * a * a * a * b * b)
+  + (1072 / 15482880 : 𝕂) • (a * a * b * a * a * b * a * b)
+  + (392 / 15482880 : 𝕂) • (a * a * b * a * a * b * b * a)
+  + (-112 / 15482880 : 𝕂) • (a * a * b * a * a * b * b * b)
+  + (2520 / 15482880 : 𝕂) • (a * a * b * a * b * a * a * a)
+  + (2192 / 15482880 : 𝕂) • (a * a * b * a * b * a * a * b)
+  + (2016 / 15482880 : 𝕂) • (a * a * b * a * b * a * b * a)
+  + (1792 / 15482880 : 𝕂) • (a * a * b * a * b * a * b * b)
+  + (1120 / 15482880 : 𝕂) • (a * a * b * a * b * b * a * a)
+  + (1792 / 15482880 : 𝕂) • (a * a * b * a * b * b * a * b)
+  + (1008 / 15482880 : 𝕂) • (a * a * b * a * b * b * b * a)
+  + (992 / 15482880 : 𝕂) • (a * a * b * a * b * b * b * b)
+  + (-630 / 15482880 : 𝕂) • (a * a * b * b * a * a * a * a)
+  + (-552 / 15482880 : 𝕂) • (a * a * b * b * a * a * a * b)
+  + (-224 / 15482880 : 𝕂) • (a * a * b * b * a * a * b * a)
+  + (-784 / 15482880 : 𝕂) • (a * a * b * b * a * a * b * b)
+  + (-1120 / 15482880 : 𝕂) • (a * a * b * b * a * b * a * a)
+  + (-448 / 15482880 : 𝕂) • (a * a * b * b * a * b * a * b)
+  + (-112 / 15482880 : 𝕂) • (a * a * b * b * a * b * b * a)
+  + (-800 / 15482880 : 𝕂) • (a * a * b * b * a * b * b * b)
+  + (672 / 15482880 : 𝕂) • (a * a * b * b * b * a * a * a)
+  + (448 / 15482880 : 𝕂) • (a * a * b * b * b * a * a * b)
+  + (448 / 15482880 : 𝕂) • (a * a * b * b * b * a * b * a)
+  + (320 / 15482880 : 𝕂) • (a * a * b * b * b * a * b * b)
+  + (320 / 15482880 : 𝕂) • (a * a * b * b * b * b * a * b)
+  + (224 / 15482880 : 𝕂) • (a * a * b * b * b * b * b * a)
+  + (64 / 15482880 : 𝕂) • (a * a * b * b * b * b * b * b)
+  + (-343 / 15482880 : 𝕂) • (a * b * a * a * a * a * a * a)
+  + (-408 / 15482880 : 𝕂) • (a * b * a * a * a * a * a * b)
+  + (736 / 15482880 : 𝕂) • (a * b * a * a * a * a * b * b)
+  + (-1260 / 15482880 : 𝕂) • (a * b * a * a * a * b * a * a)
+  + (-2624 / 15482880 : 𝕂) • (a * b * a * a * a * b * a * b)
+  + (-784 / 15482880 : 𝕂) • (a * b * a * a * a * b * b * a)
+  + (-1120 / 15482880 : 𝕂) • (a * b * a * a * a * b * b * b)
+  + (1260 / 15482880 : 𝕂) • (a * b * a * a * b * a * a * a)
+  + (2304 / 15482880 : 𝕂) • (a * b * a * a * b * a * a * b)
+  + (1120 / 15482880 : 𝕂) • (a * b * a * a * b * a * b * a)
+  + (2352 / 15482880 : 𝕂) • (a * b * a * a * b * a * b * b)
+  + (224 / 15482880 : 𝕂) • (a * b * a * a * b * b * a * a)
+  + (672 / 15482880 : 𝕂) • (a * b * a * a * b * b * a * b)
+  + (560 / 15482880 : 𝕂) • (a * b * a * a * b * b * b * a)
+  + (768 / 15482880 : 𝕂) • (a * b * a * a * b * b * b * b)
+  + (-1890 / 15482880 : 𝕂) • (a * b * a * b * a * a * a * a)
+  + (-2624 / 15482880 : 𝕂) • (a * b * a * b * a * a * a * b)
+  + (-1120 / 15482880 : 𝕂) • (a * b * a * b * a * a * b * a)
+  + (112 / 15482880 : 𝕂) • (a * b * a * b * a * a * b * b)
+  + (-2016 / 15482880 : 𝕂) • (a * b * a * b * a * b * a * a)
+  + (-6272 / 15482880 : 𝕂) • (a * b * a * b * a * b * a * b)
+  + (-2240 / 15482880 : 𝕂) • (a * b * a * b * a * b * b * a)
+  + (-2368 / 15482880 : 𝕂) • (a * b * a * b * a * b * b * b)
+  + (-224 / 15482880 : 𝕂) • (a * b * a * b * b * a * a * a)
+  + (672 / 15482880 : 𝕂) • (a * b * a * b * b * a * a * b)
+  + (1440 / 15482880 : 𝕂) • (a * b * a * b * b * a * b * b)
+  + (-448 / 15482880 : 𝕂) • (a * b * a * b * b * b * a * a)
+  + (-1920 / 15482880 : 𝕂) • (a * b * a * b * b * b * a * b)
+  + (-672 / 15482880 : 𝕂) • (a * b * a * b * b * b * b * a)
+  + (-384 / 15482880 : 𝕂) • (a * b * a * b * b * b * b * b)
+  + (630 / 15482880 : 𝕂) • (a * b * b * a * a * a * a * a)
+  + (736 / 15482880 : 𝕂) • (a * b * b * a * a * a * a * b)
+  + (784 / 15482880 : 𝕂) • (a * b * b * a * a * a * b * a)
+  + (448 / 15482880 : 𝕂) • (a * b * b * a * a * a * b * b)
+  + (-392 / 15482880 : 𝕂) • (a * b * b * a * a * b * a * a)
+  + (112 / 15482880 : 𝕂) • (a * b * b * a * a * b * a * b)
+  + (-352 / 15482880 : 𝕂) • (a * b * b * a * a * b * b * b)
+  + (1680 / 15482880 : 𝕂) • (a * b * b * a * b * a * a * a)
+  + (2352 / 15482880 : 𝕂) • (a * b * b * a * b * a * a * b)
+  + (2240 / 15482880 : 𝕂) • (a * b * b * a * b * a * b * a)
+  + (2112 / 15482880 : 𝕂) • (a * b * b * a * b * a * b * b)
+  + (112 / 15482880 : 𝕂) • (a * b * b * a * b * b * a * a)
+  + (1440 / 15482880 : 𝕂) • (a * b * b * a * b * b * a * b)
+  + (1120 / 15482880 : 𝕂) • (a * b * b * a * b * b * b * a)
+  + (960 / 15482880 : 𝕂) • (a * b * b * a * b * b * b * b)
+  + (-700 / 15482880 : 𝕂) • (a * b * b * b * a * a * a * a)
+  + (-1120 / 15482880 : 𝕂) • (a * b * b * b * a * a * a * b)
+  + (-560 / 15482880 : 𝕂) • (a * b * b * b * a * a * b * a)
+  + (-352 / 15482880 : 𝕂) • (a * b * b * b * a * a * b * b)
+  + (-1008 / 15482880 : 𝕂) • (a * b * b * b * a * b * a * a)
+  + (-2368 / 15482880 : 𝕂) • (a * b * b * b * a * b * a * b)
+  + (-1120 / 15482880 : 𝕂) • (a * b * b * b * a * b * b * a)
+  + (-1280 / 15482880 : 𝕂) • (a * b * b * b * a * b * b * b)
+  + (448 / 15482880 : 𝕂) • (a * b * b * b * b * a * a * a)
+  + (768 / 15482880 : 𝕂) • (a * b * b * b * b * a * a * b)
+  + (672 / 15482880 : 𝕂) • (a * b * b * b * b * a * b * a)
+  + (960 / 15482880 : 𝕂) • (a * b * b * b * b * a * b * b)
+  + (-224 / 15482880 : 𝕂) • (a * b * b * b * b * b * a * a)
+  + (-384 / 15482880 : 𝕂) • (a * b * b * b * b * b * a * b)
+  + (49 / 15482880 : 𝕂) • (b * a * a * a * a * a * a * a)
+  + (408 / 15482880 : 𝕂) • (b * a * a * a * a * a * b * a)
+  + (-1020 / 15482880 : 𝕂) • (b * a * a * a * a * b * a * a)
+  + (-736 / 15482880 : 𝕂) • (b * a * a * a * a * b * b * a)
+  + (1780 / 15482880 : 𝕂) • (b * a * a * a * b * a * a * a)
+  + (2624 / 15482880 : 𝕂) • (b * a * a * a * b * a * b * a)
+  + (552 / 15482880 : 𝕂) • (b * a * a * a * b * b * a * a)
+  + (1120 / 15482880 : 𝕂) • (b * a * a * a * b * b * b * a)
+  + (-1650 / 15482880 : 𝕂) • (b * a * a * b * a * a * a * a)
+  + (-2304 / 15482880 : 𝕂) • (b * a * a * b * a * a * b * a)
+  + (-2192 / 15482880 : 𝕂) • (b * a * a * b * a * b * a * a)
+  + (-2352 / 15482880 : 𝕂) • (b * a * a * b * a * b * b * a)
+  + (104 / 15482880 : 𝕂) • (b * a * a * b * b * a * a * a)
+  + (-672 / 15482880 : 𝕂) • (b * a * a * b * b * a * b * a)
+  + (-448 / 15482880 : 𝕂) • (b * a * a * b * b * b * a * a)
+  + (-768 / 15482880 : 𝕂) • (b * a * a * b * b * b * b * a)
+  + (1038 / 15482880 : 𝕂) • (b * a * b * a * a * a * a * a)
+  + (2624 / 15482880 : 𝕂) • (b * a * b * a * a * a * b * a)
+  + (-1072 / 15482880 : 𝕂) • (b * a * b * a * a * b * a * a)
+  + (-112 / 15482880 : 𝕂) • (b * a * b * a * a * b * b * a)
+  + (2848 / 15482880 : 𝕂) • (b * a * b * a * b * a * a * a)
+  + (6272 / 15482880 : 𝕂) • (b * a * b * a * b * a * b * a)
+  + (448 / 15482880 : 𝕂) • (b * a * b * a * b * b * a * a)
+  + (2368 / 15482880 : 𝕂) • (b * a * b * a * b * b * b * a)
+  + (-708 / 15482880 : 𝕂) • (b * a * b * b * a * a * a * a)
+  + (-672 / 15482880 : 𝕂) • (b * a * b * b * a * a * b * a)
+  + (-1792 / 15482880 : 𝕂) • (b * a * b * b * a * b * a * a)
+  + (-1440 / 15482880 : 𝕂) • (b * a * b * b * a * b * b * a)
+  + (896 / 15482880 : 𝕂) • (b * a * b * b * b * a * a * a)
+  + (1920 / 15482880 : 𝕂) • (b * a * b * b * b * a * b * a)
+  + (-320 / 15482880 : 𝕂) • (b * a * b * b * b * b * a * a)
+  + (384 / 15482880 : 𝕂) • (b * a * b * b * b * b * b * a)
+  + (-278 / 15482880 : 𝕂) • (b * b * a * a * a * a * a * a)
+  + (-736 / 15482880 : 𝕂) • (b * b * a * a * a * a * b * a)
+  + (-232 / 15482880 : 𝕂) • (b * b * a * a * a * b * a * a)
+  + (-448 / 15482880 : 𝕂) • (b * b * a * a * a * b * b * a)
+  + (720 / 15482880 : 𝕂) • (b * b * a * a * b * a * a * a)
+  + (-112 / 15482880 : 𝕂) • (b * b * a * a * b * a * b * a)
+  + (784 / 15482880 : 𝕂) • (b * b * a * a * b * b * a * a)
+  + (352 / 15482880 : 𝕂) • (b * b * a * a * b * b * b * a)
+  + (-1492 / 15482880 : 𝕂) • (b * b * a * b * a * a * a * a)
+  + (-2352 / 15482880 : 𝕂) • (b * b * a * b * a * a * b * a)
+  + (-1792 / 15482880 : 𝕂) • (b * b * a * b * a * b * a * a)
+  + (-2112 / 15482880 : 𝕂) • (b * b * a * b * a * b * b * a)
+  + (-112 / 15482880 : 𝕂) • (b * b * a * b * b * a * a * a)
+  + (-1440 / 15482880 : 𝕂) • (b * b * a * b * b * a * b * a)
+  + (-320 / 15482880 : 𝕂) • (b * b * a * b * b * b * a * a)
+  + (-960 / 15482880 : 𝕂) • (b * b * a * b * b * b * b * a)
+  + (580 / 15482880 : 𝕂) • (b * b * b * a * a * a * a * a)
+  + (1120 / 15482880 : 𝕂) • (b * b * b * a * a * a * b * a)
+  + (112 / 15482880 : 𝕂) • (b * b * b * a * a * b * a * a)
+  + (352 / 15482880 : 𝕂) • (b * b * b * a * a * b * b * a)
+  + (1456 / 15482880 : 𝕂) • (b * b * b * a * b * a * a * a)
+  + (2368 / 15482880 : 𝕂) • (b * b * b * a * b * a * b * a)
+  + (800 / 15482880 : 𝕂) • (b * b * b * a * b * b * a * a)
+  + (1280 / 15482880 : 𝕂) • (b * b * b * a * b * b * b * a)
+  + (-672 / 15482880 : 𝕂) • (b * b * b * b * a * a * a * a)
+  + (-768 / 15482880 : 𝕂) • (b * b * b * b * a * a * b * a)
+  + (-992 / 15482880 : 𝕂) • (b * b * b * b * a * b * a * a)
+  + (-960 / 15482880 : 𝕂) • (b * b * b * b * a * b * b * a)
+  + (352 / 15482880 : 𝕂) • (b * b * b * b * b * a * a * a)
+  + (384 / 15482880 : 𝕂) • (b * b * b * b * b * a * b * a)
+  + (-64 / 15482880 : 𝕂) • (b * b * b * b * b * b * a * a)
+
+/-- **Phase C-septic deg-8 cancellation identity (polynomial form)**:
+
+  septic_d8_perturbation_poly(a, b)
+  + bch_octic_term(½a, b)
+  + ½·[bch_septic_term(½a, b), ½a]
+  + bch_octic_term(½a+b, ½a)
+  = 0.
+
+This is a pure polynomial identity in {a, b}. Both sides are deg-8
+polynomials with rational scalars; after expansion the sum cancels
+identically.
+
+CAS-derived (`scripts/gen_septic_d8_perturbation_poly.py`): the
+perturbation poly was DEFINED as the negative of the other three
+summands' polynomial forms, so the identity is structurally trivial
+once the polynomial forms are matched via the sub-lemmas
+`C8_inner_eq`, `C8_static_eq`, `half_C7_bracket_eq`.
+
+Equivalent to bch(z, ½a)_d8 = 0 by palindromic vanishing of even
+degrees in `log(exp(½a)·exp(b)·exp(½a))`, where z = bch(½a, b).
+
+Deg-8 polynomial-form analog of the Phase C-quintic identity
+`symmetric_bch_quintic_deg6_cancellation_pure_identity` at one
+degree higher. Note: this form does NOT yet decompose the
+perturbation poly into commutator/Lie expressions (ΔC_k operators);
+that structural decomposition is left for a future session.
+(Section-level `maxHeartbeats 64000000` covers this proof.) -/
+private theorem septic_d8_cancellation_poly_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    septic_d8_perturbation_poly 𝕂 a b +
+      bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+      (2 : 𝕂)⁻¹ • (bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
+                    ((2 : 𝕂)⁻¹ • a) * bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) +
+      bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) = 0 := by
+  unfold septic_d8_perturbation_poly bch_octic_term bch_septic_term
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
 end SymmetricSepticAltForm
 
 
