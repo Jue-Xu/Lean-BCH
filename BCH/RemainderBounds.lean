@@ -5278,6 +5278,67 @@ theorem norm_bch_octic_remainder_le (a b : 𝔸)
             nlinarith [pow_nonneg hs_nn 8]
           linarith
 
+/-- **Stepping-stone axiom**: small-s case (`s < 1/10`) of the nonic remainder
+bound. To be discharged in a future session via `pieceB_nonic_decomp` + 7
+sub-piece bounds (I₁/I₂ nonic chains, y4/y5/y6 nonic decomps, y7_8/pow8
+telescoping bounds) + pieceA (deg-8 log tail).
+
+Estimated tight bound from per-piece analysis: ~440·s⁹/(2-exp(s));
+stated as ≤ 1000·s⁹/(2-exp(s)) here for headroom. Analog of the
+session-32 `norm_bch_octic_remainder_small_s_axiom` (discharged session 36
+in commit 6b5396d).
+
+Deg-9 analog of `norm_bch_octic_remainder_small_s_le`. -/
+private axiom norm_bch_nonic_remainder_small_s_axiom (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) (hs_small : ‖a‖ + ‖b‖ < 1 / 10) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+      bch_septic_term 𝕂 a b - bch_octic_term 𝕂 a b‖ ≤
+      1000 * (‖a‖ + ‖b‖) ^ 9 / (2 - Real.exp (‖a‖ + ‖b‖))
+
+include 𝕂 in
+/-- **Order-9 BCH remainder bound** (public theorem):
+
+  `‖bch(a,b) − (a+b) − ½[a,b] − C₃ − C₄ − bqt − bch_sextic_term −
+   bch_septic_term − bch_octic_term‖ ≤ 100001110·s⁹/(2 − exp(s))`
+  for `s < log 2`.
+
+This is the deg-9+ remainder of the BCH series after subtracting the
+through-deg-8 expansion. It's the order-9 analog of
+`norm_bch_octic_remainder_le` and the foundation for the future
+deg-9-parent T2-F7e-octic discharge that will eliminate
+`symmetric_bch_septic_sub_poly_axiom`.
+
+Proof: case split on `s ≥ 1/10` (uses `norm_bch_nonic_remainder_large_s_le`,
+fully proved) vs. `s < 1/10` (uses `norm_bch_nonic_remainder_small_s_axiom`,
+stepping-stone awaiting discharge; analog of session-32 octic small-s
+axiom → session-36 discharge). -/
+theorem norm_bch_nonic_remainder_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+      bch_septic_term 𝕂 a b - bch_octic_term 𝕂 a b‖ ≤
+      100001110 * (‖a‖ + ‖b‖) ^ 9 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  by_cases hs : 1 / 10 ≤ ‖a‖ + ‖b‖
+  · -- Large-s: ‖LHS‖ ≤ 100001110·s⁹/(2-exp(s)) directly.
+    exact norm_bch_nonic_remainder_large_s_le (𝕂 := 𝕂) a b hab hs
+  · -- Small-s: ‖LHS‖ ≤ 1000·s⁹/(2-exp(s)) ≤ 100001110·s⁹/(2-exp(s)).
+    push_neg at hs
+    have h_small := norm_bch_nonic_remainder_small_s_axiom (𝕂 := 𝕂) a b hab hs
+    have hexp_lt : Real.exp (‖a‖ + ‖b‖) < 2 := by
+      calc Real.exp (‖a‖ + ‖b‖) < Real.exp (Real.log 2) := Real.exp_strictMono hab
+        _ = 2 := Real.exp_log (by norm_num)
+    have hdenom : 0 < 2 - Real.exp (‖a‖ + ‖b‖) := by linarith
+    have hs_nn : 0 ≤ ‖a‖ + ‖b‖ := by positivity
+    calc _ ≤ 1000 * (‖a‖ + ‖b‖) ^ 9 / (2 - Real.exp (‖a‖ + ‖b‖)) := h_small
+      _ ≤ 100001110 * (‖a‖ + ‖b‖) ^ 9 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+          apply div_le_div_of_nonneg_right _ hdenom.le
+          have : 1000 * (‖a‖ + ‖b‖) ^ 9 ≤ 100001110 * (‖a‖ + ‖b‖) ^ 9 := by
+            nlinarith [pow_nonneg hs_nn 9]
+          linarith
+
 /-- The cubic coefficient of the *symmetric* BCH expansion.
 
 For `Z(a,b) = bch(bch(a/2, b), a/2)`, this is the degree-3 part:

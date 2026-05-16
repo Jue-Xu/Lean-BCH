@@ -1716,6 +1716,71 @@ theorem norm_bch_octic_remainder_large_s_le (a b : 𝔸)
     _ ≤ 10000110 * s ^ 8 / (2 - Real.exp s) :=
         div_le_div_of_nonneg_right h_le hdenom.le
 
+include 𝕂 in
+/-- **Ninth-order BCH remainder, large-s case** (private helper for the
+`norm_bch_nonic_remainder_le` public theorem).
+
+Crude bound for `‖a‖+‖b‖ ≥ 1/10`: combines `norm_bch_octic_remainder_le`
+with `‖bch_octic_term‖ ≤ s⁸` to give
+
+  `‖LHS_nonic‖ ≤ 10000111·s⁸/(2-exp(s)) ≤ 100001110·s⁹/(2-exp(s))`
+
+(since `10000111 ≤ 100001110·s` when `s ≥ 1/10`).
+
+Deg-9 analog of `norm_bch_octic_remainder_large_s_le` at one degree
+higher. The full nonic theorem also needs the small-s case (`s < 1/10`),
+which uses the eventual `norm_bch_nonic_remainder_small_s_le` discharge. -/
+theorem norm_bch_nonic_remainder_large_s_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ < Real.log 2) (hs_large : 1 / 10 ≤ ‖a‖ + ‖b‖) :
+    ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+      bch_septic_term 𝕂 a b - bch_octic_term 𝕂 a b‖ ≤
+      100001110 * (‖a‖ + ‖b‖) ^ 9 / (2 - Real.exp (‖a‖ + ‖b‖)) := by
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have hexp_lt : Real.exp s < 2 := by
+    calc Real.exp s < Real.exp (Real.log 2) := Real.exp_strictMono hab
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom : 0 < 2 - Real.exp s := by linarith
+  have hdenom_le1 : 2 - Real.exp s ≤ 1 := by linarith [Real.add_one_le_exp s]
+  have hR₇ := norm_bch_octic_remainder_le (𝕂 := 𝕂) a b hab
+  have hZ₈ : ‖bch_octic_term 𝕂 a b‖ ≤ s ^ 8 := norm_bch_octic_term_le a b
+  -- Algebraic split: LHS_nonic = LHS_octic - bch_octic_term
+  have hLHS_eq : bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+      bch_septic_term 𝕂 a b - bch_octic_term 𝕂 a b =
+      (bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+       bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+       bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+       bch_septic_term 𝕂 a b) -
+      bch_octic_term 𝕂 a b := by abel
+  -- ‖LHS_nonic‖ ≤ 10000110·s⁸/(2-exp(s)) + s⁸ ≤ 10000111·s⁸/(2-exp(s))
+  have hLHS_10000111 : ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+      bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+      bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+      bch_septic_term 𝕂 a b - bch_octic_term 𝕂 a b‖ ≤
+      10000111 * s ^ 8 / (2 - Real.exp s) := by
+    rw [hLHS_eq]
+    calc _ ≤ ‖bch (𝕂 := 𝕂) a b - (a + b) - (2 : 𝕂)⁻¹ • (a * b - b * a) -
+          bch_cubic_term 𝕂 a b - bch_quartic_term 𝕂 a b -
+          bch_quintic_term 𝕂 a b - bch_sextic_term 𝕂 a b -
+          bch_septic_term 𝕂 a b‖ +
+          ‖bch_octic_term 𝕂 a b‖ := norm_sub_le _ _
+      _ ≤ 10000110 * s ^ 8 / (2 - Real.exp s) + s ^ 8 := by linarith
+      _ ≤ 10000110 * s ^ 8 / (2 - Real.exp s) + s ^ 8 / (2 - Real.exp s) := by
+          gcongr; rw [le_div_iff₀ hdenom]
+          nlinarith [pow_nonneg hs_nn 8]
+      _ = 10000111 * s ^ 8 / (2 - Real.exp s) := by ring
+  -- Bound 10000111·s⁸ ≤ 100001110·s⁹ via 10000111 ≤ 100001110·s (s ≥ 1/10)
+  have h_le : 10000111 * s ^ 8 ≤ 100001110 * s ^ 9 := by
+    have h10000111 : (10000111 : ℝ) ≤ 100001110 * s := by linarith
+    nlinarith [pow_nonneg hs_nn 8]
+  calc _ ≤ 10000111 * s ^ 8 / (2 - Real.exp s) := hLHS_10000111
+    _ ≤ 100001110 * s ^ 9 / (2 - Real.exp s) :=
+        div_le_div_of_nonneg_right h_le hdenom.le
+
 /-! ### Sextic remainder small-s case helpers
 
 These are building blocks for the (future) `norm_bch_sextic_remainder_small_s_le`
