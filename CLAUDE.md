@@ -1,5 +1,60 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 39, 2026-05-16)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 39 (2026-05-16, septic alt-form foundation, 4 commits)**:
+
+Foundation infrastructure for the deg-9-parent T2-F7e-octic discharge of
+`symmetric_bch_septic_sub_poly_axiom`:
+
+1. `6a958c8`: Phase A — `norm_bch_inner_nonic_remainder_le` (≤ 2·10⁸·s⁹)
+   + `norm_bch_outer_nonic_remainder_le` (≤ 7·10¹²·s⁹). Deg-9 analogs of
+   the septic Phase A bounds, wrapping `norm_bch_nonic_remainder_le`
+   (session 37) with standard `s₁ ≤ s` / `s₂ ≤ (57/22)·s` scaffolding.
+   `(57/22)^9 ≤ 5262` (vs `(57/22)^7 ≤ 784` for septic).
+
+2. `34a7d6c`: `symmetric_bch_septic_correction_poly` (117-term def, LCM
+   276480, Σ|num|/LCM ≈ 0.057) + `symmetric_bch_septic_poly_alt_form`:
+
+       sym_E₇(a, b) = bch_septic_term(½a, b) + bch_septic_term(½a+b, ½a)
+                    + symmetric_bch_septic_correction_poly(a, b).
+
+   Proved via `unfold + simp + match_scalars <;> ring` at section-level
+   `maxHeartbeats 64000000`. CAS-derived via
+   `scripts/discover_septic_alt_form.py` + `scripts/gen_septic_correction_lean.py`.
+
+3. `315997e`: `norm_symmetric_bch_septic_correction_poly_le`:
+   `‖correction(a, b)‖ ≤ (‖a‖+‖b‖)⁷`. Uses Finset.sum approach mirroring
+   `norm_symmetric_bch_septic_poly_le` (`correctionSepticTermN`/
+   `correctionSepticTerm` defs, `_eq_sum` rewrite at 16M heartbeats +
+   maxRecDepth 2000, uniform per-i bound `1280/276480`, Σ
+   `117·1280/276480 ≈ 0.542 ≤ 1`). ~770 lines CAS-generated via
+   `scripts/gen_septic_correction_norm_bound.py`.
+
+4. `4820aa2`: `half_C6_bracket_eq` — explicit 49-term polynomial form
+   (denominator 92160) of `½·[bch_sextic_term(½a, b), ½a]`. Σ|num|/LCM
+   ≈ 0.008. Deg-7 analog of `half_C4_bracket_eq` (quintic Phase B
+   piece). First building block toward the future
+   `symmetric_bch_septic_deg7_cancellation_pure_identity` (Phase B-septic
+   identity).
+
+**Remaining work for full discharge** (multi-session, ~8-15 more):
+* Phase B-septic identity (deg-7 cancellation, combining ΔC_k diffs for
+  k=3..6 + half_C6_bracket = correction). Needs CAS for ΔC_k polynomial
+  forms (~50-150 terms each) OR a single combined 116-term identity.
+* Phase C-septic identity (deg-8 cancellation, analog of
+  `symmetric_bch_quintic_deg6_cancellation_pure_identity`).
+* Septic extended hdecomp (~17-piece, deg-9 analog of the 13-piece
+  quintic hdecomp).
+* Group C+D-septic combined bound (Phase E.2 analog).
+* Final assembly: `norm_symmetric_bch_septic_sub_poly_le` proved theorem
+  replacing the axiom.
+
+Axiom count unchanged (2 scoped private axioms remain).
+
 ## Status (session 37, 2026-05-16)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
