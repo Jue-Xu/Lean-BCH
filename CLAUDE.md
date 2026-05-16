@@ -1,9 +1,66 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
-## Status (session 36, 2026-05-15)
+## Status (session 37, 2026-05-16)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 37 (2026-05-16, nonic small-s axiom DISCHARGED, 1 commit)**:
+
+Commit `4b4e32d` (+1743 / −88 net lines): the session-9843889 stepping-stone
+`norm_bch_nonic_remainder_small_s_axiom` (introduced concurrently with the
+public `norm_bch_nonic_remainder_le`) is now a fully proved theorem
+`norm_bch_nonic_remainder_small_s_le` (~830 lines, mirrors session-36
+`norm_bch_octic_remainder_small_s_le` at one degree higher).
+
+Discharge structure:
+* pieceA bound (≤ 3·s⁹/(2-exp s)) via new `norm_bch_nonic_pieceA_le`.
+* pieceB''''' bound (≤ 442·s⁹) via `pieceB_nonic_decomp` + 7 sub-pieces:
+  - S₁'' ≤ 25·s⁹ (I₁ chain: `I1_nonic_residual_decomp_eq` +
+    `norm_I1_nonic_residual_RHS_le` + `norm_combined_tricky_nonic_le ≤ 35·s⁹`).
+  - S₂'' ≤ 93·s⁹ (I₂ chain: `norm_I2_nonic_residual_RHS_le` with K_PmT6=7,
+    K_P2''=19, K_PzP''=19, K_P3''=200 → ⅓·278·s⁹).
+  - S₃'' ≤ 150·s⁹ (¼·`norm_y4_..._sub_y4_8_le ≤ 600·s⁹`).
+  - S₄'' ≤ 80·s⁹ (⅕·`norm_y5_..._sub_y5_8_le ≤ 400·s⁹`).
+  - S₅'' ≤ 39·s⁹ (⅙·`norm_y6_..._sub_y6_8_le ≤ 230·s⁹`).
+  - S₆'' ≤ 23·s⁹ (⅐·`norm_y7_sub_z7_sub_y7_8_le ≤ 155·s⁹`).
+  - S₇ ≤ 32·s⁹ (⅛·`norm_pow8_sub_zpow8_le ≤ 255·s⁹`).
+* Total: ≤ 445·s⁹/(2-exp s) ≤ 1000·s⁹/(2-exp s).
+
+Public theorem `norm_bch_nonic_remainder_le` no longer axiom-gated.
+
+New supporting infrastructure:
+* `LogSeries.lean`: `norm_logOnePlus_sub_sub_sub_sub_sub_sub_sub_sub_le`
+  (deg-9 log tail `≤ ‖x‖⁹/(1-‖x‖)`), plus `summable_logSeriesTerm_shift8`,
+  `logSeriesTerm_seven`, `logOnePlus_sub_..._eq_tsum` helpers.
+* `Basic.lean`: `real_exp_sub_one_pow9_le_small` (`(exp s − 1)⁹ ≤ 3·s⁹`),
+  `norm_exp_sub_one_sub_sub_sub_sub_sub_sub_sub_sub_le` (noncomm deg-9
+  exp tail), `real_exp_ninth_order_le_nonic` (real ≤ s⁹).
+* `RemainderBounds.lean`: `norm_bch_nonic_pieceA_le`.
+
+Bug fix included in the same commit: commit 9843889 placed
+`norm_bch_nonic_remainder_large_s_le` in `SmallSDischarge.lean` but it
+referenced `norm_bch_octic_remainder_le` from `RemainderBounds.lean` —
+a downstream-import dependency, so the build was broken at HEAD~1.
+Moved the theorem to `RemainderBounds.lean`. Also dropped `private` from
+6 helpers needed by the new discharge (`norm_pow8_sub_zpow8_le`,
+`norm_y7_sub_z7_sub_y7_8_le`, `norm_combined_tricky_nonic_le`,
+`norm_y4_..._sub_y4_8_le`, `norm_y6_..._sub_y6_8_le`,
+`norm_y5_..._sub_y5_8_le`) — still BCH.-namespaced, no public API change.
+
+Notes:
+* `set_option maxHeartbeats 64000000` needed for whnf elaboration of the
+  ~830-line statement (same level as octic discharge).
+* S₃''/S₄''/S₅''/S₆'' bridges between wrapper output (mixed `(y-P)^k` /
+  `(y-P)*…*(y-P)` notation) and pieceB form (mul notation): `convert +
+  abel/noncomm_ring`.
+
+Axiom count: **3 → 2** (restoring the count claimed by CLAUDE.md before
+the session-9843889 axiom was introduced). The remaining two are the
+septic stepping stones `symmetric_bch_septic_sub_poly_axiom` and
+`norm_septic_match_residual_le_axiom`.
+
+## Status (session 36, 2026-05-15)
 
 **Session 36 (2026-05-15, octic small-s axiom DISCHARGED, 1 commit)**:
 
