@@ -5534,6 +5534,159 @@ theorem norm_y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_le (y P T₂ T₃ T₄ : 𝔸)
     pow_nonneg hs_nn 5, pow_nonneg hs_nn 4, pow_nonneg hs_nn 3,
     pow_nonneg hs_nn 2, hs_le_one, sq_nonneg s]
 
+set_option maxHeartbeats 128000000 in
+/-- Algebraic decomposition of `y⁴ − z⁴ − y4_5 − y4_6 − y4_7 − y4_8` where
+`z = y − P`. Deg-9 analog of `y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_decomp`
+at one degree higher.
+
+LHS subtracts: y4_5 (4 perms) + y4_6 (10) + y4_7 (20) + y4_8 (35) = 69 perms.
+
+RHS has 31 deg-9+ macro-terms refined from the 24 octic-level RHS terms.
+Each y4_8 perm is absorbed by exactly one refinement step:
+* [A] 4 (P−T₂−T₃−T₄−T₅) middle terms: absorb 4 (5,1,1,1) perms via
+  (P−T₂−T₃−T₄) → (P−T₂−T₃−T₄−T₅) + T₅.
+* [B5] split into 8 deg-9+: absorbs 7 perms via (P³−T₂³) → (P³−T₂³ minus
+  3 deg-7 absorbs) and P⁴ → T₂⁴ + 4-piece (P⁴−T₂⁴) telescoping.
+* [B6, B13, B16] 3 ⨯ (P²−T₂²−T₂T₃−T₃T₂) → (... extended) + 3 absorbed each.
+* [B7, B12] (P³−T₂³) → (P³ minus 4 deg-7 cancellations) absorbs 3 perms.
+* [B8, B10, B14] (P−T₂) → T₃ + (P−T₂−T₃) chains, absorb 1−2 perms each.
+* [B9, B11, B15] (P−T₂−T₃) → T₄ + (P−T₂−T₃−T₄), absorb 1 perm each.
+
+Total: 31 deg-9+ RHS terms absorb all 35 y4_8 perms.
+
+Forward-looking infrastructure for the eventual S₃'' inner piece bound
+in the deg-9-parent T2-F7e-octic discharge. -/
+private theorem y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_sub_y4_8_decomp
+    (y P T₂ T₃ T₄ T₅ : 𝔸) :
+    y ^ 4 - (y - P) ^ 4 -
+      ((y - P) ^ 3 * T₂ + (y - P) ^ 2 * T₂ * (y - P) +
+        (y - P) * T₂ * (y - P) ^ 2 + T₂ * (y - P) ^ 3) -
+      ((y - P) ^ 3 * T₃ + (y - P) ^ 2 * T₃ * (y - P) +
+        (y - P) * T₃ * (y - P) ^ 2 + T₃ * (y - P) ^ 3 +
+        (y - P) ^ 2 * T₂ ^ 2 + (y - P) * T₂ * (y - P) * T₂ +
+        (y - P) * T₂ ^ 2 * (y - P) +
+        T₂ * (y - P) ^ 2 * T₂ + T₂ * (y - P) * T₂ * (y - P) +
+        T₂ ^ 2 * (y - P) ^ 2) -
+      ((y - P) * (y - P) * (y - P) * T₄ +
+        (y - P) * (y - P) * T₂ * T₃ +
+        (y - P) * (y - P) * T₃ * T₂ +
+        (y - P) * (y - P) * T₄ * (y - P) +
+        (y - P) * T₂ * (y - P) * T₃ +
+        (y - P) * T₂ * T₂ * T₂ +
+        (y - P) * T₂ * T₃ * (y - P) +
+        (y - P) * T₃ * (y - P) * T₂ +
+        (y - P) * T₃ * T₂ * (y - P) +
+        (y - P) * T₄ * (y - P) * (y - P) +
+        T₂ * (y - P) * (y - P) * T₃ +
+        T₂ * (y - P) * T₂ * T₂ +
+        T₂ * (y - P) * T₃ * (y - P) +
+        T₂ * T₂ * (y - P) * T₂ +
+        T₂ * T₂ * T₂ * (y - P) +
+        T₂ * T₃ * (y - P) * (y - P) +
+        T₃ * (y - P) * (y - P) * T₂ +
+        T₃ * (y - P) * T₂ * (y - P) +
+        T₃ * T₂ * (y - P) * (y - P) +
+        T₄ * (y - P) * (y - P) * (y - P)) -
+      ((y - P) * (y - P) * (y - P) * T₅ +
+        (y - P) * (y - P) * T₂ * T₄ +
+        (y - P) * (y - P) * T₃ * T₃ +
+        (y - P) * (y - P) * T₄ * T₂ +
+        (y - P) * (y - P) * T₅ * (y - P) +
+        (y - P) * T₂ * (y - P) * T₄ +
+        (y - P) * T₂ * T₂ * T₃ +
+        (y - P) * T₂ * T₃ * T₂ +
+        (y - P) * T₂ * T₄ * (y - P) +
+        (y - P) * T₃ * (y - P) * T₃ +
+        (y - P) * T₃ * T₂ * T₂ +
+        (y - P) * T₃ * T₃ * (y - P) +
+        (y - P) * T₄ * (y - P) * T₂ +
+        (y - P) * T₄ * T₂ * (y - P) +
+        (y - P) * T₅ * (y - P) * (y - P) +
+        T₂ * (y - P) * (y - P) * T₄ +
+        T₂ * (y - P) * T₂ * T₃ +
+        T₂ * (y - P) * T₃ * T₂ +
+        T₂ * (y - P) * T₄ * (y - P) +
+        T₂ * T₂ * (y - P) * T₃ +
+        T₂ * T₂ * T₂ * T₂ +
+        T₂ * T₂ * T₃ * (y - P) +
+        T₂ * T₃ * (y - P) * T₂ +
+        T₂ * T₃ * T₂ * (y - P) +
+        T₂ * T₄ * (y - P) * (y - P) +
+        T₃ * (y - P) * (y - P) * T₃ +
+        T₃ * (y - P) * T₂ * T₂ +
+        T₃ * (y - P) * T₃ * (y - P) +
+        T₃ * T₂ * (y - P) * T₂ +
+        T₃ * T₂ * T₂ * (y - P) +
+        T₃ * T₃ * (y - P) * (y - P) +
+        T₄ * (y - P) * (y - P) * T₂ +
+        T₄ * (y - P) * T₂ * (y - P) +
+        T₄ * T₂ * (y - P) * (y - P) +
+        T₅ * (y - P) * (y - P) * (y - P)) =
+    -- [A] 4 (P−T₂−T₃−T₄−T₅) middle terms (absorb 4 (5,1,1,1) y4_8 perms).
+    (y - P) ^ 3 * (P - T₂ - T₃ - T₄ - T₅) +
+    (y - P) ^ 2 * (P - T₂ - T₃ - T₄ - T₅) * (y - P) +
+    (y - P) * (P - T₂ - T₃ - T₄ - T₅) * (y - P) ^ 2 +
+    (P - T₂ - T₃ - T₄ - T₅) * (y - P) ^ 3 +
+    -- [B5] 8 refined pieces.
+    -- B5-1: z·(P³ − T₂³ − T₂²T₃ − T₂T₃T₂ − T₃T₂²)
+    (y - P) * (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2) +
+    -- B5-2: T₂·z·(P² − T₂² − T₂T₃ − T₃T₂)
+    T₂ * (y - P) * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) +
+    -- B5-3: T₃·z·(P² − T₂²) + (P−T₂−T₃)·z·P²
+    T₃ * (y - P) * (P ^ 2 - T₂ ^ 2) +
+    (P - T₂ - T₃) * (y - P) * P ^ 2 +
+    -- B5-4: 4-piece telescoping of P⁴ − T₂⁴
+    (P - T₂) * P ^ 3 +
+    T₂ * (P - T₂) * P ^ 2 +
+    T₂ ^ 2 * (P - T₂) * P +
+    T₂ ^ 3 * (P - T₂) +
+    -- [B6] z²·(P² − T₂² − T₂T₃ − T₃T₂ − T₂T₄ − T₃² − T₄T₂)
+    (y - P) ^ 2 * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+                   T₂ * T₄ - T₃ * T₃ - T₄ * T₂) +
+    -- [B7] 3 refined pieces.
+    -- B7-1: T₂²·z·(P−T₂−T₃)
+    T₂ ^ 2 * (y - P) * (P - T₂ - T₃) +
+    -- B7-2: (P²−T₂²−T₂T₃−T₃T₂)·z·T₂
+    (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) * (y - P) * T₂ +
+    -- B7-3: (P²−T₂²)·z·(P−T₂) (natively deg-9)
+    (P ^ 2 - T₂ ^ 2) * (y - P) * (P - T₂) +
+    -- [B8] 3 refined pieces.
+    -- B8-1: z·(P−T₂−T₃−T₄)·z·T₂
+    (y - P) * (P - T₂ - T₃ - T₄) * (y - P) * T₂ +
+    -- B8-2-a: z·T₃·z·(P−T₂−T₃)
+    (y - P) * T₃ * (y - P) * (P - T₂ - T₃) +
+    -- B8-2-b: z·(P−T₂−T₃)·z·(P−T₂)
+    (y - P) * (P - T₂ - T₃) * (y - P) * (P - T₂) +
+    -- [B9] z·T₂·z·(P−T₂−T₃−T₄)
+    (y - P) * T₂ * (y - P) * (P - T₂ - T₃ - T₄) +
+    -- [B10] 3 refined pieces.
+    -- B10-1: (P−T₂−T₃−T₄)·z²·T₂
+    (P - T₂ - T₃ - T₄) * (y - P) ^ 2 * T₂ +
+    -- B10-2-a: T₃·z²·(P−T₂−T₃)
+    T₃ * (y - P) ^ 2 * (P - T₂ - T₃) +
+    -- B10-2-b: (P−T₂−T₃)·z²·(P−T₂)
+    (P - T₂ - T₃) * (y - P) ^ 2 * (P - T₂) +
+    -- [B11] T₂·z²·(P−T₂−T₃−T₄)
+    T₂ * (y - P) ^ 2 * (P - T₂ - T₃ - T₄) +
+    -- [B12] (P³ − T₂³ − T₂²T₃ − T₂T₃T₂ − T₃T₂²)·z
+    (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2) * (y - P) +
+    -- [B13] z·(P² − T₂² − T₂T₃ − T₃T₂ − T₂T₄ − T₃² − T₄T₂)·z
+    (y - P) * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+               T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * (y - P) +
+    -- [B14] 3 refined pieces.
+    -- B14-1: (P−T₂−T₃−T₄)·z·T₂·z
+    (P - T₂ - T₃ - T₄) * (y - P) * T₂ * (y - P) +
+    -- B14-2-a: T₃·z·(P−T₂−T₃)·z
+    T₃ * (y - P) * (P - T₂ - T₃) * (y - P) +
+    -- B14-2-b: (P−T₂−T₃)·z·(P−T₂)·z
+    (P - T₂ - T₃) * (y - P) * (P - T₂) * (y - P) +
+    -- [B15] T₂·z·(P−T₂−T₃−T₄)·z
+    T₂ * (y - P) * (P - T₂ - T₃ - T₄) * (y - P) +
+    -- [B16] (P² − T₂² − T₂T₃ − T₃T₂ − T₂T₄ − T₃² − T₄T₂)·z²
+    (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+     T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * (y - P) ^ 2 := by
+  noncomm_ring
+
 /-- Norm bound `‖y² - z² - y2_3‖ ≤ 11·s⁴` where `z = y - P`,
 `y2_3 = z·T₂ + T₂·z`. Used in the y5 octic norm bound for the
 `(y²-z²-y2_3)·P·z²` compound term. -/
