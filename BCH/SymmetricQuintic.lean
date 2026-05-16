@@ -10721,6 +10721,76 @@ theorem norm_symmetric_bch_septic_correction_poly_le (a b : 𝔸) :
     _ ≤ 1 * s^7 := by nlinarith [hs7_nn]
     _ = s ^ 7 := one_mul _
 
+
+-- 49 terms, LCM = 92160, Σ|num| = 716
+-- Σ|num|/LCM ≈ 0.0078
+
+/-- **Sub-lemma (Phase B-septic, piece for ½·[C₆(½a, b), ½a])**:
+`½·[bch_sextic_term(½a, b), ½a]` equals an explicit deg-7 polynomial in
+`{a, b}`. CAS-derived: denominator 92160, 49 terms.
+
+Deg-7 analog of `half_C4_bracket_eq` (quintic Phase B piece for
+`½·[bch_quartic_term(½a, b), ½a]`) at one degree higher.
+(Section-level `maxHeartbeats 64000000` covers this proof.) -/
+private theorem half_C6_bracket_eq
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    (2 : 𝕂)⁻¹ • (bch_sextic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
+                  ((2 : 𝕂)⁻¹ • a) * bch_sextic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) =
+      (1 / 92160 : 𝕂) • (a * a * a * a * a * b * b)
+    + (-4 / 92160 : 𝕂) • (a * a * a * a * b * a * b)
+    + (-1 / 92160 : 𝕂) • (a * a * a * a * b * b * a)
+    + (-8 / 92160 : 𝕂) • (a * a * a * a * b * b * b)
+    + (6 / 92160 : 𝕂) • (a * a * a * b * a * a * b)
+    + (4 / 92160 : 𝕂) • (a * a * a * b * a * b * a)
+    + (12 / 92160 : 𝕂) • (a * a * a * b * a * b * b)
+    + (12 / 92160 : 𝕂) • (a * a * a * b * b * a * b)
+    + (8 / 92160 : 𝕂) • (a * a * a * b * b * b * a)
+    + (4 / 92160 : 𝕂) • (a * a * a * b * b * b * b)
+    + (-4 / 92160 : 𝕂) • (a * a * b * a * a * a * b)
+    + (-6 / 92160 : 𝕂) • (a * a * b * a * a * b * a)
+    + (12 / 92160 : 𝕂) • (a * a * b * a * a * b * b)
+    + (-48 / 92160 : 𝕂) • (a * a * b * a * b * a * b)
+    + (-12 / 92160 : 𝕂) • (a * a * b * a * b * b * a)
+    + (-16 / 92160 : 𝕂) • (a * a * b * a * b * b * b)
+    + (12 / 92160 : 𝕂) • (a * a * b * b * a * a * b)
+    + (-12 / 92160 : 𝕂) • (a * a * b * b * a * b * a)
+    + (24 / 92160 : 𝕂) • (a * a * b * b * a * b * b)
+    + (-16 / 92160 : 𝕂) • (a * a * b * b * b * a * b)
+    + (-4 / 92160 : 𝕂) • (a * a * b * b * b * b * a)
+    + (8 / 92160 : 𝕂) • (a * b * a * a * a * b * a)
+    + (-6 / 92160 : 𝕂) • (a * b * a * a * b * a * a)
+    + (-24 / 92160 : 𝕂) • (a * b * a * a * b * b * a)
+    + (4 / 92160 : 𝕂) • (a * b * a * b * a * a * a)
+    + (96 / 92160 : 𝕂) • (a * b * a * b * a * b * a)
+    + (-12 / 92160 : 𝕂) • (a * b * a * b * b * a * a)
+    + (32 / 92160 : 𝕂) • (a * b * a * b * b * b * a)
+    + (-1 / 92160 : 𝕂) • (a * b * b * a * a * a * a)
+    + (-24 / 92160 : 𝕂) • (a * b * b * a * a * b * a)
+    + (-12 / 92160 : 𝕂) • (a * b * b * a * b * a * a)
+    + (-48 / 92160 : 𝕂) • (a * b * b * a * b * b * a)
+    + (8 / 92160 : 𝕂) • (a * b * b * b * a * a * a)
+    + (32 / 92160 : 𝕂) • (a * b * b * b * a * b * a)
+    + (-4 / 92160 : 𝕂) • (a * b * b * b * b * a * a)
+    + (-4 / 92160 : 𝕂) • (b * a * a * a * b * a * a)
+    + (6 / 92160 : 𝕂) • (b * a * a * b * a * a * a)
+    + (12 / 92160 : 𝕂) • (b * a * a * b * b * a * a)
+    + (-4 / 92160 : 𝕂) • (b * a * b * a * a * a * a)
+    + (-48 / 92160 : 𝕂) • (b * a * b * a * b * a * a)
+    + (12 / 92160 : 𝕂) • (b * a * b * b * a * a * a)
+    + (-16 / 92160 : 𝕂) • (b * a * b * b * b * a * a)
+    + (1 / 92160 : 𝕂) • (b * b * a * a * a * a * a)
+    + (12 / 92160 : 𝕂) • (b * b * a * a * b * a * a)
+    + (12 / 92160 : 𝕂) • (b * b * a * b * a * a * a)
+    + (24 / 92160 : 𝕂) • (b * b * a * b * b * a * a)
+    + (-8 / 92160 : 𝕂) • (b * b * b * a * a * a * a)
+    + (-16 / 92160 : 𝕂) • (b * b * b * a * b * a * a)
+    + (4 / 92160 : 𝕂) • (b * b * b * b * a * a * a)
+    := by
+  unfold bch_sextic_term
+  simp only [smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc]
+  match_scalars <;> ring
 end SymmetricSepticAltForm
 
 
