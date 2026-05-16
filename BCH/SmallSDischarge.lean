@@ -5687,6 +5687,457 @@ private theorem y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_sub_y4_8_decomp
      T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * (y - P) ^ 2 := by
   noncomm_ring
 
+set_option maxHeartbeats 32000000 in
+/-- Norm bound for `y⁴ - z⁴ - y4_5 - y4_6 - y4_7 - y4_8`: each of the 31
+RHS terms is deg-9+; total bound `≤ 600·s⁹` for `s ≤ 1`. The `S₃''`
+inner piece bound in the deg-9-parent T2-F7e-octic discharge. Deg-9
+analog of `norm_y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_le` at one degree
+higher.
+
+Per-term breakdown (units of s⁹):
+* [A] 4 (P-T₂-T₃-T₄-T₅) middle: 4·7 = 28
+* [B5] 8 pieces: 105 + 15 + 10 + 5 + 5+5+5+5 = 155
+* [B6] z²·(P²-7 cancel): 16
+* [B7] 3 pieces: 5 + 15 + 50 = 70
+* [B8] 3 pieces: 6 + 5 + 25 = 36
+* [B9] 6
+* [B10] 3 pieces: 6 + 5 + 25 = 36
+* [B11] 6
+* [B12] (P³-4 cancel)·z: 105
+* [B13] z·(P²-7 cancel)·z: 16
+* [B14] 3 pieces: 6 + 5 + 25 = 36
+* [B15] 6
+* [B16] 16
+Total ≈ 532·s⁹ ≤ 600·s⁹. -/
+private theorem norm_y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_sub_y4_8_le
+    (y P T₂ T₃ T₄ T₅ : 𝔸) {s : ℝ} (hs_nn : 0 ≤ s) (hs_le_one : s ≤ 1)
+    (hz : ‖y - P‖ ≤ s) (hP : ‖P‖ ≤ s ^ 2)
+    (hT₂ : ‖T₂‖ ≤ s ^ 2) (hT₃ : ‖T₃‖ ≤ s ^ 3)
+    (hPmT₂ : ‖P - T₂‖ ≤ 5 * s ^ 3)
+    (hPmT₂mT₃ : ‖P - T₂ - T₃‖ ≤ 5 * s ^ 4)
+    (hPmT₂mT₃mT₄ : ‖P - T₂ - T₃ - T₄‖ ≤ 6 * s ^ 5)
+    (hPmT₂mT₃mT₄mT₅ : ‖P - T₂ - T₃ - T₄ - T₅‖ ≤ 7 * s ^ 6)
+    (hP2T22 : ‖P ^ 2 - T₂ ^ 2‖ ≤ 10 * s ^ 5)
+    (hP2_etc : ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂‖ ≤ 15 * s ^ 6)
+    (hP2_etc7 :
+        ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+          T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖ ≤ 16 * s ^ 7)
+    (hP3_etc :
+        ‖P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2‖ ≤
+          105 * s ^ 8) :
+    ‖y ^ 4 - (y - P) ^ 4 -
+      ((y - P) ^ 3 * T₂ + (y - P) ^ 2 * T₂ * (y - P) +
+        (y - P) * T₂ * (y - P) ^ 2 + T₂ * (y - P) ^ 3) -
+      ((y - P) ^ 3 * T₃ + (y - P) ^ 2 * T₃ * (y - P) +
+        (y - P) * T₃ * (y - P) ^ 2 + T₃ * (y - P) ^ 3 +
+        (y - P) ^ 2 * T₂ ^ 2 + (y - P) * T₂ * (y - P) * T₂ +
+        (y - P) * T₂ ^ 2 * (y - P) +
+        T₂ * (y - P) ^ 2 * T₂ + T₂ * (y - P) * T₂ * (y - P) +
+        T₂ ^ 2 * (y - P) ^ 2) -
+      ((y - P) * (y - P) * (y - P) * T₄ +
+        (y - P) * (y - P) * T₂ * T₃ +
+        (y - P) * (y - P) * T₃ * T₂ +
+        (y - P) * (y - P) * T₄ * (y - P) +
+        (y - P) * T₂ * (y - P) * T₃ +
+        (y - P) * T₂ * T₂ * T₂ +
+        (y - P) * T₂ * T₃ * (y - P) +
+        (y - P) * T₃ * (y - P) * T₂ +
+        (y - P) * T₃ * T₂ * (y - P) +
+        (y - P) * T₄ * (y - P) * (y - P) +
+        T₂ * (y - P) * (y - P) * T₃ +
+        T₂ * (y - P) * T₂ * T₂ +
+        T₂ * (y - P) * T₃ * (y - P) +
+        T₂ * T₂ * (y - P) * T₂ +
+        T₂ * T₂ * T₂ * (y - P) +
+        T₂ * T₃ * (y - P) * (y - P) +
+        T₃ * (y - P) * (y - P) * T₂ +
+        T₃ * (y - P) * T₂ * (y - P) +
+        T₃ * T₂ * (y - P) * (y - P) +
+        T₄ * (y - P) * (y - P) * (y - P)) -
+      ((y - P) * (y - P) * (y - P) * T₅ +
+        (y - P) * (y - P) * T₂ * T₄ +
+        (y - P) * (y - P) * T₃ * T₃ +
+        (y - P) * (y - P) * T₄ * T₂ +
+        (y - P) * (y - P) * T₅ * (y - P) +
+        (y - P) * T₂ * (y - P) * T₄ +
+        (y - P) * T₂ * T₂ * T₃ +
+        (y - P) * T₂ * T₃ * T₂ +
+        (y - P) * T₂ * T₄ * (y - P) +
+        (y - P) * T₃ * (y - P) * T₃ +
+        (y - P) * T₃ * T₂ * T₂ +
+        (y - P) * T₃ * T₃ * (y - P) +
+        (y - P) * T₄ * (y - P) * T₂ +
+        (y - P) * T₄ * T₂ * (y - P) +
+        (y - P) * T₅ * (y - P) * (y - P) +
+        T₂ * (y - P) * (y - P) * T₄ +
+        T₂ * (y - P) * T₂ * T₃ +
+        T₂ * (y - P) * T₃ * T₂ +
+        T₂ * (y - P) * T₄ * (y - P) +
+        T₂ * T₂ * (y - P) * T₃ +
+        T₂ * T₂ * T₂ * T₂ +
+        T₂ * T₂ * T₃ * (y - P) +
+        T₂ * T₃ * (y - P) * T₂ +
+        T₂ * T₃ * T₂ * (y - P) +
+        T₂ * T₄ * (y - P) * (y - P) +
+        T₃ * (y - P) * (y - P) * T₃ +
+        T₃ * (y - P) * T₂ * T₂ +
+        T₃ * (y - P) * T₃ * (y - P) +
+        T₃ * T₂ * (y - P) * T₂ +
+        T₃ * T₂ * T₂ * (y - P) +
+        T₃ * T₃ * (y - P) * (y - P) +
+        T₄ * (y - P) * (y - P) * T₂ +
+        T₄ * (y - P) * T₂ * (y - P) +
+        T₄ * T₂ * (y - P) * (y - P) +
+        T₅ * (y - P) * (y - P) * (y - P))‖ ≤ 600 * s ^ 9 := by
+  rw [y4_sub_z4_sub_y4_5_sub_y4_6_sub_y4_7_sub_y4_8_decomp]
+  set z : 𝔸 := y - P with hz_def
+  have hzn : ‖z‖ ≤ s := hz
+  have hP2_le : ‖P ^ 2‖ ≤ (s ^ 2) ^ 2 :=
+    (norm_pow_le P 2).trans (pow_le_pow_left₀ (norm_nonneg _) hP 2)
+  have hP3_le : ‖P ^ 3‖ ≤ (s ^ 2) ^ 3 :=
+    (norm_pow_le P 3).trans (pow_le_pow_left₀ (norm_nonneg _) hP 3)
+  -- [A] 4 terms with (P-T₂-T₃-T₄-T₅).
+  have hA1 : ‖z ^ 3 * (P - T₂ - T₃ - T₄ - T₅)‖ ≤ s ^ 3 * (7 * s ^ 6) :=
+    calc _ ≤ ‖z ^ 3‖ * ‖P - T₂ - T₃ - T₄ - T₅‖ := norm_mul_le _ _
+      _ ≤ ‖z‖ ^ 3 * ‖P - T₂ - T₃ - T₄ - T₅‖ := by gcongr; exact norm_pow_le z 3
+      _ ≤ _ := mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hzn 3) hPmT₂mT₃mT₄mT₅
+          (norm_nonneg _) (by positivity)
+  have hA2 : ‖z ^ 2 * (P - T₂ - T₃ - T₄ - T₅) * z‖ ≤ s ^ 2 * (7 * s ^ 6) * s :=
+    calc _ ≤ ‖z ^ 2 * (P - T₂ - T₃ - T₄ - T₅)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖z‖ ^ 2 * ‖P - T₂ - T₃ - T₄ - T₅‖) * ‖z‖ := by
+          gcongr
+          calc _ ≤ ‖z ^ 2‖ * ‖P - T₂ - T₃ - T₄ - T₅‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le z 2
+      _ ≤ _ := mul_le_mul (mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+          hPmT₂mT₃mT₄mT₅ (norm_nonneg _) (by positivity)) hzn
+          (norm_nonneg _) (by positivity)
+  have hA3 : ‖z * (P - T₂ - T₃ - T₄ - T₅) * z ^ 2‖ ≤ s * (7 * s ^ 6) * s ^ 2 :=
+    calc _ ≤ ‖z * (P - T₂ - T₃ - T₄ - T₅)‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ (‖z‖ * ‖P - T₂ - T₃ - T₄ - T₅‖) * ‖z‖ ^ 2 := by
+          gcongr
+          · exact norm_mul_le _ _
+          · exact norm_pow_le z 2
+      _ ≤ _ := mul_le_mul (mul_le_mul hzn hPmT₂mT₃mT₄mT₅
+          (norm_nonneg _) (by positivity))
+          (pow_le_pow_left₀ (norm_nonneg _) hzn 2) (by positivity) (by positivity)
+  have hA4 : ‖(P - T₂ - T₃ - T₄ - T₅) * z ^ 3‖ ≤ (7 * s ^ 6) * s ^ 3 :=
+    calc _ ≤ ‖P - T₂ - T₃ - T₄ - T₅‖ * ‖z ^ 3‖ := norm_mul_le _ _
+      _ ≤ ‖P - T₂ - T₃ - T₄ - T₅‖ * ‖z‖ ^ 3 := by gcongr; exact norm_pow_le z 3
+      _ ≤ _ := mul_le_mul hPmT₂mT₃mT₄mT₅
+          (pow_le_pow_left₀ (norm_nonneg _) hzn 3) (by positivity) (by positivity)
+  -- [B5] 8 pieces.
+  have hB5_1 : ‖z * (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2)‖ ≤
+      s * (105 * s ^ 8) :=
+    calc _ ≤ ‖z‖ * ‖P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2‖ :=
+            norm_mul_le _ _
+      _ ≤ s * (105 * s ^ 8) := mul_le_mul hzn hP3_etc (norm_nonneg _) (by positivity)
+  have hB5_2 : ‖T₂ * z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂)‖ ≤
+      s ^ 2 * s * (15 * s ^ 6) :=
+    calc _ ≤ ‖T₂ * z‖ * ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂‖ := norm_mul_le _ _
+      _ ≤ (‖T₂‖ * ‖z‖) * ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂‖ := by
+          gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul hT₂ hzn (norm_nonneg _) (by positivity))
+          hP2_etc (norm_nonneg _) (by positivity)
+  -- [B5-3] T₃·z·(P²-T₂²) and (P-T₂-T₃)·z·P².
+  have hB5_3a : ‖T₃ * z * (P ^ 2 - T₂ ^ 2)‖ ≤ s ^ 3 * s * (10 * s ^ 5) :=
+    calc _ ≤ ‖T₃ * z‖ * ‖P ^ 2 - T₂ ^ 2‖ := norm_mul_le _ _
+      _ ≤ (‖T₃‖ * ‖z‖) * ‖P ^ 2 - T₂ ^ 2‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul hT₃ hzn (norm_nonneg _) (by positivity))
+          hP2T22 (norm_nonneg _) (by positivity)
+  have hB5_3b : ‖(P - T₂ - T₃) * z * P ^ 2‖ ≤ (5 * s ^ 4) * s * (s ^ 2) ^ 2 :=
+    calc _ ≤ ‖(P - T₂ - T₃) * z‖ * ‖P ^ 2‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃‖ * ‖z‖) * ‖P ^ 2‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul hPmT₂mT₃ hzn (norm_nonneg _) (by positivity))
+          hP2_le (norm_nonneg _) (by positivity)
+  -- [B5-4] 4-piece P⁴-T₂⁴ telescoping.
+  have hB5_4a : ‖(P - T₂) * P ^ 3‖ ≤ (5 * s ^ 3) * (s ^ 2) ^ 3 :=
+    calc _ ≤ ‖P - T₂‖ * ‖P ^ 3‖ := norm_mul_le _ _
+      _ ≤ _ := mul_le_mul hPmT₂ hP3_le (norm_nonneg _) (by positivity)
+  have hB5_4b : ‖T₂ * (P - T₂) * P ^ 2‖ ≤ s ^ 2 * (5 * s ^ 3) * (s ^ 2) ^ 2 :=
+    calc _ ≤ ‖T₂ * (P - T₂)‖ * ‖P ^ 2‖ := norm_mul_le _ _
+      _ ≤ (‖T₂‖ * ‖P - T₂‖) * ‖P ^ 2‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul hT₂ hPmT₂ (norm_nonneg _) (by positivity))
+          hP2_le (norm_nonneg _) (by positivity)
+  have hB5_4c : ‖T₂ ^ 2 * (P - T₂) * P‖ ≤ (s ^ 2) ^ 2 * (5 * s ^ 3) * s ^ 2 :=
+    calc _ ≤ ‖T₂ ^ 2 * (P - T₂)‖ * ‖P‖ := norm_mul_le _ _
+      _ ≤ (‖T₂‖ ^ 2 * ‖P - T₂‖) * ‖P‖ := by
+          gcongr
+          calc _ ≤ ‖T₂ ^ 2‖ * ‖P - T₂‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hT₂ 2)
+          hPmT₂ (by positivity) (by positivity)) hP (by positivity) (by positivity)
+  have hB5_4d : ‖T₂ ^ 3 * (P - T₂)‖ ≤ (s ^ 2) ^ 3 * (5 * s ^ 3) :=
+    calc _ ≤ ‖T₂ ^ 3‖ * ‖P - T₂‖ := norm_mul_le _ _
+      _ ≤ ‖T₂‖ ^ 3 * ‖P - T₂‖ := by gcongr; exact norm_pow_le _ _
+      _ ≤ _ := mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hT₂ 3) hPmT₂
+          (by positivity) (by positivity)
+  -- [B6] z²·(P²-7 cancellations).
+  have hB6 : ‖z ^ 2 * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+      T₂ * T₄ - T₃ * T₃ - T₄ * T₂)‖ ≤ s ^ 2 * (16 * s ^ 7) :=
+    calc _ ≤ ‖z ^ 2‖ * ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+              T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖ := norm_mul_le _ _
+      _ ≤ ‖z‖ ^ 2 * ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+              T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖ := by gcongr; exact norm_pow_le z 2
+      _ ≤ _ := mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hzn 2) hP2_etc7
+          (norm_nonneg _) (by positivity)
+  -- [B7] 3 pieces.
+  have hB7_1 : ‖T₂ ^ 2 * z * (P - T₂ - T₃)‖ ≤ (s ^ 2) ^ 2 * s * (5 * s ^ 4) :=
+    calc _ ≤ ‖T₂ ^ 2 * z‖ * ‖P - T₂ - T₃‖ := norm_mul_le _ _
+      _ ≤ (‖T₂‖ ^ 2 * ‖z‖) * ‖P - T₂ - T₃‖ := by
+          gcongr
+          calc _ ≤ ‖T₂ ^ 2‖ * ‖z‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) hT₂ 2)
+          hzn (by positivity) (by positivity)) hPmT₂mT₃ (norm_nonneg _) (by positivity)
+  have hB7_2 : ‖(P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) * z * T₂‖ ≤
+      (15 * s ^ 6) * s * s ^ 2 :=
+    calc _ ≤ ‖(P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) * z‖ * ‖T₂‖ := norm_mul_le _ _
+      _ ≤ (‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂‖ * ‖z‖) * ‖T₂‖ := by
+          gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul hP2_etc hzn (norm_nonneg _) (by positivity))
+          hT₂ (by positivity) (by positivity)
+  have hB7_3 : ‖(P ^ 2 - T₂ ^ 2) * z * (P - T₂)‖ ≤ (10 * s ^ 5) * s * (5 * s ^ 3) :=
+    calc _ ≤ ‖(P ^ 2 - T₂ ^ 2) * z‖ * ‖P - T₂‖ := norm_mul_le _ _
+      _ ≤ (‖P ^ 2 - T₂ ^ 2‖ * ‖z‖) * ‖P - T₂‖ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul hP2T22 hzn (norm_nonneg _) (by positivity))
+          hPmT₂ (by positivity) (by positivity)
+  -- [B8] 3 pieces.
+  have hB8_1 : ‖z * (P - T₂ - T₃ - T₄) * z * T₂‖ ≤ s * (6 * s ^ 5) * s * s ^ 2 :=
+    calc _ ≤ ‖z * (P - T₂ - T₃ - T₄) * z‖ * ‖T₂‖ := norm_mul_le _ _
+      _ ≤ ((‖z‖ * ‖P - T₂ - T₃ - T₄‖) * ‖z‖) * ‖T₂‖ := by
+          gcongr
+          calc _ ≤ ‖z * (P - T₂ - T₃ - T₄)‖ * ‖z‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (mul_le_mul hzn hPmT₂mT₃mT₄
+          (norm_nonneg _) (by positivity)) hzn (by positivity) (by positivity))
+          hT₂ (by positivity) (by positivity)
+  have hB8_2a : ‖z * T₃ * z * (P - T₂ - T₃)‖ ≤ s * s ^ 3 * s * (5 * s ^ 4) :=
+    calc _ ≤ ‖z * T₃ * z‖ * ‖P - T₂ - T₃‖ := norm_mul_le _ _
+      _ ≤ ((‖z‖ * ‖T₃‖) * ‖z‖) * ‖P - T₂ - T₃‖ := by
+          gcongr
+          calc _ ≤ ‖z * T₃‖ * ‖z‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (mul_le_mul hzn hT₃
+          (norm_nonneg _) (by positivity)) hzn (by positivity) (by positivity))
+          hPmT₂mT₃ (by positivity) (by positivity)
+  have hB8_2b : ‖z * (P - T₂ - T₃) * z * (P - T₂)‖ ≤ s * (5 * s ^ 4) * s * (5 * s ^ 3) :=
+    calc _ ≤ ‖z * (P - T₂ - T₃) * z‖ * ‖P - T₂‖ := norm_mul_le _ _
+      _ ≤ ((‖z‖ * ‖P - T₂ - T₃‖) * ‖z‖) * ‖P - T₂‖ := by
+          gcongr
+          calc _ ≤ ‖z * (P - T₂ - T₃)‖ * ‖z‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (mul_le_mul hzn hPmT₂mT₃
+          (norm_nonneg _) (by positivity)) hzn (by positivity) (by positivity))
+          hPmT₂ (by positivity) (by positivity)
+  -- [B9] z·T₂·z·(P-T₂-T₃-T₄).
+  have hB9 : ‖z * T₂ * z * (P - T₂ - T₃ - T₄)‖ ≤ s * s ^ 2 * s * (6 * s ^ 5) :=
+    calc _ ≤ ‖z * T₂ * z‖ * ‖P - T₂ - T₃ - T₄‖ := norm_mul_le _ _
+      _ ≤ ((‖z‖ * ‖T₂‖) * ‖z‖) * ‖P - T₂ - T₃ - T₄‖ := by
+          gcongr
+          calc _ ≤ ‖z * T₂‖ * ‖z‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (mul_le_mul hzn hT₂
+          (norm_nonneg _) (by positivity)) hzn (by positivity) (by positivity))
+          hPmT₂mT₃mT₄ (by positivity) (by positivity)
+  -- [B10] 3 pieces.
+  have hB10_1 : ‖(P - T₂ - T₃ - T₄) * z ^ 2 * T₂‖ ≤ (6 * s ^ 5) * s ^ 2 * s ^ 2 :=
+    calc _ ≤ ‖(P - T₂ - T₃ - T₄) * z ^ 2‖ * ‖T₂‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃ - T₄‖ * ‖z‖ ^ 2) * ‖T₂‖ := by
+          gcongr
+          calc _ ≤ ‖P - T₂ - T₃ - T₄‖ * ‖z ^ 2‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le z 2
+      _ ≤ _ := mul_le_mul (mul_le_mul hPmT₂mT₃mT₄
+          (pow_le_pow_left₀ (norm_nonneg _) hzn 2) (by positivity) (by positivity))
+          hT₂ (by positivity) (by positivity)
+  have hB10_2a : ‖T₃ * z ^ 2 * (P - T₂ - T₃)‖ ≤ s ^ 3 * s ^ 2 * (5 * s ^ 4) :=
+    calc _ ≤ ‖T₃ * z ^ 2‖ * ‖P - T₂ - T₃‖ := norm_mul_le _ _
+      _ ≤ (‖T₃‖ * ‖z‖ ^ 2) * ‖P - T₂ - T₃‖ := by
+          gcongr
+          calc _ ≤ ‖T₃‖ * ‖z ^ 2‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le z 2
+      _ ≤ _ := mul_le_mul (mul_le_mul hT₃ (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+          (by positivity) (by positivity)) hPmT₂mT₃ (by positivity) (by positivity)
+  have hB10_2b : ‖(P - T₂ - T₃) * z ^ 2 * (P - T₂)‖ ≤
+      (5 * s ^ 4) * s ^ 2 * (5 * s ^ 3) :=
+    calc _ ≤ ‖(P - T₂ - T₃) * z ^ 2‖ * ‖P - T₂‖ := norm_mul_le _ _
+      _ ≤ (‖P - T₂ - T₃‖ * ‖z‖ ^ 2) * ‖P - T₂‖ := by
+          gcongr
+          calc _ ≤ ‖P - T₂ - T₃‖ * ‖z ^ 2‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le z 2
+      _ ≤ _ := mul_le_mul (mul_le_mul hPmT₂mT₃
+          (pow_le_pow_left₀ (norm_nonneg _) hzn 2) (by positivity) (by positivity))
+          hPmT₂ (by positivity) (by positivity)
+  -- [B11] T₂·z²·(P-T₂-T₃-T₄).
+  have hB11 : ‖T₂ * z ^ 2 * (P - T₂ - T₃ - T₄)‖ ≤ s ^ 2 * s ^ 2 * (6 * s ^ 5) :=
+    calc _ ≤ ‖T₂ * z ^ 2‖ * ‖P - T₂ - T₃ - T₄‖ := norm_mul_le _ _
+      _ ≤ (‖T₂‖ * ‖z‖ ^ 2) * ‖P - T₂ - T₃ - T₄‖ := by
+          gcongr
+          calc _ ≤ ‖T₂‖ * ‖z ^ 2‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_pow_le z 2
+      _ ≤ _ := mul_le_mul (mul_le_mul hT₂ (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+          (by positivity) (by positivity)) hPmT₂mT₃mT₄ (by positivity) (by positivity)
+  -- [B12] (P³-T₂³-3 cancellations)·z.
+  have hB12 : ‖(P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2) * z‖ ≤
+      (105 * s ^ 8) * s :=
+    calc _ ≤ ‖P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2‖ * ‖z‖ :=
+            norm_mul_le _ _
+      _ ≤ _ := mul_le_mul hP3_etc hzn (norm_nonneg _) (by positivity)
+  -- [B13] z·(P²-7 cancel)·z.
+  have hB13 : ‖z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+      T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * z‖ ≤ s * (16 * s ^ 7) * s :=
+    calc _ ≤ ‖z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+                  T₂ * T₄ - T₃ * T₃ - T₄ * T₂)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ (‖z‖ * ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+                  T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖) * ‖z‖ := by
+          gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul hzn hP2_etc7
+          (norm_nonneg _) (by positivity)) hzn (by positivity) (by positivity)
+  -- [B14] 3 pieces.
+  have hB14_1 : ‖(P - T₂ - T₃ - T₄) * z * T₂ * z‖ ≤ (6 * s ^ 5) * s * s ^ 2 * s :=
+    calc _ ≤ ‖(P - T₂ - T₃ - T₄) * z * T₂‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ ((‖P - T₂ - T₃ - T₄‖ * ‖z‖) * ‖T₂‖) * ‖z‖ := by
+          gcongr
+          calc _ ≤ ‖(P - T₂ - T₃ - T₄) * z‖ * ‖T₂‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (mul_le_mul hPmT₂mT₃mT₄ hzn
+          (norm_nonneg _) (by positivity)) hT₂ (by positivity) (by positivity))
+          hzn (by positivity) (by positivity)
+  have hB14_2a : ‖T₃ * z * (P - T₂ - T₃) * z‖ ≤ s ^ 3 * s * (5 * s ^ 4) * s :=
+    calc _ ≤ ‖T₃ * z * (P - T₂ - T₃)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ ((‖T₃‖ * ‖z‖) * ‖P - T₂ - T₃‖) * ‖z‖ := by
+          gcongr
+          calc _ ≤ ‖T₃ * z‖ * ‖P - T₂ - T₃‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (mul_le_mul hT₃ hzn
+          (norm_nonneg _) (by positivity)) hPmT₂mT₃
+          (by positivity) (by positivity)) hzn (by positivity) (by positivity)
+  have hB14_2b : ‖(P - T₂ - T₃) * z * (P - T₂) * z‖ ≤
+      (5 * s ^ 4) * s * (5 * s ^ 3) * s :=
+    calc _ ≤ ‖(P - T₂ - T₃) * z * (P - T₂)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ ((‖P - T₂ - T₃‖ * ‖z‖) * ‖P - T₂‖) * ‖z‖ := by
+          gcongr
+          calc _ ≤ ‖(P - T₂ - T₃) * z‖ * ‖P - T₂‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (mul_le_mul hPmT₂mT₃ hzn
+          (norm_nonneg _) (by positivity)) hPmT₂
+          (by positivity) (by positivity)) hzn (by positivity) (by positivity)
+  -- [B15] T₂·z·(P-T₂-T₃-T₄)·z.
+  have hB15 : ‖T₂ * z * (P - T₂ - T₃ - T₄) * z‖ ≤ s ^ 2 * s * (6 * s ^ 5) * s :=
+    calc _ ≤ ‖T₂ * z * (P - T₂ - T₃ - T₄)‖ * ‖z‖ := norm_mul_le _ _
+      _ ≤ ((‖T₂‖ * ‖z‖) * ‖P - T₂ - T₃ - T₄‖) * ‖z‖ := by
+          gcongr
+          calc _ ≤ ‖T₂ * z‖ * ‖P - T₂ - T₃ - T₄‖ := norm_mul_le _ _
+            _ ≤ _ := by gcongr; exact norm_mul_le _ _
+      _ ≤ _ := mul_le_mul (mul_le_mul (mul_le_mul hT₂ hzn
+          (norm_nonneg _) (by positivity)) hPmT₂mT₃mT₄
+          (by positivity) (by positivity)) hzn (by positivity) (by positivity)
+  -- [B16] (P²-7 cancel)·z².
+  have hB16 : ‖(P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+      T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * z ^ 2‖ ≤ (16 * s ^ 7) * s ^ 2 :=
+    calc _ ≤ ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+              T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖ * ‖z ^ 2‖ := norm_mul_le _ _
+      _ ≤ ‖P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+              T₂ * T₄ - T₃ * T₃ - T₄ * T₂‖ * ‖z‖ ^ 2 := by gcongr; exact norm_pow_le z 2
+      _ ≤ _ := mul_le_mul hP2_etc7 (pow_le_pow_left₀ (norm_nonneg _) hzn 2)
+          (by positivity) (by positivity)
+  -- 30 triangle inequalities for the 31-term sum.
+  set t1 := z ^ 3 * (P - T₂ - T₃ - T₄ - T₅) with ht1_def
+  set t2 := z ^ 2 * (P - T₂ - T₃ - T₄ - T₅) * z with ht2_def
+  set t3 := z * (P - T₂ - T₃ - T₄ - T₅) * z ^ 2 with ht3_def
+  set t4 := (P - T₂ - T₃ - T₄ - T₅) * z ^ 3 with ht4_def
+  set t5 := z * (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2)
+    with ht5_def
+  set t6 := T₂ * z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) with ht6_def
+  set t7 := T₃ * z * (P ^ 2 - T₂ ^ 2) with ht7_def
+  set t8 := (P - T₂ - T₃) * z * P ^ 2 with ht8_def
+  set t9 := (P - T₂) * P ^ 3 with ht9_def
+  set t10 := T₂ * (P - T₂) * P ^ 2 with ht10_def
+  set t11 := T₂ ^ 2 * (P - T₂) * P with ht11_def
+  set t12 := T₂ ^ 3 * (P - T₂) with ht12_def
+  set t13 := z ^ 2 * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+    T₂ * T₄ - T₃ * T₃ - T₄ * T₂) with ht13_def
+  set t14 := T₂ ^ 2 * z * (P - T₂ - T₃) with ht14_def
+  set t15 := (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂) * z * T₂ with ht15_def
+  set t16 := (P ^ 2 - T₂ ^ 2) * z * (P - T₂) with ht16_def
+  set t17 := z * (P - T₂ - T₃ - T₄) * z * T₂ with ht17_def
+  set t18 := z * T₃ * z * (P - T₂ - T₃) with ht18_def
+  set t19 := z * (P - T₂ - T₃) * z * (P - T₂) with ht19_def
+  set t20 := z * T₂ * z * (P - T₂ - T₃ - T₄) with ht20_def
+  set t21 := (P - T₂ - T₃ - T₄) * z ^ 2 * T₂ with ht21_def
+  set t22 := T₃ * z ^ 2 * (P - T₂ - T₃) with ht22_def
+  set t23 := (P - T₂ - T₃) * z ^ 2 * (P - T₂) with ht23_def
+  set t24 := T₂ * z ^ 2 * (P - T₂ - T₃ - T₄) with ht24_def
+  set t25 := (P ^ 3 - T₂ ^ 3 - T₂ ^ 2 * T₃ - T₂ * T₃ * T₂ - T₃ * T₂ ^ 2) * z
+    with ht25_def
+  set t26 := z * (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+    T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * z with ht26_def
+  set t27 := (P - T₂ - T₃ - T₄) * z * T₂ * z with ht27_def
+  set t28 := T₃ * z * (P - T₂ - T₃) * z with ht28_def
+  set t29 := (P - T₂ - T₃) * z * (P - T₂) * z with ht29_def
+  set t30 := T₂ * z * (P - T₂ - T₃ - T₄) * z with ht30_def
+  set t31 := (P ^ 2 - T₂ ^ 2 - T₂ * T₃ - T₃ * T₂ -
+    T₂ * T₄ - T₃ * T₃ - T₄ * T₂) * z ^ 2 with ht31_def
+  have ha1 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 +
+    t23 + t24 + t25 + t26 + t27 + t28 + t29 + t30) t31
+  have ha2 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 +
+    t23 + t24 + t25 + t26 + t27 + t28 + t29) t30
+  have ha3 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 +
+    t23 + t24 + t25 + t26 + t27 + t28) t29
+  have ha4 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 +
+    t23 + t24 + t25 + t26 + t27) t28
+  have ha5 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 +
+    t23 + t24 + t25 + t26) t27
+  have ha6 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 +
+    t23 + t24 + t25) t26
+  have ha7 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 +
+    t23 + t24) t25
+  have ha8 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22 +
+    t23) t24
+  have ha9 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21 + t22) t23
+  have ha10 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20 + t21) t22
+  have ha11 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19 + t20) t21
+  have ha12 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18 + t19) t20
+  have ha13 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17 + t18) t19
+  have ha14 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16 + t17) t18
+  have ha15 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15 + t16) t17
+  have ha16 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14 + t15) t16
+  have ha17 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13 + t14) t15
+  have ha18 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12 + t13) t14
+  have ha19 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11 + t12) t13
+  have ha20 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10 +
+    t11) t12
+  have ha21 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9 + t10) t11
+  have ha22 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9) t10
+  have ha23 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8) t9
+  have ha24 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6 + t7) t8
+  have ha25 := norm_add_le (t1 + t2 + t3 + t4 + t5 + t6) t7
+  have ha26 := norm_add_le (t1 + t2 + t3 + t4 + t5) t6
+  have ha27 := norm_add_le (t1 + t2 + t3 + t4) t5
+  have ha28 := norm_add_le (t1 + t2 + t3) t4
+  have ha29 := norm_add_le (t1 + t2) t3
+  have ha30 := norm_add_le t1 t2
+  -- Sum: 28+155+16+70+36+6+36+6+105+16+36+6+16 = 532·s⁹ ≤ 600·s⁹.
+  nlinarith [pow_nonneg hs_nn 9, hs_le_one]
+
 /-- Norm bound `‖y² - z² - y2_3‖ ≤ 11·s⁴` where `z = y - P`,
 `y2_3 = z·T₂ + T₂·z`. Used in the y5 octic norm bound for the
 `(y²-z²-y2_3)·P·z²` compound term. -/
