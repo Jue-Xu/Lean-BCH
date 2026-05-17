@@ -1,5 +1,49 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 54, 2026-05-18)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 54 (2026-05-18, per-piece norm bounds for d7 non-Dynkin sub-pieces, 1 commit)**:
+
+d7 analog of session 53's d8 work. Direct polynomial norm bounds for the
+3 non-Dynkin sub-pieces of `septic_d7_perturbation_poly`. Each piece is
+bounded by `K · s⁷` via single-Finset.sum (all N ≤ 124).
+
+**`544174b`** — 3 new public theorems in `BCH/SymmetricQuintic.lean`
+(+1641 lines, after `septic_d7_full_pieces_decomp`):
+
+| Theorem | Sub-piece | Terms | Bound (K) |
+|--------:|----------:|------:|----------:|
+| `norm_septic_d7_P2_C5_quad_poly_le` | C_5 quad-in-V_2 |  79 | 8848/92160 ≈ 0.096 |
+| `norm_septic_d7_P2_C6_lin_poly_le`  | C_6 lin-in-V_2  |  60 | 7680/92160 ≈ 0.083 |
+| `norm_septic_d7_P3_C5_lin_poly_le`  | C_5 lin-in-V_3  | 108 | 89856/276480 ≈ 0.325 |
+
+Generator script extended to support d7 sub-pieces (3 new piece names:
+`d7_P2_C5_quad`, `d7_P2_C6_lin`, `d7_P3_C5_lin`) with a parametric
+`deg ∈ {7, 8}` flag selecting `deg{7,8}_smul_word_le` vs `s^{7,8}`.
+
+**Combined status after sessions 53+54**: all 9 non-Dynkin sub-pieces
+(6 d8 + 3 d7) now have direct polynomial norm bounds in Lean.
+
+| Sub-piece | d=7 bound | d=8 bound |
+|-----------|----------:|----------:|
+| P_2_C5_*  | quad ≤ 0.10·s⁷ | cubic ≤ 0.02·s⁸ |
+| P_2_C6_*  | lin ≤ 0.08·s⁷  | quad ≤ 0.04·s⁸ |
+| P_2_C7_*  | n/a  | lin ≤ 0.07·s⁸ |
+| P_3_C5_lin | ≤ 0.33·s⁷ | n/a |
+| P_3_C6_lin | n/a  | ≤ 0.13·s⁸ |
+| P_4_*     | n/a  | C_5 lin ≤ 0.04·s⁸ |
+| Cross(V_2,V_3) | n/a | C_5 bil ≤ 0.09·s⁸ |
+
+These give the "raw" polynomial-norm-bound foundation for the joint
+analysis. Insufficient alone for `O(s⁹)` (the bounds are `O(s⁷)` /
+`O(s⁸)` per piece); the joint cancellation argument still needs the
+matching identities outlined in session 52's roadmap.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 53, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
