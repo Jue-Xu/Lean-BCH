@@ -14625,6 +14625,164 @@ private theorem norm_septic_group_E_le
     _ ≤ 200000 * s ^ 8 + s ^ 7 := by linarith [hCA, hDp]
     _ ≤ 1000000 * s ^ 7 := by nlinarith [hs7_nn, hs_lt]
 
+/-! ### T2-F7e-septic Phase F.1 bound: Group F-septic ≤ K·s⁷
+
+Group F-septic (4 sub-pieces of `symmetric_bch_septic_extended_hdecomp`):
+
+  ½·[C₇(a', b), a'] + C₈(a', b) + C₈(a'+b, a')
+  + (C₆(z, a') − C₆(a'+b, a')).
+
+By `septic_d8_cancellation_poly_form` (`d8_pert + C₈(a',b) + ½·[C₇(a',b), a']
++ C₈(a'+b, a') = 0`), this rewrites as
+
+  (C₆(z, a') − C₆(a'+b, a')) − septic_d8_perturbation_poly(a, b).
+
+Per-piece bounds:
+* `‖C₆(z, a') − C₆(a'+b, a')‖ ≤ (45/11)⁵·(48/11)·s⁷ ≈ 5236·s⁷`
+  via `norm_bch_sextic_term_diff_le` + standard `M ≤ (45/11)·s`,
+  `‖z−(a'+b)‖ ≤ (48/11)·s²` bounds.
+* `‖septic_d8_perturbation_poly(a, b)‖ ≤ s⁸` via
+  `norm_septic_d8_perturbation_poly_le`.
+
+Combined via triangle inequality + the `s < 1/4` fold s⁸ → s⁷:
+  ≤ 6000·s⁷ + s⁸ ≤ 6001·s⁷ ≤ 10⁴·s⁷.
+
+This covers the 17th-20th of 20 pieces of `symmetric_bch_septic_extended_hdecomp`.
+Companion to `norm_septic_group_E_le` (Phase B-septic deg-7 cancellation).
+Together with `norm_septic_group_AB_le`, this brings the total to 12 of 20
+pieces. The remaining 8 pieces (Groups C-quintic + D-quintic) carry the
+deg-5/6 leading parts that combine with these septic residuals to drop to
+deg-9; that combined-group identity remains for a future session. -/
+set_option maxHeartbeats 4000000 in
+private theorem norm_septic_group_F_le
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖(2 : 𝕂)⁻¹ • (bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
+                  ((2 : 𝕂)⁻¹ • a) * bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) +
+     bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+     bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) +
+     (bch_sextic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        bch_sextic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a))‖ ≤
+      10000 * (‖a‖ + ‖b‖) ^ 7 := by
+  -- ALGEBRAIC step: use septic_d8_cancellation_poly_form to absorb
+  -- ½·[C₇, a'] + C₈(a',b) + C₈(a'+b, a') = −d8_pert.
+  have hd8 := septic_d8_cancellation_poly_form (𝕂 := 𝕂) a b
+  have halg :
+      (2 : 𝕂)⁻¹ • (bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
+                    ((2 : 𝕂)⁻¹ • a) * bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) +
+      bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+      bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) +
+      (bch_sextic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        bch_sextic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a)) =
+      (bch_sextic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        bch_sextic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a)) -
+      septic_d8_perturbation_poly 𝕂 a b := by
+    linear_combination (norm := abel) hd8
+  rw [halg]
+  -- SETUP: mirrors `norm_septic_group_E_le`.
+  set a' : 𝔸 := (2 : 𝕂)⁻¹ • a with ha'_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set s₁ := ‖a'‖ + ‖b‖ with hs₁_def
+  set z := bch (𝕂 := 𝕂) a' b with hz_def
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ ‖a‖ / 2 := by
+    calc ‖a'‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  have hs_nn : 0 ≤ s := by positivity
+  have hs_lt : s < 1 / 4 := hab
+  have ha_s : ‖a‖ ≤ s := by have := norm_nonneg b; linarith
+  have hb_s : ‖b‖ ≤ s := by have := norm_nonneg a; linarith
+  have ha'_s : ‖a'‖ ≤ s / 2 := by
+    calc ‖a'‖ ≤ ‖a‖ / 2 := ha'_le
+      _ ≤ s / 2 := by linarith
+  have hs₁_le : s₁ ≤ s := by
+    show ‖a'‖ + ‖b‖ ≤ ‖a‖ + ‖b‖; linarith [ha'_le, norm_nonneg a]
+  have hs₁_nn : 0 ≤ s₁ := by positivity
+  have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+  have hs8_nn : (0 : ℝ) ≤ s ^ 8 := pow_nonneg hs_nn 8
+  -- Lipschitz setup for ‖C₆(z, a') − C₆(a'+b, a')‖.
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
+      (by norm_num : (1:ℝ)/4 < 5/6)]
+  have hs₁_lt_log2 : s₁ < Real.log 2 := by linarith
+  have hexp_s₁_lt : Real.exp s₁ < 2 := by
+    calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs₁_lt_log2
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom₁ : 0 < 2 - Real.exp s₁ := by linarith
+  have hexp_le : Real.exp s₁ ≤ 1 + s₁ + s₁ ^ 2 := by
+    nlinarith [real_exp_third_order_le_cube hs₁_nn (by linarith : s₁ < 5/6)]
+  have hdenom_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp s₁ := by nlinarith
+  have hW_le : ‖z - (a' + b)‖ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    rw [hz_def]; exact norm_bch_sub_add_le (𝕂 := 𝕂) a' b hs₁_lt_log2
+  have hW_s2 : ‖z - (a' + b)‖ ≤ 48 / 11 * s ^ 2 := by
+    have hs₁_sq_le : s₁ ^ 2 ≤ s ^ 2 := pow_le_pow_left₀ hs₁_nn hs₁_le 2
+    calc ‖z - (a' + b)‖ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) := hW_le
+      _ ≤ 3 * s ^ 2 / (11 / 16) := by
+          apply div_le_div₀ (by positivity) _ (by norm_num) hdenom_lb
+          exact mul_le_mul_of_nonneg_left hs₁_sq_le (by norm_num)
+      _ = 48 / 11 * s ^ 2 := by ring
+  have hz_le : ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    calc ‖z‖ = ‖(z - (a' + b)) + (a' + b)‖ := by congr 1; abel
+      _ ≤ ‖z - (a' + b)‖ + ‖a' + b‖ := norm_add_le _ _
+      _ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) + s₁ := by
+          have hsum : ‖a' + b‖ ≤ s₁ := norm_add_le _ _
+          linarith
+      _ = s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by ring
+  have hz_mult : ‖z‖ ≤ 23/11 * s := by
+    have h1 : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 12 * s / 11 := by
+      rw [div_le_iff₀ hdenom₁]
+      nlinarith [hdenom_lb, hs₁_nn, sq_nonneg s₁, hs₁_le, hs_nn,
+        mul_nonneg hs₁_nn hs_nn, hab]
+    calc ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := hz_le
+      _ ≤ s + 12 * s / 11 := by linarith
+      _ = 23/11 * s := by ring
+  have hp_s : ‖a' + b‖ ≤ 3 / 2 * s := by
+    calc ‖a' + b‖ ≤ ‖a'‖ + ‖b‖ := norm_add_le _ _
+      _ ≤ s / 2 + s := by linarith
+      _ = 3 / 2 * s := by ring
+  have hM_le : ‖z‖ + ‖a' + b‖ + ‖a'‖ ≤ 45/11 * s := by
+    have h1 : ‖z‖ + ‖a' + b‖ + ‖a'‖ ≤ 23/11 * s + 3/2 * s + s/2 := by
+      linarith [hz_mult, hp_s, ha'_s]
+    linarith
+  have hM_nn : (0 : ℝ) ≤ ‖z‖ + ‖a' + b‖ + ‖a'‖ := by positivity
+  -- TERM A: ‖C₆(z, a') − C₆(a'+b, a')‖ ≤ 6000·s⁷.
+  have hCA : ‖bch_sextic_term 𝕂 z a' - bch_sextic_term 𝕂 (a' + b) a'‖ ≤
+              6000 * s ^ 7 := by
+    have h := norm_bch_sextic_term_diff_le (𝕂 := 𝕂) z (a' + b) a'
+    -- h : ‖.‖ ≤ M⁵ · ‖z − (a'+b)‖, M ≤ (45/11)·s, ‖W‖ ≤ (48/11)·s².
+    -- (45/11)⁵·(48/11)·s⁷ ≈ 1146·4.36·s⁷ ≈ 5001·s⁷ < 6000·s⁷.
+    have hM_pow_le : (‖z‖ + ‖a' + b‖ + ‖a'‖) ^ 5 ≤ (45/11 * s) ^ 5 :=
+      pow_le_pow_left₀ hM_nn hM_le 5
+    have hM_pow_eq : (45/11 * s) ^ 5 = (45/11 : ℝ) ^ 5 * s ^ 5 := by ring
+    have h_45_5 : ((45 : ℝ) / 11) ^ 5 ≤ 1146 := by norm_num
+    have hs5_nn : (0 : ℝ) ≤ s ^ 5 := pow_nonneg hs_nn 5
+    calc _ ≤ (‖z‖ + ‖a' + b‖ + ‖a'‖) ^ 5 * ‖z - (a' + b)‖ := h
+      _ ≤ (45/11 * s) ^ 5 * (48/11 * s ^ 2) := by
+          apply mul_le_mul hM_pow_le hW_s2 (norm_nonneg _) (by positivity)
+      _ = ((45/11 : ℝ) ^ 5 * s ^ 5) * (48/11 * s ^ 2) := by rw [hM_pow_eq]
+      _ ≤ (1146 * s ^ 5) * (48/11 * s ^ 2) := by
+          apply mul_le_mul_of_nonneg_right _ (by positivity)
+          exact mul_le_mul_of_nonneg_right h_45_5 hs5_nn
+      _ ≤ 6000 * s ^ 7 := by nlinarith [hs7_nn]
+  -- TERM B: ‖septic_d8_perturbation_poly(a, b)‖ ≤ s⁸.
+  have hDp : ‖septic_d8_perturbation_poly 𝕂 a b‖ ≤ s ^ 8 :=
+    norm_septic_d8_perturbation_poly_le a b
+  -- Triangle inequality on the 2-piece difference + final fold s⁸ → s⁷.
+  have hsubtriangle :
+      ‖(bch_sextic_term 𝕂 z a' - bch_sextic_term 𝕂 (a' + b) a') -
+        septic_d8_perturbation_poly 𝕂 a b‖ ≤
+      ‖bch_sextic_term 𝕂 z a' - bch_sextic_term 𝕂 (a' + b) a'‖ +
+      ‖septic_d8_perturbation_poly 𝕂 a b‖ := by
+    rw [sub_eq_add_neg]
+    calc _ ≤ _ + ‖-(septic_d8_perturbation_poly 𝕂 a b)‖ := norm_add_le _ _
+      _ = _ + ‖septic_d8_perturbation_poly 𝕂 a b‖ := by rw [norm_neg]
+  calc _ ≤ ‖bch_sextic_term 𝕂 z a' - bch_sextic_term 𝕂 (a' + b) a'‖ +
+          ‖septic_d8_perturbation_poly 𝕂 a b‖ := hsubtriangle
+    _ ≤ 6000 * s ^ 7 + s ^ 8 := by linarith [hCA, hDp]
+    _ ≤ 10000 * s ^ 7 := by nlinarith [hs7_nn, hs_lt]
+
 end SymmetricSepticAltForm
 
 
