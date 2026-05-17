@@ -13843,6 +13843,46 @@ private theorem septic_d7_P5_op_form
              mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
   match_scalars <;> ring
 
+/-! ### Operator-form identity for `septic_d7_P4_poly`
+
+The second-simplest piece: P_4 captures only the linear-in-V_4 perturbation
+of C_4 at deg 7 (C_4 has deg 4; replacing one z with V_4 gives deg 4+3 = 7;
+higher orders in V_4 exceed deg 7).
+
+Using `bch_quartic_term(z, y) = -(1/24)·[y, [z, [z, y]]]`, the linear-in-V_4
+perturbation when z → x + V_4 gives:
+
+  ΔC_4_lin(V_4, x, a') = -(1/24)·([a', [V_4, [x, a']]] + [a', [x, [V_4, a']]])
+
+Deg-7 analog of the quintic `deltaC4_lin_V2_eq` (V_2 case) at one higher V_k
+level. CAS-verified at `scripts/verify_P4_operator_form.py`: both forms
+produce identical 35-term polynomial (LCM 18432, Σ|num|/LCM ≈ 0.0093).
+-/
+
+/-- **septic_d7_P4_op_form**: the V_4-only perturbation piece P_4
+equals the explicit Lie polynomial form `ΔC_4_lin(V_4, x, a')`. -/
+private theorem septic_d7_P4_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    septic_d7_P4_poly 𝕂 a b =
+      (0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (V₄ * (x * a' - a' * x) - (x * a' - a' * x) * V₄) -
+                       (V₄ * (x * a' - a' * x) - (x * a' - a' * x) * V₄) * a') -
+      (24 : 𝕂)⁻¹ • (a' * (x * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * x) -
+                       (x * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * x) * a') := by
+  intro a' V₄ x
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₄ = bch_quartic_term 𝕂 a' b from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl]
+  unfold septic_d7_P4_poly bch_quartic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
 /-! ## Norm bound: `‖septic_d7_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`
 
 116 explicit deg-7 terms, max |numerator| = 1280, LCM = 276480.
