@@ -13921,6 +13921,51 @@ private theorem septic_d7_cross_V2_V4_op_form
              mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
   match_scalars <;> ring
 
+/-! ### Operator-form identity for `septic_d7_cross_V2_V3_poly`
+
+The Cross(V_2, V_3) piece: contrary to the original CAS script docstring
+(which mentioned a "trilinear V_2²·V_3 from C_3" contribution), CAS
+verification at `scripts/verify_cross_V2_V3_operator_form.py` shows that
+the ONLY deg-7 contribution is bilinear V_2·V_3 from C_4 (deg 4+1+2 = 7).
+
+Higher-order terms vanish: trilinear V_2²·V_3 would need a C_p with 3+
+z-positions, but C_3 has only 2 z-positions in `[z, [z, y]]` (and 1 in
+`[y, [y, z]]`), so trilinear from C_3 is impossible. Higher C_p with 3+
+z-positions would give deg ≥ p+4 ≥ 8 > 7.
+
+Using C_4(z, y) = -(1/24)·[y, [z, [z, y]]], the bilinear V_2·V_3 part:
+
+  ΔC_4_bil(V_2, V_3, a') = -(1/24)·{[a', [V_2, [V_3, a']]] + [a', [V_3, [V_2, a']]]}
+
+CAS-verified: both forms produce identical 41-term polynomial (LCM 18432,
+Σ|num|/LCM ≈ 0.0089).
+-/
+
+/-- **septic_d7_cross_V2_V3_op_form**: the V_2·V_3 cross perturbation piece
+equals the explicit bilinear Lie polynomial form `ΔC_4_bil(V_2, V_3, a')`. -/
+private theorem septic_d7_cross_V2_V3_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    septic_d7_cross_V2_V3_poly 𝕂 a b =
+      (0 : 𝔸)
+        - (24 : 𝕂)⁻¹ • (a' * (V₂ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₂) -
+                         (V₂ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₂) * a')
+        - (24 : 𝕂)⁻¹ • (a' * (V₃ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₃) -
+                         (V₃ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₃) * a') := by
+  intro a' V₂ V₃
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show V₃ = bch_cubic_term 𝕂 a' b from rfl]
+  unfold septic_d7_cross_V2_V3_poly bch_cubic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
 /-! ## Norm bound: `‖septic_d7_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`
 
 116 explicit deg-7 terms, max |numerator| = 1280, LCM = 276480.
