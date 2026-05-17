@@ -1,5 +1,75 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 48, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 48 (2026-05-17, Lean encoding of 9-piece d8 decomposition, 1 commit)**:
+
+The CAS-derived 9-piece operator-form decomposition (session 47) is now
+encoded in Lean (analog of session 44 for d7). Polynomial-form pieces +
+sum identity all proven.
+
+**`ff919e7`** — Nine noncomputable polynomial defs in `BCH/SymmetricQuintic.lean`
+(after `septic_d7_perturbation_poly_full_pieces_decomp`, line ~14415, +1330
+lines added) + 1 sum identity theorem:
+
+* `septic_d8_P2_poly` (186 terms, LCM 7741440) — V_2 only. Captures
+  linear-in-V_2 from C_7, quadratic-in-V_2 from C_6, cubic V_2³ from C_5.
+* `septic_d8_P3_poly` (166 terms, LCM 1105920) — V_3 only. Linear-in-V_3
+  from C_6 + quadratic-in-V_3 from C_4.
+* `septic_d8_P4_poly` (154 terms, LCM 552960) — V_4 only. Only
+  linear-in-V_4 from C_5.
+* `septic_d8_P5_poly` (146 terms, LCM 2211840) — V_5 only. Only
+  linear-in-V_5 from C_4.
+* `septic_d8_P6_poly` (126 terms, LCM 552960) — V_6 only. Only
+  linear-in-V_6 from C_3.
+* `septic_d8_cross_V2_V3_poly` (174 terms, LCM 1105920) — V_2·V_3
+  bilinear from C_5.
+* `septic_d8_cross_V2_V4_poly` (40 terms, LCM 36864) — V_2·V_4 bilinear
+  from C_4.
+* `septic_d8_cross_V2_V5_poly` (154 terms, LCM 1105920) — V_2·V_5
+  bilinear from C_3.
+* `septic_d8_cross_V3_V4_poly` (66 terms, LCM 110592) — V_3·V_4 bilinear
+  from C_3.
+
+Combined: 182 terms (LCM 15482880), matching the existing Lean def
+`septic_d8_perturbation_poly` exactly.
+
+`septic_d8_perturbation_poly_pieces_decomp` private theorem:
+
+    septic_d8_perturbation_poly 𝕂 a b =
+      septic_d8_P2_poly 𝕂 a b + septic_d8_P3_poly 𝕂 a b +
+        septic_d8_P4_poly 𝕂 a b + septic_d8_P5_poly 𝕂 a b +
+        septic_d8_P6_poly 𝕂 a b +
+        septic_d8_cross_V2_V3_poly 𝕂 a b + septic_d8_cross_V2_V4_poly 𝕂 a b +
+        septic_d8_cross_V2_V5_poly 𝕂 a b + septic_d8_cross_V3_V4_poly 𝕂 a b
+
+Proof: 3 lines (`unfold` 10 defs + `match_scalars <;> ring`). Section-level
+`maxHeartbeats 64000000` (already in `SymmetricSepticAltForm`) sufficient
+despite ~3× more terms than d7 (1212 RHS terms vs 410 for d7's 6-piece sum).
+
+Generator script: `scripts/gen_septic_d8_pieces_lean.py` (analog of
+`gen_septic_d7_pieces_lean.py`).
+
+**Remaining for full Phase C-septic (d8) infrastructure**:
+☐ Operator-form identities for the simpler pieces (analog of d7 session 45):
+  * `P_6 = (1/12)·[V_6, [x, a']] + ...` (Dynkin form, analog of P_5 at d8).
+  * `Cross(V_2, V_5) = (1/12)·([V_2, [V_5, a']] + [V_5, [V_2, a']])` (analog
+    of Cross(V_2, V_4)_d7).
+  * `Cross(V_3, V_4) = (1/12)·([V_3, [V_4, a']] + [V_4, [V_3, a']])` (analog
+    of Cross(V_2, V_4)_d7).
+  * `Cross(V_2, V_4) = -(1/24)·([a', [V_2, [V_4, a']]] + [a', [V_4, [V_2, a']]])`
+    (analog of Cross(V_2, V_3)_d7).
+☐ Sub-piece splits for the complex pieces (P_2, P_3, P_4, P_5,
+  Cross(V_2, V_3)) which involve bch_quintic_term, bch_sextic_term,
+  bch_septic_term (all monomial form in Lean).
+☐ Joint analysis with d7 + Group F + Group CD-quintic for O(s⁹) bound
+  discharging `symmetric_bch_septic_sub_poly_axiom`.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 47, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
