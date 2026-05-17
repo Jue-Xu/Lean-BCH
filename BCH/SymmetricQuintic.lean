@@ -13966,6 +13966,238 @@ private theorem septic_d7_cross_V2_V3_op_form
              mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
   match_scalars <;> ring
 
+/-! ### Sub-piece decomposition of `septic_d7_P3_poly`
+
+P_3 captures the V_3-only deg-7 perturbation, which arises from 2 distinct
+operator contributions:
+  1. C_3 quadratic-in-V_3: `(1/12)·[V_3, [V_3, a']]` — Dynkin-expressible.
+  2. C_5 linear-in-V_3: the perturbation of `bch_quintic_term` linearized
+     in V_3, restricted to deg 7. Not directly Dynkin-expressible in Lean
+     since `bch_quintic_term` is defined in monomial form, not Lie form.
+
+To enable operator-form analysis, we split P_3 into 2 sub-piece polynomial
+DEFs: a Dynkin-expressible piece `septic_d7_P3_C3_quad_poly` and a residual
+`septic_d7_P3_C5_lin_poly = P_3 − C3_quad`. Only the C_3 quad piece has
+a direct operator-form identity here; the C_5 lin piece's operator
+interpretation will be handled via a Lipschitz-style bound on
+`bch_quintic_term` differences in a future session.
+
+CAS-verified at `scripts/verify_P3_decomp.py`. -/
+
+/-- **septic_d7_P3_C3_quad_poly**: C_3 quadratic-in-V_3 part of P_3 at deg 7. Equals (1/12)·[V_3, [V_3, a']] where V_3 = bch_cubic_term(½a, b), a' = ½a. The simpler of the 2 sub-pieces of P_3 (Dynkin-expressible).
+   CAS-derived; denominator 55296, 67 terms, Σ|num|/LCM ≈ 0.0087. -/
+noncomputable def septic_d7_P3_C3_quad_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (1 / 55296 : 𝕂) • (a * a * a * b * a * a * b)
+  + (-2 / 55296 : 𝕂) • (a * a * a * b * a * b * a)
+  + (2 / 55296 : 𝕂) • (a * a * a * b * a * b * b)
+  + (1 / 55296 : 𝕂) • (a * a * a * b * b * a * a)
+  + (-4 / 55296 : 𝕂) • (a * a * a * b * b * a * b)
+  + (2 / 55296 : 𝕂) • (a * a * a * b * b * b * a)
+  + (-4 / 55296 : 𝕂) • (a * a * b * a * a * a * b)
+  + (9 / 55296 : 𝕂) • (a * a * b * a * a * b * a)
+  + (-8 / 55296 : 𝕂) • (a * a * b * a * a * b * b)
+  + (-6 / 55296 : 𝕂) • (a * a * b * a * b * a * a)
+  + (16 / 55296 : 𝕂) • (a * a * b * a * b * a * b)
+  + (-6 / 55296 : 𝕂) • (a * a * b * a * b * b * a)
+  + (1 / 55296 : 𝕂) • (a * a * b * b * a * a * a)
+  + (2 / 55296 : 𝕂) • (a * a * b * b * a * a * b)
+  + (-8 / 55296 : 𝕂) • (a * a * b * b * a * b * a)
+  + (4 / 55296 : 𝕂) • (a * a * b * b * a * b * b)
+  + (4 / 55296 : 𝕂) • (a * a * b * b * b * a * a)
+  + (-8 / 55296 : 𝕂) • (a * a * b * b * b * a * b)
+  + (4 / 55296 : 𝕂) • (a * a * b * b * b * b * a)
+  + (5 / 55296 : 𝕂) • (a * b * a * a * a * a * b)
+  + (-12 / 55296 : 𝕂) • (a * b * a * a * a * b * a)
+  + (10 / 55296 : 𝕂) • (a * b * a * a * a * b * b)
+  + (9 / 55296 : 𝕂) • (a * b * a * a * b * a * a)
+  + (-20 / 55296 : 𝕂) • (a * b * a * a * b * a * b)
+  + (6 / 55296 : 𝕂) • (a * b * a * a * b * b * a)
+  + (-2 / 55296 : 𝕂) • (a * b * a * b * a * a * a)
+  + (-4 / 55296 : 𝕂) • (a * b * a * b * a * a * b)
+  + (16 / 55296 : 𝕂) • (a * b * a * b * a * b * a)
+  + (-8 / 55296 : 𝕂) • (a * b * a * b * a * b * b)
+  + (-8 / 55296 : 𝕂) • (a * b * a * b * b * a * a)
+  + (16 / 55296 : 𝕂) • (a * b * a * b * b * a * b)
+  + (-8 / 55296 : 𝕂) • (a * b * a * b * b * b * a)
+  + (-2 / 55296 : 𝕂) • (a * b * b * a * a * a * b)
+  + (6 / 55296 : 𝕂) • (a * b * b * a * a * b * a)
+  + (-4 / 55296 : 𝕂) • (a * b * b * a * a * b * b)
+  + (-6 / 55296 : 𝕂) • (a * b * b * a * b * a * a)
+  + (8 / 55296 : 𝕂) • (a * b * b * a * b * a * b)
+  + (2 / 55296 : 𝕂) • (a * b * b * b * a * a * a)
+  + (-8 / 55296 : 𝕂) • (a * b * b * b * a * b * a)
+  + (4 / 55296 : 𝕂) • (a * b * b * b * b * a * a)
+  + (-2 / 55296 : 𝕂) • (b * a * a * a * a * a * b)
+  + (5 / 55296 : 𝕂) • (b * a * a * a * a * b * a)
+  + (-4 / 55296 : 𝕂) • (b * a * a * a * a * b * b)
+  + (-4 / 55296 : 𝕂) • (b * a * a * a * b * a * a)
+  + (8 / 55296 : 𝕂) • (b * a * a * a * b * a * b)
+  + (-2 / 55296 : 𝕂) • (b * a * a * a * b * b * a)
+  + (1 / 55296 : 𝕂) • (b * a * a * b * a * a * a)
+  + (-4 / 55296 : 𝕂) • (b * a * a * b * a * b * a)
+  + (2 / 55296 : 𝕂) • (b * a * a * b * b * a * a)
+  + (8 / 55296 : 𝕂) • (b * a * b * a * a * a * b)
+  + (-20 / 55296 : 𝕂) • (b * a * b * a * a * b * a)
+  + (16 / 55296 : 𝕂) • (b * a * b * a * a * b * b)
+  + (16 / 55296 : 𝕂) • (b * a * b * a * b * a * a)
+  + (-32 / 55296 : 𝕂) • (b * a * b * a * b * a * b)
+  + (8 / 55296 : 𝕂) • (b * a * b * a * b * b * a)
+  + (-4 / 55296 : 𝕂) • (b * a * b * b * a * a * a)
+  + (16 / 55296 : 𝕂) • (b * a * b * b * a * b * a)
+  + (-8 / 55296 : 𝕂) • (b * a * b * b * b * a * a)
+  + (-4 / 55296 : 𝕂) • (b * b * a * a * a * a * b)
+  + (10 / 55296 : 𝕂) • (b * b * a * a * a * b * a)
+  + (-8 / 55296 : 𝕂) • (b * b * a * a * a * b * b)
+  + (-8 / 55296 : 𝕂) • (b * b * a * a * b * a * a)
+  + (16 / 55296 : 𝕂) • (b * b * a * a * b * a * b)
+  + (-4 / 55296 : 𝕂) • (b * b * a * a * b * b * a)
+  + (2 / 55296 : 𝕂) • (b * b * a * b * a * a * a)
+  + (-8 / 55296 : 𝕂) • (b * b * a * b * a * b * a)
+  + (4 / 55296 : 𝕂) • (b * b * a * b * b * a * a)
+
+/-- **septic_d7_P3_C5_lin_poly**: C_5 linear-in-V_3 part of P_3 at deg 7. Defined as septic_d7_P3_poly - septic_d7_P3_C3_quad_poly (the residual after extracting the C_3 quadratic piece). Operator-form interpretation: the linear-in-V_3 perturbation of bch_quintic_term restricted to deg 7.
+   CAS-derived; denominator 276480, 108 terms, Σ|num|/LCM ≈ 0.0271. -/
+noncomputable def septic_d7_P3_C5_lin_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (-7 / 276480 : 𝕂) • (a * a * a * a * a * b * b)
+  + (37 / 276480 : 𝕂) • (a * a * a * a * b * a * b)
+  + (-2 / 276480 : 𝕂) • (a * a * a * a * b * b * a)
+  + (-87 / 276480 : 𝕂) • (a * a * a * b * a * a * b)
+  + (26 / 276480 : 𝕂) • (a * a * a * b * a * b * a)
+  + (-40 / 276480 : 𝕂) • (a * a * a * b * a * b * b)
+  + (-9 / 276480 : 𝕂) • (a * a * a * b * b * a * a)
+  + (54 / 276480 : 𝕂) • (a * a * a * b * b * a * b)
+  + (-14 / 276480 : 𝕂) • (a * a * a * b * b * b * a)
+  + (24 / 276480 : 𝕂) • (a * a * a * b * b * b * b)
+  + (118 / 276480 : 𝕂) • (a * a * b * a * a * a * b)
+  + (-93 / 276480 : 𝕂) • (a * a * b * a * a * b * a)
+  + (110 / 276480 : 𝕂) • (a * a * b * a * a * b * b)
+  + (54 / 276480 : 𝕂) • (a * a * b * a * b * a * a)
+  + (-136 / 276480 : 𝕂) • (a * a * b * a * b * a * b)
+  + (36 / 276480 : 𝕂) • (a * a * b * a * b * b * a)
+  + (-4 / 276480 : 𝕂) • (a * a * b * a * b * b * b)
+  + (-9 / 276480 : 𝕂) • (a * a * b * b * a * a * a)
+  + (4 / 276480 : 𝕂) • (a * a * b * b * a * a * b)
+  + (-34 / 276480 : 𝕂) • (a * a * b * b * a * b * a)
+  + (-76 / 276480 : 𝕂) • (a * a * b * b * a * b * b)
+  + (20 / 276480 : 𝕂) • (a * a * b * b * b * a * a)
+  + (-24 / 276480 : 𝕂) • (a * a * b * b * b * a * b)
+  + (32 / 276480 : 𝕂) • (a * a * b * b * b * b * a)
+  + (-8 / 276480 : 𝕂) • (a * a * b * b * b * b * b)
+  + (-90 / 276480 : 𝕂) • (a * b * a * a * a * a * b)
+  + (124 / 276480 : 𝕂) • (a * b * a * a * a * b * a)
+  + (-74 / 276480 : 𝕂) • (a * b * a * a * a * b * b)
+  + (-93 / 276480 : 𝕂) • (a * b * a * a * b * a * a)
+  + (20 / 276480 : 𝕂) • (a * b * a * a * b * a * b)
+  + (-18 / 276480 : 𝕂) • (a * b * a * a * b * b * a)
+  + (-92 / 276480 : 𝕂) • (a * b * a * a * b * b * b)
+  + (26 / 276480 : 𝕂) • (a * b * a * b * a * a * a)
+  + (100 / 276480 : 𝕂) • (a * b * a * b * a * a * b)
+  + (32 / 276480 : 𝕂) • (a * b * a * b * a * b * a)
+  + (212 / 276480 : 𝕂) • (a * b * a * b * a * b * b)
+  + (-34 / 276480 : 𝕂) • (a * b * a * b * b * a * a)
+  + (32 / 276480 : 𝕂) • (a * b * a * b * b * a * b)
+  + (-52 / 276480 : 𝕂) • (a * b * a * b * b * b * a)
+  + (8 / 276480 : 𝕂) • (a * b * a * b * b * b * b)
+  + (-2 / 276480 : 𝕂) • (a * b * b * a * a * a * a)
+  + (-30 / 276480 : 𝕂) • (a * b * b * a * a * a * b)
+  + (-18 / 276480 : 𝕂) • (a * b * b * a * a * b * a)
+  + (-104 / 276480 : 𝕂) • (a * b * b * a * a * b * b)
+  + (36 / 276480 : 𝕂) • (a * b * b * a * b * a * a)
+  + (172 / 276480 : 𝕂) • (a * b * b * a * b * a * b)
+  + (-24 / 276480 : 𝕂) • (a * b * b * a * b * b * a)
+  + (32 / 276480 : 𝕂) • (a * b * b * a * b * b * b)
+  + (-14 / 276480 : 𝕂) • (a * b * b * b * a * a * a)
+  + (-52 / 276480 : 𝕂) • (a * b * b * b * a * a * b)
+  + (-52 / 276480 : 𝕂) • (a * b * b * b * a * b * a)
+  + (-48 / 276480 : 𝕂) • (a * b * b * b * a * b * b)
+  + (32 / 276480 : 𝕂) • (a * b * b * b * b * a * a)
+  + (40 / 276480 : 𝕂) • (a * b * b * b * b * a * b)
+  + (-16 / 276480 : 𝕂) • (a * b * b * b * b * b * a)
+  + (36 / 276480 : 𝕂) • (b * a * a * a * a * a * b)
+  + (-90 / 276480 : 𝕂) • (b * a * a * a * a * b * a)
+  + (4 / 276480 : 𝕂) • (b * a * a * a * a * b * b)
+  + (118 / 276480 : 𝕂) • (b * a * a * a * b * a * a)
+  + (88 / 276480 : 𝕂) • (b * a * a * a * b * a * b)
+  + (-30 / 276480 : 𝕂) • (b * a * a * a * b * b * a)
+  + (-87 / 276480 : 𝕂) • (b * a * a * b * a * a * a)
+  + (-192 / 276480 : 𝕂) • (b * a * a * b * a * a * b)
+  + (100 / 276480 : 𝕂) • (b * a * a * b * a * b * a)
+  + (-48 / 276480 : 𝕂) • (b * a * a * b * a * b * b)
+  + (4 / 276480 : 𝕂) • (b * a * a * b * b * a * a)
+  + (192 / 276480 : 𝕂) • (b * a * a * b * b * a * b)
+  + (-52 / 276480 : 𝕂) • (b * a * a * b * b * b * a)
+  + (32 / 276480 : 𝕂) • (b * a * a * b * b * b * b)
+  + (37 / 276480 : 𝕂) • (b * a * b * a * a * a * a)
+  + (88 / 276480 : 𝕂) • (b * a * b * a * a * a * b)
+  + (20 / 276480 : 𝕂) • (b * a * b * a * a * b * a)
+  + (272 / 276480 : 𝕂) • (b * a * b * a * a * b * b)
+  + (-136 / 276480 : 𝕂) • (b * a * b * a * b * a * a)
+  + (-832 / 276480 : 𝕂) • (b * a * b * a * b * a * b)
+  + (172 / 276480 : 𝕂) • (b * a * b * a * b * b * a)
+  + (-96 / 276480 : 𝕂) • (b * a * b * a * b * b * b)
+  + (54 / 276480 : 𝕂) • (b * a * b * b * a * a * a)
+  + (192 / 276480 : 𝕂) • (b * a * b * b * a * a * b)
+  + (32 / 276480 : 𝕂) • (b * a * b * b * a * b * a)
+  + (48 / 276480 : 𝕂) • (b * a * b * b * a * b * b)
+  + (-24 / 276480 : 𝕂) • (b * a * b * b * b * a * a)
+  + (-64 / 276480 : 𝕂) • (b * a * b * b * b * a * b)
+  + (40 / 276480 : 𝕂) • (b * a * b * b * b * b * a)
+  + (-7 / 276480 : 𝕂) • (b * b * a * a * a * a * a)
+  + (4 / 276480 : 𝕂) • (b * b * a * a * a * a * b)
+  + (-74 / 276480 : 𝕂) • (b * b * a * a * a * b * a)
+  + (-112 / 276480 : 𝕂) • (b * b * a * a * a * b * b)
+  + (110 / 276480 : 𝕂) • (b * b * a * a * b * a * a)
+  + (272 / 276480 : 𝕂) • (b * b * a * a * b * a * b)
+  + (-104 / 276480 : 𝕂) • (b * b * a * a * b * b * a)
+  + (-16 / 276480 : 𝕂) • (b * b * a * a * b * b * b)
+  + (-40 / 276480 : 𝕂) • (b * b * a * b * a * a * a)
+  + (-48 / 276480 : 𝕂) • (b * b * a * b * a * a * b)
+  + (212 / 276480 : 𝕂) • (b * b * a * b * a * b * a)
+  + (96 / 276480 : 𝕂) • (b * b * a * b * a * b * b)
+  + (-76 / 276480 : 𝕂) • (b * b * a * b * b * a * a)
+  + (48 / 276480 : 𝕂) • (b * b * a * b * b * a * b)
+  + (-48 / 276480 : 𝕂) • (b * b * a * b * b * b * a)
+  + (-92 / 276480 : 𝕂) • (b * b * b * a * a * b * a)
+  + (-16 / 276480 : 𝕂) • (b * b * b * a * a * b * b)
+  + (-4 / 276480 : 𝕂) • (b * b * b * a * b * a * a)
+  + (-96 / 276480 : 𝕂) • (b * b * b * a * b * a * b)
+  + (32 / 276480 : 𝕂) • (b * b * b * a * b * b * a)
+  + (24 / 276480 : 𝕂) • (b * b * b * b * a * a * a)
+  + (32 / 276480 : 𝕂) • (b * b * b * b * a * a * b)
+  + (8 / 276480 : 𝕂) • (b * b * b * b * a * b * a)
+  + (-8 / 276480 : 𝕂) • (b * b * b * b * b * a * a)
+
+/-- **P_3 sub-piece decomposition**: split septic_d7_P3_poly into its two
+operator components (C_3 quad + C_5 lin). -/
+private theorem septic_d7_P3_pieces_decomp
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    septic_d7_P3_poly 𝕂 a b =
+      septic_d7_P3_C3_quad_poly 𝕂 a b + septic_d7_P3_C5_lin_poly 𝕂 a b := by
+  unfold septic_d7_P3_poly septic_d7_P3_C3_quad_poly septic_d7_P3_C5_lin_poly
+  match_scalars <;> ring
+
+/-- **septic_d7_P3_C3_quad_op_form**: the C_3 quadratic-in-V_3 sub-piece of
+P_3 equals the explicit Dynkin Lie polynomial `(1/12)·[V_3, [V_3, a']]`. -/
+private theorem septic_d7_P3_C3_quad_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    septic_d7_P3_C3_quad_poly 𝕂 a b =
+      (12 : 𝕂)⁻¹ • (V₃ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₃) := by
+  intro a' V₃
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₃ = bch_cubic_term 𝕂 a' b from rfl]
+  unfold septic_d7_P3_C3_quad_poly bch_cubic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
 /-! ## Norm bound: `‖septic_d7_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`
 
 116 explicit deg-7 terms, max |numerator| = 1280, LCM = 276480.
