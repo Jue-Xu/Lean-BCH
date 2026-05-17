@@ -1,5 +1,72 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 47, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 47 (2026-05-17, d8 9-piece structural CAS, 1 commit)**:
+
+CAS verification establishing the d8 analog of d7's 6-piece decomposition.
+The full d8 perturbation structure:
+
+    septic_d8_perturbation_poly =
+      P_2_d8 + P_3_d8 + P_4_d8 + P_5_d8 + P_6_d8
+      + Cross(V_2, V_3)_d8 + Cross(V_2, V_4)_d8
+      + Cross(V_2, V_5)_d8 + Cross(V_3, V_4)_d8
+
+Total 9 pieces (5 single-V_j + 4 cross), parallel to d7's 6 pieces.
+
+Per-piece term counts and operator-form interpretation:
+* `P_2`: 186 terms — V_2 only (linear from C_7, quadratic from C_6, cubic V_2³ from C_5).
+* `P_3`: 166 terms — V_3 only (linear from C_6, quadratic from C_4).
+* `P_4`: 154 terms — V_4 only (linear from C_5).
+* `P_5`: 146 terms — V_5 only (linear from C_4).
+* `P_6`: 126 terms — V_6 only (linear from C_3).
+* `Cross(V_2, V_3)`: 174 terms — bilinear V_2·V_3 from C_5.
+* `Cross(V_2, V_4)`: 40 terms — bilinear V_2·V_4 from C_4.
+* `Cross(V_2, V_5)`: 154 terms — bilinear V_2·V_5 from C_3.
+* `Cross(V_3, V_4)`: 66 terms — bilinear V_3·V_4 from C_3.
+
+Combined: 182 terms (LCM 15482880), matching the existing
+`septic_d8_perturbation_poly` Lean def exactly.
+
+Other potential cross pieces vanish: Cross(V_2, V_6), Cross(V_3, V_5),
+Cross(V_4, V_5) all = 0 because the required C_p with p+(j-1)+(k-1) = 8
+and (j,k) such that both ≥ 3 forces p ≤ 2, but C_2 has only 1 z-position
+(can't admit bilinear substitution).
+
+**Key structural insight**: by palindromic vanishing of sym_E_8,
+pert_d8 := (bch(z, ½a) - bch(½a+b, ½a))_d8 = -C_8(½a+b, ½a) = -C_8_static.
+Combined with `septic_d8_cancellation_poly_form` (d8_pert = -V_8 - P_7 -
+C_8_static), substituting and simplifying yields the 9-piece form.
+
+**`4e663fa`** — `scripts/verify_d8_operator_decomp.py` (327 lines). Contains
+the structural derivation, CAS verification of the 9-piece sum, and confirms
+vanishing of the 3 impossible crosses.
+
+**Remaining for full Phase C-septic (d8) infrastructure**:
+☐ 9 polynomial DEFs in Lean (analog of session 44 for d7).
+☐ 9-piece sum identity (analog of `septic_d7_perturbation_poly_pieces_decomp`).
+☐ Operator-form identities for the simpler pieces:
+  * `P_6 = (1/12)·[V_6, [x, a']] + ...` (Dynkin form, analog of P_5 at d8).
+  * `Cross(V_2, V_5) = (1/12)·([V_2, [V_5, a']] + [V_5, [V_2, a']])` (analog
+    of Cross(V_2, V_4)_d7).
+  * `Cross(V_3, V_4) = (1/12)·([V_3, [V_4, a']] + [V_4, [V_3, a']])` (analog
+    of Cross(V_2, V_4)_d7).
+  * `Cross(V_2, V_4) = -(1/24)·([a', [V_2, [V_4, a']]] + [a', [V_4, [V_2, a']]])`
+    (analog of Cross(V_2, V_3)_d7).
+☐ Sub-piece splits for the complex pieces (P_2, P_3, P_4, P_5,
+  Cross(V_2, V_3)) which involve bch_quintic_term, bch_sextic_term,
+  bch_septic_term (all monomial form in Lean).
+
+Combined with d7 infrastructure (sessions 43-46), this provides the full
+operator-form decomposition needed for the joint analysis (d7 + d8 +
+Group F + Group CD-quintic → O(s⁹) bound discharging
+`symmetric_bch_septic_sub_poly_axiom`).
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 46, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
