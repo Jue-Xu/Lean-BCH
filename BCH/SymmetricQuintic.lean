@@ -13883,6 +13883,44 @@ private theorem septic_d7_P4_op_form
              mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
   match_scalars <;> ring
 
+/-! ### Operator-form identity for `septic_d7_cross_V2_V4_poly`
+
+The Cross(V_2, V_4) piece: bilinear V_2·V_4 from C_3 (deg 3+1+3 = 7) is
+the only deg-7 contribution; bilinear from C_p ≥ 4 has deg ≥ 8, and
+higher-order in V_2 or V_4 separately also exceed deg 7.
+
+Using C_3(z, y) = (1/12)·([z, [z, y]] + [y, [y, z]]), the bilinear V_2·V_4
+part comes only from [z, [z, y]] (2 z positions); the second term [y, [y, z]]
+has only 1 z position so admits no bilinear substitution.
+
+  ΔC_3_bil(V_2, V_4, a') = (1/12)·([V_2, [V_4, a']] + [V_4, [V_2, a']])
+
+CAS-verified at `scripts/verify_cross_V2_V4_operator_form.py`: both forms
+produce identical 30-term polynomial (LCM 9216, Σ|num|/LCM ≈ 0.0104).
+-/
+
+/-- **septic_d7_cross_V2_V4_op_form**: the V_2·V_4 cross perturbation piece
+equals the explicit bilinear Lie polynomial form `ΔC_3_bil(V_2, V_4, a')`. -/
+private theorem septic_d7_cross_V2_V4_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    septic_d7_cross_V2_V4_poly 𝕂 a b =
+      (12 : 𝕂)⁻¹ • (V₂ * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * V₂) +
+      (12 : 𝕂)⁻¹ • (V₄ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₄) := by
+  intro a' V₂ V₄
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show V₄ = bch_quartic_term 𝕂 a' b from rfl]
+  unfold septic_d7_cross_V2_V4_poly bch_quartic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
 /-! ## Norm bound: `‖septic_d7_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`
 
 116 explicit deg-7 terms, max |numerator| = 1280, LCM = 276480.
