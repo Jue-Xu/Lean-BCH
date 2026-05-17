@@ -14245,6 +14245,227 @@ private theorem symmetric_bch_septic_extended_hdecomp
     add_mul, mul_add, sub_mul, mul_sub]
   match_scalars <;> ring
 
+/-! ### T2-F7e-septic Phase A+B bounds: Group A + Group B-octic combined ≤ K·s⁹
+
+The first 5 pieces of `symmetric_bch_septic_extended_hdecomp` (3 from Group A
+nonic + 2 from Group B-octic) are bounded directly via existing Phase A nonic
+remainders + deg-8 BCH term bounds + Lipschitz. These pieces are all
+intrinsically O(s⁹) (no algebraic cancellation needed).
+
+Per-piece bounds:
+* `‖R₁_nonic‖ ≤ 2·10⁸·s⁹` (via `norm_bch_inner_nonic_remainder_le`).
+* `‖R₂_nonic‖ ≤ 7·10¹²·s⁹` (via `norm_bch_outer_nonic_remainder_le`).
+* `‖½·[R₁_nonic, a']‖ ≤ ‖R₁_nonic‖·‖a'‖ ≤ 2·10⁸·s⁹·(s/2) = 10⁸·s¹⁰ ≤
+  2.5·10⁷·s⁹` (using `s < 1/4`).
+* `‖½·[C₈(a',b), a']‖ ≤ s⁸·(s/2) = s⁹/2` (using `norm_bch_octic_term_le`
+  and `norm_half_smul_bracket_le`).
+* `‖C₈(z,a') - C₈(a'+b, a')‖ ≤ 8·M⁷·‖z-(a'+b)‖ ≤ 8·(45/11)⁷·(48/11)·s⁹ ≈
+  806000·s⁹` (using `norm_bch_octic_term_diff_le` + the standard
+  `M ≤ (45/11)·s` and `‖z-(a'+b)‖ ≤ (48/11)·s²` bounds).
+
+Combined: `≤ 8·10¹²·s⁹` (sum of 5 piece bounds plus margin).
+
+This factors out 5 of the 20 pieces of `symmetric_bch_septic_extended_hdecomp`;
+the remaining 15 pieces (Groups C/D-quintic + E/F-septic) require algebraic
+cancellation at degrees 5, 6, 7, 8 (the Phase B/C-quintic and Phase B/C-septic
+identities). -/
+set_option maxHeartbeats 4000000 in
+private theorem norm_septic_group_AB_le
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    ‖(bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b - ((2 : 𝕂)⁻¹ • a + b) -
+        (2 : 𝕂)⁻¹ • ((2 : 𝕂)⁻¹ • a * b - b * ((2 : 𝕂)⁻¹ • a)) -
+        bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_quartic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_sextic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) +
+     (bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b + (2 : 𝕂)⁻¹ • a) -
+        (2 : 𝕂)⁻¹ • (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
+                     ((2 : 𝕂)⁻¹ • a) * bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) -
+        bch_cubic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        bch_quartic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        bch_quintic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        bch_sextic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        bch_septic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        bch_octic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a)) +
+     (2 : 𝕂)⁻¹ • ((bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b - ((2 : 𝕂)⁻¹ • a + b) -
+        (2 : 𝕂)⁻¹ • ((2 : 𝕂)⁻¹ • a * b - b * ((2 : 𝕂)⁻¹ • a)) -
+        bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_quartic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_sextic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) * ((2 : 𝕂)⁻¹ • a) -
+        ((2 : 𝕂)⁻¹ • a) * (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b - ((2 : 𝕂)⁻¹ • a + b) -
+        (2 : 𝕂)⁻¹ • ((2 : 𝕂)⁻¹ • a * b - b * ((2 : 𝕂)⁻¹ • a)) -
+        bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_quartic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_sextic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b -
+        bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b)) +
+     (2 : 𝕂)⁻¹ • (bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b * ((2 : 𝕂)⁻¹ • a) -
+                  ((2 : 𝕂)⁻¹ • a) * bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) +
+     (bch_octic_term 𝕂 (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) -
+        bch_octic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a))‖ ≤
+    8000000000000 * (‖a‖ + ‖b‖) ^ 9 := by
+  -- SETUP: mirrors quintic parent.
+  set a' : 𝔸 := (2 : 𝕂)⁻¹ • a with ha'_def
+  set s := ‖a‖ + ‖b‖ with hs_def
+  set s₁ := ‖a'‖ + ‖b‖ with hs₁_def
+  set z := bch (𝕂 := 𝕂) a' b with hz_def
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have ha'_le : ‖a'‖ ≤ ‖a‖ / 2 := by
+    calc ‖a'‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = ‖a‖ / 2 := by rw [h_half_norm]; ring
+  have hs_nn : 0 ≤ s := by positivity
+  have hs_lt : s < 1 / 4 := hab
+  have ha_s : ‖a‖ ≤ s := by have := norm_nonneg b; linarith
+  have hb_s : ‖b‖ ≤ s := by have := norm_nonneg a; linarith
+  have ha'_s : ‖a'‖ ≤ s / 2 := by
+    calc ‖a'‖ ≤ ‖a‖ / 2 := ha'_le
+      _ ≤ s / 2 := by linarith
+  have hs₁_le : s₁ ≤ s := by
+    show ‖a'‖ + ‖b‖ ≤ ‖a‖ + ‖b‖; linarith [ha'_le, norm_nonneg a]
+  have hs₁_nn : 0 ≤ s₁ := by positivity
+  have hs9_nn : (0 : ℝ) ≤ s ^ 9 := pow_nonneg hs_nn 9
+  -- TERM 1: ‖R₁_nonic‖ ≤ 2·10⁸·s⁹.
+  have hR1_le := norm_bch_inner_nonic_remainder_le (𝕂 := 𝕂) a b hab
+  -- TERM 2: ‖R₂_nonic‖ ≤ 7·10¹²·s⁹.
+  have hR2_le := norm_bch_outer_nonic_remainder_le (𝕂 := 𝕂) a b hab
+  -- TERM 3: ‖½·[R₁_nonic, a']‖ ≤ ‖R₁_nonic‖·‖a'‖ ≤ 2·10⁸·s⁹·(s/2) ≤ 2.5·10⁷·s⁹.
+  set R₁ : 𝔸 :=
+      bch (𝕂 := 𝕂) a' b - (a' + b) - (2 : 𝕂)⁻¹ • (a' * b - b * a') -
+        bch_cubic_term 𝕂 a' b - bch_quartic_term 𝕂 a' b -
+        bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b -
+        bch_septic_term 𝕂 a' b - bch_octic_term 𝕂 a' b with hR1_def
+  have hR1_norm_le : ‖R₁‖ ≤ 200000000 * s ^ 9 := hR1_le
+  have hT3 : ‖(2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁)‖ ≤ 25000000 * s ^ 9 := by
+    calc ‖(2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁)‖
+        ≤ ‖R₁‖ * ‖a'‖ := norm_half_smul_bracket_le R₁ a'
+      _ ≤ (200000000 * s ^ 9) * (s / 2) :=
+          mul_le_mul hR1_norm_le ha'_s (norm_nonneg _) (by positivity)
+      _ ≤ 25000000 * s ^ 9 := by nlinarith [hs9_nn, hs_lt]
+  -- TERM 4: ‖½·[C₈(a',b), a']‖ ≤ s⁹/2.
+  have hC8_ab_le : ‖bch_octic_term 𝕂 a' b‖ ≤ s ^ 8 := by
+    calc ‖bch_octic_term 𝕂 a' b‖ ≤ (‖a'‖ + ‖b‖) ^ 8 := norm_bch_octic_term_le a' b
+      _ = s₁ ^ 8 := by rw [← hs₁_def]
+      _ ≤ s ^ 8 := pow_le_pow_left₀ hs₁_nn hs₁_le 8
+  have hT4 : ‖(2 : 𝕂)⁻¹ • (bch_octic_term 𝕂 a' b * a' -
+                            a' * bch_octic_term 𝕂 a' b)‖ ≤ s ^ 9 := by
+    calc ‖(2 : 𝕂)⁻¹ • (bch_octic_term 𝕂 a' b * a' -
+                        a' * bch_octic_term 𝕂 a' b)‖
+        ≤ ‖bch_octic_term 𝕂 a' b‖ * ‖a'‖ :=
+          norm_half_smul_bracket_le (bch_octic_term 𝕂 a' b) a'
+      _ ≤ s ^ 8 * (s / 2) :=
+          mul_le_mul hC8_ab_le ha'_s (norm_nonneg _) (by positivity)
+      _ ≤ s ^ 9 := by nlinarith [hs9_nn, hs_lt]
+  -- SETUP for TERM 5: bounds on ‖z‖, ‖a'+b‖, ‖z-(a'+b)‖.
+  have hln2 : (1 : ℝ) / 4 < Real.log 2 := by
+    rw [Real.lt_log_iff_exp_lt (by norm_num : (0:ℝ) < 2)]
+    linarith [real_exp_third_order_le_cube (by norm_num : (0:ℝ) ≤ 1/4)
+      (by norm_num : (1:ℝ)/4 < 5/6)]
+  have hs₁_lt_log2 : s₁ < Real.log 2 := by linarith
+  have hexp_s₁_lt : Real.exp s₁ < 2 := by
+    calc _ < Real.exp (Real.log 2) := Real.exp_strictMono hs₁_lt_log2
+      _ = 2 := Real.exp_log (by norm_num)
+  have hdenom₁ : 0 < 2 - Real.exp s₁ := by linarith
+  have hexp_le : Real.exp s₁ ≤ 1 + s₁ + s₁ ^ 2 := by
+    nlinarith [real_exp_third_order_le_cube hs₁_nn (by linarith : s₁ < 5/6)]
+  have hdenom_lb : (11 : ℝ) / 16 ≤ 2 - Real.exp s₁ := by nlinarith
+  have hW_le : ‖z - (a' + b)‖ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    rw [hz_def]; exact norm_bch_sub_add_le (𝕂 := 𝕂) a' b hs₁_lt_log2
+  have hW_s2 : ‖z - (a' + b)‖ ≤ 48 / 11 * s ^ 2 := by
+    have hs₁_sq_le : s₁ ^ 2 ≤ s ^ 2 := pow_le_pow_left₀ hs₁_nn hs₁_le 2
+    calc ‖z - (a' + b)‖ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) := hW_le
+      _ ≤ 3 * s ^ 2 / (11 / 16) := by
+          apply div_le_div₀ (by positivity) _ (by norm_num) hdenom_lb
+          exact mul_le_mul_of_nonneg_left hs₁_sq_le (by norm_num)
+      _ = 48 / 11 * s ^ 2 := by ring
+  have hz_le : ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by
+    calc ‖z‖ = ‖(z - (a' + b)) + (a' + b)‖ := by congr 1; abel
+      _ ≤ ‖z - (a' + b)‖ + ‖a' + b‖ := norm_add_le _ _
+      _ ≤ 3 * s₁ ^ 2 / (2 - Real.exp s₁) + s₁ := by
+          have hsum : ‖a' + b‖ ≤ s₁ := norm_add_le _ _
+          linarith
+      _ = s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := by ring
+  have hz_mult : ‖z‖ ≤ 23/11 * s := by
+    have h1 : 3 * s₁ ^ 2 / (2 - Real.exp s₁) ≤ 12 * s / 11 := by
+      rw [div_le_iff₀ hdenom₁]
+      nlinarith [hdenom_lb, hs₁_nn, sq_nonneg s₁, hs₁_le, hs_nn,
+        mul_nonneg hs₁_nn hs_nn, hab]
+    calc ‖z‖ ≤ s₁ + 3 * s₁ ^ 2 / (2 - Real.exp s₁) := hz_le
+      _ ≤ s + 12 * s / 11 := by linarith
+      _ = 23/11 * s := by ring
+  have hp_s : ‖a' + b‖ ≤ 3 / 2 * s := by
+    calc ‖a' + b‖ ≤ ‖a'‖ + ‖b‖ := norm_add_le _ _
+      _ ≤ s / 2 + s := by linarith
+      _ = 3 / 2 * s := by ring
+  -- TERM 5: ‖C₈(z,a') - C₈(a'+b,a')‖ ≤ 8·M⁷·‖z-(a'+b)‖ where M ≤ (45/11)·s.
+  have hM_le : ‖z‖ + ‖a' + b‖ + ‖a'‖ ≤ 45/11 * s := by
+    have h1 : ‖z‖ + ‖a' + b‖ + ‖a'‖ ≤ 23/11 * s + 3/2 * s + s/2 := by
+      linarith [hz_mult, hp_s, ha'_s]
+    linarith
+  have hM_nn : (0 : ℝ) ≤ ‖z‖ + ‖a' + b‖ + ‖a'‖ := by positivity
+  have hT5 : ‖bch_octic_term 𝕂 z a' - bch_octic_term 𝕂 (a' + b) a'‖ ≤
+              1000000 * s ^ 9 := by
+    have h := norm_bch_octic_term_diff_le (𝕂 := 𝕂) z (a' + b) a'
+    -- h: ‖.‖ ≤ 8 · (‖z‖+‖a'+b‖+‖a'‖)^7 · ‖z-(a'+b)‖
+    -- Bound: 8 · (45/11·s)^7 · (48/11·s²) = 8·(45/11)^7·(48/11)·s^9
+    --      ≤ 8·23120·(48/11)·s^9 ≈ 806712·s^9 < 1000000·s^9.
+    have hM_pow_le : (‖z‖ + ‖a' + b‖ + ‖a'‖) ^ 7 ≤ (45/11 * s) ^ 7 :=
+      pow_le_pow_left₀ hM_nn hM_le 7
+    have hM_pow_eq : (45/11 * s) ^ 7 = (45/11 : ℝ) ^ 7 * s ^ 7 := by ring
+    have h_45_7 : ((45 : ℝ) / 11) ^ 7 ≤ 23120 := by norm_num
+    have hs7_nn : (0 : ℝ) ≤ s ^ 7 := pow_nonneg hs_nn 7
+    have h8_nn : (0 : ℝ) ≤ 8 := by norm_num
+    calc _ ≤ 8 * (‖z‖ + ‖a' + b‖ + ‖a'‖) ^ 7 * ‖z - (a' + b)‖ := h
+      _ ≤ 8 * (45/11 * s) ^ 7 * (48/11 * s ^ 2) := by
+          apply mul_le_mul _ hW_s2 (norm_nonneg _) (by positivity)
+          exact mul_le_mul_of_nonneg_left hM_pow_le h8_nn
+      _ = 8 * ((45/11 : ℝ) ^ 7 * s ^ 7) * (48/11 * s ^ 2) := by rw [hM_pow_eq]
+      _ ≤ 8 * (23120 * s ^ 7) * (48/11 * s ^ 2) := by
+          apply mul_le_mul_of_nonneg_right _ (by positivity)
+          apply mul_le_mul_of_nonneg_left _ (by norm_num)
+          exact mul_le_mul_of_nonneg_right h_45_7 hs7_nn
+      _ ≤ 1000000 * s ^ 9 := by nlinarith [hs9_nn]
+  -- Now bound the 5-piece sum by triangle inequality.
+  -- The goal has the 5 pieces in the exact form: R₁_nonic + R₂_nonic + ½·[R₁_nonic, a']
+  -- + ½·[C₈(a',b), a'] + (C₈(z,a') - C₈(a'+b, a')).
+  -- We need to relate the goal's R₁/R₂_nonic to our hR1_le/hR2_le.
+  -- The goal's R₁_nonic is the same as hR1_le's LHS (modulo let-bindings).
+  -- After `set R₁ := ...`, the goal still has the explicit form. Use convert/abel.
+  -- Strategy: show ‖A + B + C + D + E‖ ≤ ‖A‖+‖B‖+‖C‖+‖D‖+‖E‖, then sum the bounds.
+  set R₂ : 𝔸 :=
+      bch (𝕂 := 𝕂) z a' - (z + a') - (2 : 𝕂)⁻¹ • (z * a' - a' * z) -
+        bch_cubic_term 𝕂 z a' - bch_quartic_term 𝕂 z a' -
+        bch_quintic_term 𝕂 z a' - bch_sextic_term 𝕂 z a' -
+        bch_septic_term 𝕂 z a' - bch_octic_term 𝕂 z a' with hR2_def
+  have hR2_norm_le : ‖R₂‖ ≤ 7000000000000 * s ^ 9 := hR2_le
+  set T₄ : 𝔸 := (2 : 𝕂)⁻¹ • (bch_octic_term 𝕂 a' b * a' -
+                              a' * bch_octic_term 𝕂 a' b) with hT₄_def
+  set T₅ : 𝔸 := bch_octic_term 𝕂 z a' - bch_octic_term 𝕂 (a' + b) a' with hT₅_def
+  set T₃ : 𝔸 := (2 : 𝕂)⁻¹ • (R₁ * a' - a' * R₁) with hT₃_def
+  -- Triangle inequality on 5 pieces.
+  have htriangle : ‖R₁ + R₂ + T₃ + T₄ + T₅‖ ≤
+      ‖R₁‖ + ‖R₂‖ + ‖T₃‖ + ‖T₄‖ + ‖T₅‖ := by
+    have a4 := norm_add_le (R₁ + R₂ + T₃ + T₄) T₅
+    have a3 := norm_add_le (R₁ + R₂ + T₃) T₄
+    have a2 := norm_add_le (R₁ + R₂) T₃
+    have a1 := norm_add_le R₁ R₂
+    linarith
+  calc ‖R₁ + R₂ + T₃ + T₄ + T₅‖
+      ≤ ‖R₁‖ + ‖R₂‖ + ‖T₃‖ + ‖T₄‖ + ‖T₅‖ := htriangle
+    _ ≤ 200000000 * s ^ 9 + 7000000000000 * s ^ 9 + 25000000 * s ^ 9 +
+        s ^ 9 + 1000000 * s ^ 9 := by
+          linarith [hR1_norm_le, hR2_norm_le, hT3, hT4, hT5]
+    _ = 7000226000001 * s ^ 9 := by ring
+    _ ≤ 8000000000000 * s ^ 9 := by nlinarith [hs9_nn]
+
 end SymmetricSepticAltForm
 
 
