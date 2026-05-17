@@ -1,5 +1,52 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 53, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 53 (2026-05-17, per-piece norm bounds for d8 non-Dynkin sub-pieces, 1 commit)**:
+
+Direct polynomial norm bounds for the 6 sub-pieces of `septic_d8_perturbation_poly`
+that are NOT Dynkin-expressible (each uses `bch_kth_term` in monomial form for
+k ≥ 5). Each piece is bounded by `K · s⁸` via the standard Finset.sum triangle
+approach (per-i `deg8_smul_word_le` + uniform `max|num|/LCM`).
+
+**`1462ce5`** — 6 new public theorems in `BCH/SymmetricQuintic.lean`
+(+7052 lines, after `septic_d8_P2_pieces_decomp`):
+
+| Theorem | Sub-piece | Terms | Bound (K) |
+|--------:|----------:|------:|----------:|
+| `norm_septic_d8_P2_C5_cubic_poly_le` | C_5 cubic-in-V_2 | 78 | 3354/184320 ≈ 0.018 |
+| `norm_septic_d8_P2_C6_quad_poly_le` | C_6 quad-in-V_2 | 110 | 13200/368640 ≈ 0.036 |
+| `norm_septic_d8_P2_C7_lin_poly_le` | C_7 lin-in-V_2 | 174 | 272832/3870720 ≈ 0.070 |
+| `norm_septic_d8_P3_C6_lin_poly_le` | C_6 lin-in-V_3 | 166 | 138112/1105920 ≈ 0.125 |
+| `norm_septic_d8_P4_poly_le` | C_5 lin-in-V_4 | 154 | 19712/552960 ≈ 0.036 |
+| `norm_septic_d8_cross_V2_V3_poly_le` | C_5 bil V_2·V_3 | 174 | 100224/1105920 ≈ 0.091 |
+
+Pieces with N ≤ 124 use single Finset.sum; pieces with N > 124 use the
+split-half pattern (two halves combined via `abel` + triangle inequality),
+matching the existing `norm_septic_d8_perturbation_poly_le` template.
+
+New CAS generator `scripts/gen_d8_subpiece_norm_bound.py` parameterizes
+both the polynomial computation (per-sub-piece, via direct bch_kth_term
+substitution at the appropriate degree) and the Lean code emission.
+
+**Significance**: completes the "raw" `O(s⁸)` polynomial-norm step for
+each non-Dynkin sub-piece. These are useful building blocks but
+insufficient alone for the eventual `O(s⁹)` joint analysis — the joint
+analysis still needs finer cancellation arguments (deg-9+ residual via
+Lipschitz-quadratic bounds or matching identities, per session 52's
+roadmap). This session is the polynomial-norm foundation; future
+sessions formalize the cancellation.
+
+Build wall ~10 min per touched-rebuild of SymmetricQuintic (consistent
+with the existing pattern). Lean parsing pitfall encountered and fixed:
+`/-- doc -/ set_option ... in theorem` fails parsing; must use the
+order `set_option ... in /-- doc -/ theorem` (matching d7 pattern).
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 52, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
