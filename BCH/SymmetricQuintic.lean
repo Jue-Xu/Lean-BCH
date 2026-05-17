@@ -13799,6 +13799,50 @@ private theorem septic_d7_perturbation_poly_pieces_decomp
         septic_d7_cross_V2_V3_poly septic_d7_cross_V2_V4_poly
   match_scalars <;> ring
 
+/-! ### Operator-form identity for `septic_d7_P5_poly`
+
+The simplest of the 6 pieces: P_5 captures only the linear-in-V_5
+perturbation of C_3 at deg 7 (since C_3 has deg 3, replacing one z with
+V_5 gives deg 3 + (5-1) = 7; higher-order V_5 exceeds deg 7).
+
+Using the Dynkin formula `C_3(z, y) = (1/12)·([z, [z, y]] + [y, [y, z]])`,
+the linear-in-V_5 perturbation when z → x + V_5 gives:
+
+  ΔC_3_lin(V_5, x, a') = (1/12)·([V_5, [x, a']]
+                                 + [x, [V_5, a']]
+                                 + [a', [a', V_5]])
+
+This is the deg-7 analog of the quintic Phase B piece `deltaC3_lin_V3_eq`
+at one higher V_k level (V_3 → V_5, same operator structure).
+
+CAS-verified at `scripts/verify_P5_operator_form.py`: both forms produce
+identical 100-term polynomial in {a, b} (LCM 276480, Σ|num|/LCM ≈ 0.0124).
+-/
+
+/-- **septic_d7_P5_op_form**: the V_5-only perturbation piece P_5
+equals the explicit Lie polynomial form `ΔC_3_lin(V_5, x, a')`. -/
+private theorem septic_d7_P5_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₅ : 𝔸 := bch_quintic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    septic_d7_P5_poly 𝕂 a b =
+      (12 : 𝕂)⁻¹ • (V₅ * (x * a' - a' * x) - (x * a' - a' * x) * V₅) +
+      (12 : 𝕂)⁻¹ • (x * (V₅ * a' - a' * V₅) - (V₅ * a' - a' * V₅) * x) +
+      (12 : 𝕂)⁻¹ • (a' * (a' * V₅ - V₅ * a') - (a' * V₅ - V₅ * a') * a') := by
+  intro a' V₅ x
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₅ = bch_quintic_term 𝕂 a' b from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl]
+  unfold septic_d7_P5_poly bch_quintic_term
+        bch_quintic_group_1 bch_quintic_group_4 bch_quintic_group_6 bch_quintic_group_24
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
 /-! ## Norm bound: `‖septic_d7_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`
 
 116 explicit deg-7 terms, max |numerator| = 1280, LCM = 276480.
