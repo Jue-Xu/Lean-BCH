@@ -1,5 +1,68 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 50, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 50 (2026-05-17, d8 P_3 sub-piece decomposition, 1 commit)**:
+
+Polynomial-form sub-piece decomposition for the V_3-only piece (P_3_d8) of
+the 9-piece d8 decomposition. d8 analog of d7 session 46 P_3 sub-piece work
+at one degree higher.
+
+**`23ff45d`** — Two polynomial DEFs in `BCH/SymmetricQuintic.lean` (~line
+15943, after the 5 op-form theorems, +322 lines) + sum identity + Dynkin
+op-form:
+
+* `septic_d8_P3_C4_quad_poly` (90 terms, LCM 221184, Σ|num|/LCM ≈ 0.0031).
+  C_4 quadratic-in-V_3 sub-piece. Dynkin-expressible.
+* `septic_d8_P3_C6_lin_poly` (166 terms, LCM 1105920, Σ|num|/LCM ≈ 0.0126).
+  C_6 linear-in-V_3 sub-piece. Uses bch_sextic_term (monomial form, NOT
+  Dynkin), so needs Lipschitz-style treatment.
+
+`septic_d8_P3_pieces_decomp`: P_3_d8 = C_4_quad + C_6_lin. Proof: 2 lines.
+
+`septic_d8_P3_C4_quad_op_form` (Dynkin operator-form identity):
+
+    septic_d8_P3_C4_quad_poly = -(1/24)·[a', [V_3, [V_3, a']]]
+
+where V_3 = bch_cubic_term(½a, b). d8 analog of d7's C_3 quad form
+`(1/12)·[V_3, [V_3, a']]` (substituting V_3 → V_3 for both z's in the
+[z, [z, y]] term of C_4 instead of C_3).
+
+CAS-derived via `scripts/gen_d8_P3_subpieces.py`. The C_4 quad piece
+computed directly from the Dynkin formula `C_4(z, y) = -(1/24)·[y, [z, [z, y]]]`
+with both z's replaced by V_3; C_6 lin defined as the residual.
+
+**Status summary after session 50** (6 of 9 d8 pieces with Dynkin forms):
+
+| Piece | Sub-pieces | Op-form identities |
+|-------|-----------:|--------------------|
+| P_6 | 1 (ΔC_3_lin) | ✓ |
+| P_5 | 1 (ΔC_4_lin) | ✓ |
+| Cross(V_2, V_5) | 1 (ΔC_3_bil) | ✓ |
+| Cross(V_3, V_4) | 1 (ΔC_3_bil) | ✓ |
+| Cross(V_2, V_4) | 1 (ΔC_4_bil) | ✓ |
+| P_3 | 2 (C_4 quad + C_6 lin) | ✓ for C_4 quad |
+| P_4 | 1 (C_5 lin, not Dynkin) | needs Lipschitz |
+| P_2 | 3 (C_5 cubic + C_6 quad + C_7 lin) | needs Lipschitz |
+| Cross(V_2, V_3) | 1 (C_5 bil, not Dynkin) | needs Lipschitz |
+
+6 Dynkin operator-form identities proven. The remaining 3 multi-sub-piece
+operator pieces (P_2: 3 sub-pieces, Cross(V_2, V_3): 1 sub-piece, P_4: 1
+sub-piece) all involve `bch_kth_term` for k ≥ 5 (monomial form in Lean),
+needing Lipschitz-style bounds.
+
+**Remaining work**:
+☐ P_2_d8 sub-piece decomposition: 3 sub-pieces (C_5 cubic + C_6 quad +
+  C_7 lin). Requires 3-way Vandermonde-style extraction.
+☐ Lipschitz-style norm bounds for the 6 non-Dynkin sub-pieces.
+☐ Joint analysis combining d7+d8 op-form bounds with Groups F+CD-quintic
+  for O(s⁹) bound discharging `symmetric_bch_septic_sub_poly_axiom`.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 49, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
