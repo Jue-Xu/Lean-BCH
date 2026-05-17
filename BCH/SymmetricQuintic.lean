@@ -14783,6 +14783,42 @@ private theorem norm_septic_group_F_le
     _ ≤ 6000 * s ^ 7 + s ^ 8 := by linarith [hCA, hDp]
     _ ≤ 10000 * s ^ 7 := by nlinarith [hs7_nn, hs_lt]
 
+/-! ### T2-F7e-septic Group C+D-quintic wrapper
+
+The 8 retained sub-pieces (Group C-quintic 4 + Group D-quintic 4) in
+`symmetric_bch_septic_extended_hdecomp` have IDENTICAL definitions to the
+8 Group C + Group D pieces of `symmetric_bch_quintic_extended_hdecomp`.
+
+This thin wrapper re-exposes `symmetric_bch_quintic_group_CD_le` in the
+septic-section namespace so that the eventual parent discharge can chain
+the four per-Group bounds (`AB`, `E`, `F`, `CD_quintic`) uniformly.
+
+Note: the coarse `10⁸·s⁷` bound from the quintic discharge does NOT yet
+contract to deg-9 — a future joint Phase B-septic + Phase C-septic
+identity will combine these 8 pieces with `Group E` + `Group F` to drop
+to `O(s⁹)`. For now this wrapper just packages the existing quintic
+infrastructure for septic-side consumers. -/
+private theorem norm_septic_group_CD_quintic_le
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) (hab : ‖a‖ + ‖b‖ < 1 / 4) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    let DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a
+    ‖-- Group C-quintic: Phase B deg-5 cancellation group (4 sub-pieces)
+     (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+       -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+     (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
+     (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+     -symmetric_bch_quintic_correction_poly 𝕂 a b +
+     -- Group D-quintic: Phase C deg-6 cancellation group (4 sub-pieces)
+     (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
+     bch_sextic_term 𝕂 a' b +
+     bch_sextic_term 𝕂 (a' + b) a' +
+     (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a')‖ ≤
+      100000000 * (‖a‖ + ‖b‖) ^ 7 :=
+  symmetric_bch_quintic_group_CD_le (𝕂 := 𝕂) a b hab
+
 end SymmetricSepticAltForm
 
 
