@@ -13773,6 +13773,32 @@ noncomputable def septic_d7_cross_V2_V4_poly (𝕂 : Type*) [RCLike 𝕂]
   + (-3 / 9216 : 𝕂) • (b * b * a * a * a * b * a)
   + (1 / 9216 : 𝕂) • (b * b * a * a * b * a * a)
 
+/-- **6-piece decomposition of `septic_d7_perturbation_poly`** (polynomial form).
+
+CAS-verified at `scripts/verify_d7_operator_decomp.py`: the polynomial
+`septic_d7_perturbation_poly(a, b)` equals the sum of 6 operator-form
+pieces (P_2, P_3, P_4, P_5, Cross(V_2, V_3), Cross(V_2, V_4)) defined above.
+
+This is the polynomial-form Phase B-septic identity foundation. The
+operator-form Phase B-septic identity — where each piece equals a specific
+BCH-series expression (e.g., `septic_d7_P5_poly = (bch(x+V_5, ½a) − bch(x, ½a))_deg7`)
+— will be established by separate `match_scalars` lemmas for each piece
+in a follow-up session, then combined with this decomposition to produce
+the joint Lipschitz-style bound dropping O(s⁷) to O(s⁹).
+
+(Section-level `maxHeartbeats 64000000` covers this proof.) -/
+private theorem septic_d7_perturbation_poly_pieces_decomp
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    septic_d7_perturbation_poly 𝕂 a b =
+      septic_d7_P2_poly 𝕂 a b + septic_d7_P3_poly 𝕂 a b +
+        septic_d7_P4_poly 𝕂 a b + septic_d7_P5_poly 𝕂 a b +
+        septic_d7_cross_V2_V3_poly 𝕂 a b + septic_d7_cross_V2_V4_poly 𝕂 a b := by
+  unfold septic_d7_perturbation_poly
+        septic_d7_P2_poly septic_d7_P3_poly septic_d7_P4_poly septic_d7_P5_poly
+        septic_d7_cross_V2_V3_poly septic_d7_cross_V2_V4_poly
+  match_scalars <;> ring
+
 /-! ## Norm bound: `‖septic_d7_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`
 
 116 explicit deg-7 terms, max |numerator| = 1280, LCM = 276480.
