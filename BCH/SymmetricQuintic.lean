@@ -15742,6 +15742,202 @@ private theorem septic_d8_perturbation_poly_pieces_decomp
         septic_d8_cross_V2_V5_poly septic_d8_cross_V3_V4_poly
   match_scalars <;> ring
 
+/-! ### Operator-form identity for `septic_d8_P6_poly`
+
+The simplest of the 9 pieces at d8: P_6 captures only the linear-in-V_6
+perturbation of C_3 at deg 8 (since C_3 has deg 3, replacing one z with
+V_6 gives deg 3 + (6-1) = 8; higher-order V_6 exceeds deg 8).
+
+Using the Dynkin formula `C_3(z, y) = (1/12)·([z, [z, y]] + [y, [y, z]])`,
+the linear-in-V_6 perturbation when z → x + V_6 gives:
+
+  ΔC_3_lin(V_6, x, a') = (1/12)·([V_6, [x, a']]
+                                 + [x, [V_6, a']]
+                                 + [a', [a', V_6]])
+
+d8 analog of `septic_d7_P5_op_form` (V_5 → V_6) at one degree higher.
+CAS-verified at `scripts/verify_d8_P6_operator_form.py`: both forms
+produce identical 126-term polynomial (LCM 552960, Σ|num|/LCM ≈ 0.0043).
+-/
+
+/-- **septic_d8_P6_op_form**: the V_6-only perturbation piece P_6
+equals the explicit Lie polynomial form `ΔC_3_lin(V_6, x, a')`. -/
+private theorem septic_d8_P6_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₆ : 𝔸 := bch_sextic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    septic_d8_P6_poly 𝕂 a b =
+      (12 : 𝕂)⁻¹ • (V₆ * (x * a' - a' * x) - (x * a' - a' * x) * V₆) +
+      (12 : 𝕂)⁻¹ • (x * (V₆ * a' - a' * V₆) - (V₆ * a' - a' * V₆) * x) +
+      (12 : 𝕂)⁻¹ • (a' * (a' * V₆ - V₆ * a') - (a' * V₆ - V₆ * a') * a') := by
+  intro a' V₆ x
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₆ = bch_sextic_term 𝕂 a' b from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl]
+  unfold septic_d8_P6_poly bch_sextic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+/-! ### Operator-form identity for `septic_d8_P5_poly`
+
+The d8 analog of `septic_d7_P4_op_form`: P_5_d8 captures only the
+linear-in-V_5 perturbation of C_4 at deg 8 (C_4 has deg 4; replacing one
+z with V_5 gives deg 4 + (5-1) = 8; higher-order V_5 exceeds deg 8).
+
+Using `bch_quartic_term(z, y) = -(1/24)·[y, [z, [z, y]]]`, the linear-in-V_5
+perturbation when z → x + V_5 gives:
+
+  ΔC_4_lin(V_5, x, a') = -(1/24)·([a', [V_5, [x, a']]] + [a', [x, [V_5, a']]])
+
+CAS-verified at `scripts/verify_d8_P5_operator_form.py`: both forms produce
+identical 146-term polynomial (LCM 2211840, Σ|num|/LCM ≈ 0.0058).
+-/
+
+/-- **septic_d8_P5_op_form**: the V_5-only perturbation piece P_5_d8
+equals the explicit Lie polynomial form `ΔC_4_lin(V_5, x, a')`. -/
+private theorem septic_d8_P5_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₅ : 𝔸 := bch_quintic_term 𝕂 a' b
+    let x : 𝔸 := a' + b
+    septic_d8_P5_poly 𝕂 a b =
+      (0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (V₅ * (x * a' - a' * x) - (x * a' - a' * x) * V₅) -
+                       (V₅ * (x * a' - a' * x) - (x * a' - a' * x) * V₅) * a') -
+      (24 : 𝕂)⁻¹ • (a' * (x * (V₅ * a' - a' * V₅) - (V₅ * a' - a' * V₅) * x) -
+                       (x * (V₅ * a' - a' * V₅) - (V₅ * a' - a' * V₅) * x) * a') := by
+  intro a' V₅ x
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₅ = bch_quintic_term 𝕂 a' b from rfl,
+             show x = ((2 : 𝕂)⁻¹ • a + b : 𝔸) from rfl]
+  unfold septic_d8_P5_poly bch_quintic_term
+        bch_quintic_group_1 bch_quintic_group_4 bch_quintic_group_6 bch_quintic_group_24
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+/-! ### Operator-form identity for `septic_d8_cross_V2_V5_poly`
+
+The Cross(V_2, V_5)_d8 piece: bilinear V_2·V_5 from C_3 (deg 3+1+4 = 8;
+the (j-1) + (k-1) = 1+4 redistribution among C_3's 2 z-positions).
+
+Using `C_3(z, y) = (1/12)·([z, [z, y]] + [y, [y, z]])`, the bilinear V_2·V_5
+part comes only from `[z, [z, y]]` (2 z positions):
+
+  ΔC_3_bil(V_2, V_5, a') = (1/12)·([V_2, [V_5, a']] + [V_5, [V_2, a']])
+
+d8 analog of `septic_d7_cross_V2_V4_op_form` (V_4 → V_5). CAS-verified at
+`scripts/verify_d8_cross_V2_V5_operator_form.py`: 154-term polynomial
+(LCM 1105920, Σ|num|/LCM ≈ 0.0057).
+-/
+
+/-- **septic_d8_cross_V2_V5_op_form**: the V_2·V_5 cross perturbation piece
+equals the explicit bilinear Lie polynomial form `ΔC_3_bil(V_2, V_5, a')`. -/
+private theorem septic_d8_cross_V2_V5_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₅ : 𝔸 := bch_quintic_term 𝕂 a' b
+    septic_d8_cross_V2_V5_poly 𝕂 a b =
+      (12 : 𝕂)⁻¹ • (V₂ * (V₅ * a' - a' * V₅) - (V₅ * a' - a' * V₅) * V₂) +
+      (12 : 𝕂)⁻¹ • (V₅ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₅) := by
+  intro a' V₂ V₅
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show V₅ = bch_quintic_term 𝕂 a' b from rfl]
+  unfold septic_d8_cross_V2_V5_poly bch_quintic_term
+        bch_quintic_group_1 bch_quintic_group_4 bch_quintic_group_6 bch_quintic_group_24
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+/-! ### Operator-form identity for `septic_d8_cross_V3_V4_poly`
+
+The Cross(V_3, V_4)_d8 piece: bilinear V_3·V_4 from C_3 (deg 3+2+3 = 8;
+the (j-1) + (k-1) = 2+3 redistribution among C_3's 2 z-positions).
+
+Using `C_3(z, y) = (1/12)·([z, [z, y]] + [y, [y, z]])`, the bilinear V_3·V_4
+part comes only from `[z, [z, y]]` (2 z positions):
+
+  ΔC_3_bil(V_3, V_4, a') = (1/12)·([V_3, [V_4, a']] + [V_4, [V_3, a']])
+
+d8 analog of `septic_d7_cross_V2_V4_op_form` (V_2, V_4 → V_3, V_4).
+CAS-verified at `scripts/verify_d8_cross_V3_V4_operator_form.py`: 66-term
+polynomial (LCM 110592, Σ|num|/LCM ≈ 0.0028).
+-/
+
+/-- **septic_d8_cross_V3_V4_op_form**: the V_3·V_4 cross perturbation piece
+equals the explicit bilinear Lie polynomial form `ΔC_3_bil(V_3, V_4, a')`. -/
+private theorem septic_d8_cross_V3_V4_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    septic_d8_cross_V3_V4_poly 𝕂 a b =
+      (12 : 𝕂)⁻¹ • (V₃ * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * V₃) +
+      (12 : 𝕂)⁻¹ • (V₄ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₄) := by
+  intro a' V₃ V₄
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₃ = bch_cubic_term 𝕂 a' b from rfl,
+             show V₄ = bch_quartic_term 𝕂 a' b from rfl]
+  unfold septic_d8_cross_V3_V4_poly bch_cubic_term bch_quartic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+/-! ### Operator-form identity for `septic_d8_cross_V2_V4_poly`
+
+The Cross(V_2, V_4)_d8 piece: bilinear V_2·V_4 from C_4 (deg 4+1+3 = 8;
+the (j-1) + (k-1) = 1+3 redistribution among C_4's z-positions).
+
+Using `bch_quartic_term(z, y) = -(1/24)·[y, [z, [z, y]]]`, the bilinear
+V_2·V_4 part:
+
+  ΔC_4_bil(V_2, V_4, a') = -(1/24)·{[a', [V_2, [V_4, a']]] + [a', [V_4, [V_2, a']]]}
+
+d8 analog of `septic_d7_cross_V2_V3_op_form` (V_3 → V_4). CAS-verified at
+`scripts/verify_d8_cross_V2_V4_operator_form.py`: 40-term polynomial
+(LCM 36864, Σ|num|/LCM ≈ 0.0035).
+-/
+
+/-- **septic_d8_cross_V2_V4_op_form**: the V_2·V_4 cross perturbation piece
+equals the explicit bilinear Lie polynomial form `ΔC_4_bil(V_2, V_4, a')`. -/
+private theorem septic_d8_cross_V2_V4_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₂ : 𝔸 := (2 : 𝕂)⁻¹ • (a' * b - b * a')
+    let V₄ : 𝔸 := bch_quartic_term 𝕂 a' b
+    septic_d8_cross_V2_V4_poly 𝕂 a b =
+      (0 : 𝔸)
+        - (24 : 𝕂)⁻¹ • (a' * (V₂ * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * V₂) -
+                         (V₂ * (V₄ * a' - a' * V₄) - (V₄ * a' - a' * V₄) * V₂) * a')
+        - (24 : 𝕂)⁻¹ • (a' * (V₄ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₄) -
+                         (V₄ * (V₂ * a' - a' * V₂) - (V₂ * a' - a' * V₂) * V₄) * a') := by
+  intro a' V₂ V₄
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₂ = ((2 : 𝕂)⁻¹ • (a' * b - b * a') : 𝔸) from rfl,
+             show V₄ = bch_quartic_term 𝕂 a' b from rfl]
+  unfold septic_d8_cross_V2_V4_poly bch_quartic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
 /-! ## Norm bound: `‖septic_d7_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`
 
 116 explicit deg-7 terms, max |numerator| = 1280, LCM = 276480.
