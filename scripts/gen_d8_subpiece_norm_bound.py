@@ -143,12 +143,30 @@ def compute_subpiece(name):
     half = sp.Rational(1, 2)
     half_a = ncpoly_scale(a, half)
     x = ncpoly_add(half_a, b)
-    V2 = ncpoly_scale(ncpoly_bracket(half_a, b), half)
-    V3 = extract_degree(bch_series(half_a, b, 3), 3)
-    V4 = extract_degree(bch_series(half_a, b, 4), 4)
+    bch_inner = bch_series(half_a, b, 8)
+    V2 = extract_degree(bch_inner, 2)
+    V3 = extract_degree(bch_inner, 3)
+    V4 = extract_degree(bch_inner, 4)
+    V5 = extract_degree(bch_inner, 5)
+    V6 = extract_degree(bch_inner, 6)
     x_plus_V2 = ncpoly_add(x, V2)
     x_plus_V3 = ncpoly_add(x, V3)
     x_plus_V4 = ncpoly_add(x, V4)
+    x_plus_V5 = ncpoly_add(x, V5)
+    x_plus_V6 = ncpoly_add(x, V6)
+
+    def cross_piece(Vj, Vk, target_deg):
+        bch_jk = bch_series(ncpoly_add(ncpoly_add(x, Vj), Vk), half_a, target_deg)
+        bch_j = bch_series(ncpoly_add(x, Vj), half_a, target_deg)
+        bch_k = bch_series(ncpoly_add(x, Vk), half_a, target_deg)
+        bch_0 = bch_series(x, half_a, target_deg)
+        result = ncpoly_add(ncpoly_sub(bch_jk, bch_j), ncpoly_sub(bch_0, bch_k))
+        return extract_degree(result, target_deg)
+
+    def single_piece(Vj, target_deg):
+        bch_static = bch_series(x, half_a, target_deg)
+        bch_at_xVj = bch_series(ncpoly_add(x, Vj), half_a, target_deg)
+        return extract_degree(ncpoly_sub(bch_at_xVj, bch_static), target_deg)
 
     bch_full_7 = bch_series(a, b, 7)
     bch_3_abs = extract_degree(bch_full_7, 3)
@@ -216,13 +234,41 @@ def compute_subpiece(name):
         # septic_d7_P3_C5_lin_poly = septic_d7_P3_poly - septic_d7_P3_C3_quad_poly
         # P_3 = deg-7 part of (bch(x + V_3, ½a) - bch(x, ½a))
         # C_3_quad = (1/12)·[V_3, [V_3, ½a]] (Dynkin)
-        bch_static = bch_series(x, half_a, 7)
-        bch_at_xV3 = bch_series(x_plus_V3, half_a, 7)
-        P3 = extract_degree(ncpoly_sub(bch_at_xV3, bch_static), 7)
+        P3 = single_piece(V3, 7)
         inner = ncpoly_bracket(V3, half_a)
         outer = ncpoly_bracket(V3, inner)
         C3_quad = ncpoly_scale(outer, sp.Rational(1, 12))
         poly = ncpoly_sub(P3, C3_quad)
+        deg = 7
+    # ---- d8 parent pieces ----
+    elif name == "d8_P2": poly, deg = single_piece(V2, 8), 8
+    elif name == "d8_P3": poly, deg = single_piece(V3, 8), 8
+    elif name == "d8_P5": poly, deg = single_piece(V5, 8), 8
+    elif name == "d8_P6": poly, deg = single_piece(V6, 8), 8
+    elif name == "d8_cross_V2_V4": poly, deg = cross_piece(V2, V4, 8), 8
+    elif name == "d8_cross_V2_V5": poly, deg = cross_piece(V2, V5, 8), 8
+    elif name == "d8_cross_V3_V4": poly, deg = cross_piece(V3, V4, 8), 8
+    # ---- d8 Dynkin sub-piece ----
+    elif name == "d8_P3_C4_quad":
+        # septic_d8_P3_C4_quad_poly = -(1/24)·[a', [V_3, [V_3, a']]]
+        inner = ncpoly_bracket(V3, half_a)
+        mid = ncpoly_bracket(V3, inner)
+        outer = ncpoly_bracket(half_a, mid)
+        poly = ncpoly_scale(outer, sp.Rational(-1, 24))
+        deg = 8
+    # ---- d7 parent pieces ----
+    elif name == "d7_P2": poly, deg = single_piece(V2, 7), 7
+    elif name == "d7_P3": poly, deg = single_piece(V3, 7), 7
+    elif name == "d7_P4": poly, deg = single_piece(V4, 7), 7
+    elif name == "d7_P5": poly, deg = single_piece(V5, 7), 7
+    elif name == "d7_cross_V2_V3": poly, deg = cross_piece(V2, V3, 7), 7
+    elif name == "d7_cross_V2_V4": poly, deg = cross_piece(V2, V4, 7), 7
+    # ---- d7 Dynkin sub-piece ----
+    elif name == "d7_P3_C3_quad":
+        # septic_d7_P3_C3_quad_poly = (1/12)·[V_3, [V_3, a']]
+        inner = ncpoly_bracket(V3, half_a)
+        outer = ncpoly_bracket(V3, inner)
+        poly = ncpoly_scale(outer, sp.Rational(1, 12))
         deg = 7
     else:
         raise ValueError(f"Unknown piece name: {name}")
@@ -518,17 +564,34 @@ def main():
 
     # Map name -> Lean def name.
     lean_name = {
-        # d8 pieces
+        # d8 sub-pieces (added session 53)
         "P2_C5_cubic": "septic_d8_P2_C5_cubic_poly",
         "P2_C6_quad":  "septic_d8_P2_C6_quad_poly",
         "P2_C7_lin":   "septic_d8_P2_C7_lin_poly",
         "P3_C6_lin":   "septic_d8_P3_C6_lin_poly",
         "P4":          "septic_d8_P4_poly",
         "cross_V2_V3": "septic_d8_cross_V2_V3_poly",
-        # d7 pieces
+        # d7 sub-pieces (added session 54)
         "d7_P2_C5_quad": "septic_d7_P2_C5_quad_poly",
         "d7_P2_C6_lin":  "septic_d7_P2_C6_lin_poly",
         "d7_P3_C5_lin":  "septic_d7_P3_C5_lin_poly",
+        # d8 parent + Dynkin pieces (this session)
+        "d8_P2":          "septic_d8_P2_poly",
+        "d8_P3":          "septic_d8_P3_poly",
+        "d8_P5":          "septic_d8_P5_poly",
+        "d8_P6":          "septic_d8_P6_poly",
+        "d8_cross_V2_V4": "septic_d8_cross_V2_V4_poly",
+        "d8_cross_V2_V5": "septic_d8_cross_V2_V5_poly",
+        "d8_cross_V3_V4": "septic_d8_cross_V3_V4_poly",
+        "d8_P3_C4_quad":  "septic_d8_P3_C4_quad_poly",
+        # d7 parent + Dynkin pieces (this session)
+        "d7_P2":          "septic_d7_P2_poly",
+        "d7_P3":          "septic_d7_P3_poly",
+        "d7_P4":          "septic_d7_P4_poly",
+        "d7_P5":          "septic_d7_P5_poly",
+        "d7_cross_V2_V3": "septic_d7_cross_V2_V3_poly",
+        "d7_cross_V2_V4": "septic_d7_cross_V2_V4_poly",
+        "d7_P3_C3_quad":  "septic_d7_P3_C3_quad_poly",
     }[name]
 
     if N <= 124:
