@@ -1,5 +1,83 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 43, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 43 (2026-05-17, CAS infrastructure for d7 operator-form decomposition, 3 commits)**:
+
+Established the structural decomposition of `septic_d7_perturbation_poly`
+into 6 operator-form pieces (foundation for the future Lean Phase B-septic
+operator-form identity). The CAS verification confirms:
+
+    septic_d7_perturbation_poly
+      = P_2 + P_3 + P_4 + P_5 + Cross(V_2, V_3) + Cross(V_2, V_4)
+
+where:
+* `P_j := (bch(x + V_j, ½a) − bch(x, ½a))_deg7` is the single-V_j
+  perturbation piece (V_j = bch_kth_term(½a, b), x = ½a + b).
+* `Cross(V_j, V_k) := (bch(x + V_j + V_k, ½a) − bch(x + V_j, ½a) −
+  bch(x + V_k, ½a) + bch(x, ½a))_deg7` is the mixed second-difference
+  cross piece.
+
+The 6 pieces with explicit polynomial forms (CAS-derived):
+* P_2 (V_2-only): 96 terms, LCM 92160, Σ|num|/LCM ≈ 0.0277.
+* P_3 (V_3-only): 108 terms, LCM 276480, Σ|num|/LCM ≈ 0.0282.
+* P_4 (V_4-only): 35 terms, LCM 18432, Σ|num|/LCM ≈ 0.0093.
+* P_5 (V_5-only): 100 terms, LCM 276480, Σ|num|/LCM ≈ 0.0124.
+* Cross(V_2, V_3): 41 terms, LCM 18432, Σ|num|/LCM ≈ 0.0089.
+  Bilinear V_2·V_3 from C_4 (deg 4+1+2=7) + trilinear V_2²·V_3 from C_3
+  (deg 3+1+1+2=7).
+* Cross(V_2, V_4): 30 terms, LCM 9216, Σ|num|/LCM ≈ 0.0104.
+  Bilinear V_2·V_4 from C_3 (deg 3+1+3=7) only.
+
+Combined: 116 terms, LCM 276480, matching the existing Lean def
+`septic_d7_perturbation_poly_eq_sum`.
+
+3 new commits this session:
+
+1. `4f099ef`: 3 V_j-only CAS scripts (gen_delta_lin_V{3,4,5}_d7.py).
+2. `6278da8`: 2 cross V_j·V_k CAS scripts (gen_cross_V{2_V3,2_V4}_d7.py).
+3. `17636ab`: 3 verification scripts (verify_d7_{cross_terms,
+   cross_decomposition, operator_decomp}.py) confirming the 6-piece sum
+   matches `septic_d7_perturbation_poly` exactly at CAS level.
+
+Companion to the existing `gen_delta_C6_lin_V2.py` (commit 8a05af9 = P_2 piece).
+
+**Why only 6 pieces** (not 8-10 as originally roadmapped):
+Cross enumeration showed that Cross(V_2, V_5), Cross(V_3, V_4),
+Cross(V_3, V_5), and Cross(V_4, V_5) all vanish at deg 7 (C_2 doesn't
+admit bilinear substitution since it has only 1 z, and higher C_p with
+bilinear V_j·V_k pairs has total degree already too large). Only
+Cross(V_2, V_3) (bilinear + trilinear contributions) and Cross(V_2, V_4)
+(bilinear only) survive. The 4 single-V_j pieces (j = 2..5) handle the
+diagonal contributions including higher orders in single V's (V_2² in
+C_5, V_2³ in C_4, V_3² in C_3).
+
+**Mathematical interpretation**:
+* pert_d7 := (bch(z, ½a) − bch(½a+b, ½a))_d7  (z = bch(½a, b))
+* pert_d7 = C_7_inner + correction (verified, palindromic identity).
+* C_7_inner = V_7 = bch_septic_term(½a, b).
+* correction = sym_E_7 − C_7(½a, b) − C_7(½a+b, ½a) (117 terms).
+* P_6 = ½·[V_6, ½a] = ½·[C_6(½a, b), ½a] (49 terms, the existing
+  `half_C6_bracket_eq` polynomial form).
+* septic_d7_perturbation_poly = correction − P_6
+  = P_2 + P_3 + P_4 + P_5 + Cross(V_2,V_3) + Cross(V_2,V_4).
+
+**Remaining work for the operator-form Phase B-septic identity (roadmap item A)**:
+A.1) Encode each of the 6 pieces as Lean DEFs (explicit polynomial sums
+     mirroring `septic_d7_perturbation_poly`'s 116-term def).
+A.2) Prove each polynomial form equals its "operator form" (closed-form
+     expression involving bch_kth_term, brackets, and bch series
+     differences) via `match_scalars + ring`.
+A.3) Combined identity: Σ polynomial forms = septic_d7_perturbation_poly.
+A.4) Norm bounds on each operator form using Lipschitz (e.g., for P_5,
+     bound = ‖ΔC_3_lin(V_5)‖ ≤ C·s³·‖V_5‖ ≤ C·s³·s⁵ = C·s⁸).
+A.5) Joint Group E+F+CD-quintic bound replacing the 4 separate bounds.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 42, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
