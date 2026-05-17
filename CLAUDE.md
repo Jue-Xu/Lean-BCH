@@ -1,5 +1,89 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 49, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 49 (2026-05-17, operator-form identities for 5 of 9 d8 pieces, 1 commit)**:
+
+Lie-polynomial operator-form identities for the 5 SIMPLEST pieces of the
+9-piece d8 decomposition. Each piece equals a specific nested-bracket
+expression in (V_j, V_k, x, a') proved via `match_scalars + ring`. d8
+analog of session 45 (d7, 4 pieces) at one degree higher with one extra
+piece (the V_3·V_4 cross had no d7 analog).
+
+**`f2e1676`** — 5 op-form private theorems in `BCH/SymmetricQuintic.lean`
+(after `septic_d8_perturbation_poly_pieces_decomp`, ~line 15743, +196
+lines added):
+
+1. `septic_d8_P6_op_form` (ΔC_3_lin(V_6)):
+
+       septic_d8_P6_poly = (1/12)·([V_6, [x, a']] + [x, [V_6, a']] + [a', [a', V_6]])
+
+   where V_6 = bch_sextic_term(½a, b). Analog of `septic_d7_P5_op_form`.
+
+2. `septic_d8_P5_op_form` (ΔC_4_lin(V_5)):
+
+       septic_d8_P5_poly = -(1/24)·([a', [V_5, [x, a']]] + [a', [x, [V_5, a']]])
+
+   where V_5 = bch_quintic_term(½a, b). Analog of `septic_d7_P4_op_form`.
+
+3. `septic_d8_cross_V2_V5_op_form` (ΔC_3_bil(V_2, V_5)):
+
+       septic_d8_cross_V2_V5_poly = (1/12)·([V_2, [V_5, a']] + [V_5, [V_2, a']])
+
+4. `septic_d8_cross_V3_V4_op_form` (ΔC_3_bil(V_3, V_4)):
+
+       septic_d8_cross_V3_V4_poly = (1/12)·([V_3, [V_4, a']] + [V_4, [V_3, a']])
+
+   (extra piece — no d7 analog since d7 had only Cross(V_2, V_k) pieces.)
+
+5. `septic_d8_cross_V2_V4_op_form` (ΔC_4_bil(V_2, V_4)):
+
+       septic_d8_cross_V2_V4_poly = -(1/24)·([a', [V_2, [V_4, a']]] +
+                                             [a', [V_4, [V_2, a']]])
+
+CAS verification scripts: `scripts/verify_d8_{P5,P6,cross_V2_V4,cross_V2_V5,cross_V3_V4}_operator_form.py`,
+each confirms the operator form's polynomial exactly equals the
+corresponding `septic_d8_*_poly` def at CAS level.
+
+Each Lean proof ~25-40 lines, follows the exact d7 pattern (unfold +
+simp distribution + `match_scalars <;> ring`). Section-level
+`maxHeartbeats 64000000` sufficient. Build wall ~10 min, no slowdown.
+
+**Status summary after session 49** (5 of 9 d8 op-form identities proven):
+
+| Piece | Sub-pieces | Op-form identities |
+|-------|-----------:|--------------------|
+| P_6 | 1 (ΔC_3_lin) | ✓ |
+| P_5 | 1 (ΔC_4_lin) | ✓ |
+| Cross(V_2, V_5) | 1 (ΔC_3_bil) | ✓ |
+| Cross(V_3, V_4) | 1 (ΔC_3_bil) | ✓ |
+| Cross(V_2, V_4) | 1 (ΔC_4_bil) | ✓ |
+| P_4 | TBD | needs sub-piece split (C_5 lin via bch_quintic_term) |
+| P_3 | TBD | needs sub-piece split (C_6 lin + C_4 quad) |
+| P_2 | TBD | needs sub-piece split (C_7 lin + C_6 quad + C_5 cubic) |
+| Cross(V_2, V_3) | TBD | needs sub-piece split (C_5 bil) |
+
+5 Dynkin operator forms proven; the remaining 4 pieces (P_2, P_3, P_4,
+Cross(V_2, V_3)) involve `bch_kth_term` for k ≥ 5 (monomial form in
+Lean, not Dynkin Lie poly form), so will need sub-piece splits analog
+to d7's `septic_d7_P3_pieces_decomp` and `septic_d7_P2_pieces_decomp`
+(session 46), then Lipschitz-style bounds for the non-Dynkin sub-pieces.
+
+**Remaining work**:
+☐ Sub-piece splits for P_2, P_3, P_4 + Cross(V_2, V_3) (analog of d7
+  session 46). Each piece needs to be decomposed into Dynkin sub-piece +
+  bch_kth_term sub-pieces.
+☐ Dynkin op-form identities for the Dynkin sub-pieces (~5 more lemmas).
+☐ Lipschitz-style norm bounds on the bch_kth_term sub-pieces for d7+d8
+  combined (~10+ more lemmas).
+☐ Joint analysis combining d7+d8 op-form bounds with Groups F+CD-quintic
+  for O(s⁹) bound discharging `symmetric_bch_septic_sub_poly_axiom`.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 48, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
