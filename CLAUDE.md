@@ -1,5 +1,79 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 51, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 51 (2026-05-17, d8 P_2 3-piece sub-decomposition, 1 commit)**:
+
+Polynomial-form sub-piece decomposition for the V_2-only piece (P_2_d8)
+of the 9-piece d8 decomposition. d8 analog of d7 session 46 P_2 work, with
+one extra sub-piece since deg 8 admits cubic-in-V_2 from C_5 (which d7
+couldn't admit since C_4 has only 2 z-positions).
+
+**`0bfc76d`** — Three polynomial DEFs in `BCH/SymmetricQuintic.lean`
+(~line 16263, after P_3 sub-piece work, +419 lines) + sum identity:
+
+* `septic_d8_P2_C7_lin_poly` (174 terms, LCM 3870720, Σ|num|/LCM ≈ 0.0108).
+  C_7 linear-in-V_2 (k=1, p=7). Equals deg-8 part of
+  `bch_septic_term(x + V_2, a') - bch_septic_term(x, a')`.
+* `septic_d8_P2_C6_quad_poly` (110 terms, LCM 368640, Σ|num|/LCM ≈ 0.0081).
+  C_6 quadratic-in-V_2 (k=2, p=6). Equals deg-8 part of
+  `bch_sextic_term(x + V_2, a') - bch_sextic_term(x, a')`.
+* `septic_d8_P2_C5_cubic_poly` (78 terms, LCM 184320, Σ|num|/LCM ≈ 0.0052).
+  C_5 cubic-in-V_2 (k=3, p=5). Equals deg-8 part of
+  `bch_quintic_term(x + V_2, a') - bch_quintic_term(x, a')`.
+
+Sum: 186 terms (LCM 7741440), matching `septic_d8_P2_poly` exactly.
+
+`septic_d8_P2_pieces_decomp`: P_2_d8 = C_7_lin + C_6_quad + C_5_cubic.
+Proof: 2 lines (`unfold 4 defs + match_scalars <;> ring`).
+
+Extraction method: each sub-piece extracted INDEPENDENTLY via direct
+`bch_kth_term` differences (no Vandermonde extraction needed). At deg 8,
+only specific (k V_2-substitutions, p+k=8) survive per bch_kth_term:
+* For k=1 in bch_septic_term: deg 7 - 1 + 2 = 8 ✓.
+* For k=2 in bch_sextic_term: deg 6 - 2 + 4 = 8 ✓.
+* For k=3 in bch_quintic_term: deg 5 - 3 + 6 = 8 ✓.
+* Higher k impossible since C_p with p ≤ 4 has ≤ 2 z-positions (can't
+  accept k ≥ 4 substitutions).
+
+CAS-derived via `scripts/gen_d8_P2_subpieces.py`. Cross-checked at CAS
+level: sum equals direct `septic_d8_P2_poly` from full bch series.
+
+None of the 3 sub-pieces are Dynkin-expressible — all use `bch_kth_term`
+for k ≥ 5, monomial form in Lean. All need Lipschitz bounds.
+
+**Status summary after session 51**: All 9 d8 pieces now have explicit
+polynomial-form sub-decompositions in Lean.
+
+| Piece | Sub-pieces | Op-form identities |
+|-------|-----------:|--------------------|
+| P_6 | 1 (ΔC_3_lin) | ✓ |
+| P_5 | 1 (ΔC_4_lin) | ✓ |
+| Cross(V_2, V_5) | 1 (ΔC_3_bil) | ✓ |
+| Cross(V_3, V_4) | 1 (ΔC_3_bil) | ✓ |
+| Cross(V_2, V_4) | 1 (ΔC_4_bil) | ✓ |
+| P_3 | 2 (C_4 quad + C_6 lin) | ✓ for C_4 quad |
+| P_2 | 3 (C_5 cubic + C_6 quad + C_7 lin) | needs Lipschitz |
+| P_4 | 1 (C_5 lin, not Dynkin) | needs Lipschitz |
+| Cross(V_2, V_3) | 1 (C_5 bil, not Dynkin) | needs Lipschitz |
+
+6 Dynkin operator-form identities proven; 6 non-Dynkin sub-pieces remain
+(P_3 C_6 lin, P_4 C_5 lin, P_2 3 sub-pieces, Cross(V_2, V_3) C_5 bil),
+each needing a Lipschitz-style bound using existing `norm_bch_kth_term_diff_le`
+helpers (k=5,6,7 already in Lean from sessions 27-28).
+
+**Remaining work**:
+☐ Lipschitz-style norm bounds for the 6 non-Dynkin sub-pieces using
+  existing `norm_bch_quintic_term_diff_le`, `norm_bch_sextic_term_diff_le`,
+  `norm_bch_septic_term_diff_le` infrastructure.
+☐ Joint analysis combining d7+d8 op-form bounds with Groups F+CD-quintic
+  for O(s⁹) bound discharging `symmetric_bch_septic_sub_poly_axiom`.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 50, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
