@@ -1,5 +1,55 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 55, 2026-05-18)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 55 (2026-05-18, 10 more per-piece norm bounds for d7/d8, 1 commit)**:
+
+Rounds out the per-piece norm-bound infrastructure with bounds on the
+remaining single-Finset.sum-compatible (N ≤ 124 terms) d7 parent pieces,
+d7 Dynkin sub-piece, and 3 smaller d8 pieces.
+
+**`b6481d6`** — 10 new public theorems in `BCH/SymmetricQuintic.lean`
+(+4555 lines):
+
+| d7 piece | Terms | Bound (K·s⁷) | d8 piece | Terms | Bound (K·s⁸) |
+|---------:|------:|-------------:|---------:|------:|-------------:|
+| P_2_poly             |  96 | 0.106 | cross_V2_V4_poly     |  40 | 0.013 |
+| P_3_poly             | 108 | 0.388 | cross_V3_V4_poly     |  66 | 0.010 |
+| P_4_poly             |  35 | 0.030 | P_3_C4_quad_poly     |  90 | 0.013 |
+| P_5_poly             | 100 | 0.139 | | | |
+| cross_V2_V3_poly     |  41 | 0.036 | | | |
+| cross_V2_V4_poly     |  30 | 0.052 | | | |
+| P_3_C3_quad_poly     |  67 | 0.039 | | | |
+
+Generator extended with 15 new piece names (5 split-half-needed pieces
+deferred: `d8_P2/P3/P5/P6` and `d8_cross_V2_V5`, all with 126-186 terms).
+
+**Combined infrastructure summary (sessions 53+54+55)**:
+
+| Layer | Count | Status |
+|-------|------:|--------|
+| d8 parent pieces | 9 | 4/9 bounded (P_4, cross_V2_V3, cross_V2_V4, cross_V3_V4) + 5 split-half pending |
+| d7 parent pieces | 6 | 6/6 bounded ✓ |
+| d8 non-Dynkin sub-pieces | 6 | 6/6 bounded ✓ (session 53) |
+| d7 non-Dynkin sub-pieces | 3 | 3/3 bounded ✓ (session 54) |
+| d8 Dynkin sub-pieces | 1 (P_3_C4_quad) | 1/1 bounded ✓ |
+| d7 Dynkin sub-pieces | 1 (P_3_C3_quad) | 1/1 bounded ✓ |
+
+The 5 unbounded d8 parent pieces (P_2/P_3/P_5/P_6 + cross_V2_V5) would
+need split-half emission (~1500 lines each); deferred to a future
+session if needed. They're not blockers — the WHOLE
+`septic_d8_perturbation_poly` already has `‖.‖ ≤ s⁸` (session 39),
+giving a tight upper bound on each parent piece as a sub-sum.
+
+These per-piece bounds give the "raw" polynomial-norm-bound foundation.
+Insufficient alone for `O(s⁹)` joint bound; cancellation arguments
+still needed.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 54, 2026-05-18)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
