@@ -138,7 +138,7 @@ def substitute(p, sub_a, sub_b):
 # ---- Sub-piece computation ----
 
 def compute_subpiece(name):
-    """Return (items: sorted list of (word, coef)) for the named sub-piece."""
+    """Return (items, target_degree) for the named sub-piece."""
     a = ncpoly_a(); b = ncpoly_b()
     half = sp.Rational(1, 2)
     half_a = ncpoly_scale(a, half)
@@ -151,44 +151,44 @@ def compute_subpiece(name):
     x_plus_V4 = ncpoly_add(x, V4)
 
     bch_full_7 = bch_series(a, b, 7)
+    bch_3_abs = extract_degree(bch_full_7, 3)
     bch_4_abs = extract_degree(bch_full_7, 4)
     bch_5_abs = extract_degree(bch_full_7, 5)
     bch_6_abs = extract_degree(bch_full_7, 6)
     bch_7_abs = extract_degree(bch_full_7, 7)
 
+    # ---- d8 sub-pieces ----
     if name == "P2_C5_cubic":
         bch_5_at_xV2 = substitute(bch_5_abs, x_plus_V2, half_a)
         bch_5_at_x = substitute(bch_5_abs, x, half_a)
         poly = extract_degree(ncpoly_sub(bch_5_at_xV2, bch_5_at_x), 8)
+        deg = 8
     elif name == "P2_C6_quad":
         bch_6_at_xV2 = substitute(bch_6_abs, x_plus_V2, half_a)
         bch_6_at_x = substitute(bch_6_abs, x, half_a)
         poly = extract_degree(ncpoly_sub(bch_6_at_xV2, bch_6_at_x), 8)
+        deg = 8
     elif name == "P2_C7_lin":
         bch_7_at_xV2 = substitute(bch_7_abs, x_plus_V2, half_a)
         bch_7_at_x = substitute(bch_7_abs, x, half_a)
         poly = extract_degree(ncpoly_sub(bch_7_at_xV2, bch_7_at_x), 8)
+        deg = 8
     elif name == "P4":
-        # P_4 = (bch(x + V_4, ½a) - bch(x, ½a))_deg8
         bch_static = bch_series(x, half_a, 8)
         bch_at_xV4 = bch_series(x_plus_V4, half_a, 8)
         poly = extract_degree(ncpoly_sub(bch_at_xV4, bch_static), 8)
+        deg = 8
     elif name == "P3_C6_lin":
-        # P_3 = (bch(x + V_3, ½a) - bch(x, ½a))_deg8 split:
-        #   septic_d8_P3 = C_4_quad + C_6_lin
-        # C_6_lin = P_3 - C_4_quad where
-        # C_4_quad = -(1/24)·[½a, [V_3, [V_3, ½a]]] (Dynkin form).
         bch_static = bch_series(x, half_a, 8)
         bch_at_xV3 = bch_series(x_plus_V3, half_a, 8)
         P3 = extract_degree(ncpoly_sub(bch_at_xV3, bch_static), 8)
-        # C_4_quad = -(1/24)·[½a, [V_3, [V_3, ½a]]]
         inner = ncpoly_bracket(V3, half_a)
         mid = ncpoly_bracket(V3, inner)
         outer = ncpoly_bracket(half_a, mid)
         C4_quad = ncpoly_scale(outer, sp.Rational(-1, 24))
         poly = ncpoly_sub(P3, C4_quad)
+        deg = 8
     elif name == "cross_V2_V3":
-        # Cross(V_2, V_3) = (bch(x+V_2+V_3) - bch(x+V_2) - bch(x+V_3) + bch(x))_deg8
         x_p_V2_V3 = ncpoly_add(x_plus_V2, V3)
         bch_full = bch_series(x_p_V2_V3, half_a, 8)
         bch_V2 = bch_series(x_plus_V2, half_a, 8)
@@ -198,11 +198,37 @@ def compute_subpiece(name):
             ncpoly_sub(bch_full, bch_V2),
             ncpoly_sub(bch_x, bch_V3))
         poly = extract_degree(cross, 8)
+        deg = 8
+    # ---- d7 sub-pieces ----
+    elif name == "d7_P2_C5_quad":
+        # septic_d7_P2_C5_quad_poly: deg-7 part of bch_quintic(x+V_2, a') - bch_quintic(x, a').
+        bch_5_at_xV2 = substitute(bch_5_abs, x_plus_V2, half_a)
+        bch_5_at_x = substitute(bch_5_abs, x, half_a)
+        poly = extract_degree(ncpoly_sub(bch_5_at_xV2, bch_5_at_x), 7)
+        deg = 7
+    elif name == "d7_P2_C6_lin":
+        # septic_d7_P2_C6_lin_poly: deg-7 part of bch_sextic(x+V_2, a') - bch_sextic(x, a').
+        bch_6_at_xV2 = substitute(bch_6_abs, x_plus_V2, half_a)
+        bch_6_at_x = substitute(bch_6_abs, x, half_a)
+        poly = extract_degree(ncpoly_sub(bch_6_at_xV2, bch_6_at_x), 7)
+        deg = 7
+    elif name == "d7_P3_C5_lin":
+        # septic_d7_P3_C5_lin_poly = septic_d7_P3_poly - septic_d7_P3_C3_quad_poly
+        # P_3 = deg-7 part of (bch(x + V_3, ½a) - bch(x, ½a))
+        # C_3_quad = (1/12)·[V_3, [V_3, ½a]] (Dynkin)
+        bch_static = bch_series(x, half_a, 7)
+        bch_at_xV3 = bch_series(x_plus_V3, half_a, 7)
+        P3 = extract_degree(ncpoly_sub(bch_at_xV3, bch_static), 7)
+        inner = ncpoly_bracket(V3, half_a)
+        outer = ncpoly_bracket(V3, inner)
+        C3_quad = ncpoly_scale(outer, sp.Rational(1, 12))
+        poly = ncpoly_sub(P3, C3_quad)
+        deg = 7
     else:
         raise ValueError(f"Unknown piece name: {name}")
 
     items = sorted([(w, c) for w, c in poly.items() if c != 0], key=lambda x: x[0])
-    return items
+    return items, deg
 
 
 # ---- Lean code emission ----
@@ -230,8 +256,13 @@ def lcm_and_stats(items):
     return LCM, max_abs, sum_abs
 
 
-def emit_single_sum(piece_lean_name, items, lcm, max_abs):
-    """Emit single-Finset.sum norm-bound lemma (for N ≤ 124)."""
+def emit_single_sum(piece_lean_name, items, lcm, max_abs, deg=8):
+    """Emit single-Finset.sum norm-bound lemma (for N ≤ 124).
+
+    deg: the polynomial degree (7 or 8); selects `deg7_smul_word_le` vs
+    `{helper}` and `s^deg` in the bound.
+    """
+    helper = f"deg{deg}_smul_word_le"
     N = len(items)
     cap = piece_lean_name.replace("_poly", "")  # drop trailing _poly for prefix
     # Build a clean PascalCase prefix for the helper-family name.
@@ -264,12 +295,12 @@ def emit_single_sum(piece_lean_name, items, lcm, max_abs):
     print(f"    {prefix}TermN, zero_add]")
     print()
 
-    print(f"-- Per-index uniform bound: `‖{prefix}Term a b i‖ ≤ ({max_abs}/{lcm}) · s^8`.")
+    print(f"-- Per-index uniform bound: `‖{prefix}Term a b i‖ ≤ ({max_abs}/{lcm}) · s^{deg}`.")
     print("set_option maxHeartbeats 8000000 in")
     print(f"private lemma {prefix}Term_norm_le (a b : 𝔸) (s : ℝ)")
     print("    (ha : ‖a‖ ≤ s) (hb : ‖b‖ ≤ s) (hs : 0 ≤ s) :")
     print(f"    ∀ i : Fin {N}, ‖{prefix}Term (𝕂 := 𝕂) a b i‖ "
-          f"≤ ({max_abs} / {lcm} : ℝ) * s^8 := fun i =>")
+          f"≤ ({max_abs} / {lcm} : ℝ) * s^{deg} := fun i =>")
     print("  match i with")
     for idx, (w, c) in enumerate(items):
         n = int(sp.nsimplify(c * lcm))
@@ -277,8 +308,8 @@ def emit_single_sum(piece_lean_name, items, lcm, max_abs):
         whyps = word_hyps(w)
         print(f"  | ⟨{idx}, _⟩ =>")
         print(f"    show ‖({n} / {lcm} : 𝕂) • ({word_lean(w)})‖ ≤ "
-              f"({max_abs} / {lcm} : ℝ) * s^8 from")
-        print(f"      deg8_smul_word_le ({n} / {lcm} : 𝕂) ({max_abs} / {lcm} : ℝ)")
+              f"({max_abs} / {lcm} : ℝ) * s^{deg} from")
+        print(f"      {helper} ({n} / {lcm} : 𝕂) ({max_abs} / {lcm} : ℝ)")
         print(f"        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)")
         print(f"        {wargs} s {whyps} (by norm_num) hs")
     print(f"  | ⟨_ + {N}, h⟩ => absurd h (by omega)")
@@ -288,15 +319,16 @@ def emit_single_sum(piece_lean_name, items, lcm, max_abs):
     coef_num = N * max_abs
     coef_den = lcm
 
+    super = "⁷" if deg == 7 else "⁸"
     print("set_option maxHeartbeats 800000 in")
     print(f"/-- **Norm bound for `{piece_lean_name}`**:")
-    print(f"`‖{piece_lean_name}(a,b)‖ ≤ ({coef_num}/{coef_den}) · (‖a‖+‖b‖)⁸`.")
+    print(f"`‖{piece_lean_name}(a,b)‖ ≤ ({coef_num}/{coef_den}) · (‖a‖+‖b‖){super}`.")
     print()
-    print(f"{N} explicit deg-8 terms, max |numerator| = {max_abs}, LCM = {lcm}.")
-    print(f"Per-term uniform bound `({max_abs}/{lcm}) · s^8` summed over Fin {N}. -/")
+    print(f"{N} explicit deg-{deg} terms, max |numerator| = {max_abs}, LCM = {lcm}.")
+    print(f"Per-term uniform bound `({max_abs}/{lcm}) · s^{deg}` summed over Fin {N}. -/")
     print(f"theorem norm_{piece_lean_name}_le (a b : 𝔸) :")
     print(f"    ‖{piece_lean_name} 𝕂 a b‖ ≤ "
-          f"({coef_num} / {coef_den} : ℝ) * (‖a‖ + ‖b‖) ^ 8 := by")
+          f"({coef_num} / {coef_den} : ℝ) * (‖a‖ + ‖b‖) ^ {deg} := by")
     print("  set s := ‖a‖ + ‖b‖ with hs_def")
     print("  have hs_nn : 0 ≤ s := by positivity")
     print("  have ha_le : ‖a‖ ≤ s := by linarith [norm_nonneg b]")
@@ -304,16 +336,16 @@ def emit_single_sum(piece_lean_name, items, lcm, max_abs):
     print(f"  rw [{piece_lean_name}_eq_sum]")
     print(f"  calc ‖∑ i : Fin {N}, {prefix}Term (𝕂 := 𝕂) a b i‖")
     print(f"      ≤ ∑ i : Fin {N}, ‖{prefix}Term (𝕂 := 𝕂) a b i‖ := norm_sum_le _ _")
-    print(f"    _ ≤ ∑ _i : Fin {N}, ({max_abs} / {lcm} : ℝ) * s^8 :=")
+    print(f"    _ ≤ ∑ _i : Fin {N}, ({max_abs} / {lcm} : ℝ) * s^{deg} :=")
     print(f"        Finset.sum_le_sum (fun i _ => {prefix}Term_norm_le "
           f"(𝕂 := 𝕂) a b s ha_le hb_le hs_nn i)")
-    print(f"    _ = {N} * (({max_abs} / {lcm} : ℝ) * s^8) := by")
+    print(f"    _ = {N} * (({max_abs} / {lcm} : ℝ) * s^{deg}) := by")
     print("        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring")
-    print(f"    _ = ({coef_num} / {coef_den} : ℝ) * s^8 := by ring")
+    print(f"    _ = ({coef_num} / {coef_den} : ℝ) * s^{deg} := by ring")
     print()
 
 
-def emit_split_half(piece_lean_name, items, lcm, max_abs):
+def emit_split_half(piece_lean_name, items, lcm, max_abs, deg=8):
     """Emit split-half Finset.sum norm-bound lemmas (for N > 124).
 
     Splits N items into two halves at N//2. Each half gets its own
@@ -321,6 +353,7 @@ def emit_split_half(piece_lean_name, items, lcm, max_abs):
     The whole-poly statement combines via triangle inequality + a `_split`
     lemma rewriting the def as a sum of two explicit forms (via `abel`).
     """
+    helper = f"deg{deg}_smul_word_le"
     N = len(items)
     SPLIT = N // 2
     first_items = items[:SPLIT]
@@ -365,12 +398,12 @@ def emit_split_half(piece_lean_name, items, lcm, max_abs):
         print(f"    {half_prefix}TermN, zero_add]")
         print()
 
-        print(f"-- Per-index uniform bound: `‖{half_prefix}Term a b i‖ ≤ ({max_abs}/{lcm}) · s^8`.")
+        print(f"-- Per-index uniform bound: `‖{half_prefix}Term a b i‖ ≤ ({max_abs}/{lcm}) · s^{deg}`.")
         print("set_option maxHeartbeats 8000000 in")
         print(f"private lemma {half_prefix}Term_norm_le (a b : 𝔸) (s : ℝ)")
         print("    (ha : ‖a‖ ≤ s) (hb : ‖b‖ ≤ s) (hs : 0 ≤ s) :")
         print(f"    ∀ i : Fin {half_N}, ‖{half_prefix}Term (𝕂 := 𝕂) a b i‖ "
-              f"≤ ({max_abs} / {lcm} : ℝ) * s^8 := fun i =>")
+              f"≤ ({max_abs} / {lcm} : ℝ) * s^{deg} := fun i =>")
         print("  match i with")
         for idx, (w, c) in enumerate(half_items):
             n = int(sp.nsimplify(c * lcm))
@@ -378,8 +411,8 @@ def emit_split_half(piece_lean_name, items, lcm, max_abs):
             whyps = word_hyps(w)
             print(f"  | ⟨{idx}, _⟩ =>")
             print(f"    show ‖({n} / {lcm} : 𝕂) • ({word_lean(w)})‖ ≤ "
-                  f"({max_abs} / {lcm} : ℝ) * s^8 from")
-            print(f"      deg8_smul_word_le ({n} / {lcm} : 𝕂) ({max_abs} / {lcm} : ℝ)")
+                  f"({max_abs} / {lcm} : ℝ) * s^{deg} from")
+            print(f"      {helper} ({n} / {lcm} : 𝕂) ({max_abs} / {lcm} : ℝ)")
             print(f"        (by rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num)")
             print(f"        {wargs} s {whyps} (by norm_num) hs")
         print(f"  | ⟨_ + {half_N}, h⟩ => absurd h (by omega)")
@@ -389,7 +422,7 @@ def emit_split_half(piece_lean_name, items, lcm, max_abs):
         print(f"-- Norm bound on the {half_label} half.")
         print(f"private theorem norm_{half_prefix}Sum_le (a b : 𝔸) :")
         print(f"    ‖∑ i : Fin {half_N}, {half_prefix}Term (𝕂 := 𝕂) a b i‖ "
-              f"≤ ({half_N} * {max_abs} / {lcm} : ℝ) * (‖a‖ + ‖b‖) ^ 8 := by")
+              f"≤ ({half_N} * {max_abs} / {lcm} : ℝ) * (‖a‖ + ‖b‖) ^ {deg} := by")
         print("  set s := ‖a‖ + ‖b‖ with hs_def")
         print("  have hs_nn : 0 ≤ s := by positivity")
         print("  have ha_le : ‖a‖ ≤ s := by linarith [norm_nonneg b]")
@@ -397,12 +430,12 @@ def emit_split_half(piece_lean_name, items, lcm, max_abs):
         print(f"  calc ‖∑ i : Fin {half_N}, {half_prefix}Term (𝕂 := 𝕂) a b i‖")
         print(f"      ≤ ∑ i : Fin {half_N}, ‖{half_prefix}Term (𝕂 := 𝕂) a b i‖ "
               ":= norm_sum_le _ _")
-        print(f"    _ ≤ ∑ _i : Fin {half_N}, ({max_abs} / {lcm} : ℝ) * s^8 :=")
+        print(f"    _ ≤ ∑ _i : Fin {half_N}, ({max_abs} / {lcm} : ℝ) * s^{deg} :=")
         print(f"        Finset.sum_le_sum (fun i _ => {half_prefix}Term_norm_le "
               f"(𝕂 := 𝕂) a b s ha_le hb_le hs_nn i)")
-        print(f"    _ = {half_N} * (({max_abs} / {lcm} : ℝ) * s^8) := by")
+        print(f"    _ = {half_N} * (({max_abs} / {lcm} : ℝ) * s^{deg}) := by")
         print("        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring")
-        print(f"    _ = ({half_N} * {max_abs} / {lcm} : ℝ) * s^8 := by ring")
+        print(f"    _ = ({half_N} * {max_abs} / {lcm} : ℝ) * s^{deg} := by ring")
         print()
 
     emit_half("first", first_items, N1, base_prefix + "First")
@@ -440,16 +473,16 @@ def emit_split_half(piece_lean_name, items, lcm, max_abs):
     total_den = lcm
     print("set_option maxHeartbeats 800000 in")
     print(f"/-- **Norm bound for `{piece_lean_name}`**:")
-    print(f"`‖{piece_lean_name}(a,b)‖ ≤ ({total_num}/{total_den}) · (‖a‖+‖b‖)⁸`.")
+    print(f"`‖{piece_lean_name}(a,b)‖ ≤ ({total_num}/{total_den}) · (‖a‖+‖b‖)^{deg}`.")
     print()
-    print(f"{N} explicit deg-8 terms (split {N1}/{N2}), max |numerator| = {max_abs}, LCM = {lcm}.")
+    print(f"{N} explicit deg-{deg} terms (split {N1}/{N2}), max |numerator| = {max_abs}, LCM = {lcm}.")
     print(f"Uses the **split-half** Finset.sum approach: `≤ ‖first‖ + ‖second‖`. -/")
     print(f"theorem norm_{piece_lean_name}_le (a b : 𝔸) :")
     print(f"    ‖{piece_lean_name} 𝕂 a b‖ ≤ "
-          f"({total_num} / {total_den} : ℝ) * (‖a‖ + ‖b‖) ^ 8 := by")
+          f"({total_num} / {total_den} : ℝ) * (‖a‖ + ‖b‖) ^ {deg} := by")
     print("  set s := ‖a‖ + ‖b‖ with hs_def")
     print("  have hs_nn : 0 ≤ s := by positivity")
-    print("  have hs8_nn : 0 ≤ s ^ 8 := pow_nonneg hs_nn 8")
+    print("  have hsdeg_nn : 0 ≤ s ^ {deg} := pow_nonneg hs_nn {deg}")
     print(f"  rw [{piece_lean_name}_split,")
     print(f"      {base_prefix}First_explicit_eq_sum,")
     print(f"      {base_prefix}Second_explicit_eq_sum]")
@@ -457,11 +490,11 @@ def emit_split_half(piece_lean_name, items, lcm, max_abs):
           f"(∑ i : Fin {N2}, {base_prefix}SecondTerm (𝕂 := 𝕂) a b i)‖")
     print(f"      ≤ ‖∑ i : Fin {N1}, {base_prefix}FirstTerm (𝕂 := 𝕂) a b i‖ +")
     print(f"          ‖∑ i : Fin {N2}, {base_prefix}SecondTerm (𝕂 := 𝕂) a b i‖ := norm_add_le _ _")
-    print(f"    _ ≤ ({N1} * {max_abs} / {lcm} : ℝ) * s^8 +")
-    print(f"          ({N2} * {max_abs} / {lcm} : ℝ) * s^8 :=")
+    print(f"    _ ≤ ({N1} * {max_abs} / {lcm} : ℝ) * s^{deg} +")
+    print(f"          ({N2} * {max_abs} / {lcm} : ℝ) * s^{deg} :=")
     print(f"        add_le_add (norm_{base_prefix}FirstSum_le a b) "
           f"(norm_{base_prefix}SecondSum_le a b)")
-    print(f"    _ = ({total_num} / {total_den} : ℝ) * s^8 := by ring")
+    print(f"    _ = ({total_num} / {total_den} : ℝ) * s^{deg} := by ring")
     print()
 
 
@@ -473,10 +506,10 @@ def main():
         sys.exit(1)
 
     name = sys.argv[1]
-    items = compute_subpiece(name)
+    items, deg = compute_subpiece(name)
     lcm, max_abs, sum_abs = lcm_and_stats(items)
     N = len(items)
-    sys.stderr.write(f"# Piece: {name}\n")
+    sys.stderr.write(f"# Piece: {name} (deg {deg})\n")
     sys.stderr.write(f"# {N} terms, LCM = {lcm}, max|num| = {max_abs}, "
                      f"Σ|num| = {sum_abs}\n")
     sys.stderr.write(f"# Σ|num|/LCM = {sum_abs}/{lcm} ≈ {sum_abs/lcm:.6f}\n")
@@ -485,18 +518,23 @@ def main():
 
     # Map name -> Lean def name.
     lean_name = {
+        # d8 pieces
         "P2_C5_cubic": "septic_d8_P2_C5_cubic_poly",
         "P2_C6_quad":  "septic_d8_P2_C6_quad_poly",
         "P2_C7_lin":   "septic_d8_P2_C7_lin_poly",
         "P3_C6_lin":   "septic_d8_P3_C6_lin_poly",
         "P4":          "septic_d8_P4_poly",
         "cross_V2_V3": "septic_d8_cross_V2_V3_poly",
+        # d7 pieces
+        "d7_P2_C5_quad": "septic_d7_P2_C5_quad_poly",
+        "d7_P2_C6_lin":  "septic_d7_P2_C6_lin_poly",
+        "d7_P3_C5_lin":  "septic_d7_P3_C5_lin_poly",
     }[name]
 
     if N <= 124:
-        emit_single_sum(lean_name, items, lcm, max_abs)
+        emit_single_sum(lean_name, items, lcm, max_abs, deg=deg)
     else:
-        emit_split_half(lean_name, items, lcm, max_abs)
+        emit_split_half(lean_name, items, lcm, max_abs, deg=deg)
 
 
 if __name__ == "__main__":
