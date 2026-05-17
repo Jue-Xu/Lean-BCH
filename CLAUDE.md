@@ -1,5 +1,65 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 45, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 45 (2026-05-17, operator-form identities for 4 of 6 d7 pieces, 4 commits)**:
+
+Lie-polynomial operator-form identities for 4 of 6 pieces of the d7
+decomposition. Each piece equals a specific nested-bracket expression in
+(V_j, x, a') proved via `match_scalars + ring`.
+
+1. **`2b4a7c5`** — `septic_d7_P5_op_form` (P_5 = ΔC_3_lin(V_5)):
+
+       septic_d7_P5_poly = (1/12)·([V_5, [x, a']] + [x, [V_5, a']] + [a', [a', V_5]])
+
+   where V_5 = bch_quintic_term(½a, b). Mirrors quintic `deltaC3_lin_V3_eq`.
+
+2. **`b7263a2`** — `septic_d7_P4_op_form` (P_4 = ΔC_4_lin(V_4)):
+
+       septic_d7_P4_poly = -(1/24)·([a', [V_4, [x, a']]] + [a', [x, [V_4, a']]])
+
+   where V_4 = bch_quartic_term(½a, b). Mirrors quintic `deltaC4_lin_V2_eq`.
+
+3. **`05b3a35`** — `septic_d7_cross_V2_V4_op_form` (ΔC_3_bil(V_2, V_4)):
+
+       septic_d7_cross_V2_V4_poly = (1/12)·([V_2, [V_4, a']] + [V_4, [V_2, a']])
+
+4. **`a2aa5c6`** — `septic_d7_cross_V2_V3_op_form` (ΔC_4_bil(V_2, V_3)):
+
+       septic_d7_cross_V2_V3_poly = -(1/24)·([a', [V_2, [V_3, a']]] + [a', [V_3, [V_2, a']]])
+
+**Correction**: the original CAS docstring for `gen_cross_V2_V3_d7.py`
+claimed Cross(V_2, V_3) had a "trilinear V_2²·V_3 from C_3" contribution.
+This was WRONG: C_3 has at most 2 z-positions (in `[z, [z, y]]`), so
+trilinear (3 V substitutions) is impossible. The ONLY deg-7 contribution
+to Cross(V_2, V_3) is the bilinear V_2·V_3 from C_4. Lean docstring
+includes this correction note.
+
+Each proof ~25-40 lines, builds 7-8 min wall, no slowdown. Each piece is
+also verified independently in CAS at `scripts/verify_*_operator_form.py`.
+
+**Remaining for the operator-form Phase B-septic identity**:
+☐ **P_3** = ΔC_5_lin(V_3) + ΔC_3_quad(V_3). The ΔC_3_quad part
+  `(1/12)·[V_3, [V_3, a']]` is Dynkin-expressible. The ΔC_5_lin part uses
+  `bch_quintic_term` which is in monomial form (not Dynkin Lie form) in
+  Lean, so needs an alternative operator-form approach:
+  * Use the FULL bch_quintic_term difference and bound the deg-9+ residual
+    separately, OR
+  * Split P_3 into two sub-polynomial DEFs.
+☐ **P_2** = 4 op pieces (lin V_2 from C_6, quad V_2 from C_5, cubic V_2
+  from C_4, quartic V_2 from C_3). Most complex piece. Note that some
+  combinations are impossible: quartic-in-V_2 from C_3 requires 4
+  z-positions but C_3 has at most 2; quartic must redistribute to C_p
+  with enough z-positions.
+☐ Norm bounds on each piece using operator forms (Lipschitz on Lie polys).
+☐ Joint analysis combining d7_pert with Groups E+F+CD-quintic for O(s⁹).
+☐ Final assembly replacing `symmetric_bch_septic_sub_poly_axiom`.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 44, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
