@@ -1,5 +1,68 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 44, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 44 (2026-05-17, Lean encoding of 6-piece d7 decomposition, 2 commits)**:
+
+The CAS-derived 6-piece operator-form decomposition (session 43) is now
+encoded in Lean. Polynomial-form pieces + sum identity all proven.
+
+1. **`f92cb32`** — Six noncomputable polynomial defs in
+   `BCH/SymmetricQuintic.lean` (after `septic_d7_cancellation_poly_form`,
+   line 13328-13774, ~470 lines added):
+
+   * `septic_d7_P2_poly` (96 terms, LCM 92160, Σ|num|/LCM ≈ 0.0277).
+     V_2-only deg-7 perturbation. Captures linear-in-V_2 in C_6,
+     quadratic-in-V_2 in C_5, cubic-in-V_2 in C_4, quartic-in-V_2 in C_3.
+   * `septic_d7_P3_poly` (108 terms, LCM 276480, Σ|num|/LCM ≈ 0.0282).
+     V_3-only. Linear-in-V_3 in C_5 + quadratic-in-V_3 in C_3.
+   * `septic_d7_P4_poly` (35 terms, LCM 18432, Σ|num|/LCM ≈ 0.0093).
+     V_4-only. Only linear-in-V_4 in C_4 (higher orders exceed deg 7).
+   * `septic_d7_P5_poly` (100 terms, LCM 276480, Σ|num|/LCM ≈ 0.0124).
+     V_5-only. Only linear-in-V_5 in C_3.
+   * `septic_d7_cross_V2_V3_poly` (41 terms, LCM 18432, Σ|num|/LCM ≈ 0.0089).
+     V_2·V_3 cross. Bilinear V_2·V_3 from C_4 + trilinear V_2²·V_3 from C_3.
+   * `septic_d7_cross_V2_V4_poly` (30 terms, LCM 9216, Σ|num|/LCM ≈ 0.0104).
+     V_2·V_4 cross. Bilinear V_2·V_4 from C_3 only.
+
+   Generated via `scripts/gen_septic_d7_pieces_lean.py`. Build wall ~7 min.
+
+2. **`f421fdd`** — `septic_d7_perturbation_poly_pieces_decomp` private theorem:
+
+       septic_d7_perturbation_poly 𝕂 a b =
+         septic_d7_P2_poly 𝕂 a b + septic_d7_P3_poly 𝕂 a b +
+           septic_d7_P4_poly 𝕂 a b + septic_d7_P5_poly 𝕂 a b +
+           septic_d7_cross_V2_V3_poly 𝕂 a b + septic_d7_cross_V2_V4_poly 𝕂 a b
+
+   Proof: 3 lines (`unfold` 7 defs + `match_scalars <;> ring`).
+   Section-level `maxHeartbeats 64000000` (already in SymmetricSepticAltForm)
+   sufficient. +26 lines, build wall 7:33 (vs 7:12 for defs alone).
+
+**Remaining for the operator-form Phase B-septic identity (roadmap items A.2-A.5)**:
+
+A.2) Operator-form identities for each piece: prove each polynomial DEF
+     equals a specific BCH-series expression. E.g.:
+
+         septic_d7_P5_poly 𝕂 a b
+           = (deg-7 part of bch((½a+b)+V_5, ½a) − bch(½a+b, ½a))
+           = (1/12)·([V_5, [½a, b]] − [[½a, b], V_5] + ...)   -- Lie poly form
+
+     Each requires:
+     * CAS script producing the explicit operator-form expression.
+     * Lean lemma proving the polynomial DEF equals the operator form via
+       `unfold + match_scalars <;> ring`.
+     ~50-150 lines per piece, 6 lemmas total.
+
+A.3-A.5) Joint Lipschitz bound on the 6-piece sum using operator forms,
+     combining with Group E+F+CD-quintic to drop joint bound O(s⁷) → O(s⁹),
+     final assembly replacing `symmetric_bch_septic_sub_poly_axiom` with a
+     proved theorem.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 43, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
