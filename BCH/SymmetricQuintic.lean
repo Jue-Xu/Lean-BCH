@@ -15938,6 +15938,328 @@ private theorem septic_d8_cross_V2_V4_op_form
              mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
   match_scalars <;> ring
 
+/-! ### Sub-piece decomposition of `septic_d8_P3_poly`
+
+P_3_d8 = (bch(x + V_3, ½a) - bch(x, ½a))_deg8 splits into 2 sub-pieces:
+  • C_4 quadratic-in-V_3 from C_4 (deg 4 + 2·(3-1) = 8): Dynkin-expressible.
+    The [z, [z, y]] term of C_4 with both z's substituted by V_3.
+  • C_6 linear-in-V_3 from C_6 (deg 6 + (3-1) = 8): NOT Dynkin in Lean
+    (bch_sextic_term is monomial form, not Dynkin Lie poly).
+
+d8 analog of `septic_d7_P3_pieces_decomp` (C_3 quad + C_5 lin).
+
+CAS-derived: `scripts/gen_d8_P3_subpieces.py`. The polynomial form of
+C_4 quad is computed from the Dynkin formula directly; C_6 lin is
+defined as `septic_d8_P3_poly − septic_d8_P3_C4_quad_poly`.
+-/
+
+/-- **septic_d8_P3_C4_quad_poly**: C_4 quadratic-in-V_3 part of P_3 at deg 8. Equals -(1/24)·[a', [V_3, [V_3, a']]] where V_3 = bch_cubic_term(½a, b), a' = ½a. The simpler of the 2 sub-pieces of P_3_d8 (Dynkin-expressible via the d8 analog of C_3 quad in d7).
+
+CAS-derived; denominator 221184, 90 terms, Σ|num|/LCM ≈ 0.0031. -/
+noncomputable def septic_d8_P3_C4_quad_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (-1 / 221184 : 𝕂) • (a * a * a * a * b * a * a * b)
+  + (2 / 221184 : 𝕂) • (a * a * a * a * b * a * b * a)
+  + (-2 / 221184 : 𝕂) • (a * a * a * a * b * a * b * b)
+  + (-1 / 221184 : 𝕂) • (a * a * a * a * b * b * a * a)
+  + (4 / 221184 : 𝕂) • (a * a * a * a * b * b * a * b)
+  + (-2 / 221184 : 𝕂) • (a * a * a * a * b * b * b * a)
+  + (4 / 221184 : 𝕂) • (a * a * a * b * a * a * a * b)
+  + (-8 / 221184 : 𝕂) • (a * a * a * b * a * a * b * a)
+  + (8 / 221184 : 𝕂) • (a * a * a * b * a * a * b * b)
+  + (4 / 221184 : 𝕂) • (a * a * a * b * a * b * a * a)
+  + (-16 / 221184 : 𝕂) • (a * a * a * b * a * b * a * b)
+  + (8 / 221184 : 𝕂) • (a * a * a * b * a * b * b * a)
+  + (-2 / 221184 : 𝕂) • (a * a * a * b * b * a * a * b)
+  + (4 / 221184 : 𝕂) • (a * a * a * b * b * a * b * a)
+  + (-4 / 221184 : 𝕂) • (a * a * a * b * b * a * b * b)
+  + (-2 / 221184 : 𝕂) • (a * a * a * b * b * b * a * a)
+  + (8 / 221184 : 𝕂) • (a * a * a * b * b * b * a * b)
+  + (-4 / 221184 : 𝕂) • (a * a * a * b * b * b * b * a)
+  + (-5 / 221184 : 𝕂) • (a * a * b * a * a * a * a * b)
+  + (8 / 221184 : 𝕂) • (a * a * b * a * a * a * b * a)
+  + (-10 / 221184 : 𝕂) • (a * a * b * a * a * a * b * b)
+  + (20 / 221184 : 𝕂) • (a * a * b * a * a * b * a * b)
+  + (-14 / 221184 : 𝕂) • (a * a * b * a * a * b * b * a)
+  + (-4 / 221184 : 𝕂) • (a * a * b * a * b * a * a * a)
+  + (4 / 221184 : 𝕂) • (a * a * b * a * b * a * a * b)
+  + (8 / 221184 : 𝕂) • (a * a * b * a * b * a * b * b)
+  + (2 / 221184 : 𝕂) • (a * a * b * a * b * b * a * a)
+  + (-16 / 221184 : 𝕂) • (a * a * b * a * b * b * a * b)
+  + (8 / 221184 : 𝕂) • (a * a * b * a * b * b * b * a)
+  + (1 / 221184 : 𝕂) • (a * a * b * b * a * a * a * a)
+  + (2 / 221184 : 𝕂) • (a * a * b * b * a * a * a * b)
+  + (-4 / 221184 : 𝕂) • (a * a * b * b * a * a * b * a)
+  + (4 / 221184 : 𝕂) • (a * a * b * b * a * a * b * b)
+  + (-2 / 221184 : 𝕂) • (a * a * b * b * a * b * a * a)
+  + (-8 / 221184 : 𝕂) • (a * a * b * b * a * b * a * b)
+  + (4 / 221184 : 𝕂) • (a * a * b * b * a * b * b * a)
+  + (2 / 221184 : 𝕂) • (a * a * b * b * b * a * a * a)
+  + (2 / 221184 : 𝕂) • (a * b * a * a * a * a * a * b)
+  + (4 / 221184 : 𝕂) • (a * b * a * a * a * a * b * b)
+  + (-8 / 221184 : 𝕂) • (a * b * a * a * a * b * a * a)
+  + (-8 / 221184 : 𝕂) • (a * b * a * a * a * b * a * b)
+  + (12 / 221184 : 𝕂) • (a * b * a * a * a * b * b * a)
+  + (8 / 221184 : 𝕂) • (a * b * a * a * b * a * a * a)
+  + (-16 / 221184 : 𝕂) • (a * b * a * a * b * a * b * a)
+  + (4 / 221184 : 𝕂) • (a * b * a * a * b * b * a * a)
+  + (-2 / 221184 : 𝕂) • (a * b * a * b * a * a * a * a)
+  + (-8 / 221184 : 𝕂) • (a * b * a * b * a * a * a * b)
+  + (16 / 221184 : 𝕂) • (a * b * a * b * a * a * b * a)
+  + (-16 / 221184 : 𝕂) • (a * b * a * b * a * a * b * b)
+  + (32 / 221184 : 𝕂) • (a * b * a * b * a * b * a * b)
+  + (-16 / 221184 : 𝕂) • (a * b * a * b * a * b * b * a)
+  + (-4 / 221184 : 𝕂) • (a * b * a * b * b * a * a * a)
+  + (4 / 221184 : 𝕂) • (a * b * b * a * a * a * a * b)
+  + (-12 / 221184 : 𝕂) • (a * b * b * a * a * a * b * a)
+  + (8 / 221184 : 𝕂) • (a * b * b * a * a * a * b * b)
+  + (14 / 221184 : 𝕂) • (a * b * b * a * a * b * a * a)
+  + (-16 / 221184 : 𝕂) • (a * b * b * a * a * b * a * b)
+  + (-8 / 221184 : 𝕂) • (a * b * b * a * b * a * a * a)
+  + (16 / 221184 : 𝕂) • (a * b * b * a * b * a * b * a)
+  + (-4 / 221184 : 𝕂) • (a * b * b * a * b * b * a * a)
+  + (2 / 221184 : 𝕂) • (a * b * b * b * a * a * a * a)
+  + (-8 / 221184 : 𝕂) • (a * b * b * b * a * b * a * a)
+  + (4 / 221184 : 𝕂) • (a * b * b * b * b * a * a * a)
+  + (-2 / 221184 : 𝕂) • (b * a * a * a * a * a * b * a)
+  + (5 / 221184 : 𝕂) • (b * a * a * a * a * b * a * a)
+  + (-4 / 221184 : 𝕂) • (b * a * a * a * a * b * b * a)
+  + (-4 / 221184 : 𝕂) • (b * a * a * a * b * a * a * a)
+  + (8 / 221184 : 𝕂) • (b * a * a * a * b * a * b * a)
+  + (-2 / 221184 : 𝕂) • (b * a * a * a * b * b * a * a)
+  + (1 / 221184 : 𝕂) • (b * a * a * b * a * a * a * a)
+  + (-4 / 221184 : 𝕂) • (b * a * a * b * a * b * a * a)
+  + (2 / 221184 : 𝕂) • (b * a * a * b * b * a * a * a)
+  + (8 / 221184 : 𝕂) • (b * a * b * a * a * a * b * a)
+  + (-20 / 221184 : 𝕂) • (b * a * b * a * a * b * a * a)
+  + (16 / 221184 : 𝕂) • (b * a * b * a * a * b * b * a)
+  + (16 / 221184 : 𝕂) • (b * a * b * a * b * a * a * a)
+  + (-32 / 221184 : 𝕂) • (b * a * b * a * b * a * b * a)
+  + (8 / 221184 : 𝕂) • (b * a * b * a * b * b * a * a)
+  + (-4 / 221184 : 𝕂) • (b * a * b * b * a * a * a * a)
+  + (16 / 221184 : 𝕂) • (b * a * b * b * a * b * a * a)
+  + (-8 / 221184 : 𝕂) • (b * a * b * b * b * a * a * a)
+  + (-4 / 221184 : 𝕂) • (b * b * a * a * a * a * b * a)
+  + (10 / 221184 : 𝕂) • (b * b * a * a * a * b * a * a)
+  + (-8 / 221184 : 𝕂) • (b * b * a * a * a * b * b * a)
+  + (-8 / 221184 : 𝕂) • (b * b * a * a * b * a * a * a)
+  + (16 / 221184 : 𝕂) • (b * b * a * a * b * a * b * a)
+  + (-4 / 221184 : 𝕂) • (b * b * a * a * b * b * a * a)
+  + (2 / 221184 : 𝕂) • (b * b * a * b * a * a * a * a)
+  + (-8 / 221184 : 𝕂) • (b * b * a * b * a * b * a * a)
+  + (4 / 221184 : 𝕂) • (b * b * a * b * b * a * a * a)
+
+/-- **septic_d8_P3_C6_lin_poly**: C_6 linear-in-V_3 part of P_3 at deg 8. Defined as septic_d8_P3_poly - septic_d8_P3_C4_quad_poly (the residual after extracting the C_4 quadratic piece). Operator-form interpretation: the linear-in-V_3 perturbation of bch_sextic_term restricted to deg 8.
+
+CAS-derived; denominator 1105920, 166 terms, Σ|num|/LCM ≈ 0.0126. -/
+noncomputable def septic_d8_P3_C6_lin_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (-3 / 1105920 : 𝕂) • (a * a * a * a * a * a * a * b)
+  + (21 / 1105920 : 𝕂) • (a * a * a * a * a * a * b * a)
+  + (6 / 1105920 : 𝕂) • (a * a * a * a * a * a * b * b)
+  + (-63 / 1105920 : 𝕂) • (a * a * a * a * a * b * a * a)
+  + (-45 / 1105920 : 𝕂) • (a * a * a * a * a * b * a * b)
+  + (9 / 1105920 : 𝕂) • (a * a * a * a * a * b * b * a)
+  + (10 / 1105920 : 𝕂) • (a * a * a * a * a * b * b * b)
+  + (105 / 1105920 : 𝕂) • (a * a * a * a * b * a * a * a)
+  + (117 / 1105920 : 𝕂) • (a * a * a * a * b * a * a * b)
+  + (-9 / 1105920 : 𝕂) • (a * a * a * a * b * a * b * a)
+  + (30 / 1105920 : 𝕂) • (a * a * a * a * b * a * b * b)
+  + (-18 / 1105920 : 𝕂) • (a * a * a * a * b * b * a * a)
+  + (-84 / 1105920 : 𝕂) • (a * a * a * a * b * b * a * b)
+  + (4 / 1105920 : 𝕂) • (a * a * a * a * b * b * b * a)
+  + (-24 / 1105920 : 𝕂) • (a * a * a * a * b * b * b * b)
+  + (-105 / 1105920 : 𝕂) • (a * a * a * b * a * a * a * a)
+  + (-138 / 1105920 : 𝕂) • (a * a * a * b * a * a * a * b)
+  + (-54 / 1105920 : 𝕂) • (a * a * a * b * a * a * b * a)
+  + (-130 / 1105920 : 𝕂) • (a * a * a * b * a * a * b * b)
+  + (72 / 1105920 : 𝕂) • (a * a * a * b * a * b * a * a)
+  + (216 / 1105920 : 𝕂) • (a * a * a * b * a * b * a * b)
+  + (-76 / 1105920 : 𝕂) • (a * a * a * b * a * b * b * a)
+  + (4 / 1105920 : 𝕂) • (a * a * a * b * a * b * b * b)
+  + (-24 / 1105920 : 𝕂) • (a * a * a * b * b * a * a * b)
+  + (168 / 1105920 : 𝕂) • (a * a * a * b * b * a * b * a)
+  + (76 / 1105920 : 𝕂) • (a * a * a * b * b * a * b * b)
+  + (-54 / 1105920 : 𝕂) • (a * a * a * b * b * b * a * a)
+  + (24 / 1105920 : 𝕂) • (a * a * a * b * b * b * a * b)
+  + (-8 / 1105920 : 𝕂) • (a * a * a * b * b * b * b * a)
+  + (8 / 1105920 : 𝕂) • (a * a * a * b * b * b * b * b)
+  + (63 / 1105920 : 𝕂) • (a * a * b * a * a * a * a * a)
+  + (90 / 1105920 : 𝕂) • (a * a * b * a * a * a * a * b)
+  + (54 / 1105920 : 𝕂) • (a * a * b * a * a * a * b * a)
+  + (74 / 1105920 : 𝕂) • (a * a * b * a * a * a * b * b)
+  + (-20 / 1105920 : 𝕂) • (a * a * b * a * a * b * a * b)
+  + (188 / 1105920 : 𝕂) • (a * a * b * a * a * b * b * a)
+  + (92 / 1105920 : 𝕂) • (a * a * b * a * a * b * b * b)
+  + (-72 / 1105920 : 𝕂) • (a * a * b * a * b * a * a * a)
+  + (-100 / 1105920 : 𝕂) • (a * a * b * a * b * a * a * b)
+  + (-408 / 1105920 : 𝕂) • (a * a * b * a * b * a * b * a)
+  + (-212 / 1105920 : 𝕂) • (a * a * b * a * b * a * b * b)
+  + (130 / 1105920 : 𝕂) • (a * a * b * a * b * b * a * a)
+  + (-32 / 1105920 : 𝕂) • (a * a * b * a * b * b * a * b)
+  + (48 / 1105920 : 𝕂) • (a * a * b * a * b * b * b * a)
+  + (-8 / 1105920 : 𝕂) • (a * a * b * a * b * b * b * b)
+  + (18 / 1105920 : 𝕂) • (a * a * b * b * a * a * a * a)
+  + (30 / 1105920 : 𝕂) • (a * a * b * b * a * a * a * b)
+  + (82 / 1105920 : 𝕂) • (a * a * b * b * a * a * b * a)
+  + (104 / 1105920 : 𝕂) • (a * a * b * b * a * a * b * b)
+  + (-130 / 1105920 : 𝕂) • (a * a * b * b * a * b * a * a)
+  + (-172 / 1105920 : 𝕂) • (a * a * b * b * a * b * a * b)
+  + (-52 / 1105920 : 𝕂) • (a * a * b * b * a * b * b * a)
+  + (-32 / 1105920 : 𝕂) • (a * a * b * b * a * b * b * b)
+  + (54 / 1105920 : 𝕂) • (a * a * b * b * b * a * a * a)
+  + (52 / 1105920 : 𝕂) • (a * a * b * b * b * a * a * b)
+  + (28 / 1105920 : 𝕂) • (a * a * b * b * b * a * b * a)
+  + (48 / 1105920 : 𝕂) • (a * a * b * b * b * a * b * b)
+  + (-40 / 1105920 : 𝕂) • (a * a * b * b * b * b * a * b)
+  + (8 / 1105920 : 𝕂) • (a * a * b * b * b * b * b * a)
+  + (-21 / 1105920 : 𝕂) • (a * b * a * a * a * a * a * a)
+  + (-36 / 1105920 : 𝕂) • (a * b * a * a * a * a * a * b)
+  + (-4 / 1105920 : 𝕂) • (a * b * a * a * a * a * b * b)
+  + (-54 / 1105920 : 𝕂) • (a * b * a * a * a * b * a * a)
+  + (-88 / 1105920 : 𝕂) • (a * b * a * a * a * b * a * b)
+  + (-44 / 1105920 : 𝕂) • (a * b * a * a * a * b * b * a)
+  + (54 / 1105920 : 𝕂) • (a * b * a * a * b * a * a * a)
+  + (192 / 1105920 : 𝕂) • (a * b * a * a * b * a * a * b)
+  + (-80 / 1105920 : 𝕂) • (a * b * a * a * b * a * b * a)
+  + (48 / 1105920 : 𝕂) • (a * b * a * a * b * a * b * b)
+  + (-82 / 1105920 : 𝕂) • (a * b * a * a * b * b * a * a)
+  + (-192 / 1105920 : 𝕂) • (a * b * a * a * b * b * a * b)
+  + (-40 / 1105920 : 𝕂) • (a * b * a * a * b * b * b * a)
+  + (-32 / 1105920 : 𝕂) • (a * b * a * a * b * b * b * b)
+  + (9 / 1105920 : 𝕂) • (a * b * a * b * a * a * a * a)
+  + (-88 / 1105920 : 𝕂) • (a * b * a * b * a * a * a * b)
+  + (80 / 1105920 : 𝕂) • (a * b * a * b * a * a * b * a)
+  + (-272 / 1105920 : 𝕂) • (a * b * a * b * a * a * b * b)
+  + (408 / 1105920 : 𝕂) • (a * b * a * b * a * b * a * a)
+  + (832 / 1105920 : 𝕂) • (a * b * a * b * a * b * a * b)
+  + (40 / 1105920 : 𝕂) • (a * b * a * b * a * b * b * a)
+  + (96 / 1105920 : 𝕂) • (a * b * a * b * a * b * b * b)
+  + (-168 / 1105920 : 𝕂) • (a * b * a * b * b * a * a * a)
+  + (-192 / 1105920 : 𝕂) • (a * b * a * b * b * a * a * b)
+  + (-48 / 1105920 : 𝕂) • (a * b * a * b * b * a * b * b)
+  + (-28 / 1105920 : 𝕂) • (a * b * a * b * b * b * a * a)
+  + (64 / 1105920 : 𝕂) • (a * b * a * b * b * b * a * b)
+  + (-32 / 1105920 : 𝕂) • (a * b * a * b * b * b * b * a)
+  + (-9 / 1105920 : 𝕂) • (a * b * b * a * a * a * a * a)
+  + (-4 / 1105920 : 𝕂) • (a * b * b * a * a * a * a * b)
+  + (44 / 1105920 : 𝕂) • (a * b * b * a * a * a * b * a)
+  + (112 / 1105920 : 𝕂) • (a * b * b * a * a * a * b * b)
+  + (-188 / 1105920 : 𝕂) • (a * b * b * a * a * b * a * a)
+  + (-272 / 1105920 : 𝕂) • (a * b * b * a * a * b * a * b)
+  + (16 / 1105920 : 𝕂) • (a * b * b * a * a * b * b * b)
+  + (76 / 1105920 : 𝕂) • (a * b * b * a * b * a * a * a)
+  + (48 / 1105920 : 𝕂) • (a * b * b * a * b * a * a * b)
+  + (-40 / 1105920 : 𝕂) • (a * b * b * a * b * a * b * a)
+  + (-96 / 1105920 : 𝕂) • (a * b * b * a * b * a * b * b)
+  + (52 / 1105920 : 𝕂) • (a * b * b * a * b * b * a * a)
+  + (-48 / 1105920 : 𝕂) • (a * b * b * a * b * b * a * b)
+  + (80 / 1105920 : 𝕂) • (a * b * b * a * b * b * b * a)
+  + (-4 / 1105920 : 𝕂) • (a * b * b * b * a * a * a * a)
+  + (40 / 1105920 : 𝕂) • (a * b * b * b * a * a * b * a)
+  + (16 / 1105920 : 𝕂) • (a * b * b * b * a * a * b * b)
+  + (-48 / 1105920 : 𝕂) • (a * b * b * b * a * b * a * a)
+  + (96 / 1105920 : 𝕂) • (a * b * b * b * a * b * a * b)
+  + (-80 / 1105920 : 𝕂) • (a * b * b * b * a * b * b * a)
+  + (8 / 1105920 : 𝕂) • (a * b * b * b * b * a * a * a)
+  + (-32 / 1105920 : 𝕂) • (a * b * b * b * b * a * a * b)
+  + (32 / 1105920 : 𝕂) • (a * b * b * b * b * a * b * a)
+  + (-8 / 1105920 : 𝕂) • (a * b * b * b * b * b * a * a)
+  + (3 / 1105920 : 𝕂) • (b * a * a * a * a * a * a * a)
+  + (36 / 1105920 : 𝕂) • (b * a * a * a * a * a * b * a)
+  + (-90 / 1105920 : 𝕂) • (b * a * a * a * a * b * a * a)
+  + (4 / 1105920 : 𝕂) • (b * a * a * a * a * b * b * a)
+  + (138 / 1105920 : 𝕂) • (b * a * a * a * b * a * a * a)
+  + (88 / 1105920 : 𝕂) • (b * a * a * a * b * a * b * a)
+  + (-30 / 1105920 : 𝕂) • (b * a * a * a * b * b * a * a)
+  + (-117 / 1105920 : 𝕂) • (b * a * a * b * a * a * a * a)
+  + (-192 / 1105920 : 𝕂) • (b * a * a * b * a * a * b * a)
+  + (100 / 1105920 : 𝕂) • (b * a * a * b * a * b * a * a)
+  + (-48 / 1105920 : 𝕂) • (b * a * a * b * a * b * b * a)
+  + (24 / 1105920 : 𝕂) • (b * a * a * b * b * a * a * a)
+  + (192 / 1105920 : 𝕂) • (b * a * a * b * b * a * b * a)
+  + (-52 / 1105920 : 𝕂) • (b * a * a * b * b * b * a * a)
+  + (32 / 1105920 : 𝕂) • (b * a * a * b * b * b * b * a)
+  + (45 / 1105920 : 𝕂) • (b * a * b * a * a * a * a * a)
+  + (88 / 1105920 : 𝕂) • (b * a * b * a * a * a * b * a)
+  + (20 / 1105920 : 𝕂) • (b * a * b * a * a * b * a * a)
+  + (272 / 1105920 : 𝕂) • (b * a * b * a * a * b * b * a)
+  + (-216 / 1105920 : 𝕂) • (b * a * b * a * b * a * a * a)
+  + (-832 / 1105920 : 𝕂) • (b * a * b * a * b * a * b * a)
+  + (172 / 1105920 : 𝕂) • (b * a * b * a * b * b * a * a)
+  + (-96 / 1105920 : 𝕂) • (b * a * b * a * b * b * b * a)
+  + (84 / 1105920 : 𝕂) • (b * a * b * b * a * a * a * a)
+  + (192 / 1105920 : 𝕂) • (b * a * b * b * a * a * b * a)
+  + (32 / 1105920 : 𝕂) • (b * a * b * b * a * b * a * a)
+  + (48 / 1105920 : 𝕂) • (b * a * b * b * a * b * b * a)
+  + (-24 / 1105920 : 𝕂) • (b * a * b * b * b * a * a * a)
+  + (-64 / 1105920 : 𝕂) • (b * a * b * b * b * a * b * a)
+  + (40 / 1105920 : 𝕂) • (b * a * b * b * b * b * a * a)
+  + (-6 / 1105920 : 𝕂) • (b * b * a * a * a * a * a * a)
+  + (4 / 1105920 : 𝕂) • (b * b * a * a * a * a * b * a)
+  + (-74 / 1105920 : 𝕂) • (b * b * a * a * a * b * a * a)
+  + (-112 / 1105920 : 𝕂) • (b * b * a * a * a * b * b * a)
+  + (130 / 1105920 : 𝕂) • (b * b * a * a * b * a * a * a)
+  + (272 / 1105920 : 𝕂) • (b * b * a * a * b * a * b * a)
+  + (-104 / 1105920 : 𝕂) • (b * b * a * a * b * b * a * a)
+  + (-16 / 1105920 : 𝕂) • (b * b * a * a * b * b * b * a)
+  + (-30 / 1105920 : 𝕂) • (b * b * a * b * a * a * a * a)
+  + (-48 / 1105920 : 𝕂) • (b * b * a * b * a * a * b * a)
+  + (212 / 1105920 : 𝕂) • (b * b * a * b * a * b * a * a)
+  + (96 / 1105920 : 𝕂) • (b * b * a * b * a * b * b * a)
+  + (-76 / 1105920 : 𝕂) • (b * b * a * b * b * a * a * a)
+  + (48 / 1105920 : 𝕂) • (b * b * a * b * b * a * b * a)
+  + (-48 / 1105920 : 𝕂) • (b * b * a * b * b * b * a * a)
+  + (-10 / 1105920 : 𝕂) • (b * b * b * a * a * a * a * a)
+  + (-92 / 1105920 : 𝕂) • (b * b * b * a * a * b * a * a)
+  + (-16 / 1105920 : 𝕂) • (b * b * b * a * a * b * b * a)
+  + (-4 / 1105920 : 𝕂) • (b * b * b * a * b * a * a * a)
+  + (-96 / 1105920 : 𝕂) • (b * b * b * a * b * a * b * a)
+  + (32 / 1105920 : 𝕂) • (b * b * b * a * b * b * a * a)
+  + (24 / 1105920 : 𝕂) • (b * b * b * b * a * a * a * a)
+  + (32 / 1105920 : 𝕂) • (b * b * b * b * a * a * b * a)
+  + (8 / 1105920 : 𝕂) • (b * b * b * b * a * b * a * a)
+  + (-8 / 1105920 : 𝕂) • (b * b * b * b * b * a * a * a)
+
+/-- **2-piece sub-decomposition of `septic_d8_P3_poly`**.
+
+CAS-verified: septic_d8_P3_poly = septic_d8_P3_C4_quad_poly +
+septic_d8_P3_C6_lin_poly. The C_4 quad piece is Dynkin-expressible
+(see `septic_d8_P3_C4_quad_op_form`); the C_6 lin piece uses
+`bch_sextic_term` in monomial form and needs a Lipschitz-style
+operator-form treatment (analog of d7's C_5 lin piece). -/
+private theorem septic_d8_P3_pieces_decomp
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    septic_d8_P3_poly 𝕂 a b =
+      septic_d8_P3_C4_quad_poly 𝕂 a b + septic_d8_P3_C6_lin_poly 𝕂 a b := by
+  unfold septic_d8_P3_poly septic_d8_P3_C4_quad_poly septic_d8_P3_C6_lin_poly
+  match_scalars <;> ring
+
+/-- **septic_d8_P3_C4_quad_op_form**: the C_4 quadratic-in-V_3 sub-piece of
+P_3_d8 equals the explicit Dynkin Lie polynomial `-(1/24)·[a', [V_3, [V_3, a']]]`.
+d8 analog of `septic_d7_P3_C3_quad_op_form` (V_3·V_3 quadratic substitution in
+C_3's [z, [z, y]] formula at d7; here in C_4's [y, [z, [z, y]]] = -(1/24)·...
+formula at d8). -/
+private theorem septic_d8_P3_C4_quad_op_form
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let V₃ : 𝔸 := bch_cubic_term 𝕂 a' b
+    septic_d8_P3_C4_quad_poly 𝕂 a b =
+      (0 : 𝔸) - (24 : 𝕂)⁻¹ • (a' * (V₃ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₃) -
+                       (V₃ * (V₃ * a' - a' * V₃) - (V₃ * a' - a' * V₃) * V₃) * a') := by
+  intro a' V₃
+  show _ = _
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl,
+             show V₃ = bch_cubic_term 𝕂 a' b from rfl]
+  unfold septic_d8_P3_C4_quad_poly bch_cubic_term
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+
 /-! ## Norm bound: `‖septic_d7_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`
 
 116 explicit deg-7 terms, max |numerator| = 1280, LCM = 276480.
