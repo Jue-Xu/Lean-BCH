@@ -1,5 +1,58 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 42, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 42 (2026-05-17, per-Group bounds for septic hdecomp, 4 commits)**:
+
+Per-Group norm bounds for all 20 sub-pieces of
+`symmetric_bch_septic_extended_hdecomp` (session 41) now in place. The 20
+pieces split into 4 named bounds:
+
+1. **`7468707`** — `norm_septic_group_AB_le` (5 pieces, ≤ 8·10¹²·s⁹).
+   Group A nonic (R₁, R₂, ½·[R₁, a']) + Group B-octic (½·[C₈(a',b), a'],
+   C₈(z,a')−C₈(a'+b,a')). Intrinsically O(s⁹) via Phase A nonic remainders
+   + C₈ Lipschitz. Total: 2·10⁸ + 7·10¹² + 2.5·10⁷ + 0.5 + 10⁶ ≈ 7·10¹².
+
+2. **`991a15c`** — `norm_septic_group_E_le` (3 pieces, ≤ 10⁶·s⁷). Group E =
+   (C₇(z,a')−C₇(a'+b,a')) + ½·[C₆(a',b), a'] − correction. Uses
+   `septic_d7_cancellation_poly_form` to absorb ½·[C₆,a'] − correction =
+   −d7_pert, leaving (C₇ diff) − d7_pert. Bound via C₇ Lipschitz
+   (≤ 200000·s⁸) + d7_pert norm (≤ s⁷); fold s⁸ → s⁷ via s < 1/4.
+
+3. **`7dfef4f`** — `norm_septic_group_F_le` (4 pieces, ≤ 10⁴·s⁷). Group F =
+   ½·[C₇(a',b),a'] + C₈(a',b) + C₈(a'+b,a') + (C₆ diff). Uses
+   `septic_d8_cancellation_poly_form` to absorb the 3 octic-leading pieces
+   as −d8_pert. Bound via C₆ Lipschitz (≤ 6000·s⁷) + d8_pert (≤ s⁸).
+
+4. **`7134c54`** — `norm_septic_group_CD_quintic_le` (8 pieces, ≤ 10⁸·s⁷).
+   Thin wrapper around `symmetric_bch_quintic_group_CD_le` — the 8 retained
+   Group C+D-quintic pieces have identical definitions in the septic hdecomp.
+
+**Critical observation**: triangle-summing the 4 Group bounds gives
+≤ ~10⁸·s⁷, NOT the parent-axiom target of 10¹²·s⁹. The 12 deg-7-leading
+pieces (Group E + F + CD-quintic) need joint cancellation against each
+other to drop to deg-9. This requires the operator-form Phase B-septic +
+Phase C-septic identities (decomposing the d7/d8 perturbation polys into
+explicit ΔC_k operators), which is multi-session CAS work analogous to
+the existing quintic Phase B identity infrastructure
+(`deltaC3_lin_V3_eq`, `deltaC3_quad_V2_eq`, `deltaC4_lin_V2_eq`,
+`half_C4_bracket_eq`).
+
+**Remaining work** (estimate 5-10 more sessions):
+A) Phase B-septic operator-form identity: decompose
+   `septic_d7_perturbation_poly` into ΔC₃(V₄,V₅) + ΔC₃²(V₂·V₃) +
+   ΔC₄(V₃,V₄) + ΔC₄²(V₂²) + ΔC₅(V₂,V₃) + ΔC₅²(V₂²) + ΔC₆(V₂) +
+   ½·[C₆,a']. ~8-10 sub-lemmas, ~50-300 lines each.
+B) Phase C-septic operator-form identity: similar for d8.
+C) Joint Group E+F+CD-quintic bound ≤ K·s⁹ replacing the 4 separate bounds.
+D) Final assembly: `norm_symmetric_bch_septic_sub_poly_le` proved theorem
+   replacing the axiom.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 39, 2026-05-16)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
