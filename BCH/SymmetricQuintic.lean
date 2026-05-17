@@ -14064,6 +14064,187 @@ theorem norm_septic_d7_perturbation_poly_le (a b : 𝔸) :
     _ ≤ 1 * s^7 := by nlinarith [hs7_nn]
     _ = s ^ 7 := one_mul _
 
+/-! ### T2-F7e-septic Phase D: Septic extended hdecomp identity
+
+The algebraic decomposition of `sym_bch_cubic - sym_E₃ - sym_E₅ - sym_E₇` into
+20 sub-pieces. Deg-9 analog of `symmetric_bch_quintic_extended_hdecomp` (the
+13-piece quintic version at one degree lower).
+
+The 20 sub-pieces are organized into 6 groups:
+
+**Group A (nonic-related, 3 sub-pieces)**:
+- `R₁_nonic` = bch(a',b) − [(a'+b) + ½[a',b] + C₃ + ... + C₈](a',b)
+- `R₂_nonic` = bch(z,a') − [(z+a') + ½[z,a'] + C₃ + ... + C₈](z,a')
+- `½·[R₁_nonic, a']`
+
+**Group B-octic (C₈ extras, 2 sub-pieces, NEW for septic)**:
+- `½·[C₈(a',b), a']`
+- `C₈(z,a') − C₈(a'+b, a')`
+
+**Group C-quintic (Phase B deg-5 cancellation group, 4 sub-pieces; retained from quintic)**:
+- `T₅` = C₃(z,a') − C₃(a'+b,a') + (1/96)·[b, [a, [a, b]]]
+- `T₆` = C₄(z,a') − C₄(a'+b, a')
+- `½·[C₄(a',b), a']`
+- `−quintic_correction`
+
+**Group D-quintic (Phase C deg-6 cancellation group, 4 sub-pieces; retained)**:
+- `½·[C₅(a',b), a']`
+- `C₆(a',b)`
+- `C₆(a'+b, a')`
+- `C₅(z,a') − C₅(a'+b, a')`
+
+**Group E-septic (Phase B deg-7 cancellation group, 3 sub-pieces, NEW)**:
+- `C₇(z,a') − C₇(a'+b, a')`
+- `½·[C₆(a',b), a']`
+- `−septic_correction`
+
+**Group F-septic (Phase C deg-8 cancellation group, 4 sub-pieces, NEW)**:
+- `½·[C₇(a',b), a']`
+- `C₈(a',b)`
+- `C₈(a'+b, a')`
+- `C₆(z,a') − C₆(a'+b, a')`
+
+CAS-verified at `scripts/verify_septic_extended_hdecomp.py`: LHS = RHS as
+polynomials in 𝕂⟨a, b⟩ truncated at degree 9 (both have 435 non-zero deg-9
+words). Palindromic vanishing of even degrees ensures the LHS sits entirely
+at deg 9 (no deg 2, 4, 6, 8 residue).
+
+The proof extends the quintic template by:
+1. Substituting the sym_E₃ alt-form (via `symmetric_bch_cubic_poly_alt_form`).
+2. Substituting the sym_E₅ alt-form (via `symmetric_bch_quintic_poly_alt_form`).
+3. Substituting the sym_E₇ alt-form (via `symmetric_bch_septic_poly_alt_form`, NEW).
+4. Using R-nonic definitions instead of R-sept (two more BCH expansion degrees).
+5. Using the quartic identity for deg-4 cancellation.
+-/
+set_option maxHeartbeats 128000000 in
+private theorem symmetric_bch_septic_extended_hdecomp
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*}
+    [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] [NormOneClass 𝔸] [CompleteSpace 𝔸]
+    (a b : 𝔸) :
+    let a' : 𝔸 := (2 : 𝕂)⁻¹ • a
+    let z := bch (𝕂 := 𝕂) a' b
+    let R₁_nonic := z - (a' + b) - (2 : 𝕂)⁻¹ • (a' * b - b * a') -
+                    bch_cubic_term 𝕂 a' b - bch_quartic_term 𝕂 a' b -
+                    bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b -
+                    bch_septic_term 𝕂 a' b - bch_octic_term 𝕂 a' b
+    let R₂_nonic := bch (𝕂 := 𝕂) z a' - (z + a') - (2 : 𝕂)⁻¹ • (z * a' - a' * z) -
+                    bch_cubic_term 𝕂 z a' - bch_quartic_term 𝕂 z a' -
+                    bch_quintic_term 𝕂 z a' - bch_sextic_term 𝕂 z a' -
+                    bch_septic_term 𝕂 z a' - bch_octic_term 𝕂 z a'
+    let DC_a : 𝔸 := a * (a * b - b * a) - (a * b - b * a) * a
+    symmetric_bch_cubic 𝕂 a b - symmetric_bch_cubic_poly 𝕂 a b
+        - symmetric_bch_quintic_poly 𝕂 a b
+        - symmetric_bch_septic_poly 𝕂 a b =
+      -- Group A: nonic-related (3 sub-pieces)
+      R₁_nonic + R₂_nonic +
+      (2 : 𝕂)⁻¹ • (R₁_nonic * a' - a' * R₁_nonic) +
+      -- Group B-octic: C₈ extras (2 sub-pieces, NEW)
+      (2 : 𝕂)⁻¹ • (bch_octic_term 𝕂 a' b * a' - a' * bch_octic_term 𝕂 a' b) +
+      (bch_octic_term 𝕂 z a' - bch_octic_term 𝕂 (a' + b) a') +
+      -- Group C-quintic: Phase B deg-5 cancellation group (4 sub-pieces, retained)
+      (bch_cubic_term 𝕂 z a' - bch_cubic_term 𝕂 (a' + b) a' -
+        -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+      (bch_quartic_term 𝕂 z a' - bch_quartic_term 𝕂 (a' + b) a') +
+      (2 : 𝕂)⁻¹ • (bch_quartic_term 𝕂 a' b * a' - a' * bch_quartic_term 𝕂 a' b) +
+      -symmetric_bch_quintic_correction_poly 𝕂 a b +
+      -- Group D-quintic: Phase C deg-6 cancellation group (4 sub-pieces, retained)
+      (2 : 𝕂)⁻¹ • (bch_quintic_term 𝕂 a' b * a' - a' * bch_quintic_term 𝕂 a' b) +
+      bch_sextic_term 𝕂 a' b +
+      bch_sextic_term 𝕂 (a' + b) a' +
+      (bch_quintic_term 𝕂 z a' - bch_quintic_term 𝕂 (a' + b) a') +
+      -- Group E-septic: Phase B deg-7 cancellation group (3 sub-pieces, NEW)
+      (bch_septic_term 𝕂 z a' - bch_septic_term 𝕂 (a' + b) a') +
+      (2 : 𝕂)⁻¹ • (bch_sextic_term 𝕂 a' b * a' - a' * bch_sextic_term 𝕂 a' b) +
+      -symmetric_bch_septic_correction_poly 𝕂 a b +
+      -- Group F-septic: Phase C deg-8 cancellation group (4 sub-pieces, NEW)
+      (2 : 𝕂)⁻¹ • (bch_septic_term 𝕂 a' b * a' - a' * bch_septic_term 𝕂 a' b) +
+      bch_octic_term 𝕂 a' b +
+      bch_octic_term 𝕂 (a' + b) a' +
+      (bch_sextic_term 𝕂 z a' - bch_sextic_term 𝕂 (a' + b) a') := by
+  intro a' z R₁_nonic R₂_nonic DC_a
+  -- Use sym_E₃ alt-form.
+  rw [symmetric_bch_cubic_poly_alt_form (𝕂 := 𝕂)]
+  -- Use sym_E₅ alt-form.
+  rw [symmetric_bch_quintic_poly_alt_form (𝕂 := 𝕂)]
+  -- Use sym_E₇ alt-form (NEW for septic).
+  rw [symmetric_bch_septic_poly_alt_form (𝕂 := 𝕂)]
+  -- Make a' and z explicit (let-bindings unfold).
+  show bch (𝕂 := 𝕂) (bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) - (a + b) -
+      (bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+       bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) -
+       (16 : 𝕂)⁻¹ • (a * (a * b - b * a) - (a * b - b * a) * a)) -
+      (bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+       bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) +
+       symmetric_bch_quintic_correction_poly 𝕂 a b) -
+      (bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b +
+       bch_septic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) +
+       symmetric_bch_septic_correction_poly 𝕂 a b) = _
+  have hbch_inner : bch (𝕂 := 𝕂) ((2 : 𝕂)⁻¹ • a) b = z := rfl
+  -- Express bch(z, a') via R₂_nonic definition (extends through C₈).
+  have hbch_z_a' : bch (𝕂 := 𝕂) z a' = (z + a') + (2 : 𝕂)⁻¹ • (z * a' - a' * z) +
+      bch_cubic_term 𝕂 z a' + bch_quartic_term 𝕂 z a' +
+      bch_quintic_term 𝕂 z a' + bch_sextic_term 𝕂 z a' +
+      bch_septic_term 𝕂 z a' + bch_octic_term 𝕂 z a' + R₂_nonic := by
+    show bch (𝕂 := 𝕂) z a' = (z + a') + (2 : 𝕂)⁻¹ • (z * a' - a' * z) +
+        bch_cubic_term 𝕂 z a' + bch_quartic_term 𝕂 z a' +
+        bch_quintic_term 𝕂 z a' + bch_sextic_term 𝕂 z a' +
+        bch_septic_term 𝕂 z a' + bch_octic_term 𝕂 z a' +
+        (bch (𝕂 := 𝕂) z a' - (z + a') - (2 : 𝕂)⁻¹ • (z * a' - a' * z) -
+         bch_cubic_term 𝕂 z a' - bch_quartic_term 𝕂 z a' -
+         bch_quintic_term 𝕂 z a' - bch_sextic_term 𝕂 z a' -
+         bch_septic_term 𝕂 z a' - bch_octic_term 𝕂 z a')
+    abel
+  -- z·a' - a'·z split via z = (a'+b) + W.
+  have hzcom : z * a' - a' * z = (a' + b) * a' - a' * (a' + b) +
+      ((z - (a' + b)) * a' - a' * (z - (a' + b))) := by noncomm_ring
+  -- W = z - (a'+b) (extends through C₈).
+  have hW_eq : z - (a' + b) =
+      (2 : 𝕂)⁻¹ • (a' * b - b * a') + bch_cubic_term 𝕂 a' b +
+        bch_quartic_term 𝕂 a' b + bch_quintic_term 𝕂 a' b +
+        bch_sextic_term 𝕂 a' b + bch_septic_term 𝕂 a' b +
+        bch_octic_term 𝕂 a' b + R₁_nonic := by
+    show z - (a' + b) =
+        (2 : 𝕂)⁻¹ • (a' * b - b * a') + bch_cubic_term 𝕂 a' b +
+        bch_quartic_term 𝕂 a' b + bch_quintic_term 𝕂 a' b +
+        bch_sextic_term 𝕂 a' b + bch_septic_term 𝕂 a' b +
+        bch_octic_term 𝕂 a' b +
+        (z - (a' + b) - (2 : 𝕂)⁻¹ • (a' * b - b * a') -
+         bch_cubic_term 𝕂 a' b - bch_quartic_term 𝕂 a' b -
+         bch_quintic_term 𝕂 a' b - bch_sextic_term 𝕂 a' b -
+         bch_septic_term 𝕂 a' b - bch_octic_term 𝕂 a' b)
+    abel
+  -- z = (a'+b) + W.
+  have hz_eq : z = a' + b + (2 : 𝕂)⁻¹ • (a' * b - b * a') + bch_cubic_term 𝕂 a' b +
+      bch_quartic_term 𝕂 a' b + bch_quintic_term 𝕂 a' b +
+      bch_sextic_term 𝕂 a' b + bch_septic_term 𝕂 a' b +
+      bch_octic_term 𝕂 a' b + R₁_nonic := by
+    rw [show z = (z - (a' + b)) + (a' + b) from by abel, hW_eq]; abel
+  -- Quartic identity rearrangement.
+  have hQI := symmetric_bch_quartic_identity (𝕂 := 𝕂) a b
+  have hQI_rearr : bch_quartic_term 𝕂 (a' + b) a' =
+      -((2 : 𝕂)⁻¹ • (bch_cubic_term 𝕂 a' b * a' - a' * bch_cubic_term 𝕂 a' b)) -
+      bch_quartic_term 𝕂 a' b +
+      (96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b) := by
+    have h := hQI
+    have h' : ((2 : 𝕂)⁻¹ • (bch_cubic_term 𝕂 a' b * a' - a' * bch_cubic_term 𝕂 a' b) +
+                bch_quartic_term 𝕂 a' b +
+                -((96 : 𝕂)⁻¹ • (b * DC_a - DC_a * b))) +
+               bch_quartic_term 𝕂 (a' + b) a' = 0 := by
+      show _ = _
+      convert h using 2
+    have hW := eq_neg_of_add_eq_zero_right h'
+    rw [hW]; abel
+  -- Apply the rewrites in sequence (mirrors quintic proof).
+  rw [hbch_inner, hbch_z_a', hzcom, hW_eq]
+  rw [hQI_rearr]
+  nth_rewrite 1 [hz_eq]
+  -- Unfold a' to (2:𝕂)⁻¹•a to align all atoms.
+  simp only [show a' = ((2 : 𝕂)⁻¹ • a : 𝔸) from rfl]
+  -- Distribute smul through products and use match_scalars + ring.
+  simp only [smul_sub, smul_add, smul_mul_assoc, mul_smul_comm, smul_smul,
+    add_mul, mul_add, sub_mul, mul_sub]
+  match_scalars <;> ring
+
 end SymmetricSepticAltForm
 
 
