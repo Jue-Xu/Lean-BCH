@@ -1,5 +1,74 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 46, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 46 (2026-05-17, P_3 and P_2 sub-piece decompositions, 2 commits)**:
+
+Polynomial-form sub-piece decomposition for the 2 multi-operator pieces of
+the 6-piece d7 decomposition. Each is split into operator-form sub-pieces:
+
+1. **`a249954`** — P_3 sub-piece decomposition:
+   * `septic_d7_P3_C3_quad_poly` (67 terms, LCM 55296) — C_3 quadratic-in-V_3
+     piece (Dynkin-expressible).
+   * `septic_d7_P3_C5_lin_poly` (108 terms, LCM 276480) — C_5 linear-in-V_3
+     piece (uses bch_quintic_term, NOT Dynkin-form in Lean).
+   * `septic_d7_P3_pieces_decomp`: P_3 = C_3_quad + C_5_lin.
+   * `septic_d7_P3_C3_quad_op_form`:
+
+         septic_d7_P3_C3_quad_poly = (1/12)·[V_3, [V_3, a']]
+
+     (Dynkin operator-form identity for the simpler sub-piece.)
+
+2. **`64c263c`** — P_2 sub-piece decomposition:
+   * `septic_d7_P2_C6_lin_poly` (60 terms, LCM 92160) — C_6 linear-in-V_2.
+   * `septic_d7_P2_C5_quad_poly` (79 terms, LCM 92160) — C_5 quadratic-in-V_2.
+   * `septic_d7_P2_pieces_decomp`: P_2 = C_6_lin + C_5_quad.
+
+**Important correction**: P_2 has only 2 sub-pieces (not 4 as initially
+indicated). Higher orders are impossible:
+  * Cubic-in-V_2 from C_4 needs 3+ z-positions; C_4 has 2.
+  * Quartic-in-V_2 from C_3 needs 4+ z-positions; C_3 has 2.
+
+CAS extraction for P_2 used a forward/backward symmetry trick:
+  * `half-sum := (bch(x+V_2, ½a) + bch(x-V_2, ½a) − 2·bch(x, ½a))/2`
+    at deg 7 = even-in-V_2 part = C_5 quad piece (79 terms).
+  * `half-diff := (bch(x+V_2, ½a) − bch(x-V_2, ½a))/2`
+    at deg 7 = odd-in-V_2 part = C_6 lin piece (60 terms).
+
+CAS-verified at `scripts/verify_P3_decomp.py` and `scripts/verify_P2_decomp.py`.
+
+**Status summary after session 46**:
+
+| Piece | Sub-pieces | Op-form identities |
+|-------|-----------:|--------------------|
+| P_5 | 1 (ΔC_3_lin) | ✓ |
+| P_4 | 1 (ΔC_4_lin) | ✓ |
+| Cross(V_2, V_4) | 1 (ΔC_3_bil) | ✓ |
+| Cross(V_2, V_3) | 1 (ΔC_4_bil) | ✓ |
+| P_3 | 2 (C_3_quad + C_5_lin) | ✓ for C_3_quad |
+| P_2 | 2 (C_6_lin + C_5_quad) | (both need Lipschitz) |
+
+5 Dynkin operator-form identities proven; 3 sub-pieces (P_3 C_5_lin, P_2
+C_6_lin, P_2 C_5_quad) need Lipschitz-style bounds on bch_quintic_term and
+bch_sextic_term differences (since these are in monomial form in Lean, not
+Dynkin Lie polynomial form).
+
+Build wall ~7 min per commit; no slowdown despite the cumulative ~1000+
+lines of new polynomial DEFs in this session pair (sessions 45+46).
+
+**Remaining work**:
+☐ Lipschitz-style bounds for the 3 remaining sub-pieces using existing
+  `norm_bch_quintic_term_diff_le`-style infrastructure.
+☐ Combine the 6 op-form identities with sub-piece bounds for joint Lipschitz
+  bound on `septic_d7_perturbation_poly` (still O(s⁷) at piece level).
+☐ Joint analysis with Groups E+F+CD-quintic to drop O(s⁷) → O(s⁹).
+☐ Final assembly replacing `symmetric_bch_septic_sub_poly_axiom`.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 45, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
