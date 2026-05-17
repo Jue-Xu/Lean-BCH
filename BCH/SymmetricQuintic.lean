@@ -14375,6 +14375,43 @@ private theorem septic_d7_P2_pieces_decomp
   unfold septic_d7_P2_poly septic_d7_P2_C6_lin_poly septic_d7_P2_C5_quad_poly
   match_scalars <;> ring
 
+/-! ### Fully expanded 8-sub-piece decomposition of `septic_d7_perturbation_poly`
+
+The 6-piece decomposition (P_2..P_5, Cross_V2_V3, Cross_V2_V4) combined
+with the further sub-piece splits of P_3 (C_3_quad + C_5_lin) and P_2
+(C_6_lin + C_5_quad) gives a fully-expanded 8-piece operator-form
+decomposition of `septic_d7_perturbation_poly`:
+
+    septic_d7_perturbation_poly =
+      P_2_C6_lin + P_2_C5_quad
+      + P_3_C3_quad + P_3_C5_lin
+      + P_4 + P_5
+      + Cross_V2_V3 + Cross_V2_V4
+
+Each piece corresponds to a specific (C_k, V_{j_1}·...·V_{j_n}) operator
+contribution at deg 7. 5 of these 8 pieces have Dynkin Lie-polynomial
+operator-form identities (P_4, P_5, Cross_V2_V3, Cross_V2_V4, P_3_C3_quad);
+the other 3 (P_2_C6_lin, P_2_C5_quad, P_3_C5_lin) use bch_sextic_term and
+bch_quintic_term (monomial form in Lean) and remain as polynomial DEFs.
+
+This convenience identity directly combines the 3 prior decomposition
+theorems (`septic_d7_perturbation_poly_pieces_decomp` +
+`septic_d7_P3_pieces_decomp` + `septic_d7_P2_pieces_decomp`). It's the
+canonical entry point for the future joint analysis combining d7_pert
+with matching operator-form pieces in Group F (d8_pert) and Group CD-quintic
+for the eventual O(s⁹) joint bound. -/
+private theorem septic_d7_perturbation_poly_full_pieces_decomp
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    septic_d7_perturbation_poly 𝕂 a b =
+      septic_d7_P2_C6_lin_poly 𝕂 a b + septic_d7_P2_C5_quad_poly 𝕂 a b +
+        septic_d7_P3_C3_quad_poly 𝕂 a b + septic_d7_P3_C5_lin_poly 𝕂 a b +
+        septic_d7_P4_poly 𝕂 a b + septic_d7_P5_poly 𝕂 a b +
+        septic_d7_cross_V2_V3_poly 𝕂 a b + septic_d7_cross_V2_V4_poly 𝕂 a b := by
+  rw [septic_d7_perturbation_poly_pieces_decomp,
+      septic_d7_P3_pieces_decomp, septic_d7_P2_pieces_decomp]
+  abel
+
 /-! ## Norm bound: `‖septic_d7_perturbation_poly(a, b)‖ ≤ (‖a‖+‖b‖)⁷`
 
 116 explicit deg-7 terms, max |numerator| = 1280, LCM = 276480.
