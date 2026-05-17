@@ -1,5 +1,88 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 52, 2026-05-17)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 52 (2026-05-17, joint cancellation structure CAS verification, 1 commit)**:
+
+Preparatory CAS work for the joint analysis (eventual O(s⁹) bound discharging
+`symmetric_bch_septic_sub_poly_axiom`). No Lean changes; all verification at
+polynomial level only.
+
+**`51934a0`** — Two new CAS scripts:
+
+1. `scripts/verify_d8_P4_lipschitz_form.py`: confirms that
+   `septic_d8_P4_poly` equals the deg-8 part of
+   `bch_quintic_term(x + V_4, a') - bch_quintic_term(x, a')`. The FULL
+   bch_quintic_term diff has 3083 terms at degrees 8, 11, 14, 17;
+   septic_d8_P4_poly (154 terms) is exactly the deg-8 part. The deg-11+
+   residual has 2929 terms, too large to encode as an explicit Lean DEF.
+
+   **Lesson**: explicit Lipschitz-form identities for non-Dynkin sub-pieces
+   in Lean would require either a `deg-extraction` operator (none exists) or
+   massive polynomial residuals. The norm-bound approach using
+   `norm_bch_kth_term_diff_le` directly on FULL diffs is cleaner.
+
+2. `scripts/verify_d8_C_k_diff_matching.py`: verifies the 5-group grouping
+   of the 12 d8 sub-pieces by their C_p origin:
+
+       Group_C3 = P_6 + Cross(V_2, V_5) + Cross(V_3, V_4)     [3 Dynkin]
+       Group_C4 = P_5 + Cross(V_2, V_4) + P_3_C4_quad         [3 Dynkin]
+       Group_C5 = P_4 + Cross(V_2, V_3) + P_2_C5_cubic        [3 non-Dynkin]
+       Group_C6 = P_3_C6_lin + P_2_C6_quad                    [2 non-Dynkin]
+       Group_C7 = P_2_C7_lin                                  [1 non-Dynkin]
+
+   Total: 12 sub-pieces summing to `septic_d8_perturbation_poly` (182 terms,
+   LCM 15482880). CAS verified at polynomial level.
+
+   The grouping follows from degree counting: for k_j V_j substitutions
+   in C_p, total deg = p + Σ k_j·(j-1) = 8. Each (p, {k_j}) combination
+   gives a specific d8_pert sub-piece.
+
+**Joint analysis cancellation structure** (CONCEPTUAL, to be formalized):
+
+In the extended hdecomp (session 41) + per-Group bounds (session 42), the
+Groups F and CD-quintic contain pieces like `(C_p(z, a') − C_p(a'+b, a'))`
+for various p. The deg-8 part of these `(C_p diff)`s matches the corresponding
+Group_C_p from `septic_d8_perturbation_poly`:
+
+    (C_3 diff)_d8 ↔ Group_C3 (Dynkin pieces)
+    (C_4 diff)_d8 ↔ Group_C4 (Dynkin pieces)
+    (C_5 diff)_d8 ↔ Group_C5 (non-Dynkin pieces, bch_quintic_term Lipschitz)
+    (C_6 diff)_d8 ↔ Group_C6 (non-Dynkin pieces, bch_sextic_term Lipschitz)
+    (C_7 diff)_d8 ↔ Group_C7 (non-Dynkin pieces, bch_septic_term Lipschitz)
+
+When subtracted, each (C_p diff)_d8 − Group_C_p = 0 (by the polynomial
+matching established above). The residual after this cancellation is the
+deg-9+ contributions from (C_p diff)_full minus Group_C_p, bounded by
+`norm_bch_kth_term_diff_le` for the appropriate k.
+
+The same structure applies for d7 (sessions 43-46):
+    (C_3 diff)_d7 ↔ Group_C3_d7 = P_5_d7 + Cross(V_2, V_4)_d7
+    (C_4 diff)_d7 ↔ Group_C4_d7 = P_4_d7 + Cross(V_2, V_3)_d7 + P_3_C3_quad
+    (C_5 diff)_d7 ↔ Group_C5_d7 = P_3_C5_lin + P_2_C5_quad
+    (C_6 diff)_d7 ↔ Group_C6_d7 = P_2_C6_lin
+
+**Roadmap for the eventual discharge** (multi-session):
+A) Lean-formalize the matching identity: for each p, prove that the deg-q
+   part of (C_p diff) equals the corresponding Group_C_p (as polynomial
+   identity). Requires defining a "deg-extraction" mechanism or using
+   noncomputable residuals.
+B) Apply Lipschitz bounds: ‖(C_p diff)_full‖ ≤ K · M^{p-1} · ‖z − (a'+b)‖
+   via `norm_bch_kth_term_diff_le`.
+C) Joint cancellation: the deg-q part of (C_p diff) cancels with Group_C_p,
+   leaving the deg-(q+1)+ part of (C_p diff). Bound this residual by
+   O(s^{q+1}) via direct polynomial bound or further Lipschitz.
+D) Sum across p and groups to get the total O(s⁹) bound.
+
+This is multi-session work (estimated 5-10 more sessions). The current
+session 52 documents the structural matching; future sessions will
+formalize the Lean-level cancellation identities.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 51, 2026-05-17)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
