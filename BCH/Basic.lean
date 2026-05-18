@@ -2268,6 +2268,16 @@ lemma norm_9prod_le (A B C D E F G H I : 𝔸) :
     _ ≤ (‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ * ‖H‖) * ‖I‖ :=
         mul_le_mul_of_nonneg_right (norm_8prod_le A B C D E F G H) (norm_nonneg _)
 
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **10-product norm helper**: deg-10 generalization. -/
+lemma norm_10prod_le (A B C D E F G H I J : 𝔸) :
+    ‖A * B * C * D * E * F * G * H * I * J‖ ≤
+      ‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ * ‖H‖ * ‖I‖ * ‖J‖ := by
+  calc ‖A * B * C * D * E * F * G * H * I * J‖
+      ≤ ‖A * B * C * D * E * F * G * H * I‖ * ‖J‖ := norm_mul_le _ _
+    _ ≤ (‖A‖ * ‖B‖ * ‖C‖ * ‖D‖ * ‖E‖ * ‖F‖ * ‖G‖ * ‖H‖ * ‖I‖) * ‖J‖ :=
+        mul_le_mul_of_nonneg_right (norm_9prod_le A B C D E F G H I) (norm_nonneg _)
+
 set_option maxHeartbeats 800000 in
 omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
 /-- **Lipschitz bound for `bch_quintic_group_4` in its first argument**:

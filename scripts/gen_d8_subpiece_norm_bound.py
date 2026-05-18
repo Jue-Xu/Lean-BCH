@@ -288,6 +288,15 @@ def compute_subpiece(name):
         bch_6_at_x = substitute(bch_6_abs, x, half_a)
         poly = extract_degree(ncpoly_sub(bch_6_at_xV2, bch_6_at_x), 9)
         deg = 9
+    # ---- d=10 residual: k=4 V_2 part of C_6 diff ----
+    elif name == "d8_P2_C6_quartic_residual":
+        # septic_d8_P2_C6_quartic_residual_poly: deg-10 part of
+        #   bch_sextic_term(x + V_2, ½a) - bch_sextic_term(x, ½a)
+        # = k=4 V_2 substitutions into C_6 (6 z-positions; deg = 6 - 4 + 8 = 10).
+        bch_6_at_xV2 = substitute(bch_6_abs, x_plus_V2, half_a)
+        bch_6_at_x = substitute(bch_6_abs, x, half_a)
+        poly = extract_degree(ncpoly_sub(bch_6_at_xV2, bch_6_at_x), 10)
+        deg = 10
     else:
         raise ValueError(f"Unknown piece name: {name}")
 
@@ -383,7 +392,7 @@ def emit_single_sum(piece_lean_name, items, lcm, max_abs, deg=8):
     coef_num = N * max_abs
     coef_den = lcm
 
-    super = {7: "⁷", 8: "⁸", 9: "⁹"}[deg]
+    super = {7: "⁷", 8: "⁸", 9: "⁹", 10: "¹⁰"}[deg]
     print("set_option maxHeartbeats 800000 in")
     print(f"/-- **Norm bound for `{piece_lean_name}`**:")
     print(f"`‖{piece_lean_name}(a,b)‖ ≤ ({coef_num}/{coef_den}) · (‖a‖+‖b‖){super}`.")
@@ -614,6 +623,8 @@ def main():
         "d8_P2_C5_quartic_residual": "septic_d8_P2_C5_quartic_residual_poly",
         # d8 P_2 C_6 deg-9 residual (this session)
         "d8_P2_C6_cubic_residual": "septic_d8_P2_C6_cubic_residual_poly",
+        # d8 P_2 C_6 deg-10 residual (this session)
+        "d8_P2_C6_quartic_residual": "septic_d8_P2_C6_quartic_residual_poly",
     }[name]
 
     if N <= 124:
