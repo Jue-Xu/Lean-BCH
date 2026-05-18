@@ -56,13 +56,50 @@ approach loses little.
 | CAS-level Group_Cp grouping | ✓ (session 57) | ✓ (session 52) |
 | Residual sizing study | ✓ (session 57) | ✓ (session 57) |
 | Operator-form identities (Dynkin pieces) | 5 of 6 piece-types ✓ (sessions 45-46) | 6 of 9 piece-types ✓ (sessions 49-50) |
-| Lean matching identities (small/marginal pieces) | pending | pending |
+| Lean matching identities (small/marginal pieces) | covers P_2_C5_quad via decomp | 1 of ~3 small ✓ (P_2_C5_cubic, session 57) |
+| Lean residual norm bounds (small/marginal pieces) | covers P_2_C5_quad via piece bound | 1 of ~3 small ✓ (P_2_C5_cubic, session 57) |
 | Lipschitz residual bounds (large pieces) | pending | pending |
 | Final O(s⁹) joint assembly | pending | pending |
 
-CAS-side structural setup for joint cancellation is now COMPLETE at both
-degrees with sizing data. Next Lean session can start with the simplest
-piece (d=8 P_2_C5_cubic, 48-term residual, single DEF + identity).
+**First (matching identity + residual norm bound) pair landed (session 57):**
+
+`bch_quintic_term_V2_shift_decomp` (commit `812119c`, 139 lines):
+
+    bch_quintic_term(½a + b + V_2, ½a) − bch_quintic_term(½a + b, ½a)
+      = septic_d8_P2_C5_lin_poly             (deg 6, k=1, NEW)
+      + septic_d7_P2_C5_quad_poly            (deg 7, k=2, session 46)
+      + septic_d8_P2_C5_cubic_poly           (deg 8, k=3, session 51)
+      + septic_d8_P2_C5_quartic_residual_poly (deg 9, k=4, NEW)
+
+V_2 inlined as `(1/4)·(a*b − b*a)`. Proof: standard 4-line pattern
+`unfold (4 quintic-groups + 4 P_2_C5 defs) + simp only [smul/mul distribute]
++ match_scalars <;> ring`.
+
+`norm_septic_d8_P2_C5_quartic_residual_poly_le` (commit `57802c4`,
+351 lines via the extended generator):
+
+    ‖septic_d8_P2_C5_quartic_residual_poly(a, b)‖ ≤ (768/368640) · s⁹
+                                                  ≈ 0.00208 · s⁹.
+
+CAS-derived via `scripts/gen_d8_subpiece_norm_bound.py
+d8_P2_C5_quartic_residual` (generator extended to deg-9 case). Pattern
+matches the existing per-piece d8 bounds (sessions 53-56): TermN family +
+Fin wrapper + eq_sum + per-i bound via `deg9_smul_word_le` + final
+`norm_sum_le` + `Finset.sum_const` + ring.
+
+The matching identity automatically gives the d=7 case (k=2 piece matches
+`septic_d7_P2_C5_quad_poly`, session 46) and the d=6 case (the new
+`septic_d8_P2_C5_lin_poly` — useful as a d6-level building block). The
+deg-9 residual bound feeds into the joint analysis as the "post-cancellation"
+remainder once the d6, d7, d8 sub-pieces match against their respective
+pert decompositions.
+
+CAS-side structural setup for joint cancellation is COMPLETE at both
+degrees. Lean-side: first (identity + bound) pair in place; the proven
+pattern extends to the remaining small/marginal pieces (next: d=8
+P_2_C6_quad with 194-term per-deg split, then d=7 P_2_C6_lin with
+304-term per-deg split). Large residuals (>2000 terms) await the
+Lipschitz approach via existing `norm_bch_kth_term_diff_le` infrastructure.
 
 Axiom count unchanged (still 2 scoped private axioms).
 
