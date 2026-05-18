@@ -21541,6 +21541,145 @@ private theorem septic_d8_P2_pieces_decomp
   match_scalars <;> ring
 
 
+/-! ## d8 P_2 C_5 matching identity (deg-6, 7, 8, 9 decomposition)
+
+The (bch_quintic_term diff under V_2 perturbation) decomposes into 4 pieces
+at degrees 6, 7, 8, 9. The deg-7 piece matches `septic_d7_P2_C5_quad_poly`
+(session 46) and the deg-8 piece matches `septic_d8_P2_C5_cubic_poly`
+(session 51). The deg-6 contribution and the deg-9 residual are captured
+by two new DEFs below.
+
+This matching identity is the simplest of a family needed for the joint
+cancellation argument that will eventually discharge
+`symmetric_bch_septic_sub_poly_axiom` (session 52 roadmap).
+
+Here V_2 = bch_quadratic_term(½a, b) is inlined as (1/4)·(a·b - b·a).
+-/
+
+/-- Deg-6 contribution (k=1 V_2 substitution into C_5) to
+`bch_quintic_term(x + V_2, ½a) - bch_quintic_term(x, ½a)` where x = ½a+b.
+36 terms, LCM 23040, Σ|num|/LCM ≈ 0.0284. -/
+noncomputable def septic_d8_P2_C5_lin_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (-7 / 23040 : 𝕂) • (a * a * a * a * b * b)
+  + (23 / 23040 : 𝕂) • (a * a * a * b * a * b)
+  + (5 / 23040 : 𝕂) • (a * a * a * b * b * a)
+  + (14 / 23040 : 𝕂) • (a * a * a * b * b * b)
+  + (-27 / 23040 : 𝕂) • (a * a * b * a * a * b)
+  + (-15 / 23040 : 𝕂) • (a * a * b * a * b * a)
+  + (-26 / 23040 : 𝕂) • (a * a * b * a * b * b)
+  + (-6 / 23040 : 𝕂) • (a * a * b * b * a * b)
+  + (-10 / 23040 : 𝕂) • (a * a * b * b * b * a)
+  + (-4 / 23040 : 𝕂) • (a * a * b * b * b * b)
+  + (18 / 23040 : 𝕂) • (a * b * a * a * a * b)
+  + (-16 / 23040 : 𝕂) • (a * b * a * a * b * b)
+  + (15 / 23040 : 𝕂) • (a * b * a * b * a * a)
+  + (64 / 23040 : 𝕂) • (a * b * a * b * a * b)
+  + (20 / 23040 : 𝕂) • (a * b * a * b * b * a)
+  + (16 / 23040 : 𝕂) • (a * b * a * b * b * b)
+  + (-5 / 23040 : 𝕂) • (a * b * b * a * a * a)
+  + (-16 / 23040 : 𝕂) • (a * b * b * a * a * b)
+  + (-20 / 23040 : 𝕂) • (a * b * b * a * b * a)
+  + (-24 / 23040 : 𝕂) • (a * b * b * a * b * b)
+  + (10 / 23040 : 𝕂) • (a * b * b * b * a * a)
+  + (16 / 23040 : 𝕂) • (a * b * b * b * a * b)
+  + (-18 / 23040 : 𝕂) • (b * a * a * a * b * a)
+  + (27 / 23040 : 𝕂) • (b * a * a * b * a * a)
+  + (16 / 23040 : 𝕂) • (b * a * a * b * b * a)
+  + (-23 / 23040 : 𝕂) • (b * a * b * a * a * a)
+  + (-64 / 23040 : 𝕂) • (b * a * b * a * b * a)
+  + (6 / 23040 : 𝕂) • (b * a * b * b * a * a)
+  + (-16 / 23040 : 𝕂) • (b * a * b * b * b * a)
+  + (7 / 23040 : 𝕂) • (b * b * a * a * a * a)
+  + (16 / 23040 : 𝕂) • (b * b * a * a * b * a)
+  + (26 / 23040 : 𝕂) • (b * b * a * b * a * a)
+  + (24 / 23040 : 𝕂) • (b * b * a * b * b * a)
+  + (-14 / 23040 : 𝕂) • (b * b * b * a * a * a)
+  + (-16 / 23040 : 𝕂) • (b * b * b * a * b * a)
+  + (4 / 23040 : 𝕂) • (b * b * b * b * a * a)
+
+/-- Deg-9 residual (k=4 V_2 substitution into C_5) to
+`bch_quintic_term(x + V_2, ½a) - bch_quintic_term(x, ½a)` where x = ½a+b.
+48 terms, LCM 368640, Σ|num|/LCM ≈ 0.0007. -/
+noncomputable def septic_d8_P2_C5_quartic_residual_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (-1 / 368640 : 𝕂) • (a * a * b * a * b * a * b * a * b)
+  + (1 / 368640 : 𝕂) • (a * a * b * a * b * a * b * b * a)
+  + (1 / 368640 : 𝕂) • (a * a * b * a * b * b * a * a * b)
+  + (-1 / 368640 : 𝕂) • (a * a * b * a * b * b * a * b * a)
+  + (1 / 368640 : 𝕂) • (a * a * b * b * a * a * b * a * b)
+  + (-1 / 368640 : 𝕂) • (a * a * b * b * a * a * b * b * a)
+  + (-1 / 368640 : 𝕂) • (a * a * b * b * a * b * a * a * b)
+  + (1 / 368640 : 𝕂) • (a * a * b * b * a * b * a * b * a)
+  + (5 / 368640 : 𝕂) • (a * b * a * a * b * a * b * a * b)
+  + (-5 / 368640 : 𝕂) • (a * b * a * a * b * a * b * b * a)
+  + (-5 / 368640 : 𝕂) • (a * b * a * a * b * b * a * a * b)
+  + (5 / 368640 : 𝕂) • (a * b * a * a * b * b * a * b * a)
+  + (-11 / 368640 : 𝕂) • (a * b * a * b * a * a * b * a * b)
+  + (11 / 368640 : 𝕂) • (a * b * a * b * a * a * b * b * a)
+  + (15 / 368640 : 𝕂) • (a * b * a * b * a * b * a * a * b)
+  + (-16 / 368640 : 𝕂) • (a * b * a * b * a * b * a * b * a)
+  + (1 / 368640 : 𝕂) • (a * b * a * b * a * b * b * a * a)
+  + (-4 / 368640 : 𝕂) • (a * b * a * b * b * a * a * a * b)
+  + (5 / 368640 : 𝕂) • (a * b * a * b * b * a * a * b * a)
+  + (-1 / 368640 : 𝕂) • (a * b * a * b * b * a * b * a * a)
+  + (6 / 368640 : 𝕂) • (a * b * b * a * a * a * b * a * b)
+  + (-6 / 368640 : 𝕂) • (a * b * b * a * a * a * b * b * a)
+  + (-10 / 368640 : 𝕂) • (a * b * b * a * a * b * a * a * b)
+  + (11 / 368640 : 𝕂) • (a * b * b * a * a * b * a * b * a)
+  + (-1 / 368640 : 𝕂) • (a * b * b * a * a * b * b * a * a)
+  + (4 / 368640 : 𝕂) • (a * b * b * a * b * a * a * a * b)
+  + (-5 / 368640 : 𝕂) • (a * b * b * a * b * a * a * b * a)
+  + (1 / 368640 : 𝕂) • (a * b * b * a * b * a * b * a * a)
+  + (-4 / 368640 : 𝕂) • (b * a * a * a * b * a * b * a * b)
+  + (4 / 368640 : 𝕂) • (b * a * a * a * b * a * b * b * a)
+  + (4 / 368640 : 𝕂) • (b * a * a * a * b * b * a * a * b)
+  + (-4 / 368640 : 𝕂) • (b * a * a * a * b * b * a * b * a)
+  + (10 / 368640 : 𝕂) • (b * a * a * b * a * a * b * a * b)
+  + (-10 / 368640 : 𝕂) • (b * a * a * b * a * a * b * b * a)
+  + (-14 / 368640 : 𝕂) • (b * a * a * b * a * b * a * a * b)
+  + (15 / 368640 : 𝕂) • (b * a * a * b * a * b * a * b * a)
+  + (-1 / 368640 : 𝕂) • (b * a * a * b * a * b * b * a * a)
+  + (4 / 368640 : 𝕂) • (b * a * a * b * b * a * a * a * b)
+  + (-5 / 368640 : 𝕂) • (b * a * a * b * b * a * a * b * a)
+  + (1 / 368640 : 𝕂) • (b * a * a * b * b * a * b * a * a)
+  + (-6 / 368640 : 𝕂) • (b * a * b * a * a * a * b * a * b)
+  + (6 / 368640 : 𝕂) • (b * a * b * a * a * a * b * b * a)
+  + (10 / 368640 : 𝕂) • (b * a * b * a * a * b * a * a * b)
+  + (-11 / 368640 : 𝕂) • (b * a * b * a * a * b * a * b * a)
+  + (1 / 368640 : 𝕂) • (b * a * b * a * a * b * b * a * a)
+  + (-4 / 368640 : 𝕂) • (b * a * b * a * b * a * a * a * b)
+  + (5 / 368640 : 𝕂) • (b * a * b * a * b * a * a * b * a)
+  + (-1 / 368640 : 𝕂) • (b * a * b * a * b * a * b * a * a)
+
+/-- **d8 P_2 C_5 matching identity**: the full bch_quintic_term diff under
+V_2 perturbation decomposes into deg-6, deg-7, deg-8, deg-9 pieces. The
+deg-7 piece matches the existing `septic_d7_P2_C5_quad_poly` (session 46)
+and the deg-8 piece matches `septic_d8_P2_C5_cubic_poly` (session 51).
+
+This is the simplest matching identity in the joint cancellation roadmap:
+the deg-9 residual has just 48 terms (smallest among all (C_p, V_j)
+substitution pairs per the session 57 sizing study). -/
+private theorem bch_quintic_term_V2_shift_decomp
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    bch_quintic_term 𝕂 ((1/2 : 𝕂) • a + b +
+                          (1/4 : 𝕂) • (a * b - b * a)) ((1/2 : 𝕂) • a) -
+    bch_quintic_term 𝕂 ((1/2 : 𝕂) • a + b) ((1/2 : 𝕂) • a) =
+      septic_d8_P2_C5_lin_poly 𝕂 a b
+      + septic_d7_P2_C5_quad_poly 𝕂 a b
+      + septic_d8_P2_C5_cubic_poly 𝕂 a b
+      + septic_d8_P2_C5_quartic_residual_poly 𝕂 a b := by
+  unfold bch_quintic_term bch_quintic_group_1 bch_quintic_group_4
+        bch_quintic_group_6 bch_quintic_group_24
+        septic_d8_P2_C5_lin_poly septic_d7_P2_C5_quad_poly
+        septic_d8_P2_C5_cubic_poly septic_d8_P2_C5_quartic_residual_poly
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+
 /-! ## Norm bounds for the d8 P_2 sub-pieces (non-Dynkin)
 
 The 3 sub-pieces of `septic_d8_P2_poly` (C_5 cubic, C_6 quad, C_7 lin) are
