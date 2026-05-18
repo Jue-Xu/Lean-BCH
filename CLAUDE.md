@@ -1,5 +1,55 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 56, 2026-05-18)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 56 (2026-05-18, 5 deferred d8 parent piece bounds, 1 commit)**:
+
+Completes the per-piece norm-bound infrastructure with the 5 remaining
+d8 parent pieces (which need split-half Finset.sum emission since
+N > 124 terms hits Lean's simp recursion limit).
+
+**`ee6c0fb`** — 5 new public theorems in `BCH/SymmetricQuintic.lean`
+(+6828 lines, before the d7 perturbation norm-bound section):
+
+| Theorem | Terms | Bound (K·s⁸) |
+|--------:|------:|-------------:|
+| `norm_septic_d8_P2_poly_le`          | 186 | 583296/7741440 ≈ 0.075 |
+| `norm_septic_d8_P3_poly_le`          | 166 | 164672/1105920 ≈ 0.149 |
+| `norm_septic_d8_P5_poly_le`          | 146 | 112128/2211840 ≈ 0.051 |
+| `norm_septic_d8_P6_poly_le`          | 126 | 12096/552960 ≈ 0.022 |
+| `norm_septic_d8_cross_V2_V5_poly_le` | 154 | 29568/1105920 ≈ 0.027 |
+
+Each piece is split into two ~75-93 term halves at definition time, with
+the halves combined via `abel` reassociation + triangle inequality.
+
+Generator-script bug fix: a previous regex-based parameterization left
+a literal `{deg}` placeholder in the `pow_nonneg` line (only triggered
+for split-half emission). Fixed by converting the `print` call to an
+f-string.
+
+**Per-piece norm bound infrastructure is now COMPLETE** (sessions 53-56):
+
+| Layer | Count | Status |
+|-------|------:|--------|
+| d8 parent pieces | 9 | 9/9 bounded ✓ |
+| d7 parent pieces | 6 | 6/6 bounded ✓ |
+| d8 non-Dynkin sub-pieces | 6 | 6/6 bounded ✓ |
+| d7 non-Dynkin sub-pieces | 3 | 3/3 bounded ✓ |
+| d8 Dynkin sub-pieces | 1 (P_3_C4_quad) | 1/1 bounded ✓ |
+| d7 Dynkin sub-pieces | 1 (P_3_C3_quad) | 1/1 bounded ✓ |
+
+**Total: 26 direct polynomial norm-bound theorems** across d7+d8.
+
+These are the "raw" polynomial-norm-bound foundation. Insufficient
+alone for `O(s⁹)` joint bound (the bounds are `O(s⁷)` / `O(s⁸)` per
+piece); the joint cancellation argument still needs the matching
+identities outlined in session 52's roadmap.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 55, 2026-05-18)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
