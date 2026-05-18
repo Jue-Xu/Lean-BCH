@@ -5,38 +5,48 @@
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
 `symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
 
-**Session 57 (2026-05-18, d7 CAS matching identity verification, 1 commit)**:
+**Session 57 (2026-05-18, d7 CAS matching identity + residual sizing, 2 commits)**:
 
-CAS-only progress on the joint cancellation roadmap (session 52). Adds the
-d7 analog of `verify_d8_C_k_diff_matching.py`, completing the structural
-sub-piece grouping at both d=7 and d=8.
+CAS-only progress on the joint cancellation roadmap (session 52). Two
+commits this session: (1) d7 analog of the d8 C_p grouping verification,
+(2) a sizing study measuring residual sizes for each (C_p, V_j) matching
+to plan the Lean strategy.
 
-**`5ddd583`** — `scripts/verify_d7_C_k_diff_matching.py` (304 lines).
-Verifies at CAS level that the 8 d7 sub-pieces group by C_p origin:
+**`5ddd583`** — `scripts/verify_d7_C_k_diff_matching.py`: 8 d7 sub-pieces
+group by C_p origin into 4 groups (Group_C3/C4/C5/C6 with 3+2+2+1
+sub-pieces) summing exactly to `septic_d7_perturbation_poly` (116 terms,
+LCM 276480). Identity: pert_d7 = V_7 + P_6 + Σ Group_Cp. Corrects session
+52's docstring typo (P_3_C3_quad is in Group_C3, not C_4).
 
-    Group_C3_d7 = P_5 + Cross(V_2, V_4) + P_3_C3_quad   (3 sub-pieces)
-    Group_C4_d7 = P_4 + Cross(V_2, V_3)                  (2 sub-pieces)
-    Group_C5_d7 = P_3_C5_lin + P_2_C5_quad               (2 sub-pieces)
-    Group_C6_d7 = P_2_C6_lin                             (1 sub-piece)
+**`75f4ec7`** — `scripts/verify_d7_P2_C6_lin_residual.py` and
+`scripts/verify_matching_residual_sizes.py`: measures the deg-(q+1)+
+residual size for each matching identity. Three strategies needed by piece:
 
-Total: Σ Group_Cp = `septic_d7_perturbation_poly` (116 terms, LCM 276480).
+| Piece              | Residual terms      | Σ\|num\|/LCM | Lean strategy             |
+|--------------------|--------------------:|------------:|---------------------------|
+| d=8 P_2_C5_cubic   |  48 (d9 only)       | 0.0007      | (A) single DEF + identity |
+| d=7 P_2_C5_quad    | 126 (d8:78,d9:48)   | 0.0059      | (A) single DEF + identity |
+| d=8 P_2_C6_quad    | 194 (d9:120,d10:74) | 0.0025      | (B) per-deg split DEFs    |
+| d=7 P_2_C6_lin     | 304 (d8:110,d9:120,d10:74) | 0.0106 | (B) per-deg split DEFs |
+| d=8 P_2_C7_lin     | 2488                | 0.0134      | (C) Lipschitz residual    |
+| d=8 Cross_V2_V3_C5 | 3193                | 0.0064      | (C) Lipschitz residual    |
+| d=8 P_4_C5_lin     | 2929                | 0.0005      | (C) Lipschitz residual    |
+| d=7 P_3_C5_lin     | 5029                | 0.0062      | (C) Lipschitz residual    |
+| d=8 P_3_C6_lin     | 7638                | 0.0028      | (C) Lipschitz residual    |
 
-The structural identity behind it:
+(A) = direct polynomial-form Lean DEF + identity via `match_scalars <;> ring`
++ Finset.sum norm bound.
 
-    pert_d7 := (bch(z, ½a) − bch(½a+b, ½a))_d7
-             = V_7 + P_6 + Group_C3 + Group_C4 + Group_C5 + Group_C6,
+(B) = decompose residual into per-degree pieces (each ≤ 124 terms to fit
+the simp recursion pattern, per memory `feedback_simp_recursion_180_terms.md`).
+Each piece gets its own DEF + bound; identity combines via `abel`.
 
-where V_7 = bch_septic_term(½a, b) comes from the deg-7 part of
-z − (a'+b), and P_6 = ½·[V_6, a'] comes from the bracket term ½·[W, a']
-with W = z − (a'+b). The C_7-diff contributes 0 at deg 7 (would need
-no V_j substitution, but then C_7(a'+b, a') − C_7(a'+b, a') = 0).
-Thus septic_d7_perturbation_poly = pert_d7 − V_7 − P_6 = Σ Group_Cp.
-
-**Corrects a typo** in session 52's docstring: the previous roadmap text
-listed `P_3_C3_quad` in Group_C4_d7, but degree counting (p=3, k_3=2 gives
-deg = 3 + 2·2 = 7 from C_3) shows it must be in Group_C3_d7. The CAS sum
-confirms: with P_3_C3_quad in Group_C3, the four groups sum exactly to
-septic_d7_perturbation_poly.
+(C) = bound the full diff via `norm_bch_kth_term_diff_le` (which gives
+`p·M^(p-1)·‖V‖` ≤ `p·M^(p-1)·s^j`), subtract the explicit deg-q part bound,
+deduce residual bound. Loses constant tightness but doesn't need polynomial
+form. Useful insight from the sizing: even the large residuals have small
+Σ|num|/LCM (e.g., P_4_C5_lin: 2929 terms but only 0.0005), so the Lipschitz
+approach loses little.
 
 **Status of the joint cancellation roadmap** (session 52 items A–D):
 
@@ -44,16 +54,15 @@ septic_d7_perturbation_poly.
 |------|-----|-----|
 | Per-piece norm bounds (raw) | 6 parent + 4 sub ✓ (sessions 54-56) | 9 parent + 7 sub ✓ (sessions 53-56) |
 | CAS-level Group_Cp grouping | ✓ (session 57) | ✓ (session 52) |
+| Residual sizing study | ✓ (session 57) | ✓ (session 57) |
 | Operator-form identities (Dynkin pieces) | 5 of 6 piece-types ✓ (sessions 45-46) | 6 of 9 piece-types ✓ (sessions 49-50) |
-| Lean-level matching identity for residual | pending | pending |
-| Joint Lipschitz residual bound (O(s⁸)/O(s⁹)) | pending | pending |
-| Final assembly → discharge of axiom | pending | pending |
+| Lean matching identities (small/marginal pieces) | pending | pending |
+| Lipschitz residual bounds (large pieces) | pending | pending |
+| Final O(s⁹) joint assembly | pending | pending |
 
-The CAS-side structural setup for joint cancellation is now complete at
-both degrees. Remaining work is Lean-level: formalize the matching identity
-(`(C_p diff)_dq = Group_Cp_dq`) and the Lipschitz residual bound
-(`‖(C_p diff)_full − (C_p diff)_dq‖ ≤ K · s^(q+1)`) for each p, then assemble
-into the O(s⁹) joint bound.
+CAS-side structural setup for joint cancellation is now COMPLETE at both
+degrees with sizing data. Next Lean session can start with the simplest
+piece (d=8 P_2_C5_cubic, 48-term residual, single DEF + identity).
 
 Axiom count unchanged (still 2 scoped private axioms).
 
