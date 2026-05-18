@@ -1,5 +1,62 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 57, 2026-05-18)
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+
+**Session 57 (2026-05-18, d7 CAS matching identity verification, 1 commit)**:
+
+CAS-only progress on the joint cancellation roadmap (session 52). Adds the
+d7 analog of `verify_d8_C_k_diff_matching.py`, completing the structural
+sub-piece grouping at both d=7 and d=8.
+
+**`5ddd583`** — `scripts/verify_d7_C_k_diff_matching.py` (304 lines).
+Verifies at CAS level that the 8 d7 sub-pieces group by C_p origin:
+
+    Group_C3_d7 = P_5 + Cross(V_2, V_4) + P_3_C3_quad   (3 sub-pieces)
+    Group_C4_d7 = P_4 + Cross(V_2, V_3)                  (2 sub-pieces)
+    Group_C5_d7 = P_3_C5_lin + P_2_C5_quad               (2 sub-pieces)
+    Group_C6_d7 = P_2_C6_lin                             (1 sub-piece)
+
+Total: Σ Group_Cp = `septic_d7_perturbation_poly` (116 terms, LCM 276480).
+
+The structural identity behind it:
+
+    pert_d7 := (bch(z, ½a) − bch(½a+b, ½a))_d7
+             = V_7 + P_6 + Group_C3 + Group_C4 + Group_C5 + Group_C6,
+
+where V_7 = bch_septic_term(½a, b) comes from the deg-7 part of
+z − (a'+b), and P_6 = ½·[V_6, a'] comes from the bracket term ½·[W, a']
+with W = z − (a'+b). The C_7-diff contributes 0 at deg 7 (would need
+no V_j substitution, but then C_7(a'+b, a') − C_7(a'+b, a') = 0).
+Thus septic_d7_perturbation_poly = pert_d7 − V_7 − P_6 = Σ Group_Cp.
+
+**Corrects a typo** in session 52's docstring: the previous roadmap text
+listed `P_3_C3_quad` in Group_C4_d7, but degree counting (p=3, k_3=2 gives
+deg = 3 + 2·2 = 7 from C_3) shows it must be in Group_C3_d7. The CAS sum
+confirms: with P_3_C3_quad in Group_C3, the four groups sum exactly to
+septic_d7_perturbation_poly.
+
+**Status of the joint cancellation roadmap** (session 52 items A–D):
+
+| Step | d=7 | d=8 |
+|------|-----|-----|
+| Per-piece norm bounds (raw) | 6 parent + 4 sub ✓ (sessions 54-56) | 9 parent + 7 sub ✓ (sessions 53-56) |
+| CAS-level Group_Cp grouping | ✓ (session 57) | ✓ (session 52) |
+| Operator-form identities (Dynkin pieces) | 5 of 6 piece-types ✓ (sessions 45-46) | 6 of 9 piece-types ✓ (sessions 49-50) |
+| Lean-level matching identity for residual | pending | pending |
+| Joint Lipschitz residual bound (O(s⁸)/O(s⁹)) | pending | pending |
+| Final assembly → discharge of axiom | pending | pending |
+
+The CAS-side structural setup for joint cancellation is now complete at
+both degrees. Remaining work is Lean-level: formalize the matching identity
+(`(C_p diff)_dq = Group_Cp_dq`) and the Lipschitz residual bound
+(`‖(C_p diff)_full − (C_p diff)_dq‖ ≤ K · s^(q+1)`) for each p, then assemble
+into the O(s⁹) joint bound.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 56, 2026-05-18)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
