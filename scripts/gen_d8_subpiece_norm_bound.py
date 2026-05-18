@@ -270,6 +270,15 @@ def compute_subpiece(name):
         outer = ncpoly_bracket(V3, inner)
         poly = ncpoly_scale(outer, sp.Rational(1, 12))
         deg = 7
+    # ---- d=9 residual: k=4 V_2 part of C_5 diff ----
+    elif name == "d8_P2_C5_quartic_residual":
+        # septic_d8_P2_C5_quartic_residual_poly: deg-9 part of
+        #   bch_quintic_term(x + V_2, ½a) - bch_quintic_term(x, ½a)
+        # = k=4 V_2 substitutions into C_5 (5 z-positions; deg = 5 - 4 + 8 = 9).
+        bch_5_at_xV2 = substitute(bch_5_abs, x_plus_V2, half_a)
+        bch_5_at_x = substitute(bch_5_abs, x, half_a)
+        poly = extract_degree(ncpoly_sub(bch_5_at_xV2, bch_5_at_x), 9)
+        deg = 9
     else:
         raise ValueError(f"Unknown piece name: {name}")
 
@@ -365,7 +374,7 @@ def emit_single_sum(piece_lean_name, items, lcm, max_abs, deg=8):
     coef_num = N * max_abs
     coef_den = lcm
 
-    super = "⁷" if deg == 7 else "⁸"
+    super = {7: "⁷", 8: "⁸", 9: "⁹"}[deg]
     print("set_option maxHeartbeats 800000 in")
     print(f"/-- **Norm bound for `{piece_lean_name}`**:")
     print(f"`‖{piece_lean_name}(a,b)‖ ≤ ({coef_num}/{coef_den}) · (‖a‖+‖b‖){super}`.")
@@ -592,6 +601,8 @@ def main():
         "d7_cross_V2_V3": "septic_d7_cross_V2_V3_poly",
         "d7_cross_V2_V4": "septic_d7_cross_V2_V4_poly",
         "d7_P3_C3_quad":  "septic_d7_P3_C3_quad_poly",
+        # d8 P_2 C_5 deg-9 residual (this session)
+        "d8_P2_C5_quartic_residual": "septic_d8_P2_C5_quartic_residual_poly",
     }[name]
 
     if N <= 124:
