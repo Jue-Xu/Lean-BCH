@@ -279,6 +279,15 @@ def compute_subpiece(name):
         bch_5_at_x = substitute(bch_5_abs, x, half_a)
         poly = extract_degree(ncpoly_sub(bch_5_at_xV2, bch_5_at_x), 9)
         deg = 9
+    # ---- d=9 residual: k=3 V_2 part of C_6 diff ----
+    elif name == "d8_P2_C6_cubic_residual":
+        # septic_d8_P2_C6_cubic_residual_poly: deg-9 part of
+        #   bch_sextic_term(x + V_2, ½a) - bch_sextic_term(x, ½a)
+        # = k=3 V_2 substitutions into C_6 (6 z-positions; deg = 6 - 3 + 6 = 9).
+        bch_6_at_xV2 = substitute(bch_6_abs, x_plus_V2, half_a)
+        bch_6_at_x = substitute(bch_6_abs, x, half_a)
+        poly = extract_degree(ncpoly_sub(bch_6_at_xV2, bch_6_at_x), 9)
+        deg = 9
     else:
         raise ValueError(f"Unknown piece name: {name}")
 
@@ -603,6 +612,8 @@ def main():
         "d7_P3_C3_quad":  "septic_d7_P3_C3_quad_poly",
         # d8 P_2 C_5 deg-9 residual (this session)
         "d8_P2_C5_quartic_residual": "septic_d8_P2_C5_quartic_residual_poly",
+        # d8 P_2 C_6 deg-9 residual (this session)
+        "d8_P2_C6_cubic_residual": "septic_d8_P2_C6_cubic_residual_poly",
     }[name]
 
     if N <= 124:
