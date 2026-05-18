@@ -528,7 +528,7 @@ def emit_split_half(piece_lean_name, items, lcm, max_abs, deg=8):
           f"({total_num} / {total_den} : ℝ) * (‖a‖ + ‖b‖) ^ {deg} := by")
     print("  set s := ‖a‖ + ‖b‖ with hs_def")
     print("  have hs_nn : 0 ≤ s := by positivity")
-    print("  have hsdeg_nn : 0 ≤ s ^ {deg} := pow_nonneg hs_nn {deg}")
+    print(f"  have hsdeg_nn : 0 ≤ s ^ {deg} := pow_nonneg hs_nn {deg}")
     print(f"  rw [{piece_lean_name}_split,")
     print(f"      {base_prefix}First_explicit_eq_sum,")
     print(f"      {base_prefix}Second_explicit_eq_sum]")
