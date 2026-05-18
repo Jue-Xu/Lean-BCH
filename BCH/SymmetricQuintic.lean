@@ -22031,6 +22031,256 @@ theorem norm_septic_d8_P2_C5_quartic_residual_poly_le (a b : 𝔸) :
     _ = (768 / 368640 : ℝ) * s^9 := by ring
 
 
+/-! ## d8 P_2 C_6 matching identity (deg-7, 8, 9, 10 decomposition)
+
+The bch_sextic_term diff under V_2 perturbation decomposes into 4 pieces
+at degrees 7, 8, 9, 10 corresponding to k=1, 2, 3, 4 V_2 substitutions
+into C_6 (which has up to 6 z-positions). The deg-7 piece matches
+`septic_d7_P2_C6_lin_poly` (session 46) and the deg-8 piece matches
+`septic_d8_P2_C6_quad_poly` (session 51). The deg-9 and deg-10 residual
+pieces are NEW. The deg-11 (k=5) and deg-12 (k=6) contributions vanish
+because the bch_sextic_term polynomial has at most 4 a's per word.
+
+Analog of the d=8 P_2 C_5 matching identity above (`bch_quintic_term_V2_
+shift_decomp`), at one degree higher (bch_sextic_term instead of
+bch_quintic_term).
+-/
+
+-- === Deg-9 residual (k=3 V_2 in C_6) ===
+
+/-- Deg-9 residual = (k=3 V_2 substitution part) of (bch_sextic_term(x+V_2, ½a) - bch_sextic_term(x, ½a)). 120 terms. -/
+noncomputable def septic_d8_P2_C6_cubic_residual_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (-7 / 737280 : 𝕂) • (a * a * a * a * b * a * b * a * b)
+  + (7 / 737280 : 𝕂) • (a * a * a * a * b * a * b * b * a)
+  + (7 / 737280 : 𝕂) • (a * a * a * a * b * b * a * a * b)
+  + (-7 / 737280 : 𝕂) • (a * a * a * a * b * b * a * b * a)
+  + (20 / 737280 : 𝕂) • (a * a * a * b * a * a * b * a * b)
+  + (-20 / 737280 : 𝕂) • (a * a * a * b * a * a * b * b * a)
+  + (-17 / 737280 : 𝕂) • (a * a * a * b * a * b * a * a * b)
+  + (22 / 737280 : 𝕂) • (a * a * a * b * a * b * a * b * a)
+  + (2 / 737280 : 𝕂) • (a * a * a * b * a * b * a * b * b)
+  + (-5 / 737280 : 𝕂) • (a * a * a * b * a * b * b * a * a)
+  + (-2 / 737280 : 𝕂) • (a * a * a * b * a * b * b * b * a)
+  + (-3 / 737280 : 𝕂) • (a * a * a * b * b * a * a * a * b)
+  + (-2 / 737280 : 𝕂) • (a * a * a * b * b * a * a * b * a)
+  + (-2 / 737280 : 𝕂) • (a * a * a * b * b * a * a * b * b)
+  + (5 / 737280 : 𝕂) • (a * a * a * b * b * a * b * a * a)
+  + (2 / 737280 : 𝕂) • (a * a * a * b * b * a * b * a * b)
+  + (-2 / 737280 : 𝕂) • (a * a * a * b * b * b * a * a * b)
+  + (2 / 737280 : 𝕂) • (a * a * a * b * b * b * a * b * a)
+  + (-5 / 737280 : 𝕂) • (a * a * b * a * a * a * b * a * b)
+  + (5 / 737280 : 𝕂) • (a * a * b * a * a * a * b * b * a)
+  + (-30 / 737280 : 𝕂) • (a * a * b * a * a * b * a * a * b)
+  + (15 / 737280 : 𝕂) • (a * a * b * a * a * b * a * b * a)
+  + (-10 / 737280 : 𝕂) • (a * a * b * a * a * b * a * b * b)
+  + (15 / 737280 : 𝕂) • (a * a * b * a * a * b * b * a * a)
+  + (10 / 737280 : 𝕂) • (a * a * b * a * a * b * b * b * a)
+  + (43 / 737280 : 𝕂) • (a * a * b * a * b * a * a * a * b)
+  + (-18 / 737280 : 𝕂) • (a * a * b * a * b * a * a * b * a)
+  + (22 / 737280 : 𝕂) • (a * a * b * a * b * a * a * b * b)
+  + (-30 / 737280 : 𝕂) • (a * a * b * a * b * a * b * a * a)
+  + (-16 / 737280 : 𝕂) • (a * a * b * a * b * a * b * a * b)
+  + (-14 / 737280 : 𝕂) • (a * a * b * a * b * a * b * b * a)
+  + (5 / 737280 : 𝕂) • (a * a * b * a * b * b * a * a * a)
+  + (8 / 737280 : 𝕂) • (a * a * b * a * b * b * a * a * b)
+  + (-8 / 737280 : 𝕂) • (a * a * b * b * a * a * a * a * b)
+  + (-2 / 737280 : 𝕂) • (a * a * b * b * a * a * a * b * a)
+  + (-12 / 737280 : 𝕂) • (a * a * b * b * a * a * a * b * b)
+  + (15 / 737280 : 𝕂) • (a * a * b * b * a * a * b * a * a)
+  + (18 / 737280 : 𝕂) • (a * a * b * b * a * a * b * a * b)
+  + (2 / 737280 : 𝕂) • (a * a * b * b * a * a * b * b * a)
+  + (-5 / 737280 : 𝕂) • (a * a * b * b * a * b * a * a * a)
+  + (-18 / 737280 : 𝕂) • (a * a * b * b * a * b * a * a * b)
+  + (10 / 737280 : 𝕂) • (a * a * b * b * a * b * a * b * a)
+  + (8 / 737280 : 𝕂) • (a * a * b * b * b * a * a * a * b)
+  + (-8 / 737280 : 𝕂) • (a * a * b * b * b * a * a * b * a)
+  + (-8 / 737280 : 𝕂) • (a * b * a * a * a * a * b * a * b)
+  + (8 / 737280 : 𝕂) • (a * b * a * a * a * a * b * b * a)
+  + (40 / 737280 : 𝕂) • (a * b * a * a * a * b * a * a * b)
+  + (-38 / 737280 : 𝕂) • (a * b * a * a * a * b * a * b * a)
+  + (8 / 737280 : 𝕂) • (a * b * a * a * a * b * a * b * b)
+  + (-2 / 737280 : 𝕂) • (a * b * a * a * a * b * b * a * a)
+  + (-8 / 737280 : 𝕂) • (a * b * a * a * a * b * b * b * a)
+  + (-40 / 737280 : 𝕂) • (a * b * a * a * b * a * a * a * b)
+  + (60 / 737280 : 𝕂) • (a * b * a * a * b * a * a * b * a)
+  + (-20 / 737280 : 𝕂) • (a * b * a * a * b * a * a * b * b)
+  + (-18 / 737280 : 𝕂) • (a * b * a * a * b * a * b * a * a)
+  + (8 / 737280 : 𝕂) • (a * b * a * a * b * a * b * a * b)
+  + (28 / 737280 : 𝕂) • (a * b * a * a * b * a * b * b * a)
+  + (-2 / 737280 : 𝕂) • (a * b * a * a * b * b * a * a * a)
+  + (-8 / 737280 : 𝕂) • (a * b * a * a * b * b * a * b * a)
+  + (-8 / 737280 : 𝕂) • (a * b * a * a * b * b * b * a * a)
+  + (8 / 737280 : 𝕂) • (a * b * a * b * a * a * a * a * b)
+  + (-38 / 737280 : 𝕂) • (a * b * a * b * a * a * a * b * a)
+  + (12 / 737280 : 𝕂) • (a * b * a * b * a * a * a * b * b)
+  + (15 / 737280 : 𝕂) • (a * b * a * b * a * a * b * a * a)
+  + (-40 / 737280 : 𝕂) • (a * b * a * b * a * a * b * b * a)
+  + (22 / 737280 : 𝕂) • (a * b * a * b * a * b * a * a * a)
+  + (-8 / 737280 : 𝕂) • (a * b * a * b * a * b * a * a * b)
+  + (32 / 737280 : 𝕂) • (a * b * a * b * a * b * a * b * a)
+  + (10 / 737280 : 𝕂) • (a * b * a * b * a * b * b * a * a)
+  + (-7 / 737280 : 𝕂) • (a * b * a * b * b * a * a * a * a)
+  + (-8 / 737280 : 𝕂) • (a * b * a * b * b * a * a * b * a)
+  + (2 / 737280 : 𝕂) • (a * b * a * b * b * b * a * a * a)
+  + (8 / 737280 : 𝕂) • (a * b * b * a * a * a * a * b * a)
+  + (5 / 737280 : 𝕂) • (a * b * b * a * a * a * b * a * a)
+  + (-12 / 737280 : 𝕂) • (a * b * b * a * a * a * b * a * b)
+  + (24 / 737280 : 𝕂) • (a * b * b * a * a * a * b * b * a)
+  + (-20 / 737280 : 𝕂) • (a * b * b * a * a * b * a * a * a)
+  + (20 / 737280 : 𝕂) • (a * b * b * a * a * b * a * a * b)
+  + (-40 / 737280 : 𝕂) • (a * b * b * a * a * b * a * b * a)
+  + (2 / 737280 : 𝕂) • (a * b * b * a * a * b * b * a * a)
+  + (7 / 737280 : 𝕂) • (a * b * b * a * b * a * a * a * a)
+  + (-8 / 737280 : 𝕂) • (a * b * b * a * b * a * a * a * b)
+  + (28 / 737280 : 𝕂) • (a * b * b * a * b * a * a * b * a)
+  + (-14 / 737280 : 𝕂) • (a * b * b * a * b * a * b * a * a)
+  + (-8 / 737280 : 𝕂) • (a * b * b * b * a * a * a * b * a)
+  + (10 / 737280 : 𝕂) • (a * b * b * b * a * a * b * a * a)
+  + (-2 / 737280 : 𝕂) • (a * b * b * b * a * b * a * a * a)
+  + (8 / 737280 : 𝕂) • (b * a * a * a * a * b * a * b * a)
+  + (-8 / 737280 : 𝕂) • (b * a * a * a * a * b * b * a * a)
+  + (-40 / 737280 : 𝕂) • (b * a * a * a * b * a * a * b * a)
+  + (43 / 737280 : 𝕂) • (b * a * a * a * b * a * b * a * a)
+  + (-8 / 737280 : 𝕂) • (b * a * a * a * b * a * b * b * a)
+  + (-3 / 737280 : 𝕂) • (b * a * a * a * b * b * a * a * a)
+  + (8 / 737280 : 𝕂) • (b * a * a * a * b * b * b * a * a)
+  + (40 / 737280 : 𝕂) • (b * a * a * b * a * a * a * b * a)
+  + (-30 / 737280 : 𝕂) • (b * a * a * b * a * a * b * a * a)
+  + (20 / 737280 : 𝕂) • (b * a * a * b * a * a * b * b * a)
+  + (-17 / 737280 : 𝕂) • (b * a * a * b * a * b * a * a * a)
+  + (-8 / 737280 : 𝕂) • (b * a * a * b * a * b * a * b * a)
+  + (-18 / 737280 : 𝕂) • (b * a * a * b * a * b * b * a * a)
+  + (7 / 737280 : 𝕂) • (b * a * a * b * b * a * a * a * a)
+  + (8 / 737280 : 𝕂) • (b * a * a * b * b * a * b * a * a)
+  + (-2 / 737280 : 𝕂) • (b * a * a * b * b * b * a * a * a)
+  + (-8 / 737280 : 𝕂) • (b * a * b * a * a * a * a * b * a)
+  + (-5 / 737280 : 𝕂) • (b * a * b * a * a * a * b * a * a)
+  + (-12 / 737280 : 𝕂) • (b * a * b * a * a * a * b * b * a)
+  + (20 / 737280 : 𝕂) • (b * a * b * a * a * b * a * a * a)
+  + (18 / 737280 : 𝕂) • (b * a * b * a * a * b * b * a * a)
+  + (-7 / 737280 : 𝕂) • (b * a * b * a * b * a * a * a * a)
+  + (8 / 737280 : 𝕂) • (b * a * b * a * b * a * a * b * a)
+  + (-16 / 737280 : 𝕂) • (b * a * b * a * b * a * b * a * a)
+  + (2 / 737280 : 𝕂) • (b * a * b * a * b * b * a * a * a)
+  + (12 / 737280 : 𝕂) • (b * b * a * a * a * b * a * b * a)
+  + (-12 / 737280 : 𝕂) • (b * b * a * a * a * b * b * a * a)
+  + (-20 / 737280 : 𝕂) • (b * b * a * a * b * a * a * b * a)
+  + (22 / 737280 : 𝕂) • (b * b * a * a * b * a * b * a * a)
+  + (-2 / 737280 : 𝕂) • (b * b * a * a * b * b * a * a * a)
+  + (8 / 737280 : 𝕂) • (b * b * a * b * a * a * a * b * a)
+  + (-10 / 737280 : 𝕂) • (b * b * a * b * a * a * b * a * a)
+  + (2 / 737280 : 𝕂) • (b * b * a * b * a * b * a * a * a)
+
+
+-- === Deg-10 residual (k=4 V_2 in C_6) ===
+
+/-- Deg-10 residual = (k=4 V_2 substitution part) of (bch_sextic_term(x+V_2, ½a) - bch_sextic_term(x, ½a)). 74 terms. -/
+noncomputable def septic_d8_P2_C6_quartic_residual_poly (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (a b : 𝔸) : 𝔸 :=
+    (1 / 1474560 : 𝕂) • (a * a * a * b * a * b * a * b * a * b)
+  + (-1 / 1474560 : 𝕂) • (a * a * a * b * a * b * a * b * b * a)
+  + (-1 / 1474560 : 𝕂) • (a * a * a * b * a * b * b * a * a * b)
+  + (1 / 1474560 : 𝕂) • (a * a * a * b * a * b * b * a * b * a)
+  + (-1 / 1474560 : 𝕂) • (a * a * a * b * b * a * a * b * a * b)
+  + (1 / 1474560 : 𝕂) • (a * a * a * b * b * a * a * b * b * a)
+  + (1 / 1474560 : 𝕂) • (a * a * a * b * b * a * b * a * a * b)
+  + (-1 / 1474560 : 𝕂) • (a * a * a * b * b * a * b * a * b * a)
+  + (-5 / 1474560 : 𝕂) • (a * a * b * a * a * b * a * b * a * b)
+  + (5 / 1474560 : 𝕂) • (a * a * b * a * a * b * a * b * b * a)
+  + (5 / 1474560 : 𝕂) • (a * a * b * a * a * b * b * a * a * b)
+  + (-5 / 1474560 : 𝕂) • (a * a * b * a * a * b * b * a * b * a)
+  + (11 / 1474560 : 𝕂) • (a * a * b * a * b * a * a * b * a * b)
+  + (-11 / 1474560 : 𝕂) • (a * a * b * a * b * a * a * b * b * a)
+  + (-15 / 1474560 : 𝕂) • (a * a * b * a * b * a * b * a * a * b)
+  + (15 / 1474560 : 𝕂) • (a * a * b * a * b * a * b * a * b * a)
+  + (4 / 1474560 : 𝕂) • (a * a * b * a * b * b * a * a * a * b)
+  + (-4 / 1474560 : 𝕂) • (a * a * b * a * b * b * a * a * b * a)
+  + (-6 / 1474560 : 𝕂) • (a * a * b * b * a * a * a * b * a * b)
+  + (6 / 1474560 : 𝕂) • (a * a * b * b * a * a * a * b * b * a)
+  + (10 / 1474560 : 𝕂) • (a * a * b * b * a * a * b * a * a * b)
+  + (-10 / 1474560 : 𝕂) • (a * a * b * b * a * a * b * a * b * a)
+  + (-4 / 1474560 : 𝕂) • (a * a * b * b * a * b * a * a * a * b)
+  + (4 / 1474560 : 𝕂) • (a * a * b * b * a * b * a * a * b * a)
+  + (4 / 1474560 : 𝕂) • (a * b * a * a * a * b * a * b * a * b)
+  + (-4 / 1474560 : 𝕂) • (a * b * a * a * a * b * a * b * b * a)
+  + (-4 / 1474560 : 𝕂) • (a * b * a * a * a * b * b * a * a * b)
+  + (4 / 1474560 : 𝕂) • (a * b * a * a * a * b * b * a * b * a)
+  + (-10 / 1474560 : 𝕂) • (a * b * a * a * b * a * a * b * a * b)
+  + (10 / 1474560 : 𝕂) • (a * b * a * a * b * a * a * b * b * a)
+  + (14 / 1474560 : 𝕂) • (a * b * a * a * b * a * b * a * a * b)
+  + (-10 / 1474560 : 𝕂) • (a * b * a * a * b * a * b * a * b * a)
+  + (-4 / 1474560 : 𝕂) • (a * b * a * a * b * a * b * b * a * a)
+  + (-4 / 1474560 : 𝕂) • (a * b * a * a * b * b * a * a * a * b)
+  + (4 / 1474560 : 𝕂) • (a * b * a * a * b * b * a * b * a * a)
+  + (6 / 1474560 : 𝕂) • (a * b * a * b * a * a * a * b * a * b)
+  + (-6 / 1474560 : 𝕂) • (a * b * a * b * a * a * a * b * b * a)
+  + (-10 / 1474560 : 𝕂) • (a * b * a * b * a * a * b * a * a * b)
+  + (10 / 1474560 : 𝕂) • (a * b * a * b * a * a * b * b * a * a)
+  + (4 / 1474560 : 𝕂) • (a * b * a * b * a * b * a * a * a * b)
+  + (10 / 1474560 : 𝕂) • (a * b * a * b * a * b * a * a * b * a)
+  + (-15 / 1474560 : 𝕂) • (a * b * a * b * a * b * a * b * a * a)
+  + (1 / 1474560 : 𝕂) • (a * b * a * b * a * b * b * a * a * a)
+  + (-4 / 1474560 : 𝕂) • (a * b * a * b * b * a * a * a * b * a)
+  + (5 / 1474560 : 𝕂) • (a * b * a * b * b * a * a * b * a * a)
+  + (-1 / 1474560 : 𝕂) • (a * b * a * b * b * a * b * a * a * a)
+  + (6 / 1474560 : 𝕂) • (a * b * b * a * a * a * b * a * b * a)
+  + (-6 / 1474560 : 𝕂) • (a * b * b * a * a * a * b * b * a * a)
+  + (-10 / 1474560 : 𝕂) • (a * b * b * a * a * b * a * a * b * a)
+  + (11 / 1474560 : 𝕂) • (a * b * b * a * a * b * a * b * a * a)
+  + (-1 / 1474560 : 𝕂) • (a * b * b * a * a * b * b * a * a * a)
+  + (4 / 1474560 : 𝕂) • (a * b * b * a * b * a * a * a * b * a)
+  + (-5 / 1474560 : 𝕂) • (a * b * b * a * b * a * a * b * a * a)
+  + (1 / 1474560 : 𝕂) • (a * b * b * a * b * a * b * a * a * a)
+  + (-4 / 1474560 : 𝕂) • (b * a * a * a * b * a * b * a * b * a)
+  + (4 / 1474560 : 𝕂) • (b * a * a * a * b * a * b * b * a * a)
+  + (4 / 1474560 : 𝕂) • (b * a * a * a * b * b * a * a * b * a)
+  + (-4 / 1474560 : 𝕂) • (b * a * a * a * b * b * a * b * a * a)
+  + (10 / 1474560 : 𝕂) • (b * a * a * b * a * a * b * a * b * a)
+  + (-10 / 1474560 : 𝕂) • (b * a * a * b * a * a * b * b * a * a)
+  + (-14 / 1474560 : 𝕂) • (b * a * a * b * a * b * a * a * b * a)
+  + (15 / 1474560 : 𝕂) • (b * a * a * b * a * b * a * b * a * a)
+  + (-1 / 1474560 : 𝕂) • (b * a * a * b * a * b * b * a * a * a)
+  + (4 / 1474560 : 𝕂) • (b * a * a * b * b * a * a * a * b * a)
+  + (-5 / 1474560 : 𝕂) • (b * a * a * b * b * a * a * b * a * a)
+  + (1 / 1474560 : 𝕂) • (b * a * a * b * b * a * b * a * a * a)
+  + (-6 / 1474560 : 𝕂) • (b * a * b * a * a * a * b * a * b * a)
+  + (6 / 1474560 : 𝕂) • (b * a * b * a * a * a * b * b * a * a)
+  + (10 / 1474560 : 𝕂) • (b * a * b * a * a * b * a * a * b * a)
+  + (-11 / 1474560 : 𝕂) • (b * a * b * a * a * b * a * b * a * a)
+  + (1 / 1474560 : 𝕂) • (b * a * b * a * a * b * b * a * a * a)
+  + (-4 / 1474560 : 𝕂) • (b * a * b * a * b * a * a * a * b * a)
+  + (5 / 1474560 : 𝕂) • (b * a * b * a * b * a * a * b * a * a)
+  + (-1 / 1474560 : 𝕂) • (b * a * b * a * b * a * b * a * a * a)
+
+
+-- === Matching identity ===
+
+/-- **d8 P_2 C_6 matching identity**: the full bch_sextic_term diff under
+V_2 perturbation decomposes into deg-7, deg-8, deg-9, deg-10 pieces. The
+deg-7 piece matches `septic_d7_P2_C6_lin_poly` (session 46) and the deg-8
+piece matches `septic_d8_P2_C6_quad_poly` (session 51).
+
+C_6 has up to 6 z-positions, but the bch_sextic_term def has at most 4 a's
+per word, so the deg-11 (k=5) and deg-12 (k=6) contributions vanish. -/
+private theorem bch_sextic_term_V2_shift_decomp
+    {𝕂 : Type*} [RCLike 𝕂] {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸]
+    (a b : 𝔸) :
+    bch_sextic_term 𝕂 ((1/2 : 𝕂) • a + b +
+                         (1/4 : 𝕂) • (a * b - b * a)) ((1/2 : 𝕂) • a) -
+    bch_sextic_term 𝕂 ((1/2 : 𝕂) • a + b) ((1/2 : 𝕂) • a) =
+      septic_d7_P2_C6_lin_poly 𝕂 a b
+      + septic_d8_P2_C6_quad_poly 𝕂 a b
+      + septic_d8_P2_C6_cubic_residual_poly 𝕂 a b
+      + septic_d8_P2_C6_quartic_residual_poly 𝕂 a b := by
+  unfold bch_sextic_term septic_d7_P2_C6_lin_poly septic_d8_P2_C6_quad_poly
+        septic_d8_P2_C6_cubic_residual_poly septic_d8_P2_C6_quartic_residual_poly
+  simp only [neg_mul, mul_neg, neg_neg, neg_smul, smul_neg,
+             smul_sub, smul_add, smul_smul, mul_smul_comm, smul_mul_assoc,
+             mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc, sub_neg_eq_add]
+  match_scalars <;> ring
+
+
 /-! ## Norm bounds for the d8 P_2 sub-pieces (non-Dynkin)
 
 The 3 sub-pieces of `septic_d8_P2_poly` (C_5 cubic, C_6 quad, C_7 lin) are
