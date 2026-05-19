@@ -16068,6 +16068,124 @@ theorem norm_septic_d7_P3_C5_lin_poly_le (a b : 𝔸) :
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring
     _ = (89856 / 276480 : ℝ) * s^7 := by ring
 
+/-! ## d=7 P_3 C_5 residual bound via second-order Taylor (Phase 3)
+
+For the joint cancellation argument, we need a bound on the deg-9+ residual
+
+  residual := (bch_quintic_term(½a+b+V_3, ½a) − bch_quintic_term(½a+b, ½a))
+                − septic_d7_P3_C5_lin_poly(a, b)
+
+where V_3 := bch_cubic_term(½a, b). Built via Phase 1 + Phase 2
+infrastructure in `BCH.Basic`. -/
+
+set_option maxHeartbeats 1024000000 in
+/-- **Specialization identity**: `bch_quintic_term_lin_diff` evaluated at
+`(x = ½a+b, V = bch_cubic_term(½a, b), y = ½a)` equals
+`septic_d7_P3_C5_lin_poly(a, b)`. CAS-verified polynomial identity in
+{a, b}; both sides are 108-term polynomials at degree 7. -/
+theorem septic_d7_P3_C5_lin_poly_eq_lin_diff (a b : 𝔸) :
+    septic_d7_P3_C5_lin_poly 𝕂 a b =
+      bch_quintic_term_lin_diff 𝕂 ((2 : 𝕂)⁻¹ • a + b)
+        (bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) := by
+  unfold septic_d7_P3_C5_lin_poly bch_quintic_term_lin_diff bch_cubic_term
+  simp only [smul_sub, smul_add, smul_neg, smul_smul, mul_smul_comm,
+    smul_mul_assoc, mul_add, add_mul, mul_sub, sub_mul, ← mul_assoc,
+    neg_mul, mul_neg, neg_neg, sub_neg_eq_add, neg_smul]
+  match_scalars <;> ring
+
+set_option maxHeartbeats 16000000 in
+/-- **Residual identity** for the d=7 P_3 C_5 case: after subtracting
+the leading `septic_d7_P3_C5_lin_poly`, the remaining residual equals the
+specialized second-order Taylor remainder. -/
+theorem septic_d7_P3_C5_residual_eq_taylor2 (a b : 𝔸) :
+    bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b + bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b)
+                       ((2 : 𝕂)⁻¹ • a) -
+    bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) -
+    septic_d7_P3_C5_lin_poly 𝕂 a b =
+      bch_quintic_term_taylor2_remainder 𝕂 ((2 : 𝕂)⁻¹ • a + b)
+        (bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a) := by
+  have h_decomp := bch_quintic_term_taylor2_decomp (𝕂 := 𝕂)
+    ((2 : 𝕂)⁻¹ • a + b) (bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b) ((2 : 𝕂)⁻¹ • a)
+  rw [septic_d7_P3_C5_lin_poly_eq_lin_diff]
+  linear_combination (norm := abel) h_decomp
+
+set_option maxHeartbeats 16000000 in
+/-- **d=7 P_3 C_5 residual norm bound** via second-order Taylor.
+
+`‖residual‖ ≤ K · s⁹` for `s = ‖a‖+‖b‖ ≤ 1`. Bound chain:
+
+* Phase 2 gives ‖R₂(x, V, y)‖ ≤ (2430/720) · M³ · ‖V‖² with M = ‖x‖+‖V‖+‖y‖.
+* At specialization (V = V_3 = bch_cubic_term(½a, b), y = ½a, x = ½a+b):
+  - ‖x‖ ≤ 3s/2, ‖V₃‖ ≤ 27s³/8 ≤ 27s/8, ‖y‖ ≤ s/2 → M ≤ 5s.
+  - M³ ≤ 125s³; ‖V₃‖² ≤ 729 s⁶ / 64.
+  - Combined: ≤ (2430/720) · 125 · (729/64) · s⁹ = 221484375/46080 · s⁹ ≈ 4807·s⁹. -/
+theorem norm_septic_d7_P3_C5_residual_le (a b : 𝔸)
+    (hab : ‖a‖ + ‖b‖ ≤ 1) :
+    ‖bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b + bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b)
+                        ((2 : 𝕂)⁻¹ • a) -
+     bch_quintic_term 𝕂 ((2 : 𝕂)⁻¹ • a + b) ((2 : 𝕂)⁻¹ • a) -
+     septic_d7_P3_C5_lin_poly 𝕂 a b‖ ≤ 10000 * (‖a‖ + ‖b‖) ^ 9 := by
+  set s := ‖a‖ + ‖b‖ with hs_def
+  have hs_nn : 0 ≤ s := by positivity
+  have ha : ‖a‖ ≤ s := by linarith [norm_nonneg b]
+  have hb : ‖b‖ ≤ s := by linarith [norm_nonneg a]
+  have hs1 : s ≤ 1 := hab
+  rw [septic_d7_P3_C5_residual_eq_taylor2]
+  set x : 𝔸 := (2 : 𝕂)⁻¹ • a + b with hx_def
+  set V3 : 𝔸 := bch_cubic_term 𝕂 ((2 : 𝕂)⁻¹ • a) b with hV3_def
+  set y : 𝔸 := (2 : 𝕂)⁻¹ • a with hy_def
+  have h_half_norm : ‖(2 : 𝕂)⁻¹‖ = (2 : ℝ)⁻¹ := by rw [norm_inv, RCLike.norm_ofNat]
+  have hhalf_a : ‖((2 : 𝕂)⁻¹ • a)‖ ≤ s / 2 := by
+    calc ‖((2 : 𝕂)⁻¹ • a)‖ ≤ ‖(2 : 𝕂)⁻¹‖ * ‖a‖ := norm_smul_le _ _
+      _ = (2 : ℝ)⁻¹ * ‖a‖ := by rw [h_half_norm]
+      _ ≤ (2 : ℝ)⁻¹ * s := by gcongr
+      _ = s / 2 := by ring
+  have hy : ‖y‖ ≤ s / 2 := hhalf_a
+  have hx : ‖x‖ ≤ 3 * s / 2 := by
+    calc ‖x‖ = ‖(2 : 𝕂)⁻¹ • a + b‖ := by rw [hx_def]
+      _ ≤ ‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖ := norm_add_le _ _
+      _ ≤ s/2 + s := by linarith
+      _ = 3 * s / 2 := by ring
+  have hV3 : ‖V3‖ ≤ (27 / 8) * s^3 := by
+    have h1 : ‖V3‖ ≤ (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) ^ 3 := by
+      rw [hV3_def]; exact norm_bch_cubic_term_le _ _
+    have h2 : ‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖ ≤ 3 * s / 2 := by linarith
+    have h2_nn : 0 ≤ ‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖ := by positivity
+    calc ‖V3‖ ≤ (‖((2 : 𝕂)⁻¹ • a)‖ + ‖b‖) ^ 3 := h1
+      _ ≤ (3 * s / 2) ^ 3 := by gcongr
+      _ = (27 / 8) * s^3 := by ring
+  have h_phase2 := norm_bch_quintic_term_taylor2_remainder_le (𝕂 := 𝕂) x V3 y
+  set M := ‖x‖ + ‖V3‖ + ‖y‖ with hM_def
+  have hs3_le : s^3 ≤ s := by
+    have h1 : s^3 = s * (s * s) := by ring
+    rw [h1]; nlinarith [hs_nn, hs1]
+  have hVle' : ‖V3‖ ≤ (27 / 8) * s := by
+    have hVle : ‖V3‖ ≤ (27 / 8) * s^3 := hV3
+    have h_step : (27 / 8 : ℝ) * s^3 ≤ (27 / 8 : ℝ) * s := by
+      apply mul_le_mul_of_nonneg_left hs3_le; norm_num
+    exact le_trans hVle h_step
+  -- M ≤ 3s/2 + 27s/8 + s/2 = 43s/8 ≤ 6s.
+  have hM_le : M ≤ 6 * s := by
+    rw [hM_def]; linarith [hx, hVle', hy]
+  have hM_nn : 0 ≤ M := by rw [hM_def]; positivity
+  have hM3 : M^3 ≤ 216 * s^3 := by
+    calc M^3 ≤ (6 * s)^3 := pow_le_pow_left₀ hM_nn hM_le _
+      _ = 216 * s^3 := by ring
+  have hV3sq : ‖V3‖^2 ≤ (729 / 64 : ℝ) * s^6 := by
+    have hV3_nn : 0 ≤ ‖V3‖ := norm_nonneg _
+    calc ‖V3‖^2 ≤ ((27/8 : ℝ) * s^3)^2 := pow_le_pow_left₀ hV3_nn hV3 _
+      _ = (729/64 : ℝ) * s^6 := by ring
+  have h_const_nn : (0 : ℝ) ≤ 2430 / 720 := by norm_num
+  have hM3_nn : (0 : ℝ) ≤ M^3 := by positivity
+  have hV3sq_nn : (0 : ℝ) ≤ ‖V3‖^2 := by positivity
+  have hs9_nn : (0 : ℝ) ≤ s^9 := by positivity
+  -- 2430/720 · 216 · 729/64 = 382637520/46080 ≈ 8304.
+  calc ‖bch_quintic_term_taylor2_remainder 𝕂 x V3 y‖
+      ≤ (2430 / 720 : ℝ) * (‖x‖ + ‖V3‖ + ‖y‖)^3 * ‖V3‖^2 := h_phase2
+    _ = (2430 / 720 : ℝ) * M^3 * ‖V3‖^2 := by rw [hM_def]
+    _ ≤ (2430 / 720 : ℝ) * (216 * s^3) * ((729/64 : ℝ) * s^6) := by gcongr
+    _ = (382637520 / 46080 : ℝ) * s^9 := by ring
+    _ ≤ 10000 * s^9 := by nlinarith [hs9_nn]
 
 
 /-! ## Norm bounds for the d7 parent pieces (5 single-V_j + 2 cross + 1 Dynkin)
