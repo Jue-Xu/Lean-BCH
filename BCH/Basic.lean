@@ -3236,6 +3236,1597 @@ theorem bch_quintic_term_taylor2_decomp (x V y : 𝔸) :
     neg_mul, mul_neg, neg_neg, sub_neg_eq_add, neg_smul]
   match_scalars <;> ring
 
+
+/-- The k=2 sub-piece of `bch_quintic_term_taylor2_remainder`: sum
+over each bch_quintic_term word of placing V at exactly 2 positions
+among the word's x-positions. 70 terms in {x, V, y}. -/
+noncomputable def bch_quintic_term_taylor2_remainder_2V (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (x V y : 𝔸) : 𝔸 :=
+    (-1 / 720 : 𝕂) • (x * x * V * V * y)
+  + (4 / 720 : 𝕂) • (x * x * V * y * V)
+  + (-6 / 720 : 𝕂) • (x * x * y * V * V)
+  + (-1 / 720 : 𝕂) • (x * V * x * V * y)
+  + (4 / 720 : 𝕂) • (x * V * x * y * V)
+  + (-1 / 720 : 𝕂) • (x * V * V * x * y)
+  + (4 / 720 : 𝕂) • (x * V * V * y * x)
+  + (4 / 720 : 𝕂) • (x * V * V * y * y)
+  + (-6 / 720 : 𝕂) • (x * V * y * x * V)
+  + (-6 / 720 : 𝕂) • (x * V * y * V * x)
+  + (-6 / 720 : 𝕂) • (x * V * y * V * y)
+  + (-6 / 720 : 𝕂) • (x * V * y * y * V)
+  + (4 / 720 : 𝕂) • (x * y * x * V * V)
+  + (4 / 720 : 𝕂) • (x * y * V * x * V)
+  + (4 / 720 : 𝕂) • (x * y * V * V * x)
+  + (-6 / 720 : 𝕂) • (x * y * V * V * y)
+  + (24 / 720 : 𝕂) • (x * y * V * y * V)
+  + (-6 / 720 : 𝕂) • (x * y * y * V * V)
+  + (-1 / 720 : 𝕂) • (V * x * x * V * y)
+  + (4 / 720 : 𝕂) • (V * x * x * y * V)
+  + (-1 / 720 : 𝕂) • (V * x * V * x * y)
+  + (4 / 720 : 𝕂) • (V * x * V * y * x)
+  + (4 / 720 : 𝕂) • (V * x * V * y * y)
+  + (-6 / 720 : 𝕂) • (V * x * y * x * V)
+  + (-6 / 720 : 𝕂) • (V * x * y * V * x)
+  + (-6 / 720 : 𝕂) • (V * x * y * V * y)
+  + (-6 / 720 : 𝕂) • (V * x * y * y * V)
+  + (-1 / 720 : 𝕂) • (V * V * x * x * y)
+  + (4 / 720 : 𝕂) • (V * V * x * y * x)
+  + (4 / 720 : 𝕂) • (V * V * x * y * y)
+  + (-6 / 720 : 𝕂) • (V * V * y * x * x)
+  + (-6 / 720 : 𝕂) • (V * V * y * x * y)
+  + (-6 / 720 : 𝕂) • (V * V * y * y * x)
+  + (4 / 720 : 𝕂) • (V * V * y * y * y)
+  + (4 / 720 : 𝕂) • (V * y * x * x * V)
+  + (4 / 720 : 𝕂) • (V * y * x * V * x)
+  + (-6 / 720 : 𝕂) • (V * y * x * V * y)
+  + (24 / 720 : 𝕂) • (V * y * x * y * V)
+  + (4 / 720 : 𝕂) • (V * y * V * x * x)
+  + (-6 / 720 : 𝕂) • (V * y * V * x * y)
+  + (24 / 720 : 𝕂) • (V * y * V * y * x)
+  + (-6 / 720 : 𝕂) • (V * y * V * y * y)
+  + (-6 / 720 : 𝕂) • (V * y * y * x * V)
+  + (-6 / 720 : 𝕂) • (V * y * y * V * x)
+  + (-6 / 720 : 𝕂) • (V * y * y * V * y)
+  + (4 / 720 : 𝕂) • (V * y * y * y * V)
+  + (-1 / 720 : 𝕂) • (y * x * x * V * V)
+  + (-1 / 720 : 𝕂) • (y * x * V * x * V)
+  + (-1 / 720 : 𝕂) • (y * x * V * V * x)
+  + (4 / 720 : 𝕂) • (y * x * V * V * y)
+  + (-6 / 720 : 𝕂) • (y * x * V * y * V)
+  + (-6 / 720 : 𝕂) • (y * x * y * V * V)
+  + (-1 / 720 : 𝕂) • (y * V * x * x * V)
+  + (-1 / 720 : 𝕂) • (y * V * x * V * x)
+  + (4 / 720 : 𝕂) • (y * V * x * V * y)
+  + (-6 / 720 : 𝕂) • (y * V * x * y * V)
+  + (-1 / 720 : 𝕂) • (y * V * V * x * x)
+  + (4 / 720 : 𝕂) • (y * V * V * x * y)
+  + (-6 / 720 : 𝕂) • (y * V * V * y * x)
+  + (-6 / 720 : 𝕂) • (y * V * V * y * y)
+  + (-6 / 720 : 𝕂) • (y * V * y * x * V)
+  + (-6 / 720 : 𝕂) • (y * V * y * V * x)
+  + (24 / 720 : 𝕂) • (y * V * y * V * y)
+  + (-6 / 720 : 𝕂) • (y * V * y * y * V)
+  + (4 / 720 : 𝕂) • (y * y * x * V * V)
+  + (4 / 720 : 𝕂) • (y * y * V * x * V)
+  + (4 / 720 : 𝕂) • (y * y * V * V * x)
+  + (-6 / 720 : 𝕂) • (y * y * V * V * y)
+  + (-6 / 720 : 𝕂) • (y * y * V * y * V)
+  + (4 / 720 : 𝕂) • (y * y * y * V * V)
+
+/-- The k=3 sub-piece of `bch_quintic_term_taylor2_remainder`: sum
+over each bch_quintic_term word of placing V at exactly 3 positions
+among the word's x-positions. 30 terms in {x, V, y}. -/
+noncomputable def bch_quintic_term_taylor2_remainder_3V (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (x V y : 𝔸) : 𝔸 :=
+    (-1 / 720 : 𝕂) • (x * V * V * V * y)
+  + (4 / 720 : 𝕂) • (x * V * V * y * V)
+  + (-6 / 720 : 𝕂) • (x * V * y * V * V)
+  + (4 / 720 : 𝕂) • (x * y * V * V * V)
+  + (-1 / 720 : 𝕂) • (V * x * V * V * y)
+  + (4 / 720 : 𝕂) • (V * x * V * y * V)
+  + (-6 / 720 : 𝕂) • (V * x * y * V * V)
+  + (-1 / 720 : 𝕂) • (V * V * x * V * y)
+  + (4 / 720 : 𝕂) • (V * V * x * y * V)
+  + (-1 / 720 : 𝕂) • (V * V * V * x * y)
+  + (4 / 720 : 𝕂) • (V * V * V * y * x)
+  + (4 / 720 : 𝕂) • (V * V * V * y * y)
+  + (-6 / 720 : 𝕂) • (V * V * y * x * V)
+  + (-6 / 720 : 𝕂) • (V * V * y * V * x)
+  + (-6 / 720 : 𝕂) • (V * V * y * V * y)
+  + (-6 / 720 : 𝕂) • (V * V * y * y * V)
+  + (4 / 720 : 𝕂) • (V * y * x * V * V)
+  + (4 / 720 : 𝕂) • (V * y * V * x * V)
+  + (4 / 720 : 𝕂) • (V * y * V * V * x)
+  + (-6 / 720 : 𝕂) • (V * y * V * V * y)
+  + (24 / 720 : 𝕂) • (V * y * V * y * V)
+  + (-6 / 720 : 𝕂) • (V * y * y * V * V)
+  + (-1 / 720 : 𝕂) • (y * x * V * V * V)
+  + (-1 / 720 : 𝕂) • (y * V * x * V * V)
+  + (-1 / 720 : 𝕂) • (y * V * V * x * V)
+  + (-1 / 720 : 𝕂) • (y * V * V * V * x)
+  + (4 / 720 : 𝕂) • (y * V * V * V * y)
+  + (-6 / 720 : 𝕂) • (y * V * V * y * V)
+  + (-6 / 720 : 𝕂) • (y * V * y * V * V)
+  + (4 / 720 : 𝕂) • (y * y * V * V * V)
+
+/-- The k=4 sub-piece of `bch_quintic_term_taylor2_remainder`: sum
+over each bch_quintic_term word of placing V at exactly 4 positions
+among the word's x-positions. 5 terms in {x, V, y}. -/
+noncomputable def bch_quintic_term_taylor2_remainder_4V (𝕂 : Type*) [RCLike 𝕂]
+    {𝔸 : Type*} [NormedRing 𝔸] [NormedAlgebra 𝕂 𝔸] (x V y : 𝔸) : 𝔸 :=
+    (-1 / 720 : 𝕂) • (V * V * V * V * y)
+  + (4 / 720 : 𝕂) • (V * V * V * y * V)
+  + (-6 / 720 : 𝕂) • (V * V * y * V * V)
+  + (4 / 720 : 𝕂) • (V * y * V * V * V)
+  + (-1 / 720 : 𝕂) • (y * V * V * V * V)
+
+set_option maxHeartbeats 32000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Per-k split identity**: the second-order Taylor remainder of
+bch_quintic_term decomposes additively into k=2, k=3, k=4 sub-pieces. -/
+theorem bch_quintic_term_taylor2_remainder_split (x V y : 𝔸) :
+    bch_quintic_term_taylor2_remainder 𝕂 x V y =
+      bch_quintic_term_taylor2_remainder_2V 𝕂 x V y +
+      bch_quintic_term_taylor2_remainder_3V 𝕂 x V y +
+      bch_quintic_term_taylor2_remainder_4V 𝕂 x V y := by
+  unfold bch_quintic_term_taylor2_remainder
+    bch_quintic_term_taylor2_remainder_2V
+    bch_quintic_term_taylor2_remainder_3V
+    bch_quintic_term_taylor2_remainder_4V
+  match_scalars <;> ring
+
+-- Per-Nat-index family for `bch_quintic_term_taylor2_remainder_2V`.
+set_option maxHeartbeats 800000 in
+private noncomputable def BchQuinticTermTaylor2Remainder2VTermN (x V y : 𝔸) : Nat → 𝔸
+  | 0 => (-1 / 720 : 𝕂) • (x * x * V * V * y)
+  | 1 => (4 / 720 : 𝕂) • (x * x * V * y * V)
+  | 2 => (-6 / 720 : 𝕂) • (x * x * y * V * V)
+  | 3 => (-1 / 720 : 𝕂) • (x * V * x * V * y)
+  | 4 => (4 / 720 : 𝕂) • (x * V * x * y * V)
+  | 5 => (-1 / 720 : 𝕂) • (x * V * V * x * y)
+  | 6 => (4 / 720 : 𝕂) • (x * V * V * y * x)
+  | 7 => (4 / 720 : 𝕂) • (x * V * V * y * y)
+  | 8 => (-6 / 720 : 𝕂) • (x * V * y * x * V)
+  | 9 => (-6 / 720 : 𝕂) • (x * V * y * V * x)
+  | 10 => (-6 / 720 : 𝕂) • (x * V * y * V * y)
+  | 11 => (-6 / 720 : 𝕂) • (x * V * y * y * V)
+  | 12 => (4 / 720 : 𝕂) • (x * y * x * V * V)
+  | 13 => (4 / 720 : 𝕂) • (x * y * V * x * V)
+  | 14 => (4 / 720 : 𝕂) • (x * y * V * V * x)
+  | 15 => (-6 / 720 : 𝕂) • (x * y * V * V * y)
+  | 16 => (24 / 720 : 𝕂) • (x * y * V * y * V)
+  | 17 => (-6 / 720 : 𝕂) • (x * y * y * V * V)
+  | 18 => (-1 / 720 : 𝕂) • (V * x * x * V * y)
+  | 19 => (4 / 720 : 𝕂) • (V * x * x * y * V)
+  | 20 => (-1 / 720 : 𝕂) • (V * x * V * x * y)
+  | 21 => (4 / 720 : 𝕂) • (V * x * V * y * x)
+  | 22 => (4 / 720 : 𝕂) • (V * x * V * y * y)
+  | 23 => (-6 / 720 : 𝕂) • (V * x * y * x * V)
+  | 24 => (-6 / 720 : 𝕂) • (V * x * y * V * x)
+  | 25 => (-6 / 720 : 𝕂) • (V * x * y * V * y)
+  | 26 => (-6 / 720 : 𝕂) • (V * x * y * y * V)
+  | 27 => (-1 / 720 : 𝕂) • (V * V * x * x * y)
+  | 28 => (4 / 720 : 𝕂) • (V * V * x * y * x)
+  | 29 => (4 / 720 : 𝕂) • (V * V * x * y * y)
+  | 30 => (-6 / 720 : 𝕂) • (V * V * y * x * x)
+  | 31 => (-6 / 720 : 𝕂) • (V * V * y * x * y)
+  | 32 => (-6 / 720 : 𝕂) • (V * V * y * y * x)
+  | 33 => (4 / 720 : 𝕂) • (V * V * y * y * y)
+  | 34 => (4 / 720 : 𝕂) • (V * y * x * x * V)
+  | 35 => (4 / 720 : 𝕂) • (V * y * x * V * x)
+  | 36 => (-6 / 720 : 𝕂) • (V * y * x * V * y)
+  | 37 => (24 / 720 : 𝕂) • (V * y * x * y * V)
+  | 38 => (4 / 720 : 𝕂) • (V * y * V * x * x)
+  | 39 => (-6 / 720 : 𝕂) • (V * y * V * x * y)
+  | 40 => (24 / 720 : 𝕂) • (V * y * V * y * x)
+  | 41 => (-6 / 720 : 𝕂) • (V * y * V * y * y)
+  | 42 => (-6 / 720 : 𝕂) • (V * y * y * x * V)
+  | 43 => (-6 / 720 : 𝕂) • (V * y * y * V * x)
+  | 44 => (-6 / 720 : 𝕂) • (V * y * y * V * y)
+  | 45 => (4 / 720 : 𝕂) • (V * y * y * y * V)
+  | 46 => (-1 / 720 : 𝕂) • (y * x * x * V * V)
+  | 47 => (-1 / 720 : 𝕂) • (y * x * V * x * V)
+  | 48 => (-1 / 720 : 𝕂) • (y * x * V * V * x)
+  | 49 => (4 / 720 : 𝕂) • (y * x * V * V * y)
+  | 50 => (-6 / 720 : 𝕂) • (y * x * V * y * V)
+  | 51 => (-6 / 720 : 𝕂) • (y * x * y * V * V)
+  | 52 => (-1 / 720 : 𝕂) • (y * V * x * x * V)
+  | 53 => (-1 / 720 : 𝕂) • (y * V * x * V * x)
+  | 54 => (4 / 720 : 𝕂) • (y * V * x * V * y)
+  | 55 => (-6 / 720 : 𝕂) • (y * V * x * y * V)
+  | 56 => (-1 / 720 : 𝕂) • (y * V * V * x * x)
+  | 57 => (4 / 720 : 𝕂) • (y * V * V * x * y)
+  | 58 => (-6 / 720 : 𝕂) • (y * V * V * y * x)
+  | 59 => (-6 / 720 : 𝕂) • (y * V * V * y * y)
+  | 60 => (-6 / 720 : 𝕂) • (y * V * y * x * V)
+  | 61 => (-6 / 720 : 𝕂) • (y * V * y * V * x)
+  | 62 => (24 / 720 : 𝕂) • (y * V * y * V * y)
+  | 63 => (-6 / 720 : 𝕂) • (y * V * y * y * V)
+  | 64 => (4 / 720 : 𝕂) • (y * y * x * V * V)
+  | 65 => (4 / 720 : 𝕂) • (y * y * V * x * V)
+  | 66 => (4 / 720 : 𝕂) • (y * y * V * V * x)
+  | 67 => (-6 / 720 : 𝕂) • (y * y * V * V * y)
+  | 68 => (-6 / 720 : 𝕂) • (y * y * V * y * V)
+  | 69 => (4 / 720 : 𝕂) • (y * y * y * V * V)
+  | _ => 0
+
+/-- `Fin 70`-indexed wrapper for `BchQuinticTermTaylor2Remainder2VTermN`. -/
+private noncomputable def BchQuinticTermTaylor2Remainder2VTerm (x V y : 𝔸) (i : Fin 70) : 𝔸 :=
+  BchQuinticTermTaylor2Remainder2VTermN (𝕂 := 𝕂) x V y i.val
+
+-- The explicit `bch_quintic_term_taylor2_remainder_2V` def equals the `Finset.sum` form.
+set_option maxHeartbeats 16000000 in
+set_option maxRecDepth 2000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem bch_quintic_term_taylor2_remainder_2V_eq_sum (x V y : 𝔸) :
+    bch_quintic_term_taylor2_remainder_2V 𝕂 x V y = ∑ i : Fin 70, BchQuinticTermTaylor2Remainder2VTerm (𝕂 := 𝕂) x V y i := by
+  unfold bch_quintic_term_taylor2_remainder_2V BchQuinticTermTaylor2Remainder2VTerm
+  rw [Fin.sum_univ_eq_sum_range (fun k => BchQuinticTermTaylor2Remainder2VTermN (𝕂 := 𝕂) x V y k)]
+  simp only [Finset.sum_range_succ, Finset.sum_range_zero,
+    BchQuinticTermTaylor2Remainder2VTermN, zero_add]
+
+-- Per-index uniform bound: ‖BchQuinticTermTaylor2Remainder2VTerm x V y i‖ ≤ (24/720) · Vn² · M³.
+set_option maxHeartbeats 32000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma BchQuinticTermTaylor2Remainder2VTerm_norm_le (x V y : 𝔸) (M Vn : ℝ)
+    (hx_M : ‖x‖ ≤ M) (hV_Vn : ‖V‖ ≤ Vn) (hy_M : ‖y‖ ≤ M)
+    (hV_M : ‖V‖ ≤ M)
+    (hM_nn : 0 ≤ M) (hVn_nn : 0 ≤ Vn) :
+    ∀ i : Fin 70, ‖BchQuinticTermTaylor2Remainder2VTerm (𝕂 := 𝕂) x V y i‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 := fun i =>
+  match i with
+  | ⟨0, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (x * x * V * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (x * x * V * V * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖x * x * V * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * x * V * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖x‖ * ‖V‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨1, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (x * x * V * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (x * x * V * y * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖x * x * V * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * x * V * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖x‖ * ‖V‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨2, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (x * x * y * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (x * x * y * V * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖x * x * y * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * x * y * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖x‖ * ‖y‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * M * Vn * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨3, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (x * V * x * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (x * V * x * V * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖x * V * x * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * x * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖x‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨4, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (x * V * x * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (x * V * x * y * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖x * V * x * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * x * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖x‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨5, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (x * V * V * x * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (x * V * V * x * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖x * V * V * x * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * V * x * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖V‖ * ‖x‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨6, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (x * V * V * y * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (x * V * V * y * x)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖x * V * V * y * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * V * y * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖V‖ * ‖y‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨7, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (x * V * V * y * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (x * V * V * y * y)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖x * V * V * y * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * V * y * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖V‖ * ‖y‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨8, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (x * V * y * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (x * V * y * x * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖x * V * y * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * y * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖y‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨9, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (x * V * y * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (x * V * y * V * x)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖x * V * y * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * y * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖y‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨10, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (x * V * y * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (x * V * y * V * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖x * V * y * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * y * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖y‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨11, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (x * V * y * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (x * V * y * y * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖x * V * y * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * y * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖y‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨12, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (x * y * x * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (x * y * x * V * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖x * y * x * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * y * x * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖y‖ * ‖x‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * M * Vn * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨13, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (x * y * V * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (x * y * V * x * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖x * y * V * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * y * V * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖y‖ * ‖V‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨14, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (x * y * V * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (x * y * V * V * x)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖x * y * V * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * y * V * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖y‖ * ‖V‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨15, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (x * y * V * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (x * y * V * V * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖x * y * V * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * y * V * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖y‖ * ‖V‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨16, _⟩ =>
+    show ‖(24 / 720 : 𝕂) • (x * y * V * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(24 / 720 : 𝕂) • (x * y * V * y * V)‖
+          ≤ ‖(24 / 720 : 𝕂)‖ * ‖x * y * V * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * y * V * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖y‖ * ‖V‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨17, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (x * y * y * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (x * y * y * V * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖x * y * y * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * y * y * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖y‖ * ‖y‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * M * Vn * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨18, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (V * x * x * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (V * x * x * V * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖V * x * x * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * x * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖x‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨19, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * x * x * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * x * x * y * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * x * x * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * x * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖x‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨20, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (V * x * V * x * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (V * x * V * x * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖V * x * V * x * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * V * x * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖V‖ * ‖x‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨21, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * x * V * y * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * x * V * y * x)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * x * V * y * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * V * y * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖V‖ * ‖y‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨22, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * x * V * y * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * x * V * y * y)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * x * V * y * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * V * y * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖V‖ * ‖y‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨23, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * x * y * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * x * y * x * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * x * y * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * y * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖y‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨24, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * x * y * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * x * y * V * x)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * x * y * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * y * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖y‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨25, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * x * y * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * x * y * V * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * x * y * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * y * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖y‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨26, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * x * y * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * x * y * y * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * x * y * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * y * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖y‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨27, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (V * V * x * x * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (V * V * x * x * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖V * V * x * x * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * x * x * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖x‖ * ‖x‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨28, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * V * x * y * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * V * x * y * x)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * V * x * y * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * x * y * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖x‖ * ‖y‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨29, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * V * x * y * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * V * x * y * y)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * V * x * y * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * x * y * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖x‖ * ‖y‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨30, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * V * y * x * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * V * y * x * x)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * V * y * x * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * y * x * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖y‖ * ‖x‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨31, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * V * y * x * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * V * y * x * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * V * y * x * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * y * x * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖y‖ * ‖x‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨32, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * V * y * y * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * V * y * y * x)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * V * y * y * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * y * y * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖y‖ * ‖y‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨33, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * V * y * y * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * V * y * y * y)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * V * y * y * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * y * y * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖y‖ * ‖y‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨34, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * y * x * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * y * x * x * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * y * x * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * x * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖x‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨35, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * y * x * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * y * x * V * x)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * y * x * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * x * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖x‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨36, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * y * x * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * y * x * V * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * y * x * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * x * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖x‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨37, _⟩ =>
+    show ‖(24 / 720 : 𝕂) • (V * y * x * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(24 / 720 : 𝕂) • (V * y * x * y * V)‖
+          ≤ ‖(24 / 720 : 𝕂)‖ * ‖V * y * x * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * x * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖x‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨38, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * y * V * x * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * y * V * x * x)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * y * V * x * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * V * x * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖V‖ * ‖x‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨39, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * y * V * x * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * y * V * x * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * y * V * x * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * V * x * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖V‖ * ‖x‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨40, _⟩ =>
+    show ‖(24 / 720 : 𝕂) • (V * y * V * y * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(24 / 720 : 𝕂) • (V * y * V * y * x)‖
+          ≤ ‖(24 / 720 : 𝕂)‖ * ‖V * y * V * y * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * V * y * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖V‖ * ‖y‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨41, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * y * V * y * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * y * V * y * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * y * V * y * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * V * y * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖V‖ * ‖y‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨42, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * y * y * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * y * y * x * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * y * y * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * y * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖y‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨43, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * y * y * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * y * y * V * x)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * y * y * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * y * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖y‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨44, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * y * y * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * y * y * V * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * y * y * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * y * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖y‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨45, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * y * y * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * y * y * y * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * y * y * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * y * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖y‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨46, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * x * x * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * x * x * V * V)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * x * x * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * x * x * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖x‖ * ‖x‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * M * Vn * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨47, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * x * V * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * x * V * x * V)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * x * V * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * x * V * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖x‖ * ‖V‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨48, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * x * V * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * x * V * V * x)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * x * V * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * x * V * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖x‖ * ‖V‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨49, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (y * x * V * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (y * x * V * V * y)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖y * x * V * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * x * V * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖x‖ * ‖V‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨50, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * x * V * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * x * V * y * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * x * V * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * x * V * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖x‖ * ‖V‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨51, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * x * y * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * x * y * V * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * x * y * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * x * y * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖x‖ * ‖y‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * M * Vn * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨52, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * V * x * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * V * x * x * V)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * V * x * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * x * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖x‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨53, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * V * x * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * V * x * V * x)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * V * x * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * x * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖x‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨54, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (y * V * x * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (y * V * x * V * y)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖y * V * x * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * x * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖x‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨55, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * V * x * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * V * x * y * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * V * x * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * x * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖x‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨56, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * V * V * x * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * V * V * x * x)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * V * V * x * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * V * x * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖V‖ * ‖x‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨57, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (y * V * V * x * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (y * V * V * x * y)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖y * V * V * x * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * V * x * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖V‖ * ‖x‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨58, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * V * V * y * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * V * V * y * x)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * V * V * y * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * V * y * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖V‖ * ‖y‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨59, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * V * V * y * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * V * V * y * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * V * V * y * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * V * y * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖V‖ * ‖y‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨60, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * V * y * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * V * y * x * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * V * y * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * y * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖y‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨61, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * V * y * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * V * y * V * x)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * V * y * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * y * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖y‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨62, _⟩ =>
+    show ‖(24 / 720 : 𝕂) • (y * V * y * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(24 / 720 : 𝕂) • (y * V * y * V * y)‖
+          ≤ ‖(24 / 720 : 𝕂)‖ * ‖y * V * y * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * y * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖y‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨63, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * V * y * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * V * y * y * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * V * y * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * y * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖y‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨64, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (y * y * x * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (y * y * x * V * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖y * y * x * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * y * x * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖y‖ * ‖x‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * M * Vn * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨65, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (y * y * V * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (y * y * V * x * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖y * y * V * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * y * V * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖y‖ * ‖V‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨66, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (y * y * V * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (y * y * V * V * x)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖y * y * V * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * y * V * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖y‖ * ‖V‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨67, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * y * V * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * y * V * V * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * y * V * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * y * V * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖y‖ * ‖V‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨68, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * y * V * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * y * V * y * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * y * V * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * y * V * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖y‖ * ‖V‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * M * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨69, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (y * y * y * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (y * y * y * V * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖y * y * y * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * y * y * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖y‖ * ‖y‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * M * Vn * Vn) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨_ + 70, h⟩ => absurd h (by omega)
+
+set_option maxHeartbeats 800000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Per-k norm bound for `bch_quintic_term_taylor2_remainder_2V`**:
+`‖bch_quintic_term_taylor2_remainder_2V(x, V, y)‖ ≤ (1680/720) · Vn² · M³` for `Vn = ‖V‖` and
+`M ≥ ‖x‖, ‖V‖, ‖y‖`. -/
+theorem norm_bch_quintic_term_taylor2_remainder_2V_le (x V y : 𝔸) (M Vn : ℝ)
+    (hx_M : ‖x‖ ≤ M) (hV_Vn : ‖V‖ ≤ Vn) (hy_M : ‖y‖ ≤ M)
+    (hV_M : ‖V‖ ≤ M)
+    (hM_nn : 0 ≤ M) (hVn_nn : 0 ≤ Vn) :
+    ‖bch_quintic_term_taylor2_remainder_2V 𝕂 x V y‖ ≤ (1680 / 720 : ℝ) * Vn^2 * M^3 := by
+  rw [bch_quintic_term_taylor2_remainder_2V_eq_sum]
+  calc ‖∑ i : Fin 70, BchQuinticTermTaylor2Remainder2VTerm (𝕂 := 𝕂) x V y i‖
+      ≤ ∑ i : Fin 70, ‖BchQuinticTermTaylor2Remainder2VTerm (𝕂 := 𝕂) x V y i‖ := norm_sum_le _ _
+    _ ≤ ∑ _i : Fin 70, (24 / 720 : ℝ) * Vn^2 * M^3 :=
+        Finset.sum_le_sum (fun i _ => BchQuinticTermTaylor2Remainder2VTerm_norm_le (𝕂 := 𝕂) x V y M Vn hx_M hV_Vn hy_M hV_M hM_nn hVn_nn i)
+    _ = 70 * ((24 / 720 : ℝ) * Vn^2 * M^3) := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring
+    _ = (1680 / 720 : ℝ) * Vn^2 * M^3 := by ring
+
+-- Per-Nat-index family for `bch_quintic_term_taylor2_remainder_3V`.
+set_option maxHeartbeats 800000 in
+private noncomputable def BchQuinticTermTaylor2Remainder3VTermN (x V y : 𝔸) : Nat → 𝔸
+  | 0 => (-1 / 720 : 𝕂) • (x * V * V * V * y)
+  | 1 => (4 / 720 : 𝕂) • (x * V * V * y * V)
+  | 2 => (-6 / 720 : 𝕂) • (x * V * y * V * V)
+  | 3 => (4 / 720 : 𝕂) • (x * y * V * V * V)
+  | 4 => (-1 / 720 : 𝕂) • (V * x * V * V * y)
+  | 5 => (4 / 720 : 𝕂) • (V * x * V * y * V)
+  | 6 => (-6 / 720 : 𝕂) • (V * x * y * V * V)
+  | 7 => (-1 / 720 : 𝕂) • (V * V * x * V * y)
+  | 8 => (4 / 720 : 𝕂) • (V * V * x * y * V)
+  | 9 => (-1 / 720 : 𝕂) • (V * V * V * x * y)
+  | 10 => (4 / 720 : 𝕂) • (V * V * V * y * x)
+  | 11 => (4 / 720 : 𝕂) • (V * V * V * y * y)
+  | 12 => (-6 / 720 : 𝕂) • (V * V * y * x * V)
+  | 13 => (-6 / 720 : 𝕂) • (V * V * y * V * x)
+  | 14 => (-6 / 720 : 𝕂) • (V * V * y * V * y)
+  | 15 => (-6 / 720 : 𝕂) • (V * V * y * y * V)
+  | 16 => (4 / 720 : 𝕂) • (V * y * x * V * V)
+  | 17 => (4 / 720 : 𝕂) • (V * y * V * x * V)
+  | 18 => (4 / 720 : 𝕂) • (V * y * V * V * x)
+  | 19 => (-6 / 720 : 𝕂) • (V * y * V * V * y)
+  | 20 => (24 / 720 : 𝕂) • (V * y * V * y * V)
+  | 21 => (-6 / 720 : 𝕂) • (V * y * y * V * V)
+  | 22 => (-1 / 720 : 𝕂) • (y * x * V * V * V)
+  | 23 => (-1 / 720 : 𝕂) • (y * V * x * V * V)
+  | 24 => (-1 / 720 : 𝕂) • (y * V * V * x * V)
+  | 25 => (-1 / 720 : 𝕂) • (y * V * V * V * x)
+  | 26 => (4 / 720 : 𝕂) • (y * V * V * V * y)
+  | 27 => (-6 / 720 : 𝕂) • (y * V * V * y * V)
+  | 28 => (-6 / 720 : 𝕂) • (y * V * y * V * V)
+  | 29 => (4 / 720 : 𝕂) • (y * y * V * V * V)
+  | _ => 0
+
+/-- `Fin 30`-indexed wrapper for `BchQuinticTermTaylor2Remainder3VTermN`. -/
+private noncomputable def BchQuinticTermTaylor2Remainder3VTerm (x V y : 𝔸) (i : Fin 30) : 𝔸 :=
+  BchQuinticTermTaylor2Remainder3VTermN (𝕂 := 𝕂) x V y i.val
+
+-- The explicit `bch_quintic_term_taylor2_remainder_3V` def equals the `Finset.sum` form.
+set_option maxHeartbeats 16000000 in
+set_option maxRecDepth 2000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem bch_quintic_term_taylor2_remainder_3V_eq_sum (x V y : 𝔸) :
+    bch_quintic_term_taylor2_remainder_3V 𝕂 x V y = ∑ i : Fin 30, BchQuinticTermTaylor2Remainder3VTerm (𝕂 := 𝕂) x V y i := by
+  unfold bch_quintic_term_taylor2_remainder_3V BchQuinticTermTaylor2Remainder3VTerm
+  rw [Fin.sum_univ_eq_sum_range (fun k => BchQuinticTermTaylor2Remainder3VTermN (𝕂 := 𝕂) x V y k)]
+  simp only [Finset.sum_range_succ, Finset.sum_range_zero,
+    BchQuinticTermTaylor2Remainder3VTermN, zero_add]
+
+-- Per-index uniform bound: ‖BchQuinticTermTaylor2Remainder3VTerm x V y i‖ ≤ (24/720) · Vn² · M³.
+set_option maxHeartbeats 32000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma BchQuinticTermTaylor2Remainder3VTerm_norm_le (x V y : 𝔸) (M Vn : ℝ)
+    (hx_M : ‖x‖ ≤ M) (hV_Vn : ‖V‖ ≤ Vn) (hy_M : ‖y‖ ≤ M)
+    (hV_M : ‖V‖ ≤ M)
+    (hM_nn : 0 ≤ M) (hVn_nn : 0 ≤ Vn) :
+    ∀ i : Fin 30, ‖BchQuinticTermTaylor2Remainder3VTerm (𝕂 := 𝕂) x V y i‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 := fun i =>
+  match i with
+  | ⟨0, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (x * V * V * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (x * V * V * V * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖x * V * V * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * V * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖V‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨1, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (x * V * V * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (x * V * V * y * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖x * V * V * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * V * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖V‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨2, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (x * V * y * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (x * V * y * V * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖x * V * y * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * V * y * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖V‖ * ‖y‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨3, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (x * y * V * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (x * y * V * V * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖x * y * V * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖x * y * V * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖x‖ * ‖y‖ * ‖V‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨4, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (V * x * V * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (V * x * V * V * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖V * x * V * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * V * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖V‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨5, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * x * V * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * x * V * y * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * x * V * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * V * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖V‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨6, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * x * y * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * x * y * V * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * x * y * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * x * y * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖x‖ * ‖y‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨7, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (V * V * x * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (V * V * x * V * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖V * V * x * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * x * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖x‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨8, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * V * x * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * V * x * y * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * V * x * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * x * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖x‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨9, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (V * V * V * x * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (V * V * V * x * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖V * V * V * x * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * V * x * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖V‖ * ‖x‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨10, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * V * V * y * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * V * V * y * x)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * V * V * y * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * V * y * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖V‖ * ‖y‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨11, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * V * V * y * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * V * V * y * y)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * V * V * y * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * V * y * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖V‖ * ‖y‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨12, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * V * y * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * V * y * x * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * V * y * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * y * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖y‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨13, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * V * y * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * V * y * V * x)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * V * y * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * y * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖y‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨14, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * V * y * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * V * y * V * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * V * y * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * y * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖y‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨15, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * V * y * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * V * y * y * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * V * y * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * V * y * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖y‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨16, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * y * x * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * y * x * V * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * y * x * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * x * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖x‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨17, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * y * V * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * y * V * x * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * y * V * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * V * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖V‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨18, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * y * V * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * y * V * V * x)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * y * V * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * V * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖V‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨19, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * y * V * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * y * V * V * y)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * y * V * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * V * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖V‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨20, _⟩ =>
+    show ‖(24 / 720 : 𝕂) • (V * y * V * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(24 / 720 : 𝕂) • (V * y * V * y * V)‖
+          ≤ ‖(24 / 720 : 𝕂)‖ * ‖V * y * V * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * V * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖V‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨21, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * y * y * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * y * y * V * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * y * y * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖V * y * y * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖y‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (Vn * M * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨22, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * x * V * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * x * V * V * V)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * x * V * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * x * V * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖x‖ * ‖V‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨23, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * V * x * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * V * x * V * V)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * V * x * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * x * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖x‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨24, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * V * V * x * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * V * V * x * V)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * V * V * x * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * V * x * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖V‖ * ‖x‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨25, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * V * V * V * x)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * V * V * V * x)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * V * V * V * x‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * V * V * x‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖V‖ * ‖V‖ * ‖x‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨26, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (y * V * V * V * y)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (y * V * V * V * y)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖y * V * V * V * y‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * V * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖V‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨27, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * V * V * y * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * V * V * y * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * V * V * y * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * V * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖V‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨28, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (y * V * y * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (y * V * y * V * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖y * V * y * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * V * y * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖y‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * Vn * M * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨29, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (y * y * V * V * V)‖ ≤ (24 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (y * y * V * V * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖y * y * V * V * V‖ := norm_smul_le _ _
+        _ ≤ (24 / 720 : ℝ) * ‖y * y * V * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (24 / 720 : ℝ) * (‖y‖ * ‖y‖ * ‖V‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (24 / 720 : ℝ) * (M * M * Vn * Vn * M) := by gcongr
+        _ = (24 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨_ + 30, h⟩ => absurd h (by omega)
+
+set_option maxHeartbeats 800000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Per-k norm bound for `bch_quintic_term_taylor2_remainder_3V`**:
+`‖bch_quintic_term_taylor2_remainder_3V(x, V, y)‖ ≤ (720/720) · Vn² · M³` for `Vn = ‖V‖` and
+`M ≥ ‖x‖, ‖V‖, ‖y‖`. -/
+theorem norm_bch_quintic_term_taylor2_remainder_3V_le (x V y : 𝔸) (M Vn : ℝ)
+    (hx_M : ‖x‖ ≤ M) (hV_Vn : ‖V‖ ≤ Vn) (hy_M : ‖y‖ ≤ M)
+    (hV_M : ‖V‖ ≤ M)
+    (hM_nn : 0 ≤ M) (hVn_nn : 0 ≤ Vn) :
+    ‖bch_quintic_term_taylor2_remainder_3V 𝕂 x V y‖ ≤ (720 / 720 : ℝ) * Vn^2 * M^3 := by
+  rw [bch_quintic_term_taylor2_remainder_3V_eq_sum]
+  calc ‖∑ i : Fin 30, BchQuinticTermTaylor2Remainder3VTerm (𝕂 := 𝕂) x V y i‖
+      ≤ ∑ i : Fin 30, ‖BchQuinticTermTaylor2Remainder3VTerm (𝕂 := 𝕂) x V y i‖ := norm_sum_le _ _
+    _ ≤ ∑ _i : Fin 30, (24 / 720 : ℝ) * Vn^2 * M^3 :=
+        Finset.sum_le_sum (fun i _ => BchQuinticTermTaylor2Remainder3VTerm_norm_le (𝕂 := 𝕂) x V y M Vn hx_M hV_Vn hy_M hV_M hM_nn hVn_nn i)
+    _ = 30 * ((24 / 720 : ℝ) * Vn^2 * M^3) := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring
+    _ = (720 / 720 : ℝ) * Vn^2 * M^3 := by ring
+
+-- Per-Nat-index family for `bch_quintic_term_taylor2_remainder_4V`.
+set_option maxHeartbeats 800000 in
+private noncomputable def BchQuinticTermTaylor2Remainder4VTermN (x V y : 𝔸) : Nat → 𝔸
+  | 0 => (-1 / 720 : 𝕂) • (V * V * V * V * y)
+  | 1 => (4 / 720 : 𝕂) • (V * V * V * y * V)
+  | 2 => (-6 / 720 : 𝕂) • (V * V * y * V * V)
+  | 3 => (4 / 720 : 𝕂) • (V * y * V * V * V)
+  | 4 => (-1 / 720 : 𝕂) • (y * V * V * V * V)
+  | _ => 0
+
+/-- `Fin 5`-indexed wrapper for `BchQuinticTermTaylor2Remainder4VTermN`. -/
+private noncomputable def BchQuinticTermTaylor2Remainder4VTerm (x V y : 𝔸) (i : Fin 5) : 𝔸 :=
+  BchQuinticTermTaylor2Remainder4VTermN (𝕂 := 𝕂) x V y i.val
+
+-- The explicit `bch_quintic_term_taylor2_remainder_4V` def equals the `Finset.sum` form.
+set_option maxHeartbeats 16000000 in
+set_option maxRecDepth 2000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private theorem bch_quintic_term_taylor2_remainder_4V_eq_sum (x V y : 𝔸) :
+    bch_quintic_term_taylor2_remainder_4V 𝕂 x V y = ∑ i : Fin 5, BchQuinticTermTaylor2Remainder4VTerm (𝕂 := 𝕂) x V y i := by
+  unfold bch_quintic_term_taylor2_remainder_4V BchQuinticTermTaylor2Remainder4VTerm
+  rw [Fin.sum_univ_eq_sum_range (fun k => BchQuinticTermTaylor2Remainder4VTermN (𝕂 := 𝕂) x V y k)]
+  simp only [Finset.sum_range_succ, Finset.sum_range_zero,
+    BchQuinticTermTaylor2Remainder4VTermN, zero_add]
+
+-- Per-index uniform bound: ‖BchQuinticTermTaylor2Remainder4VTerm x V y i‖ ≤ (6/720) · Vn² · M³.
+set_option maxHeartbeats 32000000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+private lemma BchQuinticTermTaylor2Remainder4VTerm_norm_le (x V y : 𝔸) (M Vn : ℝ)
+    (hx_M : ‖x‖ ≤ M) (hV_Vn : ‖V‖ ≤ Vn) (hy_M : ‖y‖ ≤ M)
+    (hV_M : ‖V‖ ≤ M)
+    (hM_nn : 0 ≤ M) (hVn_nn : 0 ≤ Vn) :
+    ∀ i : Fin 5, ‖BchQuinticTermTaylor2Remainder4VTerm (𝕂 := 𝕂) x V y i‖ ≤ (6 / 720 : ℝ) * Vn^2 * M^3 := fun i =>
+  match i with
+  | ⟨0, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (V * V * V * V * y)‖ ≤ (6 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (V * V * V * V * y)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖V * V * V * V * y‖ := norm_smul_le _ _
+        _ ≤ (6 / 720 : ℝ) * ‖V * V * V * V * y‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (6 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖V‖ * ‖V‖ * ‖y‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (6 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (6 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨1, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * V * V * y * V)‖ ≤ (6 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * V * V * y * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * V * V * y * V‖ := norm_smul_le _ _
+        _ ≤ (6 / 720 : ℝ) * ‖V * V * V * y * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (6 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖V‖ * ‖y‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (6 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (6 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨2, _⟩ =>
+    show ‖(-6 / 720 : 𝕂) • (V * V * y * V * V)‖ ≤ (6 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-6 / 720 : 𝕂) • (V * V * y * V * V)‖
+          ≤ ‖(-6 / 720 : 𝕂)‖ * ‖V * V * y * V * V‖ := norm_smul_le _ _
+        _ ≤ (6 / 720 : ℝ) * ‖V * V * y * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (6 / 720 : ℝ) * (‖V‖ * ‖V‖ * ‖y‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (6 / 720 : ℝ) * (Vn * Vn * M * M * M) := by gcongr
+        _ = (6 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨3, _⟩ =>
+    show ‖(4 / 720 : 𝕂) • (V * y * V * V * V)‖ ≤ (6 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(4 / 720 : 𝕂) • (V * y * V * V * V)‖
+          ≤ ‖(4 / 720 : 𝕂)‖ * ‖V * y * V * V * V‖ := norm_smul_le _ _
+        _ ≤ (6 / 720 : ℝ) * ‖V * y * V * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (6 / 720 : ℝ) * (‖V‖ * ‖y‖ * ‖V‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (6 / 720 : ℝ) * (Vn * M * Vn * M * M) := by gcongr
+        _ = (6 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨4, _⟩ =>
+    show ‖(-1 / 720 : 𝕂) • (y * V * V * V * V)‖ ≤ (6 / 720 : ℝ) * Vn^2 * M^3 from by
+      calc ‖(-1 / 720 : 𝕂) • (y * V * V * V * V)‖
+          ≤ ‖(-1 / 720 : 𝕂)‖ * ‖y * V * V * V * V‖ := norm_smul_le _ _
+        _ ≤ (6 / 720 : ℝ) * ‖y * V * V * V * V‖ := by
+            apply mul_le_mul_of_nonneg_right _ (norm_nonneg _)
+            rw [norm_div]; simp [RCLike.norm_ofNat] <;> norm_num
+        _ ≤ (6 / 720 : ℝ) * (‖y‖ * ‖V‖ * ‖V‖ * ‖V‖ * ‖V‖) := by
+            apply mul_le_mul_of_nonneg_left (norm_5prod_le _ _ _ _ _) (by positivity)
+        _ ≤ (6 / 720 : ℝ) * (M * Vn * Vn * M * M) := by gcongr
+        _ = (6 / 720 : ℝ) * Vn^2 * M^3 := by ring
+  | ⟨_ + 5, h⟩ => absurd h (by omega)
+
+set_option maxHeartbeats 800000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Per-k norm bound for `bch_quintic_term_taylor2_remainder_4V`**:
+`‖bch_quintic_term_taylor2_remainder_4V(x, V, y)‖ ≤ (30/720) · Vn² · M³` for `Vn = ‖V‖` and
+`M ≥ ‖x‖, ‖V‖, ‖y‖`. -/
+theorem norm_bch_quintic_term_taylor2_remainder_4V_le (x V y : 𝔸) (M Vn : ℝ)
+    (hx_M : ‖x‖ ≤ M) (hV_Vn : ‖V‖ ≤ Vn) (hy_M : ‖y‖ ≤ M)
+    (hV_M : ‖V‖ ≤ M)
+    (hM_nn : 0 ≤ M) (hVn_nn : 0 ≤ Vn) :
+    ‖bch_quintic_term_taylor2_remainder_4V 𝕂 x V y‖ ≤ (30 / 720 : ℝ) * Vn^2 * M^3 := by
+  rw [bch_quintic_term_taylor2_remainder_4V_eq_sum]
+  calc ‖∑ i : Fin 5, BchQuinticTermTaylor2Remainder4VTerm (𝕂 := 𝕂) x V y i‖
+      ≤ ∑ i : Fin 5, ‖BchQuinticTermTaylor2Remainder4VTerm (𝕂 := 𝕂) x V y i‖ := norm_sum_le _ _
+    _ ≤ ∑ _i : Fin 5, (6 / 720 : ℝ) * Vn^2 * M^3 :=
+        Finset.sum_le_sum (fun i _ => BchQuinticTermTaylor2Remainder4VTerm_norm_le (𝕂 := 𝕂) x V y M Vn hx_M hV_Vn hy_M hV_M hM_nn hVn_nn i)
+    _ = 5 * ((6 / 720 : ℝ) * Vn^2 * M^3) := by
+        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]; ring
+    _ = (30 / 720 : ℝ) * Vn^2 * M^3 := by ring
+
+set_option maxHeartbeats 800000 in
+omit [NormOneClass 𝔸] [CompleteSpace 𝔸] in
+/-- **Norm bound for `bch_quintic_term_taylor2_remainder`**:
+`‖bch_quintic_term_taylor2_remainder(x, V, y)‖ ≤ (2430/720) · M³ · ‖V‖²`
+where `M = ‖x‖ + ‖V‖ + ‖y‖`.
+
+Combines the per-k=2, k=3, k=4 sub-piece bounds via triangle inequality.
+Constants: k=2 contributes 1680/720, k=3 contributes 720/720, k=4 contributes
+30/720; total = 2430/720. -/
+theorem norm_bch_quintic_term_taylor2_remainder_le (x V y : 𝔸) :
+    ‖bch_quintic_term_taylor2_remainder 𝕂 x V y‖ ≤
+      (2430 / 720 : ℝ) * (‖x‖ + ‖V‖ + ‖y‖)^3 * ‖V‖^2 := by
+  set M := ‖x‖ + ‖V‖ + ‖y‖ with hM_def
+  set Vn := ‖V‖ with hVn_def
+  have hM_nn : 0 ≤ M := by positivity
+  have hVn_nn : 0 ≤ Vn := norm_nonneg _
+  have hx_M : ‖x‖ ≤ M := by
+    rw [hM_def]; linarith [norm_nonneg V, norm_nonneg y]
+  have hV_M : ‖V‖ ≤ M := by
+    rw [hM_def]; linarith [norm_nonneg x, norm_nonneg y]
+  have hy_M : ‖y‖ ≤ M := by
+    rw [hM_def]; linarith [norm_nonneg x, norm_nonneg V]
+  have hV_Vn : ‖V‖ ≤ Vn := le_refl _
+  rw [bch_quintic_term_taylor2_remainder_split]
+  have h2 := norm_bch_quintic_term_taylor2_remainder_2V_le (𝕂 := 𝕂) x V y M Vn hx_M hV_Vn hy_M hV_M hM_nn hVn_nn
+  -- h2 : ‖_kV‖ ≤ (1680/720) * Vn^2 * M^3
+  have h3 := norm_bch_quintic_term_taylor2_remainder_3V_le (𝕂 := 𝕂) x V y M Vn hx_M hV_Vn hy_M hV_M hM_nn hVn_nn
+  -- h3 : ‖_kV‖ ≤ (720/720) * Vn^2 * M^3
+  have h4 := norm_bch_quintic_term_taylor2_remainder_4V_le (𝕂 := 𝕂) x V y M Vn hx_M hV_Vn hy_M hV_M hM_nn hVn_nn
+  -- h4 : ‖_kV‖ ≤ (30/720) * Vn^2 * M^3
+  calc ‖bch_quintic_term_taylor2_remainder_2V 𝕂 x V y +
+         bch_quintic_term_taylor2_remainder_3V 𝕂 x V y +
+         bch_quintic_term_taylor2_remainder_4V 𝕂 x V y‖
+      ≤ ‖bch_quintic_term_taylor2_remainder_2V 𝕂 x V y +
+         bch_quintic_term_taylor2_remainder_3V 𝕂 x V y‖ +
+        ‖bch_quintic_term_taylor2_remainder_4V 𝕂 x V y‖ := norm_add_le _ _
+    _ ≤ ‖bch_quintic_term_taylor2_remainder_2V 𝕂 x V y‖ +
+        ‖bch_quintic_term_taylor2_remainder_3V 𝕂 x V y‖ +
+        ‖bch_quintic_term_taylor2_remainder_4V 𝕂 x V y‖ := by
+        linarith [norm_add_le (bch_quintic_term_taylor2_remainder_2V 𝕂 x V y) (bch_quintic_term_taylor2_remainder_3V 𝕂 x V y)]
+    _ ≤ _ := by linarith [h2, h3, h4]
+
 /-! ### `bch_sextic_term` — the τ⁶ coefficient of `bch(a, b)`
 
 Explicit 28-term polynomial in {a, b}, derived via the CAS pipeline at
