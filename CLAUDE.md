@@ -1,5 +1,73 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 59, 2026-05-19) — τ⁷ piece-by-piece calibration
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**
+(unchanged): `symmetric_bch_septic_sub_poly_axiom`,
+`norm_septic_match_residual_le_axiom`.
+
+**Calibration of the piece-by-piece septic discharge (Path A)**:
+
+Started building the second-order Taylor remainder framework for the 4
+remaining single-V pieces in the joint cancellation roadmap (P_3_C5,
+P_4_C5, P_2_C7, P_3_C6). The motivation: first-order Lipschitz gives
+`O(s^{p+j-1})` which is short of the s⁹ target for 4 of 5 pieces.
+Second-order Taylor gives `O(s^{p+2j-2}) ≥ s⁹` for all 4.
+
+**Phase 1 commit `80686d1` (this session, 213 Lean lines)**:
+
+* `bch_quintic_term_lin_diff (x V y : 𝔸) : 𝔸` — 75-term polynomial
+  in {x, V, y}, LCM 720. First-order directional difference
+  `Σ_w c_w · Σ_{i ∈ x-positions of w} word_with_V_at_i`.
+* `bch_quintic_term_taylor2_remainder (x V y : 𝔸) : 𝔸` — 105-term
+  polynomial, LCM 720, broken down as k=2 (70 terms), k=3 (30), k=4 (5).
+* `bch_quintic_term_taylor2_decomp` — the matching identity
+  `bch_quintic_term(x+V, y) - bch_quintic_term(x, y) = lin_diff + taylor2_remainder`.
+  Proved via `unfold + simp only + match_scalars <;> ring` at
+  `maxHeartbeats 1024000000`.
+
+CAS-generated via `scripts/gen_bch_quintic_term_taylor2.py` (200 lines).
+
+**Calibration findings (smaller-than-estimated for Phase 1)**:
+
+* Original estimate: 500–1000 lines for Phase 1. Actual: 213. Both
+  `lin_diff` (75) and `taylor2_remainder` (105) fit within the 124-term
+  simp recursion limit, so single Finset.sum DEFs work cleanly.
+* Hit the `[doc-comment] [set_option ... in] <decl>` parser order issue
+  (memory: `feedback_doc_comment_set_option_order.md`). The correct
+  order is `set_option ... in /-- doc -/ <decl>`. Cost: 1 build cycle.
+
+**Phase 2 ahead (next session)**:
+
+Bound `‖bch_quintic_term_taylor2_remainder(x, V, y)‖ ≤ K · M³ · ‖V‖²`
+where `M = ‖x‖ + ‖V‖ + ‖y‖`. Approach:
+
+1. Split into per-k sub-defs `taylor2_remainder_2V/_3V/_4V` (70 / 30 / 5
+   terms each). Each fits a single Finset.sum.
+2. Per-k uniform bound via per-i case analysis:
+   * k=2: ≤ (Σ|c|_k2 / 720) · `‖V‖² · M³` (exact factorization).
+   * k=3: ≤ (Σ|c|_k3 / 720) · `‖V‖³ · M²`, lift to `‖V‖² · M³` via
+     `‖V‖ ≤ M` (automatic since M = ‖x‖+‖V‖+‖y‖).
+   * k=4: ≤ (Σ|c|_k4 / 720) · `‖V‖⁴ · M`, lift similarly.
+3. Triangle-sum: `‖taylor2_remainder‖ ≤ 536/720 · M³ · ‖V‖² ≈
+   0.745 · M³ · ‖V‖²`.
+
+Estimated 1000–1500 Lean lines (per-pattern case analysis for 25
+position patterns + per-piece norm bounds + combined).
+
+**Phase 3 (after Phase 2)**: Specialize at `V = V_3 = bch_cubic_term(½a, b)`,
+`x = ½a + b`, `y = ½a`. Identify `bch_quintic_term_lin_diff(½a+b, V_3, ½a)`
+with the existing `septic_d7_P3_C5_lin_poly`. Bound the residual ≤ K·s⁹
+via Phase 2 + ‖V_3‖ ≤ s³ + M ≤ 2.02·s. Estimated 200–400 lines.
+
+After P_3_C5 calibration, the remaining 3 single-V pieces (P_4_C5,
+P_2_C7, P_3_C6) follow the same pattern with k=5,6,7 Taylor frameworks.
+Plus the Cross_V₂·V₃_C5 bilinear piece needs special treatment.
+
+**Roadmap reset**: prior session estimated 10–15 sessions for full τ⁷
+discharge. Phase 1's better-than-estimated complexity suggests 6–10
+sessions may suffice if subsequent phases hold.
+
 ## Status (session 58, 2026-05-19) — τ⁵ pipeline closure
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
