@@ -555,8 +555,10 @@ B2.2.e residual + L_extra, and B2.2.c), the discharge becomes a direct
 triangle inequality assembly.
 
 `#print axioms norm_suzuki5_bch_sub_smul_sub_R5_le` returns only
-`{propext, Classical.choice, Quot.sound, BCH.symmetric_bch_quintic_sub_poly_axiom}`
-(B1.c remains as the sole project-side axiom).
+`{propext, Classical.choice, Quot.sound}` — the B1.c quintic axiom
+was discharged (May 2026); `norm_symmetric_bch_quintic_sub_poly_le` is
+now a proved theorem (see `BCH/SymmetricQuintic.lean:9587`) with
+constant `2·10¹⁰·s⁷`.
 
 **Session 11 progress**: T₂ bound `norm_sym_cubic_poly_at_strangBlock_sub_L_leading_τ5_le`
 in `BCH/Palindromic.lean` is now fully proved. Below

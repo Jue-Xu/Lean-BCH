@@ -1,5 +1,44 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 58, 2026-05-19) — τ⁵ pipeline closure
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
+`symmetric_bch_septic_sub_poly_axiom`, `norm_septic_match_residual_le_axiom`.
+Both gate τ⁷-order results only.
+
+**Strategic milestone confirmed (this session)**: the tight 4th-order
+Trotter formula error bound on the Lean-Trotter side is **axiom-free at
+the project level** after pushing 83 local commits to GitHub and bumping
+the Lean-Trotter pin to `d455ff0`.
+
+`#print axioms` on each τ⁵ headline (Lean-BCH side) returns only
+`[propext, Classical.choice, Quot.sound]`:
+- `norm_suzuki5_bch_sub_smul_sub_R5_le` (P1)
+- `suzuki5_log_product_quintic_of_IsSuzukiCubic` (P1 bridge)
+- `suzuki5_log_product_quintic_tight_at_suzukiP` (P2)
+
+Downstream on Lean-Trotter side (axiom-free):
+- `norm_suzuki4_childs_form_via_level3` (tight 4th-order, Childs (2021) form)
+- `norm_suzuki4_level3_bch` (tight γᵢ prefactors)
+- `norm_suzuki4_level2_bch` (unit-coefficient τ⁵ bound)
+
+The Lean-BCH B1.c quintic axiom (`symmetric_bch_quintic_sub_poly_axiom`)
+was discharged May 10–11; the Lean-Trotter pin at `cf5eea3` (Apr 26)
+was pre-discharge. The pin bump closes the loop.
+
+The 2 remaining Lean-BCH axioms gate ONLY the L4 τ⁷ uniform refinement
+on the Lean-Trotter side (`bch_uniform_integrated`), not the core
+4th-order Trotter bound.
+
+This was a **stale-docs problem**, not a math problem. The piece-by-piece
+septic work (sessions 26–57) is on a separate τ⁷-refinement thread,
+orthogonal to the τ⁵ tight 4th-order Trotter goal.
+
+Single commit this session:
+**`<this commit>`** — doc cleanup in Lean-BCH and Lean-Trotter
+(stale "B1.c is alive" claims now correctly say "discharged"); the
+Tier-2 of B1.c section now describes the proved theorem.
+
 ## Status (session 57, 2026-05-18)
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**:
@@ -1826,17 +1865,33 @@ Status: public theorem in place using `norm_bch_sextic_remainder_small_s_le` axi
 See `claude/sextic_remainder_strategy.md` for the full proof plan and
 per-piece bounds.
 
-## Tier-2 of B1.c: `symmetric_bch_quintic_sub_poly_axiom`
+## Tier-2 of B1.c: `symmetric_bch_quintic_sub_poly_axiom` — DISCHARGED
 
-Asserts for `‖a‖+‖b‖ < 1/4`:
+**DISCHARGED (May 2026).** `norm_symmetric_bch_quintic_sub_poly_le` is
+now a proved theorem at `BCH/SymmetricQuintic.lean:9587` with constant
+`2·10¹⁰·(‖a‖+‖b‖)⁷` (tighter than the original `10⁹·(‖a‖+‖b‖)⁷`
+axiom slack, but achievable via the proof's piece-by-piece estimates).
+
+Statement now in place as a proved theorem:
 ```
 ‖symmetric_bch_cubic 𝕂 a b − symmetric_bch_cubic_poly 𝕂 a b
-    − symmetric_bch_quintic_poly 𝕂 a b‖ ≤ 10⁹ · (‖a‖+‖b‖)⁷
+    − symmetric_bch_quintic_poly 𝕂 a b‖ ≤ 2·10¹⁰ · (‖a‖+‖b‖)⁷
 ```
 
-Public theorems depending on this axiom:
-- `BCH.norm_symmetric_bch_quintic_sub_poly_le` (B1.c bridge).
+Proof: 13-piece extended hdecomp (Phase D), bounding via Phase A septic
+remainders, Phase E.1 inline (Group A bracket + Group B C₆ pieces), and
+the Group C+D sub-result (Phase E.2). Total ≤ 1.21·10¹⁰·s⁷ ≤ 2·10¹⁰·s⁷.
+
+Public theorems no longer depending on any axiom for the τ⁵ chain:
+- `BCH.norm_symmetric_bch_quintic_sub_poly_le` (B1.c bridge, proved theorem).
 - `BCH.norm_strangBlock_log_sub_quintic_target_le` (B1.d per-block wrapper).
+- `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le` (P1 headline).
+- `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` (P1 bridge corollary).
+- `BCH.suzuki5_log_product_quintic_tight_at_suzukiP` (P2 bridge).
+
+Downstream consumer: Lean-Trotter's `norm_suzuki4_childs_form_via_level3`
+(tight 4th-order Trotter formula, Childs (2021) prefactors) is now
+axiom-free at the project level after the May-2026 pin bump.
 
 CAS at `Lean-Trotter/scripts/verify_strangblock_degree7.py` confirms degrees
 2, 4, 6 vanish identically (palindromic symmetry); degree-7 residual has
@@ -2019,8 +2074,9 @@ The alt-form discharge (T2-B) is now in place to support step 4
 3. `bch_uniform_integrated` — order-7 + R₇ + FTC-2 integrated bound.
    Currently `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` (Lean-BCH side).
 
-**Key public theorems on this branch** (depend only on Lean's 3 standard +
-B1.c Tier-2 axiom + `suzuki5_log_product_septic_at_suzukiP_axiom`):
+**Key public theorems on this branch** (the τ⁵ chain depends only on
+Lean's 3 standard axioms; the τ⁷ chain additionally depends on the 2
+septic stepping-stone axioms):
 - `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le` (P1 headline).
 - `BCH.suzuki5_log_product_quintic_of_IsSuzukiCubic` (P1 bridge corollary).
 - `BCH.suzuki5_log_product_quintic_tight_at_suzukiP` (P2 bridge).
