@@ -1702,6 +1702,14 @@ axioms. The 6-stage septic-axiom discharge roadmap is complete.
 Formalize BCH and its truncated bounds in a complete normed algebra, with
 applications to product formula error analysis (Trotter, Strang, Suzuki).
 
+**Primary downstream application achieved (2026-05-19)**: tight 4th-order
+Trotter formula error bound (`norm_suzuki4_childs_form_via_level3` on the
+Lean-Trotter side) is fully proved, axiom-free at the project level.
+
+Remaining: τ⁷ uniform refinement on Lean-Trotter side (`bch_uniform_integrated`,
+`norm_suzuki4_level4_uniform`) still depends on 2 surviving Lean-BCH septic
+stepping stones. Discharge roadmap continues in sessions 26+.
+
 ## Constraints
 
 - **Lean:** 4.29.0-rc8 (via `lean-toolchain`)
@@ -1723,13 +1731,15 @@ BCH/
 │                            cluster bounds, public norm_bch_sextic/septic/octic_
 │                            remainder_le, symmetric BCH cubic/quintic/septic poly
 ├── SymmetricQuintic.lean  ← τ⁵ coefficient: 30-term polynomial, c⁵ homogeneity,
-│                            B1.c quintic Taylor bridge (Tier-2 axiom)
+│                            B1.c quintic Taylor bridge (proved theorem,
+│                            no axioms); septic stepping-stone definitions
 ├── Palindromic.lean       ← Suzuki-5 palindromic product, M1–M4b, M6 Trotter h4,
 │                            B1.d per-block wrapper, B2.2.a-e, B2.5 T₂ bound
 ├── ChildsBasis.lean       ← 8 Childs 4-fold commutators + bchFourFoldSum
 │                            + BCHPrefactors struct
-└── Suzuki5Quintic.lean    ← βᵢ(p) polynomials, R₅ Childs def, headline τ⁵ theorem,
-                             tight bridge at Suzuki p, septic axiom 3
+└── Suzuki5Quintic.lean    ← βᵢ(p) polynomials, R₅ Childs def, headline τ⁵ theorem
+                             (axiom-free), tight bridge at Suzuki p,
+                             septic τ⁷ infrastructure (2 stepping-stone axioms)
 ```
 
 Import chain: `LogSeries → Basic → SmallSDischarge → RemainderBounds →
@@ -2063,16 +2073,24 @@ infrastructure (additional ~1500 lines for `bch_sextic_term` +
 The alt-form discharge (T2-B) is now in place to support step 4
 (absorbing the deg-5 contribution from `bqt(a', b) + bqt(a'+b, a')`).
 
-## Lean-Trotter interface (axioms 1–3)
+## Lean-Trotter interface (all 3 axioms discharged)
 
-`Lean-Trotter/LieTrotter/Suzuki4ViaBCH.lean` has three BCH-interface axioms:
+`Lean-Trotter/LieTrotter/Suzuki4ViaBCH.lean` originally had three
+BCH-interface axioms; all three are now proved theorems:
 
 1. `bch_w4Deriv_quintic_level2` — unit-coefficient pointwise τ⁵ bound.
-   **Discharged session 12** via `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le`.
+   **Theorem (2026-04-24)** via `BCH.norm_suzuki5_bch_sub_smul_sub_R5_le`.
 2. `bch_w4Deriv_level3_tight` — tight γᵢ at Suzuki p.
-   **Discharged session 8** via `BCH.suzuki5_log_product_quintic_tight_at_suzukiP`.
-3. `bch_uniform_integrated` — order-7 + R₇ + FTC-2 integrated bound.
-   Currently `BCH.suzuki5_log_product_septic_at_suzukiP_axiom` (Lean-BCH side).
+   **Theorem (2026-04-24)** via `BCH.suzuki5_log_product_quintic_tight_at_suzukiP`.
+3. `bch_uniform_integrated` — existential-δ pointwise τ⁵ + τ⁷ bound.
+   **Theorem (2026-04-26)** via `BCH.suzuki5_log_product_septic_at_suzukiP`
+   (itself a theorem since Lean-BCH session 26, gated only by the 2 surviving
+   septic stepping-stone axioms).
+
+After Lean-Trotter's pin bump to Lean-BCH `d455ff0` (2026-05-19),
+the τ⁵ chain (interface axioms 1+2) is axiom-free; interface axiom 3
+(L4 uniform refinement) transitively depends only on the 2 remaining
+Lean-BCH septic axioms.
 
 **Key public theorems on this branch** (the τ⁵ chain depends only on
 Lean's 3 standard axioms; the τ⁷ chain additionally depends on the 2
@@ -2103,8 +2121,15 @@ septic stepping-stone axioms):
 
 ## Pointers
 
-- `claude/sextic_remainder_strategy.md` — Tier-1 small-s discharge plan.
-- `claude/lean-bch-B1c-session-prompt.md` — Tier-1/Tier-2 overview.
+- Git log preserves session-by-session implementation history (sessions 1–58).
+- `claude/session_history.md` — archived earlier session notes (sessions 16–27).
+- `claude/sextic_remainder_strategy.md` — Tier-1 small-s discharge plan
+  (historical; closed in session 16).
+- `claude/lean-bch-B1c-session-prompt.md` — **obsolete (B1.c discharged
+  May 10–11, 2026)**, kept for historical context.
+- `claude/lean-bch-T2F7e-*.md` — T2-F7e parent-discharge plans
+  (historical; B1.c Tier-2 closed via sessions 20–22).
 - `claude/lean-bch-B2-session-prompt.md` — B2 (5-factor BCH composition).
 - `claude/lean-bch-B2.5-session-prompt.md` — B2.5 (T₂ bound).
-- Git log preserves session-by-session implementation history.
+- `claude/lean-bch-next-session-prompt.md` — current task pointer
+  (sessions 26+ matching-identity roadmap for τ⁷).

@@ -1,5 +1,11 @@
 # T2-F7e Parent Discharge — Detailed Implementation Plan
 
+> **OBSOLETE (2026-05-19).** T2-F7e completed via sessions 20–22 — the
+> B1.c quintic axiom is fully discharged.
+> `norm_symmetric_bch_quintic_sub_poly_le` is a proved theorem at
+> `BCH/SymmetricQuintic.lean:9587`. This document is retained for
+> historical context only.
+
 **Target axiom**: `BCH.symmetric_bch_quintic_sub_poly_axiom` in
 `BCH/SymmetricQuintic.lean:1690`.
 

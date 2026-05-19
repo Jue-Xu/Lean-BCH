@@ -1,5 +1,9 @@
 # Lean-BCH Next Session — Discharge T2-F7e Parent Axiom
 
+> **OBSOLETE (2026-05-19).** T2-F7e parent axiom discharged in sessions
+> 20–22. `norm_symmetric_bch_quintic_sub_poly_le` is a proved theorem.
+> This document is retained for historical context only.
+
 > **Detailed implementation plan**: see
 > `claude/lean-bch-T2F7e-parent-discharge-implementation-plan.md` for the
 > full extended hdecomp derivation (11 pieces), the 2 algebraic identities

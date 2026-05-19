@@ -1,5 +1,12 @@
 # Lean-BCH next session — B1.c (quintic Taylor bridge for symmetric BCH)
 
+> **OBSOLETE (2026-05-19).** The B1.c quintic axiom
+> `symmetric_bch_quintic_sub_poly_axiom` was discharged in sessions
+> 20–22 (May 10–11, 2026). `norm_symmetric_bch_quintic_sub_poly_le`
+> is now a proved theorem at `BCH/SymmetricQuintic.lean:9587` with
+> constant `2·10¹⁰·s⁷`. This document is retained for historical
+> context only.
+
 ## Status update (2026-05-05, session 14 — sextic_pure_identity PROVED)
 
 **Major progress on B1.c.** Repository on `main` @ `dcf140f`, 0 sorries,

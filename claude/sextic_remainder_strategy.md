@@ -1,5 +1,9 @@
 # Sextic Remainder Lean Port Strategy (session 14, B1.c Tier 1)
 
+> **COMPLETED (session 16).** `norm_bch_sextic_remainder_le` is a proved
+> theorem in `BCH/RemainderBounds.lean`. This document is retained for
+> historical context only.
+
 ## Goal
 
 Prove `norm_bch_sextic_remainder_le` in `BCH/Basic.lean`:

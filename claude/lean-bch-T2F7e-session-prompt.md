@@ -1,5 +1,9 @@
 # T2-F7e Session Prompt — Discharge Parent Tier-2 Axiom
 
+> **OBSOLETE (2026-05-19).** T2-F7e parent axiom discharged in sessions
+> 20–22. `norm_symmetric_bch_quintic_sub_poly_le` is a proved theorem.
+> This document is retained for historical context only.
+
 ## Current State (after session 19, all I2 wrapper inputs in place)
 
 - **0 sorries**, **3 scoped private axioms** (unchanged):
