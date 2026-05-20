@@ -1,5 +1,91 @@
 # Lean-BCH — Baker-Campbell-Hausdorff in Lean 4
 
+## Status (session 60, 2026-05-20) — first τ⁷ single-V piece DISCHARGED
+
+Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**
+(unchanged): `symmetric_bch_septic_sub_poly_axiom`,
+`norm_septic_match_residual_le_axiom`.
+
+**Phases 2+3 complete: first single-V piece (d=7 P_3 C_5) has a proved
+deg-9 residual bound.** The second-order Taylor framework is fully
+operational.
+
+**Phase 2 commit `b3cb673` (1591 Lean lines)**:
+
+`norm_bch_quintic_term_taylor2_remainder_le`:
+
+    ‖bch_quintic_term_taylor2_remainder(x, V, y)‖ ≤ (2430/720) · M³ · ‖V‖²
+
+where `M = ‖x‖ + ‖V‖ + ‖y‖`. Structure:
+* 3 per-k sub-defs `bch_quintic_term_taylor2_remainder_{2,3,4}V`
+  (70 + 30 + 5 = 105 terms).
+* `bch_quintic_term_taylor2_remainder_split` — additive identity.
+* Per-k Term families + per-i uniform bounds. Key trick: for each word
+  with k V's, bound exactly 2 V-positions by `Vn = ‖V‖` and the rest
+  (including extra V's) by `M` — product is literally `Vn²·M³` for all k.
+* Per-k bound theorems via Finset.sum + combined triangle inequality.
+
+CAS-generated via `scripts/gen_bch_quintic_term_taylor2_bound.py`.
+
+**Phase 3 commit `06cd53e` (118 Lean lines, `SymmetricQuintic.lean`)**:
+
+3 theorems discharging the d=7 P_3 C_5 residual:
+* `septic_d7_P3_C5_lin_poly_eq_lin_diff` — specialization identity:
+  `septic_d7_P3_C5_lin_poly(a, b) = bch_quintic_term_lin_diff(½a+b,
+  V_3, ½a)`, V_3 = bch_cubic_term(½a, b). Proved `match_scalars + ring`.
+* `septic_d7_P3_C5_residual_eq_taylor2` — residual identity (composes
+  Phase 1 decomp + specialization). Proved `linear_combination (norm := abel)`.
+* `norm_septic_d7_P3_C5_residual_le`:
+
+      ‖(bch_5(½a+b+V_3, ½a) − bch_5(½a+b, ½a)) − septic_d7_P3_C5_lin_poly‖
+        ≤ 10000 · s⁹       (for s = ‖a‖+‖b‖ ≤ 1)
+
+  Actual bound 382637520/46080 ≈ 8304·s⁹. Bound chain: Phase 2 +
+  ‖V_3‖ ≤ 27s³/8 (via `norm_bch_cubic_term_le`) + M ≤ 6s.
+
+**Calibration findings**:
+
+| Phase | Estimate | Actual |
+|-------|---------:|-------:|
+| Phase 1 (Taylor decomp identity) | 500–1000 | 213 |
+| Phase 2 (norm bound on R₂) | 1000–1500 | 1591 |
+| Phase 3 (P_3_C5 specialization) | 200–400 | 118 |
+
+**Total ~1900 Lean lines for the first single-V piece**, 3 sessions.
+Phases 1+2 (the k=5 framework) are reusable: the d=8 P_4_C_5 piece needs
+only a Phase-3-style ~120-line specialization. The d=7/d=8 P_3_C_6 and
+d=8 P_2_C_7 pieces need k=6 / k=7 analogs of Phase 1+2 (mirror the
+generators with bch_sextic_term / bch_septic_term).
+
+**Lean-tactic notes (this session)**:
+* `gcongr` auto-closes per-factor goals from context — don't add
+  explicit `· exact h` lines (causes "No goals to be solved").
+* `gcongr <;> [t1; t2; ...]` is invalid syntax → "too many tactics".
+* `linarith` does not work on noncommutative-algebra equalities; use
+  `linear_combination (norm := abel) h` for additive-group identities.
+* `omit [NormOneClass 𝔸]` fails inside `SymmetricQuintic.lean` scopes
+  where that typeclass is already a section variable in use — just drop
+  the `omit`.
+* The `[doc-comment] [set_option … in]` parser order quirk struck
+  again (memory `feedback_doc_comment_set_option_order.md`). Correct
+  order: `set_option … in /-- doc -/ <decl>`.
+
+**Roadmap for the remaining τ⁷ discharge** (next sessions):
+
+| Piece | Strategy | Status |
+|-------|----------|--------|
+| d=7 P_3 C_5 | k=5 second-order Taylor | ✓ DONE (session 60) |
+| d=8 P_4 C_5 | k=5 framework (reuse) + Phase-3 specialization | next |
+| d=8 Cross V₂·V₃ C_5 | bilinear — custom infrastructure | pending |
+| d=7/d=8 P_3 C_6 | k=6 Phase 1+2 analog | pending |
+| d=8 P_2 C_7 | k=7 Phase 1+2 analog | pending |
+| Joint cancellation | operator-form matching identities | pending |
+| Final O(s⁹) assembly | discharge `symmetric_bch_septic_sub_poly_axiom` | pending |
+
+Estimated 6–8 more sessions for full τ⁷ discharge.
+
+Axiom count unchanged (still 2 scoped private axioms).
+
 ## Status (session 59, 2026-05-19) — τ⁷ piece-by-piece calibration
 
 Branch: `main`. Repository is **0 sorries**, **2 scoped private axioms**
